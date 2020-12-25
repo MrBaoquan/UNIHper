@@ -27,7 +27,7 @@ public class UHelperEntry : SingletonBehaviour<UHelperEntry>
         }
         DontDestroyOnLoad(this.gameObject);
         
-        ULogger.Initialize();
+        ULog.Initialize();
         
         GameObject _utilGO = new GameObject("UHelperUtils");
         _utilGO.transform.parent = this.transform;
@@ -114,7 +114,7 @@ public class UHelperEntry : SingletonBehaviour<UHelperEntry>
 
     private void OnApplicationQuit() {
         Debug.Log("application quit");
-        ULogger.Uninitialize();
+        ULog.Uninitialize();
     }
     
 }  

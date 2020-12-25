@@ -17,6 +17,10 @@ public class UTimerManager : Singleton<UTimerManager>,Manageable
 
     public void Uninitialize(){}
 
+    public IDisposable SetTimeout(Action InHandler, float InTime){
+        return SetTimeout(InTime,InHandler);
+    }
+
     public IDisposable SetTimeout(float InDuration, Action OnCompleted = null, Action<float> OnUpdate = null, float InInterval=0.05f)
     {
         float _startTime = Time.time;
