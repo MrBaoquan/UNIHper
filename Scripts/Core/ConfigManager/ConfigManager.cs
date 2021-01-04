@@ -40,13 +40,13 @@ public class ConfigManager : Singleton<ConfigManager>
 
 
             if(!File.Exists(_path)){
-                UXmlSerialization.Serialize(_configInstance,_path);
+                USerialization.SerializeXML(_configInstance,_path);
             }else{
-                MethodInfo _method = typeof(UXmlSerialization).GetMethod("Deserialize").MakeGenericMethod(new Type[]{_configClass});
+                MethodInfo _method = typeof(USerialization).GetMethod("DeserializeXML").MakeGenericMethod(new Type[]{_configClass});
                 _configInstance = _method.Invoke(null,new object[]{_path}) as UConfig;
             }
 
-            UReflection.SetFieldValue(_configInstance,"__path",_path);
+            UReflection.SetPrivateField(_configInstance,"__path",_path);
             this.configs.Add(_configClass.Name, _configInstance);
         }
     }
@@ -54,7 +54,7 @@ public class ConfigManager : Singleton<ConfigManager>
     public void SerializeAll()
     {
         this.configs.Values.ToList().ForEach(_config=>{
-            UXmlSerialization.Serialize(_config,_config.__path);
+            USerialization.SerializeXML(_config,_config.__Path);
         });
     }
 
@@ -73,7 +73,7 @@ public class ConfigManager : Singleton<ConfigManager>
         string _configName = typeof(T).Name;
         UConfig _config;
         if(this.configs.TryGetValue(_configName,out _config)){
-            UXmlSerialization.Serialize(_config,_config.__path);
+            USerialization.SerializeXML(_config,_config.__Path);
             return true;
         }
         return false;

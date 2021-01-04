@@ -24,7 +24,14 @@ public class SerializedAt : Attribute
 public class UConfig
 {
     [XmlIgnore]
-    public string __path;
+    protected string __path;
+
+    [XmlIgnore]
+    public string __Path{
+        get{
+            return __path;
+        }
+    }
 }
 
 

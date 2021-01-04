@@ -13,7 +13,7 @@ public class LogSwitcher : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(Input.GetKey(KeyCode.LeftControl)&&Input.GetKeyDown(KeyCode.D)){
+        if(Input.GetKey(KeyCode.LeftShift)&&Input.GetKey(KeyCode.LeftControl)&&Input.GetKeyDown(KeyCode.D)){
             this.GetComponent<Reporter>().enabled = !this.GetComponent<Reporter>().enabled;
         }
     }

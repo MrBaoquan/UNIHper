@@ -49,6 +49,12 @@ public class UTimerManager : Singleton<UTimerManager>,Manageable
 
     }
 
+    /// <summary>
+    /// 忽略InTime时间内的多次调用          (节流)
+    /// </summary>
+    /// <param name="InTime"></param>      
+    /// <param name="InCallback"></param>   主动调用时: 计时器小于InTime时  调用将会被忽略  计时器大于InTime时，回调一次  计时器清零
+    /// <returns></returns>
     public Action Throttle(float InTime, Action InAction)
     {
         float _last = 0;
@@ -60,13 +66,18 @@ public class UTimerManager : Singleton<UTimerManager>,Manageable
             }
         };
     }
-
+    
+    /// <summary>
+    /// 忽略InTime时间内的多次调用
+    /// </summary>
+    /// <param name="InTime"></param>       
+    /// <param name="InCallback"></param>   主动调用后: 计时器清零, 计时器大于InTime时，回调一次, 计时器重新计时
+    /// <returns></returns>
     public Action Debounce(float InTime, Action InCallback)
     {
         IDisposable _timerHandler = null;
         float _lastCallTime =Time.time;
         Func<long,bool> _condition = _=>{
-            //Debug.LogFormat("count time:{0}", Time.time - _lastCallTime);
             return (Time.time - _lastCallTime)>=InTime;
         };
 
@@ -76,7 +87,6 @@ public class UTimerManager : Singleton<UTimerManager>,Manageable
                     _lastCallTime = Time.time;
                     InCallback();
                 });
-
         return ()=>{
             _lastCallTime = Time.time;
         };

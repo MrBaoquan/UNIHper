@@ -11,7 +11,7 @@ namespace UHelper
 
 
 
-public class URangeInput : MonoBehaviour
+public class UInput_Range : MonoBehaviour
 {
     public string FieldTitle = "字段范围";
     public string MinTitle = "最小值";

@@ -29,6 +29,13 @@ public static class ULog
         NLogger.Debug(InMessage);
     }
 
+    public static void Debug(object InMessage){
+#if UNITY_EDITOR
+        UnityEngine.Debug.Log(InMessage);
+#endif
+        NLogger.Debug(InMessage);
+    }
+
     public static void Debug(string InFormat, params object[] InParams)
     {
 #if UNITY_EDITOR

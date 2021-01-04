@@ -4,17 +4,14 @@ using UnityEngine;
 
 namespace UHelper
 {
-public abstract class UIBase : MonoBehaviour
+public abstract partial class UIBase : MonoBehaviour
 {
-    private UIType uiType = UIType.Normal;
-    public UIType  Type
+    protected string __UIKey = string.Empty;
+    protected UIType __Type = UIType.Normal;
+    public UIType Type
     {
         get{
-            return uiType;
-        }
-
-        set{
-            uiType = value;
+            return __Type;
         }
     }
 
@@ -23,12 +20,9 @@ public abstract class UIBase : MonoBehaviour
         get {return bShow;}
     }
     
-    public virtual void OnLoad()
-    {
-     
-    }
+    protected virtual void OnLoad(){}
 
-    public virtual void Show()
+    protected void HandleShow()
     {
         if(!this.gameObject.activeInHierarchy){
             this.gameObject.SetActive(true);
@@ -36,6 +30,13 @@ public abstract class UIBase : MonoBehaviour
         bShow = true;
         this.OnShow();
         handleShowAction();
+    }
+    
+    protected void HandleHide()
+    {
+        bShow = false;
+        this.OnHidden();
+        handleHideAction();
     }
 
     protected virtual void handleShowAction()
@@ -46,13 +47,6 @@ public abstract class UIBase : MonoBehaviour
     protected virtual void handleHideAction()
     {
         this.gameObject.SetActive(false);
-    }
-
-    public virtual void Hide()
-    {
-        bShow = false;
-        this.OnHidden();
-        handleHideAction();
     }
 
     protected virtual void OnShow()

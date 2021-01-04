@@ -1,9 +1,11 @@
-﻿using System.Xml.Linq;
+﻿using System.IO;
+using System.Xml.Linq;
 using System.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UniRx;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -199,11 +201,77 @@ public class UIManager : Singleton<UIManager>,Manageable
     }
 
     // 对话框类
-
-    public void ShowDialog(string InContent, Action<DialogUI> onConfirm=null){
+    public void ShowAlert(string InContent, Action OnConfirm=null){
         ShowUI<DialogUI>(InUI=>{
-            InUI.SetCallback(onConfirm);
-            InUI.SetContent(InContent);
+            InUI.SetContent(InContent).ShowDialog();
+            IDisposable _clear = null;
+            _clear = InUI.OnConfirmAsObservable().Subscribe(_=>{
+                Utility.Dispose(ref _clear);
+
+                Utility.CallFunction(OnConfirm);
+                HideUI<DialogUI>();
+            });
+        });
+    }
+
+    public void ShowConfrim(string InContent, Action OnConfirm=null, Action OnCancel=null)
+    {
+        ShowUI<DialogUI>(InUI=>{
+            InUI.SetContent(InContent).ShowConfirm();
+            IDisposable _clearConfirm = null;
+            IDisposable _clearCancel = null;
+            _clearConfirm = InUI.OnConfirmAsObservable().Subscribe(_=>{
+                Utility.Dispose(ref _clearConfirm);
+                Utility.Dispose(ref _clearCancel);
+
+                Utility.CallFunction(OnConfirm);
+                HideUI<DialogUI>();
+            });
+
+            _clearCancel = InUI.OnCancelAsObservable().Subscribe(_=>{
+                Utility.Dispose(ref _clearConfirm);
+                Utility.Dispose(ref _clearCancel);
+                
+                Utility.CallFunction(OnCancel);
+                HideUI<DialogUI>();
+            });        
+        });
+    }
+
+    public void ShowSaveFileDialog(string BaseDir, Func<string,bool> OnSaved)
+    {
+       ShowSaveFileDialog(BaseDir, "*.*", OnSaved);
+    }
+    public void ShowSaveFileDialog(string BaseDir, string SearchPattern, Func<string,bool> OnSaved)
+    {
+       ShowUI<FileDialog>(InUI=>{
+           IDisposable _clear = null;
+           _clear = InUI.SaveFile(BaseDir, SearchPattern)
+            .Subscribe(_value=>{
+                if(OnSaved(Path.Combine(BaseDir,_value))){
+                    Utility.Dispose(ref _clear);
+                    HideUI<FileDialog>();
+                };
+            });
+       });
+    }
+
+    public void ShowOpenFileDialog(string FileDir, Func<string,bool> OnOpened)
+    {
+         ShowOpenFileDialog(FileDir, "*.*", OnOpened);
+    }
+
+    public void ShowOpenFileDialog(string FileDir, string InSearchPattern, Func<string,bool> OnOpened)
+    {
+         ShowUI<FileDialog>(InUI=>{
+            IDisposable _clear = null;
+            _clear = InUI.ReadFile(FileDir, InSearchPattern)
+                .Subscribe(_value=>{
+                    Utility.Dispose(ref _clear);
+                    if(OnOpened(Path.Combine(FileDir, _value))){
+                        HideUI<FileDialog>();
+                    };
+                });
         });
     }
 
@@ -278,8 +346,10 @@ public class UIManager : Singleton<UIManager>,Manageable
         if(!_uiComponent){
             _uiComponent = _newUI.AddComponent(_T) as UIBase;
         }
-        _uiComponent.Type = InUIConfig.Type;
-        _uiComponent.OnLoad();
+        UReflection.SetPrivateField<string>(_uiComponent,"__UIKey",InUIKey);
+        UReflection.SetPrivateField<UIType>(_uiComponent,"__Type", InUIConfig.Type);
+        UReflection.CallPrivateMethod(_uiComponent,"OnLoad");
+
         _newUI.transform.SetParent(getParentUIAttachTo(_uiComponent.Type));
         allSpawnedUICaches.Add(InUIKey,_uiComponent);
     }
@@ -320,8 +390,8 @@ public class UIManager : Singleton<UIManager>,Manageable
     {
         UIBase _uiComponent = allSpawnedUICaches[InKey];
         if(normalUIs.ContainsKey(InKey)) return;
-
-        _uiComponent.Show();
+        
+        UReflection.CallPrivateMethod(_uiComponent,"HandleShow");
         normalUIs.Add(InKey,_uiComponent);
     }
 
@@ -331,7 +401,8 @@ public class UIManager : Singleton<UIManager>,Manageable
         if(!normalUIs.TryGetValue(InKey, out _uiComponent)){
             return;
         }
-        _uiComponent.Hide();
+
+        UReflection.CallPrivateMethod(_uiComponent,"HandleHide");
         normalUIs.Remove(InKey);
     }
 
@@ -339,9 +410,11 @@ public class UIManager : Singleton<UIManager>,Manageable
     {
         UIBase _uiComponent = allSpawnedUICaches[InKey];
         foreach(var _uiItem in standaloneUIs){
-            _uiItem.Value.Hide();
+            UReflection.CallPrivateMethod(_uiItem.Value, "HandleHide");
         }
-        _uiComponent.Show();
+        
+        UReflection.CallPrivateMethod(_uiComponent, "HandleShow");
+
         if (!standaloneUIs.Keys.Contains(InKey))
         {
             standaloneUIs.Add(InKey, _uiComponent);
@@ -355,12 +428,13 @@ public class UIManager : Singleton<UIManager>,Manageable
         if(!standaloneUIs.TryGetValue(InKey,out _uiComponent)){
             return;
         }
-        _uiComponent.Hide();
-        standaloneUIs.Remove(InKey);
+        
+        UReflection.CallPrivateMethod(_uiComponent, "HandleHide");
 
+        standaloneUIs.Remove(InKey);
         var _last = standaloneUIs.LastOrDefault();
         if(!_last.Equals(default(KeyValuePair<string,UIBase>))){
-            _last.Value.Show();
+            UReflection.CallPrivateMethod(_last.Value,"HandleShow");
         }
     }
 
@@ -376,7 +450,9 @@ public class UIManager : Singleton<UIManager>,Manageable
                 popupUIs.Add(_uiComponent);
             }
         }
-        _uiComponent.Show();
+        
+        UReflection.CallPrivateMethod(_uiComponent, "HandleShow");
+
         _uiComponent.transform.SetAsLastSibling();
     }
 
@@ -395,7 +471,8 @@ public class UIManager : Singleton<UIManager>,Manageable
         if(!popupUIs.Contains(_uiComponent)){
             return;
         }
-        _uiComponent.Hide();
+        
+        UReflection.CallPrivateMethod(_uiComponent, "HandleHide");
         popupUIs.Remove(_uiComponent);
     }
 

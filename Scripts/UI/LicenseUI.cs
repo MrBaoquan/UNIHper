@@ -63,18 +63,18 @@ public class LicenseUI : UIBase
             {
                 string _input_key = Encrypter.Decrypt(licenseContent.Value, "mrbaoquan");
                 if(_input_key==machineID){
-                    Managements.UI.ShowDialog("序列号有效, 软件已成功激活!",_=>{
+                    Managements.UI.ShowAlert("序列号有效, 软件已成功激活!",()=>{
                         PlayerPrefs.SetString(encrypter_key,licenseContent.Value);
                         PlayerPrefs.SetString(machineNumber_key, machineID);
                         Managements.UI.HideUI("LicenseUI");
                     });
                 }else{
-                    Managements.UI.ShowDialog("请输入正确的激活码!",_=>{});
+                    Managements.UI.ShowAlert("请输入正确的激活码!");
                 }
             }
             catch (System.Exception)
             {
-                    Managements.UI.ShowDialog("请输入正确的激活码!",_=>{});
+                    Managements.UI.ShowAlert("请输入正确的激活码!");
                 throw;
             }
           

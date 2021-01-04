@@ -4,29 +4,53 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-using UHelper;
 using UniRx;
+
+namespace UHelper
+{
+
+
 public class DialogUI : UIBase
 {
 
-    Action<DialogUI> onConfirm = null;
-
-    public void SetCallback(Action<DialogUI> InCallback){
-        onConfirm = InCallback;
+    public void ShowDialog()
+    {
+        this.Get("button_group/btn_cancel").SetActive(true);
+        this.Get("button_group/btn_cancel").SetActive(false);
     }
 
-    public void SetContent(string InContent){
-        this.Get<Text>("text_content").text = InContent;
+    public void ShowConfirm()
+    {
+        this.Get("button_group/btn_cancel").SetActive(true);
+        this.Get("button_group/btn_cancel").SetActive(true);
     }
 
+    public IObservable<Unit> OnConfirmAsObservable()
+    {
+        return this.Get<Button>("button_group/btn_confirm").OnClickAsObservable();
+    }
+
+    public IObservable<Unit> OnCancelAsObservable()
+    {
+        return this.Get<Button>("button_group/btn_cancel").OnClickAsObservable();
+    }
+
+    public DialogUI SetContent(string Content)
+    {
+        this.Get<Text>("content_panel/Scroll View/Viewport/Content").text = Content;
+        return this;
+    }
+
+    public DialogUI SetTitle(string Title)
+    {
+        this.Get<Text>("title/text_title").text = Title;
+        return this;
+    }
 
     // Start is called before the first frame update
     private void Start()
     {
-        this.Get<Button>("btn_confirm").OnClickAsObservable().Subscribe(_=>{
-            Managements.UI.HideUI("DialogUI");
-            if(onConfirm!=null) onConfirm.Invoke(this);
-        });
+        EnableDragMove();
     }
 
     // Update is called once per frame
@@ -47,3 +71,9 @@ public class DialogUI : UIBase
 
     }
 }
+
+
+
+
+}
+

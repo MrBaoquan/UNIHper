@@ -8,7 +8,13 @@ namespace UHelper
 {
 public static class MonobehaviourExtension
 {
-    public static T Get<T>(this MonoBehaviour _behaviour,string InPath) where T : Component
+
+    public static T Get<T>(this MonoBehaviour _behaviour) where T : Component
+    {
+        return _behaviour.GetComponent<T>();
+    }
+
+    public static T Get<T>(this MonoBehaviour _behaviour, string InPath) where T : Component
     {
         Transform _target = Get(_behaviour,InPath);
         return _target.GetComponent<T>();
@@ -29,10 +35,46 @@ public static class MonobehaviourExtension
         return _behaviour.TryGetComponent(_component.GetType(),out _out_component);
     }
 
-    public static bool Contain(this Transform _transform, Type _type)
+    public static bool Contains<T>(this MonoBehaviour _behaviour) where T : Component
+    {
+        Component _out_component;
+        return _behaviour.TryGetComponent(typeof(T), out _out_component);
+    }
+
+    public static bool Contains<T>(this Transform _transform) where T :Component
+    {
+        T _component;
+        return _transform.gameObject.TryGetComponent<T>(out _component);
+    }
+
+    public static bool Contains(this Transform _transform, Type _type)
     {
         Component _out_component;
         return _transform.TryGetComponent(_type, out _out_component);
+    }
+
+    public static T AddComponent<T>(this MonoBehaviour _behaviour) where T : Component
+    {
+        if(!_behaviour.Contains<T>()){
+            return _behaviour.gameObject.AddComponent<T>();
+        }
+        return _behaviour.GetComponent<T>();
+    }
+
+    public static T AddComponent<T>(this Transform _transform) where T : Component
+    {
+        if(_transform.Contains<T>()){
+            return _transform.GetComponent<T>();
+        }
+        return _transform.gameObject.AddComponent<T>();
+    }
+
+    public static void SetActive(this Transform _transform, bool Value){
+        _transform.gameObject.SetActive(Value);
+    }
+
+    public static void SetChildrenActive(this Transform _transform, bool bActive){
+        _transform.gameObject.SetChildrenActive(bActive);
     }
 
     // 设置指定子元素激活状态
@@ -111,6 +153,15 @@ public static class MonobehaviourExtension
         return _children;
     }
 
+    public static List<Transform> Children(this Transform _self, bool bOnlyEnabled=true){
+        return _self.gameObject.Children(bOnlyEnabled);
+    }
+
+    public static T GetComponent<T>(this Transform _self) where T : Component
+    {
+        return _self.gameObject.GetComponent<T>();
+    }
+
 
         static Vector3[] corners = new Vector3[4];
     
@@ -172,7 +223,6 @@ public static class MonobehaviourExtension
     public static void ScrollToCenter(this ScrollRect scrollRect, RectTransform target, RectTransform.Axis axis = RectTransform.Axis.Horizontal)
     {
         float _centerPosition = scrollRect.GetItemNormallizedPosition(target, axis);
-        Debug.Log("normallized postion " + _centerPosition);
         if (axis == RectTransform.Axis.Vertical) {
             scrollRect.verticalNormalizedPosition = _centerPosition;
         } else {
@@ -202,6 +252,7 @@ public static class MonobehaviourExtension
             _centerPosition = Mathf.Clamp(scrollPos, 0, 1);
             //scrollRect.horizontalNormalizedPosition = Mathf.Clamp(scrollPos, 0, 1);
         }
+        Debug.Log(_centerPosition);
         return _centerPosition;
     }
 
