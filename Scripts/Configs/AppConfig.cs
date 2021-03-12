@@ -1,29 +1,43 @@
-using UnityEngine;
 using System.Collections.Generic;
 using System.Xml.Serialization;
+using UnityEngine;
 
-namespace UHelper
-{
+namespace UHelper {
     public class ScreenConfig {
-        [XmlAttribute()]
+        [XmlAttribute ()]
         public int Width = Screen.width;
-        [XmlAttribute()]
+        [XmlAttribute ()]
         public int Height = Screen.height;
 
-        [XmlAttribute]
-        public int RefreshRate = 30;
-
-        [XmlAttribute()]
-        public UFullScreenMode Mode = UFullScreenMode.ExclusiveFullScreen;
+        [XmlAttribute ()]
+        public FullScreenMode Mode = FullScreenMode.FullScreenWindow;
     }
 
-    public class AppConfig : UConfig
-    {
-        public float KeepTopWindowInterval = 0;
-        public ScreenConfig Screen = new ScreenConfig();
+    public class SetWindowPos {
+        public HWndInsertAfter HWndInsertAfter = HWndInsertAfter.HWND_TOPMOST;
+        public Vector4 SWP_Rect = Vector4.zero;
+        public List<SetWindowPosFlags> SWPFlags = new List<SetWindowPosFlags> () { SetWindowPosFlags.SWP_NOMOVE, SetWindowPosFlags.SWP_NOSIZE };
+    }
 
-        [XmlArray("Displays")]
-        [XmlArrayItem("Display")]
-        public List<ScreenConfig> Displays = new List<ScreenConfig>();
+    public class KeepWindowTop {
+        [XmlAttribute]
+        public float Interval = 0;
+        [XmlAttribute]
+        public bool ShowWindow = false;
+        [XmlAttribute]
+        public bool SetWindowPos = true;
+        [XmlAttribute]
+        public bool SetForegroundWindow = true;
+
+        public SetWindowPos SetWindowPosFunction = new SetWindowPos ();
+    }
+
+    public class AppConfig : UConfig {
+        public KeepWindowTop KeepWindowTop = new KeepWindowTop ();
+        public ScreenConfig PrimaryScreen = new ScreenConfig ();
+
+        [XmlArray ("Displays")]
+        [XmlArrayItem ("Display")]
+        public List<ScreenConfig> Displays = new List<ScreenConfig> ();
     }
 }
