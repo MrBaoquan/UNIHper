@@ -52,13 +52,12 @@ namespace UHelper {
 
             // 6. 初始化网络模块
             UNetManager.Instance.Initialize ();
-
             this.Initialize ();
         }
 
         private void Initialize () {
+#if UNITY_STANDALONE_WIN && !UNITY_EDITOR
             appConfig = Managements.Config.Get<AppConfig> ();
-
             activeAllDisplays ();
             bool _fullScreen = (
                     appConfig.PrimaryScreen.Mode == FullScreenMode.ExclusiveFullScreen ||
@@ -69,6 +68,7 @@ namespace UHelper {
                 _fullScreen, appConfig.PrimaryScreen.Width, appConfig.PrimaryScreen.Height);
 
             KeepWindowTop ();
+#endif
 
         }
 
@@ -82,6 +82,7 @@ namespace UHelper {
 
             int _index = 0;
             _config.Displays.ForEach (_display => {
+                if (_index >= Display.displays.Length) return;
                 Display.displays[_index].Activate ();
                 Display.displays[_index].SetRenderingResolution (_config.Displays[_index].Width, _config.Displays[_index].Height);
                 _index++;

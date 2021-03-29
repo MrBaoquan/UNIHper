@@ -1,46 +1,41 @@
 using System;
-using UnityEngine;
 using UniRx;
 using UniRx.Triggers;
-namespace UHelper
-{
-    
+using UnityEngine;
+namespace UHelper {
 
-public abstract partial class UIBase
-{
+    public abstract partial class UIBase {
 
-    public void EnableDragMove()
-    {
-        if(!this.Contains<ObservableBeginDragTrigger>()){
-            this.AddComponent<ObservableBeginDragTrigger>();
+        public void EnableDragMove () {
+            if (!this.Contains<ObservableBeginDragTrigger> ()) {
+                this.AddComponent<ObservableBeginDragTrigger> ();
+            }
+            if (!this.Contains<ObservableDragTrigger> ()) {
+                this.AddComponent<ObservableDragTrigger> ();
+            }
+
+            var _delta = Vector2.zero;
+            this.GetComponent<ObservableBeginDragTrigger> ()
+                .OnBeginDragAsObservable ()
+                .Subscribe (_event => {
+                    _delta = _event.position - new Vector2 (transform.position.x, transform.position.y);
+                });
+
+            this.GetComponent<ObservableDragTrigger> ()
+                .OnDragAsObservable ()
+                .Subscribe (_event => {
+                    transform.position = _event.position - _delta;
+                });
         }
-        if(!this.Contains<ObservableDragTrigger>()){
-            this.AddComponent<ObservableDragTrigger>();
+
+        public void Show (Action<UIBase> InCallback = null) {
+            Managements.UI.Show (__UIKey, InCallback);
         }
 
-        var _delta = Vector2.zero;
-        this.GetComponent<ObservableBeginDragTrigger>()
-            .OnBeginDragAsObservable()
-            .Subscribe(_event=>{
-                _delta = _event.position - new Vector2(transform.position.x, transform.position.y);
-            });
+        public void Hide () {
+            Managements.UI.Hide (__UIKey);
+        }
 
-        this.GetComponent<ObservableDragTrigger>()
-            .OnDragAsObservable()
-            .Subscribe(_event=>{
-                transform.position = _event.position - _delta;
-            });
     }
-
-    public void Show(Action<UIBase> InCallback=null)
-    {
-        Managements.UI.ShowUI(__UIKey,InCallback);
-    }
-
-    public void Hide(){
-       Managements.UI.HideUI(__UIKey);
-    }
-
-}
 
 }

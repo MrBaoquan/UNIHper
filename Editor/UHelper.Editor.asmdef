@@ -1,8 +1,6 @@
 {
     "name": "UHelper.Editor",
-    "references": [
-        "GUID:796cbadcd939cb5409c03b5946a75b62"
-    ],
+    "references": [],
     "includePlatforms": [
         "Editor"
     ],
