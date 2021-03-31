@@ -1,4 +1,4 @@
-﻿Shader "UHelper/BackgroundTexture"
+﻿Shader "UNIHper/BackgroundTexture"
 {
     Properties
     {

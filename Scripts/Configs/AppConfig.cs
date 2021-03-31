@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Xml.Serialization;
 using UnityEngine;
 
-namespace UHelper {
+namespace UNIHper {
     public class ScreenConfig {
         [XmlAttribute ()]
         public int Width = Screen.width;

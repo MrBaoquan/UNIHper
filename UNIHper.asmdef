@@ -1,5 +1,5 @@
 {
-    "name": "UHelper",
+    "name": "UNIHper",
     "references": [
         "GUID:560b04d1a97f54a4e82edc0cbbb69285",
         "GUID:a0ec2668532769941996e7ada72c78fc"
@@ -11,6 +11,5 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
-    "noEngineReferences": false
+    "versionDefines": []
 }

@@ -9,7 +9,7 @@ using Newtonsoft.Json.Converters;
 using UniRx;
 using UnityEngine;
 
-namespace UHelper {
+namespace UNIHper {
 
     public enum UIType {
         Normal,
@@ -274,7 +274,7 @@ namespace UHelper {
         }
 
         private void ReadConfigData () {
-            string _uiPath = UHelperConfig.UIConfigPath;
+            string _uiPath = UNIHperConfig.UIConfigPath;
             TextAsset _uiAsset = Resources.Load<TextAsset> (_uiPath);
             customUIConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, UIConfig>>> (_uiAsset.text);
 

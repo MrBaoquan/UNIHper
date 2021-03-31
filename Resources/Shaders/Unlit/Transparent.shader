@@ -1,4 +1,4 @@
-﻿Shader "UHelper/Unlit/Transparent"
+﻿Shader "UNIHper/Unlit/Transparent"
 {
     Properties
     {

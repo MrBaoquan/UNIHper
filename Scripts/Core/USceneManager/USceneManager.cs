@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 using UniRx;
 
 
-namespace UHelper
+namespace UNIHper
 {
 
 public class USceneManager : Singleton<USceneManager>

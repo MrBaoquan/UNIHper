@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace UHelper
+namespace UNIHper
 {
 public class MonobehaviourUtil : SingletonBehaviour<MonobehaviourUtil>
 {

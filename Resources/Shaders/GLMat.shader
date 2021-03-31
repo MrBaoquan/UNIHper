@@ -1,4 +1,4 @@
-﻿Shader "UHelper/GLMat"
+﻿Shader "UNIHper/GLMat"
 {
     Properties
     {

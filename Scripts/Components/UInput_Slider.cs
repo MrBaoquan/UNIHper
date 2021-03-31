@@ -6,7 +6,7 @@ using UnityEngine;
 using UniRx;
 using UnityEngine.UI;
 
-namespace UHelper
+namespace UNIHper
 {
 
 public class UInput_Slider : MonoBehaviour

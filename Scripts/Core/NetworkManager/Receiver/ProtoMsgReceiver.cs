@@ -5,7 +5,7 @@ using System.Net.Sockets;
 /// <summary>
 /// Google ProtoBuf 消息封装类
 /// </summary>
-namespace UHelper
+namespace UNIHper
 {
 
     public class ProtoMsgReceiver : UNetMsgReceiver

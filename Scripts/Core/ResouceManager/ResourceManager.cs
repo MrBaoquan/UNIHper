@@ -7,7 +7,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace UHelper {
+namespace UNIHper {
     public struct ResourceItem {
         public string type;
         public string path;
@@ -138,7 +138,7 @@ namespace UHelper {
         }
 
         private void ReadConfigData () {
-            string _resPath = UHelperConfig.ResourceConfigPath;
+            string _resPath = UNIHperConfig.ResourceConfigPath;
             TextAsset _resAsset = Resources.Load<TextAsset> (_resPath);
             // 逻辑层自定义资源加载配置项
             var _logicConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, List<ResourceItem>>> (_resAsset.text);

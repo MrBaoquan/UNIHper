@@ -1,6 +1,6 @@
 using System;
 using UniRx;
-namespace UHelper
+namespace UNIHper
 {
     
 public static class UObservable

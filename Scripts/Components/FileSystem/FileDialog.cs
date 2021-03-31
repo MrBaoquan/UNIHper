@@ -7,7 +7,7 @@ using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UHelper {
+namespace UNIHper {
 
     public class FileDialog : UIBase {
         enum DialogType {

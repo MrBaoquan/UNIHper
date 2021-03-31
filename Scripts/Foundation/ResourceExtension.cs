@@ -4,7 +4,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Networking;
 using UniRx;
-namespace UHelper
+namespace UNIHper
 {
     
 public static class ResourceExtension{
@@ -16,7 +16,6 @@ public static class ResourceExtension{
     public static IObservable<AudioClip> LoadAudioClip(this ResourceManager resourceManager, string InPath,AudioType InAudioType){
         return Observable.FromCoroutine<AudioClip>((_observer,_cancellationToken)=>LoadAudioClip(InPath,InAudioType,_observer,_cancellationToken));
     }
-
 
     // 加载外部音频文件
     private static IEnumerator LoadAudioClip(string InPath,AudioType InAudioType,IObserver<AudioClip> observer, CancellationToken cancellationToken){

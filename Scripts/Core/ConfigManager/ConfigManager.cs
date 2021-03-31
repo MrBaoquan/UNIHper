@@ -6,7 +6,7 @@ using System.Xml.Serialization;
 using System.IO;
 using UnityEngine;
 
-namespace UHelper
+namespace UNIHper
 {
 
 public class ConfigManager : Singleton<ConfigManager>

@@ -5,7 +5,7 @@ using UnityEngine;
 using UniRx;
 using UnityEngine.SceneManagement;
 
-namespace UHelper
+namespace UNIHper
 {
 public class SceneScriptManager : Singleton<SceneScriptManager>
 {

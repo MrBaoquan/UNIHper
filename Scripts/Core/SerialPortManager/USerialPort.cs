@@ -7,9 +7,9 @@ using System.Threading;
 using System.IO.Ports;
 using UniRx;
 
-using UHelper;
+using UNIHper;
 
-namespace UHelper
+namespace UNIHper
 {
 
 public class USerialPort

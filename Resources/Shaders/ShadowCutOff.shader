@@ -4,7 +4,7 @@
  *
  */
 
-Shader "UHelper/ShadowCutOff"
+Shader "UNIHper/ShadowCutOff"
 {
     Properties
     {

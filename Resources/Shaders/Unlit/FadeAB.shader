@@ -1,4 +1,4 @@
-﻿Shader "UHelper/Unlit/FadeAB"
+﻿Shader "UNIHper/Unlit/FadeAB"
 {
     Properties
     {

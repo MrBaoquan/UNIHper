@@ -2,7 +2,7 @@ using System;
 using UniRx;
 using UniRx.Triggers;
 using UnityEngine;
-namespace UHelper {
+namespace UNIHper {
 
     public abstract partial class UIBase {
 

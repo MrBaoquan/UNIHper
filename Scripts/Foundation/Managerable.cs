@@ -1,4 +1,4 @@
-namespace UHelper
+namespace UNIHper
 {
 
 public interface Manageable

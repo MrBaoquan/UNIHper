@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UHelper {
+namespace UNIHper {
     public static class MonobehaviourExtension {
 
         public static T Get<T> (this MonoBehaviour _behaviour) where T : Component {

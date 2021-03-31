@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace UHelper
+namespace UNIHper
 {
 
 public static class UMath

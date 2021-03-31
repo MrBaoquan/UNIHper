@@ -16,12 +16,11 @@ using UnityEngine;
  * Copyright 2019 - 2019 mrma617@gmail.com
  */
 
-namespace UHelper {
-    public class UHelperEntry : SingletonBehaviour<UHelperEntry> {
-        private AppConfig appConfig;
+namespace UNIHper {
+    public class UNIHperEntry : SingletonBehaviour<UNIHperEntry> {
         private void Awake () {
-            Debug.Log ("UHelper.Awake");
-            if (UHelperEntry.Instance != this) {
+            Debug.Log ("UNIHper.Awake");
+            if (UNIHperEntry.Instance != this) {
                 GameObject.Destroy (this);
                 return;
             }
@@ -97,29 +96,30 @@ namespace UHelper {
         }
 
         private void KeepWindowTop () {
-            if (appConfig.KeepWindowTop.Interval <= 0) return;
+            var _config = Managements.Config.Get<AppConfig> ();
+            if (_config.KeepWindowTop.Interval <= 0) return;
 
             var _window = WinAPI.CurrentWindow ();
-            Observable.Interval (TimeSpan.FromSeconds (appConfig.KeepWindowTop.Interval))
+            Observable.Interval (TimeSpan.FromSeconds (_config.KeepWindowTop.Interval))
                 .Subscribe (_ => {
-                    if (appConfig.KeepWindowTop.SetWindowPos)
+                    if (_config.KeepWindowTop.SetWindowPos)
                         WinAPI.SetWindowPos (_window,
-                            (int) appConfig.KeepWindowTop.SetWindowPosFunction.HWndInsertAfter,
-                            (int) appConfig.KeepWindowTop.SetWindowPosFunction.SWP_Rect.x,
-                            (int) appConfig.KeepWindowTop.SetWindowPosFunction.SWP_Rect.y,
-                            (int) appConfig.KeepWindowTop.SetWindowPosFunction.SWP_Rect.z,
-                            (int) appConfig.KeepWindowTop.SetWindowPosFunction.SWP_Rect.w,
-                            appConfig.KeepWindowTop.SetWindowPosFunction.SWPFlags.Aggregate ((_flags, _current) => _flags | _current)
+                            (int) _config.KeepWindowTop.SetWindowPosFunction.HWndInsertAfter,
+                            (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.x,
+                            (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.y,
+                            (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.z,
+                            (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.w,
+                            _config.KeepWindowTop.SetWindowPosFunction.SWPFlags.Aggregate ((_flags, _current) => _flags | _current)
                         );
-                    if (appConfig.KeepWindowTop.ShowWindow)
+                    if (_config.KeepWindowTop.ShowWindow)
                         WinAPI.ShowWindow (_window, 3);
-                    if (appConfig.KeepWindowTop.SetForegroundWindow)
+                    if (_config.KeepWindowTop.SetForegroundWindow)
                         WinAPI.SetForegroundWindow (_window);
                 });
         }
 
         private void OnDestroy () {
-            Debug.Log ("UHelper.OnDestroy");
+            Debug.Log ("UNIHper.OnDestroy");
         }
 
         private void OnApplicationQuit () {

@@ -4,7 +4,7 @@ using UnityEngine;
 
 using UniRx;
 
-namespace UHelper
+namespace UNIHper
 {
 
 public static class AnimatorExtension

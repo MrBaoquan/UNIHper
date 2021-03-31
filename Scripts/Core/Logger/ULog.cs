@@ -3,7 +3,7 @@ using UnityEngine;
 using System;
 
 
-namespace UHelper
+namespace UNIHper
 {
     
 public static class ULog

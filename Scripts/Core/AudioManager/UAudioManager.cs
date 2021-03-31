@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UniRx;
 using UnityEngine;
-namespace UHelper {
+namespace UNIHper {
 
     public class UAudioManager : SingletonBehaviour<UAudioManager> {
 

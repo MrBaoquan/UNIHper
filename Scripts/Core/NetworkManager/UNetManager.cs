@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UniRx;
 using Google.Protobuf;
 
-namespace UHelper
+namespace UNIHper
 {
 
 public class UNetManager : Singleton<UNetManager>,Manageable

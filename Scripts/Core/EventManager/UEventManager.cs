@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-namespace UHelper
+namespace UNIHper
 {
 
 public abstract class UEvent{}
