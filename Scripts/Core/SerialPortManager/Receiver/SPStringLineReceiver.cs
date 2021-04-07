@@ -1,8 +1,5 @@
+#if NET_4_6
 using System.Text;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using System.IO.Ports;
 namespace UNIHper
 {
 
@@ -33,3 +30,5 @@ public class SPStringLineReceiver : USPMsgReceiver
 
 
 }
+
+#endif

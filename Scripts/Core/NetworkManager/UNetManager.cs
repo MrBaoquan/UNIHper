@@ -181,7 +181,6 @@ public class UNetManager : Singleton<UNetManager>,Manageable
 
     public void Send2TcpClient(byte[] InData, string InLocalKey="", string InRemoteKey="")
     {
-        UnityEngine.Debug.Log(InLocalKey);
         if(InLocalKey==""){
             allTcpServers.Values.ToList().ForEach(_socket=>{
                 _socket.Send2Client(InData,InRemoteKey);

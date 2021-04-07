@@ -1,3 +1,4 @@
+#if NET_4_6
 using System.Threading.Tasks;
 namespace UNIHper
 {
@@ -30,3 +31,4 @@ public class SPFixedReceiver : USPMsgReceiver
 
 
 }
+#endif

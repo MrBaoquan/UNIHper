@@ -1,3 +1,4 @@
+#if NET_4_6
 using System.Linq;
 using System.Threading;
 using UnityEngine;
@@ -44,3 +45,4 @@ public class SerialPortManager : Singleton<SerialPortManager>, Manageable
 
 
 }
+#endif

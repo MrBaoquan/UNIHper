@@ -1,3 +1,4 @@
+#if NET_4_6
 using System.Text;
 using System;
 using System.Collections.Generic;
@@ -110,3 +111,5 @@ public class USerialPort
 
 
 }
+
+#endif

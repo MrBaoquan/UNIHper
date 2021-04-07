@@ -1,3 +1,4 @@
+#if NET_4_6
 using System.Threading;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -44,3 +45,4 @@ public abstract class USPMsgReceiver
 
 
 }
+#endif
