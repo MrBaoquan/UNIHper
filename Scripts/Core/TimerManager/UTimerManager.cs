@@ -16,10 +16,10 @@ public class UTimerManager : Singleton<UTimerManager>, Manageable {
     public void Uninitialize () { }
 
     public IDisposable SetTimeout (Action InHandler, float InTime) {
-        return SetTimeout (InTime, InHandler);
+        return SetTimeout (InHandler, InTime);
     }
 
-    public IDisposable SetTimeout (float InDuration, Action OnCompleted = null, Action<float> OnUpdate = null, float InInterval = 0.05f) {
+    public IDisposable SetTimeout (Action OnCompleted, Action<float> OnUpdate, float InDuration, float InInterval = 0.05f) {
         float _startTime = Time.time;
         IDisposable _timerHandler = null;
         _timerHandler = Observable.Interval (TimeSpan.FromSeconds (InInterval)).Where ((_1, _2) => {

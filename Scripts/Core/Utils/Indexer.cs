@@ -3,17 +3,39 @@ using UnityEngine;
 namespace UNIHper {
 
     /// <summary>
-    /// 数组索引迭代器
+    /// 数组索引迭代器 迭代范围 [Min,Max)
     /// </summary>
     public class Indexer {
         private int maxIndex;
-        private int current;
+        private int minIndex = 0;
+        private int current = 0;
         public int Current {
             get { return current; }
         }
 
-        public Indexer (int Size) {
-            maxIndex = Size;
+        public Indexer (int Max) {
+            SetMax (Max);
+        }
+
+        public Indexer (int Min, int Max) {
+            SetMin (Min);
+            SetMax (Max);
+        }
+
+        /// <summary>
+        /// 设置索引最大值
+        /// </summary>
+        /// <param name="Max">索引最大值</param>
+        public void SetMax (int Max) {
+            maxIndex = Max;
+        }
+
+        /// <summary>
+        /// 设置索引最小值
+        /// </summary>
+        /// <param name="Min">索引最小值</param>
+        public void SetMin (int Min) {
+            minIndex = Min;
         }
 
         /// <summary>
