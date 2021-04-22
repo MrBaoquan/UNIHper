@@ -18,6 +18,24 @@
 - Rx.net
 - Google.Protobuf
 
+## 安装
+
+1. 下载插件包
+
+```bash
+# clone into your Assets directory
+git clone https://github.com/MrBaoquan/UNIHper.git
+```
+
+2. 初始化项目
+
+   - 菜单栏: UNIHper ==> Initialize
+
+3. 开始开发
+   - 创建 UI 脚本 UNIHper ==> Create ==> UIScript
+   - 创建场景脚本 UNIHper ==> Create ==> SceneScript
+   - 创建配置文件脚本 UNIHper ==> Create ==> ConfigScript
+
 ## Examples
 
 ### 场景管理
@@ -63,6 +81,26 @@ Managements.UI.Show<IdleUI>(_idleUI=>{
     // ...
 });
 Managements.UI.Hide<IdleUI>();
+```
+
+```c#
+// IdleUI.cs
+void Start()
+{
+
+    // button clicked event
+    this.Get<Button>("btn_start")
+        .OnClickAsObservable()
+        .Subscribe(_=>{
+            // Handle start game action ...
+        });
+
+    // replace sprite example
+    var _imageBG = this.Get<Image>("img_background");
+    _imageBG.sprite = Managements.Resource.Get<Sprite>("background");
+}
+
+
 ```
 
 ### 网络管理
