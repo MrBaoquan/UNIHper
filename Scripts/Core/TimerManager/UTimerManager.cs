@@ -69,25 +69,30 @@ public class UTimerManager : Singleton<UTimerManager>, Manageable {
     /// <param name="InCallback"></param>   主动调用后: 计时器清零, 计时器大于InTime时，回调一次, 计时器重新计时
     /// <returns></returns>
     public Action Debounce (float InTime, Action InCallback) {
+
         IDisposable _timerHandler = null;
         float _lastCallTime = Time.time;
         Func<long, bool> _condition = _ => {
             return (Time.time - _lastCallTime) >= InTime;
         };
 
-        _timerHandler = Observable.EveryUpdate ()
-            .Where (_condition)
-            .Subscribe (_ => {
-                _lastCallTime = Time.time;
-                if (_timerHandler != null) {
-                    _timerHandler.Dispose ();
+        Action _registerTrigger = () => {
+            _timerHandler = Observable.EveryUpdate ()
+                .Where (_condition)
+                .First ()
+                .Subscribe (_ => {
+                    _lastCallTime = Time.time;
                     _timerHandler = null;
-                }
-                InCallback ();
-            });
-        return () => {
-            _lastCallTime = Time.time;
+                    InCallback ();
+                });
         };
+
+        Action _debounceDelegate = () => {
+            _lastCallTime = Time.time;
+            if (_timerHandler == null) _registerTrigger ();
+        };
+        _debounceDelegate ();
+        return _debounceDelegate;
     }
 
     public void NextFrame (Action InAction) {
