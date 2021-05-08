@@ -86,7 +86,7 @@ namespace UNIHper {
         /// <param name="Width"></param>
         /// <param name="Height"></param>
         /// <param name="bAutoRender">是否自动渲染到 RawImage 组件</param>
-        public void BuildRender (int Width = -1, int Height = -1, bool bAutoRender = true) {
+        public UVideoPlayer BuildRender (int Width = -1, int Height = -1, bool bAutoRender = true) {
             RectTransform rectTransform = this.transform as RectTransform;
             if (rectTransform) { // 如果是UI组件 则渲染为UI组件的尺寸
                 if (Width == -1) Width = (int) rectTransform.rect.width;
@@ -107,6 +107,7 @@ namespace UNIHper {
             }
 
             Render2Texture (_videoRT);
+            return this;
         }
 
         public void Render2Texture (RenderTexture InTexture) {
@@ -210,9 +211,7 @@ namespace UNIHper {
                 videoPlayer.Pause ();
                 this.realPlay (OnReachEndHandler, loop, StartTime, InEndTime);
             } else if (!videoPlayer.isPrepared) {
-                Debug.Log ("Start prepare");
                 this.Prepare (_ => {
-                    Debug.LogWarning ("Prepare completed...");
                     this.realPlay (OnReachEndHandler, loop, StartTime, InEndTime);
                 });
             } else {
