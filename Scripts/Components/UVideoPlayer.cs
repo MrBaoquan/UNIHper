@@ -95,15 +95,14 @@ namespace UNIHper {
                 if (Width == -1) Width = Screen.width;
                 if (Height == -1) Height = Screen.height;
             }
-
             RenderTexture _videoRT = new RenderTexture (Width, Height, 0, RenderTextureFormat.ARGB32);
 
             if (bAutoRender) {
                 var _renderer = this.GetComponent<RawImage> ();
                 if (!_renderer) {
                     _renderer = this.AddComponent<RawImage> ();
-                    _renderer.texture = _videoRT;
                 }
+                _renderer.texture = _videoRT;
             }
 
             Render2Texture (_videoRT);
@@ -208,13 +207,16 @@ namespace UNIHper {
 
         public void Play (VideoPlayer.EventHandler OnReachEndHandler = null, int loop = -1, float StartTime = 0, float InEndTime = 0) {
             if (videoPlayer.isPlaying) {
+                Debug.Log (1);
                 videoPlayer.Pause ();
                 this.realPlay (OnReachEndHandler, loop, StartTime, InEndTime);
             } else if (!videoPlayer.isPrepared) {
+                Debug.Log (2);
                 this.Prepare (_ => {
                     this.realPlay (OnReachEndHandler, loop, StartTime, InEndTime);
                 });
             } else {
+                Debug.Log (3);
                 this.realPlay (OnReachEndHandler, loop, StartTime, InEndTime);
             }
         }
@@ -297,12 +299,13 @@ namespace UNIHper {
             });
         }
 
-        public void Prepare (string InUrl, VideoPlayer.EventHandler OnPrepared = null) {
+        public void Prepare (string InUrl, VideoPlayer.EventHandler OnPrepared = null, VideoPlayer.EventHandler OnTimeReady = null) {
             videoPlayer.url = InUrl;
             this.Prepare (_ => {
-                this.SeekTo (0f, OnPrepared);
+                this.SeekTo (0f, OnPrepared, OnTimeReady);
             });
         }
+
         public void Prepare (VideoPlayer.EventHandler OnPrepared = null) {
             if (videoPlayer == null) {
                 Debug.LogWarning ("UVP: null reference of videoPlayer");
@@ -339,6 +342,14 @@ namespace UNIHper {
         private bool timeGreaterThan (double InTime) {
             return videoPlayer.time >= InTime;
         }
+
+        /// <summary>
+        /// seek 
+        /// </summary>
+        /// <param name="InTime"></param>
+        /// <param name="InSeekedHandler">原生组件seek完成事件</param>
+        /// <param name="InTimeReadyHandler">真正的时间完成事件(原生事件触发时，获取时间并不是设置的时间)</param>
+        /// <param name="AutoPlay"></param>
         public void SeekTo (double InTime, VideoPlayer.EventHandler InSeekedHandler = null, VideoPlayer.EventHandler InTimeReadyHandler = null, bool AutoPlay = false) {
             clearSeekCompltedHandler ();
             clearSeekTimer ();
