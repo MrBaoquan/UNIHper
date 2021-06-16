@@ -11,12 +11,13 @@ namespace UNIHper {
         /// <summary>
         /// 下载速度
         /// </summary>
-        public float DownloadSpeed = 0.0f;
+        public int DownloadSpeed = 0;
         /// <summary>
         /// 实时下载进度
         /// </summary>
         public float DownloadProgress = 0.0f;
 
+        public ulong FileSize = 0;
         public ulong DownloadedBytes = 0;
         public bool isDone = false;
     }
@@ -41,43 +42,66 @@ namespace UNIHper {
             return Observable.FromCoroutine<HttpResponse> ((observer, cancellationToken) => GetCore (url, true, observer, cancellationToken));
         }
 
-        // IObserver is a callback publisher
+        ///
+        /// 注意: 在安卓平台有内存限制，不能下载大文件      TODO: 大文件支持
         // Note: IObserver's basic scheme is "OnNext* (OnError | Oncompleted)?" 
         static IEnumerator GetCore (string url, bool updateSpeed, IObserver<HttpResponse> observer, CancellationToken cancellationToken) {
+            UnityWebRequest webRequest = UnityWebRequest.Get (url);
+            //yield return webRequest.SendWebRequest ();
+            var _requestAction = webRequest.SendWebRequest ();
+            // 开始下载时间
+            float _startTime = Time.time;
+            // 上一次下载字节数
+            ulong _lastDownloadedBytes = 0;
 
-            using (UnityWebRequest webRequest = UnityWebRequest.Get (url)) {
-                //yield return webRequest.SendWebRequest ();
-                var _requestAction = webRequest.SendWebRequest ();
-                // 开始下载时间
-                float _startTime = Time.time;
-                // 上一次更新时间
-                float _lastUpdateTime = Time.time;
-                // 上一次下载字节数
-                ulong _lastDownloadedBytes = 0;
-                IDisposable _updateHandler = null;
-                if (updateSpeed) {
-                    _updateHandler = Observable.Interval (TimeSpan.FromMilliseconds (100)).Subscribe (_ => {
-                        float _delta = Time.time - _lastUpdateTime;
-                        if (_delta <= 0) return;
-                        float _speed = ((webRequest.downloadedBytes - _lastDownloadedBytes) / _delta) / 1024.0f / 1024.0f;
+            float _lastSpeedTime = Time.time;
+            float _lastSpeed = 0;
+
+            IDisposable _updateHandler = null;
+            if (updateSpeed) {
+
+                _updateHandler = Observable.Interval (TimeSpan.FromMilliseconds (100)).Subscribe (_ => {
+                    if (cancellationToken.IsCancellationRequested) {
+                        _updateHandler.Dispose ();
+                        webRequest.Dispose ();
+                        webRequest = null;
+                        return;
+                    }
+
+                    var _fileSize = webRequest.GetResponseHeader ("Content-Length");
+                    if (_fileSize == null) return;
+
+                    var _speedDelta = Time.time - _lastSpeedTime;
+                    if (_speedDelta <= 0) return;
+
+                    float _speed = _speedDelta >= 1.0 ?
+                        ((webRequest.downloadedBytes - _lastDownloadedBytes) / _speedDelta) :
+                        _lastSpeed;
+                    if (_speed != _lastSpeed) {
                         _lastDownloadedBytes = webRequest.downloadedBytes;
-                        _lastUpdateTime = Time.time;
-                        observer.OnNext (new HttpResponse {
-                            DownloadProgress = webRequest.downloadProgress,
-                                WebRequest = webRequest,
-                                DownloadSpeed = _speed,
-                                DownloadedBytes = webRequest.downloadedBytes,
-                                isDone = webRequest.isDone
-                        });
+                        _lastSpeedTime = Time.time;
+                        _lastSpeed = _speed;
+                    }
+
+                    observer.OnNext (new HttpResponse {
+                        DownloadProgress = webRequest.downloadProgress,
+                            WebRequest = webRequest,
+                            DownloadSpeed = Mathf.CeilToInt (_speed),
+                            FileSize = (ulong) _fileSize.Parse2Int (),
+                            DownloadedBytes = webRequest.downloadedBytes,
+                            isDone = webRequest.isDone
                     });
+                });
 
-                }
+            }
 
-                // Request and wait for the desired page.
-                yield return _requestAction;
-                if (updateSpeed)
-                    _updateHandler.Dispose ();
+            // Request and wait for the desired page.
+            yield return _requestAction;
 
+            if (updateSpeed && _updateHandler != null)
+                _updateHandler.Dispose ();
+
+            if (webRequest != null) {
                 string[] pages = url.Split ('/');
                 int page = pages.Length - 1;
 
@@ -90,17 +114,21 @@ namespace UNIHper {
                         observer.OnError (new Exception (pages[page] + ": HTTP Error: " + webRequest.error));
                         break;
                     case UnityWebRequest.Result.Success:
+                        var _fileSize = webRequest.GetResponseHeader ("Content-Length");
                         observer.OnNext (new HttpResponse {
                             DownloadProgress = webRequest.downloadProgress,
                                 WebRequest = webRequest,
-                                DownloadSpeed = webRequest.downloadedBytes / (Time.time - _startTime) / 1024.0f / 1024.0f, // 下载平均速度
+                                DownloadSpeed = Mathf.CeilToInt (webRequest.downloadedBytes / (Time.time - _startTime)), // 下载平均速度
                                 DownloadedBytes = webRequest.downloadedBytes,
+                                FileSize = (ulong) _fileSize.Parse2Int (),
                                 isDone = webRequest.isDone
                         });
                         observer.OnCompleted ();
                         break;
                 }
+                webRequest.Dispose ();
             }
+
         }
     }
 
