@@ -199,11 +199,50 @@ public class UScrollView : MonoBehaviour
     }
 
     public Action<RectTransform> OnRetarget = null;
+
+
+    /// 事件穿透
+    // private void PassEvent<T>(PointerEventData data, ExecuteEvents.EventFunction<T> function) where T : IEventSystemHandler
+    // {
+    //     var results = new List<RaycastResult>();
+    //     EventSystem.current.RaycastAll(data, results);
+    //     var current = data.pointerCurrentRaycast.gameObject;
+    //     for (int i = 0; i < results.Count; i++)
+    //     {
+    //         //判断穿透对象是否是需要要点击的对象
+    //         if (results[i].gameObject.name=="Scroll View")
+    //         {
+    //             ExecuteEvents.Execute(results[i].gameObject, data, function);
+    //         }
+    //     }
+    // }
+
     void Start()
     {
-        IDisposable _stopHandler = null;
-        scrollRect.OnEndDragAsObservable().Subscribe(_=>{
 
+        // 如果字元素阻挡了ScrollView  则需要进行事件穿透 
+        IDisposable _stopHandler = null;
+        scrollRect.OnPointerDownAsObservable().Subscribe(_=>{
+            if(_stopHandler!=null){
+                _stopHandler.Dispose();
+                _stopHandler = null;
+            }
+            scrollRect.StopMovement();
+            _stopHandler = Managements.Timer.SetTimeout(0.3f,()=>{
+                var _rectTransform = ClosetCenterItem() as RectTransform;
+                ScrollTo(_rectTransform.GetSiblingIndex());
+                _stopHandler = null;
+            });
+        });
+
+        scrollRect.OnBeginDragAsObservable().Subscribe(_=>{
+            if(_stopHandler!=null){
+                _stopHandler.Dispose();
+                _stopHandler=null;
+            }
+        });
+        
+        scrollRect.OnEndDragAsObservable().Subscribe(_=>{
             if(_stopHandler!=null) _stopHandler.Dispose();
             _stopHandler = Observable.EveryUpdate().Where(_1=>Mathf.Abs(scrollRect.velocity.x)<=1000f).Subscribe(_2=>{
                 var _rectTransform = ClosetCenterItem() as RectTransform;
@@ -211,19 +250,6 @@ public class UScrollView : MonoBehaviour
                 _stopHandler.Dispose();
                 _stopHandler = null;
             });
-            
-            
-
-            
-            // float _normalizedPosition = scrollRect.GetItemNormallizedPosition(_rectTransform);
-
-            // DOTween.To(()=>scrollRect.horizontalNormalizedPosition,_2=>{
-            //     scrollRect.horizontalNormalizedPosition = _2;
-            // },_normalizedPosition,0.15f).OnComplete(()=>{
-            //     if(OnRetarget!=null){
-            //         OnRetarget(_rectTransform);
-            //     }
-            // });
 
         });   
     }
