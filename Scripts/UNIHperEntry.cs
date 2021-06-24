@@ -6,7 +6,7 @@ using UniRx;
 using UnityEngine;
 
 /*
- * File: UHelperEntry.cs
+ * File: UNIHperEntry.cs
  * File Created: 2019-10-11 08:50:03
  * Author: MrBaoquan (mrma617@gmail.com)
  * -----
@@ -28,7 +28,7 @@ namespace UNIHper {
 
             ULog.Initialize ();
 
-            GameObject _utilGO = new GameObject ("UHelperUtils");
+            GameObject _utilGO = new GameObject ("UNIHperUtils");
             _utilGO.transform.parent = this.transform;
             _utilGO.AddComponent (typeof (MonobehaviourUtil));
 
@@ -55,9 +55,8 @@ namespace UNIHper {
         }
 
         private void Initialize () {
+            var appConfig = Managements.Config.Get<AppConfig> ();
 #if UNITY_STANDALONE_WIN && !UNITY_EDITOR
-            appConfig = Managements.Config.Get<AppConfig> ();
-            activeAllDisplays ();
             bool _fullScreen = (
                     appConfig.PrimaryScreen.Mode == FullScreenMode.ExclusiveFullScreen ||
                     appConfig.PrimaryScreen.Mode == FullScreenMode.FullScreenWindow) ?
@@ -66,9 +65,12 @@ namespace UNIHper {
             Debug.LogFormat ("set fullScreen:{0}, width:{1}, height:{2}",
                 _fullScreen, appConfig.PrimaryScreen.Width, appConfig.PrimaryScreen.Height);
 
+            if (_fullScreen) {
+                activeAllDisplays ();
+            }
+
             KeepWindowTop ();
 #endif
-
         }
 
         private void activeAllDisplays () {

@@ -23,7 +23,7 @@ namespace UNIHper {
         /// 视频连接地址 如果是相对路径 则相对于 Application.StreamingAssetsPath
         /// </summary>
         public string videoUrl = string.Empty;
-        public bool looping = false;
+        private bool looping = false;
         public bool Looping {
             set {
                 looping = value;

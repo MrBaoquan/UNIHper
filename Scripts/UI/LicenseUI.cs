@@ -1,12 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using UNIHper;
-using UHelper;
+﻿using UHelper;
 using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
+using UNIHper;
 
 public class LicenseUI : UIBase {
     const string machineNumber_key = "machine_key";

@@ -45,21 +45,21 @@ namespace UNIHper {
             Component[] _objs = FindObjectsOfType (Type.GetType ("UNIHper.UNIHperEntry, UNIHper, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")) as Component[];
             if (_objs.Length > 1) {
                 _objs.Skip (1)
-                    .Select (_uhelper => _uhelper.gameObject)
+                    .Select (_UNIHper => _UNIHper.gameObject)
                     .ToList ()
-                    .ForEach (_uhelperGO => {
-                        Debug.Log ("Destory UHelperEntry: " + _uhelperGO.name);
-                        DestroyImmediate (_uhelperGO, true);
+                    .ForEach (_UNIHperGO => {
+                        Debug.Log ("Destory UNIHperEntry: " + _UNIHperGO.name);
+                        DestroyImmediate (_UNIHperGO, true);
                     });
             } else if (_objs.Length <= 0) {
-                string _uhelperPrefabPath = @"Assets\UNIHper\Resources\Prefabs\UNIHper.prefab";
-                UnityEngine.Object _uhelperPrefab = AssetDatabase.LoadAssetAtPath (_uhelperPrefabPath, typeof (GameObject));
-                GameObject _newUHelper = PrefabUtility.InstantiatePrefab (_uhelperPrefab) as GameObject;
-                _newUHelper.name = "__UNIHper";
+                string _UNIHperPrefabPath = @"Assets\UNIHper\Resources\Prefabs\UNIHper.prefab";
+                UnityEngine.Object _UNIHperPrefab = AssetDatabase.LoadAssetAtPath (_UNIHperPrefabPath, typeof (GameObject));
+                GameObject _newUNIHper = PrefabUtility.InstantiatePrefab (_UNIHperPrefab) as GameObject;
+                _newUNIHper.name = "__UNIHper";
             }
 
             // 2.   复制 配置文件
-            string _uhelperConfigPath = Application.dataPath + "/UNIHper/Resources/Configs";
+            string _UNIHperConfigPath = Application.dataPath + "/UNIHper/Resources/Configs";
             string _customConfigPath = Application.dataPath + "/Resources/UNIHper";
             string _textTemplatePath = Application.dataPath + "/UNIHper/Editor/Templates";
 
@@ -69,12 +69,12 @@ namespace UNIHper {
 
             string _dstResPath = Path.Combine (_customConfigPath, "resources.json");
             if (!File.Exists (_dstResPath)) {
-                File.Copy (Path.Combine (_uhelperConfigPath, "res.json"), _dstResPath);
+                File.Copy (Path.Combine (_UNIHperConfigPath, "res.json"), _dstResPath);
             }
 
             string _dstUIPath = Path.Combine (_customConfigPath, "uis.json");
             if (!File.Exists (_dstUIPath)) {
-                File.Copy (Path.Combine (_uhelperConfigPath, "ui.json"), _dstUIPath);
+                File.Copy (Path.Combine (_UNIHperConfigPath, "ui.json"), _dstUIPath);
             }
 
             string _dstAssembliesConfigPath = Path.Combine (_customConfigPath, "assemblies.json");
@@ -107,7 +107,7 @@ namespace UNIHper {
             AssetDatabase.Refresh ();
             Debug.Log ("UNIHper framework initalize successful.");
             //AssetDatabase.LoadAssetAtPath()
-            //MonoScript _uhelperScript = MonoScript.FromMonoBehaviour(UNIHper.UHelperEntry);
+            //MonoScript _UNIHperScript = MonoScript.FromMonoBehaviour(UNIHper.UNIHperEntry);
         }
     }
 

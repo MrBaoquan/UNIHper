@@ -1,27 +1,17 @@
 using System.IO;
-using UnityEngine;
 using UnityEditor;
 using UnityEditor.Callbacks;
+using UnityEngine;
 
-namespace UNIHper
-{
-    
+namespace UNIHper {
 
-public class BuildUHelper
-{
+    public class BuildUNIHper {
 
-    [PostProcessBuildAttribute(1)]
-    public static void OnPostprocessBuild(BuildTarget target, string pathToBuildProject)
-    {   
+        [PostProcessBuildAttribute (1)]
+        public static void OnPostprocessBuild (BuildTarget target, string pathToBuildProject) {
+
+        }
 
     }
-
-    
-
-
-
-}
-
-
 
 }
