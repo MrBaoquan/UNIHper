@@ -63,7 +63,6 @@ namespace UNIHper {
 
             playHandlers.Add (OnFinishedSeekingAsObservable ().Subscribe (_ => {
                 MediaPlayer.Play ();
-                Debug.Log ("Seek Completed");
                 bool _bFinished = false;
                 var _duration = mediaPlayer.Info.GetDuration ();
                 EndTime = EndTime == 0 ? _duration : EndTime;
