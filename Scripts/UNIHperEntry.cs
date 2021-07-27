@@ -65,10 +65,7 @@ namespace UNIHper {
             Debug.LogFormat ("set fullScreen:{0}, width:{1}, height:{2}",
                 _fullScreen, appConfig.PrimaryScreen.Width, appConfig.PrimaryScreen.Height);
 
-            if (_fullScreen) {
-                activeAllDisplays ();
-            }
-
+            activeAllDisplays ();
             KeepWindowTop ();
 #endif
         }
@@ -84,8 +81,12 @@ namespace UNIHper {
             int _index = 0;
             _config.Displays.ForEach (_display => {
                 if (_index >= Display.displays.Length) return;
-                Display.displays[_index].Activate ();
-                Display.displays[_index].SetRenderingResolution (_config.Displays[_index].Width, _config.Displays[_index].Height);
+                var _displayConfig = _config.Displays[_index];
+
+                if (_displayConfig.Activate) {
+                    Display.displays[_index].Activate ();
+                    Display.displays[_index].SetParams (_displayConfig.Width, _displayConfig.Height, _displayConfig.PosX, _displayConfig.PosY);
+                }
                 _index++;
             });
         }
@@ -102,21 +103,30 @@ namespace UNIHper {
             if (_config.KeepWindowTop.Interval <= 0) return;
 
             var _window = WinAPI.CurrentWindow ();
+            Action _syncWindowSettings = () => {
+                if (_config.KeepWindowTop.SetWindowLong) {
+                    WinAPI.SetWindowLong (_window,
+                        (int) _config.KeepWindowTop.SetWindowLongFunction.Index,
+                        _config.KeepWindowTop.SetWindowLongFunction.NewValue
+                    );
+                }
+
+                if (_config.KeepWindowTop.SetWindowPos) {
+                    WinAPI.SetWindowPos (_window,
+                        (int) _config.KeepWindowTop.SetWindowPosFunction.HWndInsertAfter,
+                        (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.x,
+                        (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.y,
+                        (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.z,
+                        (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.w,
+                        _config.KeepWindowTop.SetWindowPosFunction.SWPFlags.Aggregate ((_flags, _current) => _flags | _current)
+                    );
+                }
+            };
+
+            _syncWindowSettings ();
             Observable.Interval (TimeSpan.FromSeconds (_config.KeepWindowTop.Interval))
                 .Subscribe (_ => {
-                    if (_config.KeepWindowTop.SetWindowPos)
-                        WinAPI.SetWindowPos (_window,
-                            (int) _config.KeepWindowTop.SetWindowPosFunction.HWndInsertAfter,
-                            (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.x,
-                            (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.y,
-                            (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.z,
-                            (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.w,
-                            _config.KeepWindowTop.SetWindowPosFunction.SWPFlags.Aggregate ((_flags, _current) => _flags | _current)
-                        );
-                    if (_config.KeepWindowTop.ShowWindow)
-                        WinAPI.ShowWindow (_window, 3);
-                    if (_config.KeepWindowTop.SetForegroundWindow)
-                        WinAPI.SetForegroundWindow (_window);
+                    _syncWindowSettings ();
                 });
         }
 
