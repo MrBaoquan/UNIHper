@@ -43,6 +43,12 @@ namespace UNIHper {
             }
         }
 
+        public bool Ready2Play {
+            get {
+                return MediaPlayer.Control != null;
+            }
+        }
+
         private List<IDisposable> playHandlers = new List<IDisposable> ();
         /// <summary>
         /// 播放指定地址的视频  可为网络地址 或者本地地址
@@ -52,55 +58,81 @@ namespace UNIHper {
         /// <param name="bLoop">是否循环</param>
         /// <param name="StartTime">开始时间</param>
         /// <param name="EndTime">结束时间</param>
+        IDisposable _readyHandler = null;
         public void Play (string InUrl, Action<UAVProPlayer> OnFinished, bool bLoop, double StartTime = 0, double EndTime = 0) {
             disposeHandlers (playHandlers);
+            if (_readyHandler != null) {
+                _readyHandler.Dispose ();
+                _readyHandler = null;
+            }
 
-            if (MediaPlayer.MediaPath.Path != InUrl || MediaPlayer.Control == null)
-                MediaPlayer.OpenMedia (MediaPathType.AbsolutePathOrURL, InUrl, false);
+            Action _registerFinishedSeekingEvent = () => {
 
-            MediaPlayer.Control.Seek (StartTime);
-            MediaPlayer.Loop = bLoop;
+                playHandlers.Add (OnFinishedSeekingAsObservable ().Subscribe (_ => {
+                    MediaPlayer.Play ();
+                    bool _bFinished = false;
+                    var _duration = mediaPlayer.Info.GetDuration ();
+                    EndTime = EndTime == 0 ? _duration : EndTime;
 
-            playHandlers.Add (OnFinishedSeekingAsObservable ().Subscribe (_ => {
-                MediaPlayer.Play ();
-                bool _bFinished = false;
-                var _duration = mediaPlayer.Info.GetDuration ();
-                EndTime = EndTime == 0 ? _duration : EndTime;
+                    var _startTime = Mathf.Clamp ((float) StartTime, 0, (float) _duration);
+                    var _endTime = Mathf.Clamp ((float) EndTime, _startTime, (float) _duration);
 
-                var _startTime = Mathf.Clamp ((float) StartTime, 0, (float) _duration);
-                var _endTime = Mathf.Clamp ((float) EndTime, _startTime, (float) _duration);
+                    // 播放结束回调
+                    Action _onFinished = () => {
+                        if (_bFinished) return;
 
-                // 播放结束回调
-                Action _onFinished = () => {
-                    if (_bFinished) return;
+                        _bFinished = true;
+                        if (OnFinished != null) OnFinished (this);
+                        MediaPlayer.Pause ();
 
-                    _bFinished = true;
-                    if (OnFinished != null) OnFinished (this);
-                    MediaPlayer.Pause ();
+                        if (bLoop) {
+                            MediaPlayer.Control.Seek (StartTime);
+                        } else {
+                            disposeHandlers (playHandlers);
+                        }
+                    };
 
-                    if (bLoop) {
-                        MediaPlayer.Control.Seek (StartTime);
-                    } else {
-                        disposeHandlers (playHandlers);
-                    }
-                };
+                    // 正常播放时间大于指定结束时间
+                    playHandlers.Add (Observable.EveryUpdate ()
+                        .Where (_1 => MediaPlayer.Control.GetCurrentTime () >= EndTime)
+                        .First ()
+                        .Subscribe (_1 => {
+                            _onFinished ();
+                            //Debug.LogFormat ("UVA: reach end point c1: {0}", MediaPlayer.Control.GetCurrentTime ());
+                        }));
 
-                // 正常播放时间大于指定结束时间
-                playHandlers.Add (Observable.EveryUpdate ()
-                    .Where (_1 => MediaPlayer.Control.GetCurrentTime () >= EndTime)
-                    .First ()
-                    .Subscribe (_1 => {
+                    // 视频到达结尾
+                    playHandlers.Add (OnFinishedPlayingAsObservable ().Subscribe (_1 => {
+                        //Debug.LogFormat ("UVA: reach end point  c2: {0}", MediaPlayer.Control.GetCurrentTime ());
                         _onFinished ();
-                        //Debug.LogFormat ("UVA: reach end point c1: {0}", MediaPlayer.Control.GetCurrentTime ());
                     }));
 
-                // 视频到达结尾
-                playHandlers.Add (OnFinishedPlayingAsObservable ().Subscribe (_1 => {
-                    //Debug.LogFormat ("UVA: reach end point  c2: {0}", MediaPlayer.Control.GetCurrentTime ());
-                    _onFinished ();
                 }));
 
-            }));
+            };
+
+            MediaPlayer.Loop = bLoop;
+            if (MediaPlayer.MediaPath.Path != InUrl || MediaPlayer.Control == null) {
+                _readyHandler = OnFirstFrameReadyAsObservable ()
+                    .Subscribe (_ => {
+                        _registerFinishedSeekingEvent ();
+                        _readyHandler.Dispose ();
+                        _readyHandler = null;
+                        MediaPlayer.Control.Seek (StartTime);
+                    });
+                MediaPlayer.OpenMedia (MediaPathType.AbsolutePathOrURL, InUrl, false);
+            } else {
+                _registerFinishedSeekingEvent ();
+                MediaPlayer.Control.Seek (StartTime);
+            }
+        }
+
+        public void Seek (double InTime) {
+            if (!Ready2Play) {
+                return;
+            }
+
+            MediaPlayer.Control.Seek (InTime);
         }
 
         private void disposeHandlers (List<IDisposable> InHandlers) {
@@ -175,6 +207,7 @@ namespace UNIHper {
         // 注册所有播放器相关事件
         private void registerAllEvents () {
             MediaPlayer.Events.AddListener ((_media, _type, err) => {
+                // Debug.LogWarningFormat ("new event: {0}", _type);
                 switch (_type) {
                     case MediaPlayerEvent.EventType.MetaDataReady: // Triggered when meta data(width, duration etc) is available
                         OnMetaDataReady.Invoke (_media);
