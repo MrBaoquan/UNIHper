@@ -1,98 +1,90 @@
-using System.IO;
-using UnityEngine;
 using System;
+using System.IO;
+using DNHper;
+using UnityEngine;
 
+namespace UNIHper {
 
-namespace UNIHper
-{
-    
-public static class ULog
-{
-    const string configName = "NLog.config.xml";
-    const string logFileName = "${shortdate}.log";
-    
-    static string LogFileDir{
-        get{
-            return Path.Combine(Directory.GetParent(Application.dataPath).FullName,"Logs");
+    public static class ULog {
+        const string configName = "NLog.config.xml";
+        const string logFileName = "${shortdate}.log";
+
+        static string LogFileDir {
+            get {
+                return Path.Combine (Directory.GetParent (Application.dataPath).FullName, "Logs");
+            }
         }
-    }
-    static string LogFilePath {
-        get{
-            return Path.Combine(LogFileDir, logFileName);
+        static string LogFilePath {
+            get {
+                return Path.Combine (LogFileDir, logFileName);
+            }
         }
-    }
 
-    public static void Debug(string InMessage){   
+        public static void Debug (string InMessage) {
 #if UNITY_EDITOR
-        UnityEngine.Debug.Log(InMessage);
+            UnityEngine.Debug.Log (InMessage);
 #endif
-        NLogger.Debug(InMessage);
-    }
+            NLogger.Debug (InMessage);
+        }
 
-    public static void Debug(object InMessage){
+        public static void Debug (object InMessage) {
 #if UNITY_EDITOR
-        UnityEngine.Debug.Log(InMessage);
+            UnityEngine.Debug.Log (InMessage);
 #endif
-        NLogger.Debug(InMessage);
-    }
+            NLogger.Debug (InMessage);
+        }
 
-    public static void Debug(string InFormat, params object[] InParams)
-    {
+        public static void Debug (string InFormat, params object[] InParams) {
 #if UNITY_EDITOR
-        UnityEngine.Debug.LogFormat(InFormat, InParams);
+            UnityEngine.Debug.LogFormat (InFormat, InParams);
 #endif
-        NLogger.Debug(InFormat, InParams);
-    }
+            NLogger.Debug (InFormat, InParams);
+        }
 
-    public static void Warning(string InMessage){   
+        public static void Warning (string InMessage) {
 #if UNITY_EDITOR
-        UnityEngine.Debug.LogWarning(InMessage);
+            UnityEngine.Debug.LogWarning (InMessage);
 #endif
-        NLogger.Warn(InMessage);
-    }
+            NLogger.Warn (InMessage);
+        }
 
-    public static void Warning(string InFormat, params object[] InParams){   
+        public static void Warning (string InFormat, params object[] InParams) {
 #if UNITY_EDITOR
-        UnityEngine.Debug.LogWarningFormat(InFormat, InParams);
+            UnityEngine.Debug.LogWarningFormat (InFormat, InParams);
 #endif
-        NLogger.Warn(InFormat, InParams);
-    }
+            NLogger.Warn (InFormat, InParams);
+        }
 
-    public static void Error(string InMessage){   
+        public static void Error (string InMessage) {
 #if UNITY_EDITOR
-        UnityEngine.Debug.LogError(InMessage);
+            UnityEngine.Debug.LogError (InMessage);
 #endif
-        NLogger.Error(InMessage);
-    }
+            NLogger.Error (InMessage);
+        }
 
-    public static void Error(string InFormat, params object[] InParams){   
+        public static void Error (string InFormat, params object[] InParams) {
 #if UNITY_EDITOR
-        UnityEngine.Debug.LogErrorFormat(InFormat, InParams);
+            UnityEngine.Debug.LogErrorFormat (InFormat, InParams);
 #endif
-        NLogger.Error(InFormat, InParams);
-    }
+            NLogger.Error (InFormat, InParams);
+        }
 
-    public static void Error(Exception InEx, string InMessage=""){   
+        public static void Error (Exception InEx, string InMessage = "") {
 #if UNITY_EDITOR
-        UnityEngine.Debug.LogError(InMessage);
+            UnityEngine.Debug.LogError (InMessage);
 #endif
-        NLogger.Error(InEx, InMessage);
+            NLogger.Error (InEx, InMessage);
+        }
+
+        public static void Initialize () {
+            NLogger.LogFileDir = LogFileDir;
+            NLogger.Initialize ();
+        }
+
+        public static void Uninitialize () {
+            NLogger.Uninitialize ();
+        }
+
     }
-
-    
-
-    public static void Initialize()
-    {
-        NLogger.LogFileDir = LogFileDir;
-        NLogger.Initialize();
-    }
-
-    public static void Uninitialize()
-    {
-        NLogger.Uninitialize();
-    }
-
-}
-
 
 }

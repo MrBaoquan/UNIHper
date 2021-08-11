@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using DNHper;
 using UniRx;
 using UnityEngine;
+
 namespace UNIHper {
 
     public class UAudioManager : SingletonBehaviour<UAudioManager> {
