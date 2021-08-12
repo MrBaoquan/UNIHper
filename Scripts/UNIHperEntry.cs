@@ -108,7 +108,7 @@ namespace UNIHper {
                 if (_config.KeepWindowTop.SetWindowLong) {
                     WinAPI.SetWindowLong (_window,
                         (int) _config.KeepWindowTop.SetWindowLongFunction.Index,
-                        _config.KeepWindowTop.SetWindowLongFunction.NewValue
+                        (UInt32) _config.KeepWindowTop.SetWindowLongFunction.NewValue
                     );
                 }
 
