@@ -1,0 +1,3 @@
+[submodule "Plugins/DNHper"]
+	path = Plugins/DNHper
+	url = https://github.com/mrbaoquan/dnhper
