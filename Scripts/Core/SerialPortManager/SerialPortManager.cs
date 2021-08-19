@@ -24,6 +24,11 @@ namespace UNIHper {
             return _newSerialPort;
         }
 
+        public void Send (string InPortName, byte[] InData) {
+            if (!serialPorts.ContainsKey (InPortName)) { return; }
+            serialPorts[InPortName].Write (InData);
+        }
+
         public void Initialize () { }
         public void Uninitialize () { }
 
