@@ -25,7 +25,11 @@ namespace UNIHper {
     public class SetWindowPos {
         public HWndInsertAfter HWndInsertAfter = HWndInsertAfter.HWND_TOPMOST;
         public Vector4 SWP_Rect = new Vector4 (0, 0, 1920, 1080);
-        public List<SetWindowPosFlags> SWPFlags = new List<SetWindowPosFlags> () { SetWindowPosFlags.SWP_SHOWWINDOW };
+        public List<SetWindowPosFlags> SWPFlags = new List<SetWindowPosFlags> () {
+            SetWindowPosFlags.SWP_SHOWWINDOW,
+            SetWindowPosFlags.SWP_NOMOVE,
+            SetWindowPosFlags.SWP_NOSIZE
+        };
     }
 
     public class SetWindowLong {
@@ -52,7 +56,7 @@ namespace UNIHper {
         [XmlAttribute]
         public bool SetWindowPos = true;
         [XmlAttribute]
-        public bool SetWindowLong = true;
+        public bool SetWindowLong = false;
         public SetWindowPos SetWindowPosFunction = new SetWindowPos ();
         public SetWindowLong SetWindowLongFunction = new SetWindowLong ();
     }
