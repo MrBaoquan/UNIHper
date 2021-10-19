@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.IO;
+using System.Text;
 using System.Threading;
 using UniRx;
 using UnityEngine;
@@ -23,6 +24,7 @@ namespace UNIHper {
         public bool isDone = false;
     }
     public static class HttpRequest {
+
         /// <summary>
         /// HTTP Get request
         /// </summary>
@@ -166,6 +168,40 @@ namespace UNIHper {
             }
 
         }
-    }
 
+        public static IObservable<string> Post (string url, string postData) {
+            // convert coroutine to IObservable
+            return Observable.FromCoroutine<string> ((observer, cancellationToken) => PostCore (url, postData, observer, cancellationToken))
+                .Select (_response => _response);
+        }
+
+        static IEnumerator PostCore (string url, string postData, IObserver<string> observer, CancellationToken cancellationToken) {
+            using (UnityWebRequest webRequest = new UnityWebRequest (url, UnityWebRequest.kHttpVerbPOST)) {
+                webRequest.uploadHandler = new UploadHandlerRaw (Encoding.UTF8.GetBytes (postData));
+                webRequest.downloadHandler = new DownloadHandlerBuffer ();
+                webRequest.SetRequestHeader ("Content-Type", "application/json");
+                yield return webRequest.SendWebRequest ();
+
+                string[] pages = url.Split ('/');
+                int page = pages.Length - 1;
+
+                switch (webRequest.result) {
+                    case UnityWebRequest.Result.ConnectionError:
+                    case UnityWebRequest.Result.DataProcessingError:
+                        Debug.LogError (pages[page] + ": Error: " + webRequest.error);
+                        observer.OnError (new Exception (webRequest.error));
+                        break;
+                    case UnityWebRequest.Result.ProtocolError:
+                        Debug.LogError (pages[page] + ": HTTP Error: " + webRequest.error);
+                        observer.OnError (new Exception (webRequest.error));
+                        break;
+                    case UnityWebRequest.Result.Success:
+                        observer.OnNext (webRequest.downloadHandler.text);
+                        observer.OnCompleted ();
+                        break;
+                }
+            }
+
+        }
+    }
 }
