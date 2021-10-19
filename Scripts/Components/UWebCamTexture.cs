@@ -10,8 +10,12 @@ namespace UNIHper {
         private UnityEvent<WebCamTexture> onCapture = new UnityEvent<WebCamTexture> ();
         private UnityEvent<WebCamTexture> onReady = new UnityEvent<WebCamTexture> ();
         private void Start () {
+
+        }
+
+        public UWebCamTexture StartCapture (int width = 640, int height = 480) {
             var _device = WebCamTexture.devices.FirstOrDefault ();
-            WebCamTexture _webcamTexture = new WebCamTexture (_device.name, 640, 480, 30);
+            WebCamTexture _webcamTexture = new WebCamTexture (_device.name, width, height, 30);
             _webcamTexture.Play ();
             onReady.Invoke (_webcamTexture);
 
@@ -20,6 +24,7 @@ namespace UNIHper {
                     onCapture.Invoke (_webcamTexture);
                 }
             }).AddTo (this);
+            return this;
         }
 
         public IObservable<WebCamTexture> OnCaptureAsObserable () {

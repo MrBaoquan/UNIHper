@@ -91,7 +91,7 @@ public class UTimerManager : Singleton<UTimerManager>, Manageable {
             _lastCallTime = Time.time;
             if (_timerHandler == null) _registerTrigger ();
         };
-        _debounceDelegate ();
+        //_debounceDelegate ();
         return _debounceDelegate;
     }
 
