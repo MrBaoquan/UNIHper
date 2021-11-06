@@ -102,9 +102,9 @@ namespace UNIHper {
             return getResource<T> (resources[CUSTOM_RES_KEY], InName);
         }
 
-        public bool Exists (string InResKey) {
+        public bool Exists<T> (string InResKey) where T : UnityEngine.Object {
             foreach (var _res in resources) {
-                if (_res.Value.ContainsKey (InResKey))
+                if (_res.Value.ContainsKey ($"{typeof(T).FullName}_{InResKey}"))
                     return true;
             }
             return false;
@@ -214,12 +214,12 @@ namespace UNIHper {
             if (!resources.ContainsKey (InResID)) resources.Add (InResID, new Dictionary<string, UnityEngine.Object> ());
 
             foreach (var _resource in InResources) {
-                //Debug.LogFormat("{0} Add resource {1}", InResID, _resource.name);
+                string _key = string.Format ("{0}_{1}", _resource.GetType ().FullName, _resource.name);
                 if (resources[InResID].ContainsKey (_resource.name)) {
                     Debug.LogErrorFormat ("resource key can not duplicate, error key: {0}", _resource.name);
                     continue;
                 }
-                string _key = string.Format ("{0}_{1}", _resource.GetType ().FullName, _resource.name);
+                //Debug.LogFormat ("{0} Add resource {1}", InResID, _key);
                 resources[InResID].Add (_key, _resource);
             }
         }
