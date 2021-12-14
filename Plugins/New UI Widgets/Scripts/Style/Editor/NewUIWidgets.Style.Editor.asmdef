@@ -1,0 +1,18 @@
+{
+    "name": "NewUIWidgets.Style.Editor",
+    "references": [
+        "GUID:763b75f63c31267419a196dc7ce16579",
+        "GUID:1c3eb3d495e4940459ab21cb3fdbc91f"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,16 @@
+{
+    "name": "NewUIWidgets.Examples",
+    "references": [
+        "GUID:e89e8b7e7e10f024fbda215a76659b5f",
+        "GUID:1c3eb3d495e4940459ab21cb3fdbc91f"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
