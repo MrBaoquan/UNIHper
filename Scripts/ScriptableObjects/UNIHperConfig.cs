@@ -1,36 +1,60 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
-[CreateAssetMenu (fileName = "UNIHperConfig", menuName = "UNIHper/Assets/UNIHperConfig", order = 1)]
-public class UNIHperConfig : ScriptableObject {
-    private static UNIHperConfig instance = null;
-    private static UNIHperConfig Self () {
-        if (instance == null)
-            instance = Resources.Load<UNIHperConfig> ("UNIHperConfig");
-        return instance;
+namespace UNIHper {
+
+    public enum ConfigDirver {
+        XML,
+        YAML
     }
 
-    public static string ResourceConfigPath {
-        get {
-            return Self ().resPath;
+    [CreateAssetMenu (fileName = "UNIHperConfig", menuName = "UNIHper/Assets/UNIHperConfig", order = 1)]
+    public class UNIHperConfig : ScriptableObject {
+        private static UNIHperConfig instance = null;
+        private static UNIHperConfig Self () {
+            if (instance == null)
+                instance = Resources.Load<UNIHperConfig> ("UNIHperConfig");
+            return instance;
         }
-    }
 
-    public static string UIConfigPath {
-        get {
-            return Self ().uiPath;
+        public static string ResourceConfigPath {
+            get {
+                return Self ().resPath;
+            }
         }
-    }
 
-    public static string AssemblyConfigPath {
-        get {
-            return Self ().assemblyPath;
+        public static string UIConfigPath {
+            get {
+                return Self ().uiPath;
+            }
         }
+
+        public static string AssemblyConfigPath {
+            get {
+                return Self ().assemblyPath;
+            }
+        }
+
+        public static ConfigDirver ConfigDirver {
+            get {
+                return Self ().configDriver;
+            }
+        }
+
+        public string resPath = "UNIHper/resources";
+        public string uiPath = "UNIHper/uis";
+        public string assemblyPath = "UNIHper/assemblies";
+        [Serializable]
+        public class VariableHolder {
+            public bool var1;
+            public float var2 = 150f;
+            public float var3 = 25f;
+        }
+
+        public ConfigDirver configDriver = ConfigDirver.YAML;
     }
 
-    public string resPath = "UNIHper/resources";
-    public string uiPath = "UNIHper/uis";
-    public string assemblyPath = "UNIHper/assemblies";
 }

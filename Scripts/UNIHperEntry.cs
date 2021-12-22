@@ -117,8 +117,8 @@ namespace UNIHper {
                         (int) _config.KeepWindowTop.SetWindowPosFunction.HWndInsertAfter,
                         (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.x,
                         (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.y,
-                        (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.z,
                         (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.w,
+                        (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.h,
                         _config.KeepWindowTop.SetWindowPosFunction.SWPFlags.Aggregate ((_flags, _current) => _flags | _current)
                     );
                 }
