@@ -1,0 +1,10 @@
+{
+    "name": "com.parful.unihper",
+    "author": {
+        "name": "MrBaoquan",
+        "email": "mrma617@gmail.com"
+    },
+    "version": "1.0.0",
+    "displayName": "UNIHper",
+    "unity": "2019.1"
+}
