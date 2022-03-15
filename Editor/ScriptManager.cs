@@ -27,7 +27,7 @@ namespace UNIHper {
             CreateFromTemplate
                 (
                     "NewSceneScript.cs", // Class's temporal name.
-                    @"Assets\UNIHper\Editor\Templates\SceneScriptTemplate.txt" // Template's path.
+                    @"Packages\com.parful.unihper\Editor\Templates\SceneScriptTemplate.txt" // Template's path.
                 );
         }
 
@@ -37,7 +37,7 @@ namespace UNIHper {
             CreateFromTemplate
                 (
                     "NewUI.cs",
-                    @"Assets/UNIHper/Editor/Templates/UIScriptTemplate.txt"
+                    @"Packages/com.parful.unihper/Editor/Templates/UIScriptTemplate.txt"
                 );
         }
 
@@ -47,7 +47,7 @@ namespace UNIHper {
             CreateFromTemplate
                 (
                     "NewConfig.cs",
-                    @"Assets/UNIHper/Editor/Templates/ConfigScriptTemplate.txt"
+                    @"Packages\com.parful.unihper\Editor\Templates\ConfigScriptTemplate.txt"
                 );
         }
 
@@ -60,7 +60,7 @@ namespace UNIHper {
             if (!Directory.Exists (_directory)) {
                 Directory.CreateDirectory (_directory);
             }
-            Object o = CreateScript (_relativePath, @"Assets\UNIHper\Editor\Templates\SceneScriptTemplate.txt");
+            Object o = CreateScript (_relativePath, @"Packages\com.parful.unihper\Editor\Templates\SceneScriptTemplate.txt");
             ProjectWindowUtil.ShowCreatedAsset (o);
         }
 
