@@ -13,10 +13,10 @@
 
 ### 核心插件集成
 
-- DOTween
-- Unirx
-- Rx.net
-- Google.Protobuf
+-   DOTween
+-   Unirx
+-   Rx.net
+-   Google.Protobuf
 
 ## 安装
 
@@ -29,12 +29,12 @@ git clone https://github.com/MrBaoquan/UNIHper.git
 
 2. 初始化项目
 
-   - 菜单栏: UNIHper ==> Initialize
+    - 菜单栏: UNIHper ==> Initialize
 
 3. 开始开发
-   - 创建 UI 脚本 UNIHper ==> Create ==> UIScript
-   - 创建场景脚本 UNIHper ==> Create ==> SceneScript
-   - 创建配置文件脚本 UNIHper ==> Create ==> ConfigScript
+    - 创建 UI 脚本 UNIHper ==> Create ==> UIScript
+    - 创建场景脚本 UNIHper ==> Create ==> SceneScript
+    - 创建配置文件脚本 UNIHper ==> Create ==> ConfigScript
 
 ## Examples
 
