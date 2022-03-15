@@ -13,6 +13,38 @@ namespace UNIHper {
     public class UNIHperEditor : Editor {
         const string sceneEntryName = "SceneEntry";
 
+        /// <summary>
+        /// 包相关路径
+        /// </summary>
+        /// <value></value>
+        private static string packageRoot {
+            get => Path.GetFullPath (@"Packages\com.parful.unihper");
+        }
+
+        private static string packageResourcesDir {
+            get => Path.Combine (packageRoot, "Resources");
+        }
+
+        private static string packageConfigDir {
+            get => Path.Combine (packageRoot, @"Resources\Configs");
+        }
+
+        private static string packageTemplatesDir {
+            get => Path.Combine (packageRoot, @"Editor\Templates");
+        }
+
+        /// <summary>
+        /// 项目相关路径
+        /// </summary>
+        /// <value></value>
+        private static string ProjectAssetRoot {
+            get => Application.dataPath;
+        }
+
+        private static string ProjectConfigDir {
+            get => Path.Combine (ProjectAssetRoot, @"Resources\UNIHper");
+        }
+
         [InitializeOnLoadMethod]
         public static void OnLoad () {
             EditorSceneManager.newSceneCreated += NewSceneCreatedCallback;
@@ -52,44 +84,40 @@ namespace UNIHper {
                         DestroyImmediate (_UNIHperGO, true);
                     });
             } else if (_objs.Length <= 0) {
-                string _UNIHperPrefabPath = @"Assets\UNIHper\Resources\Prefabs\UNIHper.prefab";
+                string _UNIHperPrefabPath = @"Packages\com.parful.unihper\Resources\Prefabs\UNIHper.prefab";
                 UnityEngine.Object _UNIHperPrefab = AssetDatabase.LoadAssetAtPath (_UNIHperPrefabPath, typeof (GameObject));
                 GameObject _newUNIHper = PrefabUtility.InstantiatePrefab (_UNIHperPrefab) as GameObject;
                 _newUNIHper.name = "__UNIHper";
             }
 
             // 2.   复制 配置文件
-            string _UNIHperConfigPath = Application.dataPath + "/UNIHper/Resources/Configs";
-            string _customConfigPath = Application.dataPath + "/Resources/UNIHper";
-            string _textTemplatePath = Application.dataPath + "/UNIHper/Editor/Templates";
-
-            if (!Directory.Exists (_customConfigPath)) {
-                Directory.CreateDirectory (_customConfigPath);
+            if (!Directory.Exists (UNIHperEditor.ProjectConfigDir)) {
+                Directory.CreateDirectory (UNIHperEditor.ProjectConfigDir);
             }
 
-            string _dstResPath = Path.Combine (_customConfigPath, "resources.json");
+            string _dstResPath = Path.Combine (ProjectConfigDir, "resources.json");
             if (!File.Exists (_dstResPath)) {
-                File.Copy (Path.Combine (_UNIHperConfigPath, "res.json"), _dstResPath);
+                File.Copy (Path.Combine (packageConfigDir, "res.json"), _dstResPath);
             }
 
-            string _dstUIPath = Path.Combine (_customConfigPath, "uis.json");
+            string _dstUIPath = Path.Combine (ProjectConfigDir, "uis.json");
             if (!File.Exists (_dstUIPath)) {
-                File.Copy (Path.Combine (_UNIHperConfigPath, "ui.json"), _dstUIPath);
+                File.Copy (Path.Combine (packageConfigDir, "ui.json"), _dstUIPath);
             }
 
-            string _dstAssembliesConfigPath = Path.Combine (_customConfigPath, "assemblies.json");
+            string _dstAssembliesConfigPath = Path.Combine (ProjectConfigDir, "assemblies.json");
             if (!File.Exists (_dstAssembliesConfigPath)) {
-                File.Copy (Path.Combine (_textTemplatePath, "AssembliesTemplate.txt"), _dstAssembliesConfigPath);
+                File.Copy (Path.Combine (packageTemplatesDir, "AssembliesTemplate.txt"), _dstAssembliesConfigPath);
             }
 
             // 做一些项目结构
             List<string> _frame_dirs = new List<string> {
-                Path.Combine (Application.dataPath, "Develop/Scripts"),
-                Path.Combine (Application.dataPath, "Develop/Scripts/UIs"),
-                Path.Combine (Application.dataPath, "Develop/Scripts/Configs"),
-                Path.Combine (Application.dataPath, "ArtAssets"),
-                Path.Combine (Application.dataPath, "Resources/Textures"),
-                Path.Combine (Application.dataPath, "Resources/Prefabs/UI/SceneEntry"),
+                Path.Combine (ProjectAssetRoot, "Develop/Scripts"),
+                Path.Combine (ProjectAssetRoot, "Develop/Scripts/UIs"),
+                Path.Combine (ProjectAssetRoot, "Develop/Scripts/Configs"),
+                Path.Combine (ProjectAssetRoot, "ArtAssets"),
+                Path.Combine (ProjectAssetRoot, "Resources/Textures"),
+                Path.Combine (ProjectAssetRoot, "Resources/Prefabs/UI/SceneEntry"),
             };
 
             _frame_dirs.ForEach (_path => {
@@ -101,7 +129,7 @@ namespace UNIHper {
             // 3.   创建程序集定义文件
             string _dstAssemblyPath = Path.Combine (Path.GetFullPath ("Assets/Develop/Scripts"), "GameMain.asmdef");
             if (!File.Exists (_dstAssemblyPath)) {
-                File.Copy (Path.Combine (_textTemplatePath, "GameMainAssembly.txt"), _dstAssemblyPath);
+                File.Copy (Path.Combine (packageTemplatesDir, "GameMainAssembly.txt"), _dstAssemblyPath);
             }
 
             AssetDatabase.Refresh ();

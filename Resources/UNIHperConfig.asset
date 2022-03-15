@@ -15,3 +15,4 @@ MonoBehaviour:
   resPath: UNIHper/resources
   uiPath: UNIHper/uis
   assemblyPath: UNIHper/assemblies
+  configDriver: 0

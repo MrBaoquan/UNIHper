@@ -1,0 +1,19 @@
+{
+    "name": "UNIHper",
+    "references": [
+        "GUID:560b04d1a97f54a4e82edc0cbbb69285",
+        "GUID:d84275e519c25fe4c8ea91e96f53ae13",
+        "GUID:3ca842002c51d0a43b73e45298809a13",
+        "GUID:3bd657f68851a7f448c82186c6797ee0",
+        "GUID:b3f49edfedc855a48aa1a9e5d3cba438"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
