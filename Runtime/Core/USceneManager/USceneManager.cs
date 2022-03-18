@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using DNHper;
 using UniRx;
 using UnityEngine;
@@ -9,9 +10,11 @@ using UnityEngine.SceneManagement;
 namespace UNIHper {
 
     public class USceneManager : Singleton<USceneManager> {
-        public void Initialize () {
+        internal async Task Initialize () {
+            UNIHperLogger.Log ("SceneManager Initializing ...");
             UIManager.Instance.OnEnterScene (SceneManager.GetActiveScene ().name);
             SceneScriptManager.Instance.TriggerOnStart (SceneManager.GetActiveScene ().name);
+            await Task.CompletedTask;
         }
 
         public void LoadSceneAsync (string InSceneName, System.Action<float> InProgress, System.Action InCompleted) {
@@ -26,7 +29,9 @@ namespace UNIHper {
             }
             // 2. 卸载旧场景动态资源,加载新场景动态资源
             ResourceManager.Instance.UnloadSceneResources (_currentSceneName);
-            ResourceManager.Instance.LoadSceneResources (InSceneName);
+
+            var _task = ResourceManager.Instance.LoadSceneResources (InSceneName);
+            yield return new WaitUntil (() => _task.IsCompleted);
 
             // 3. Unity 开始加载场景
             AsyncOperation _async = SceneManager.LoadSceneAsync (InSceneName);

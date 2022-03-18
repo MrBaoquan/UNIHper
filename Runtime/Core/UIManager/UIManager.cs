@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Xml.Linq;
+using System.Threading.Tasks;
 using DNHper;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -18,7 +17,7 @@ namespace UNIHper {
         Popup
     }
 
-    public class UIManager : Singleton<UIManager>, Manageable {
+    public class UIManager : Singleton<UIManager> {
         private Transform UIRoot = null;
 
         private Transform NormalUIRoot = null;
@@ -60,19 +59,22 @@ namespace UNIHper {
 
         private Dictionary<string, UIBase> standaloneUIs = new Dictionary<string, UIBase> ();
         private List<UIBase> popupUIs = new List<UIBase> ();
-        public void Initialize () {
+        internal async Task Initialize () {
+            UNIHperLogger.Log ("UIManager Initializing ...");
             TargetUIRoot ();
             ReadConfigData ();
             spawnPersistUIs ();
+            await Task.CompletedTask;
         }
 
-        public void OnEnterScene (string InSceneName) {
+        internal void OnEnterScene (string InSceneName) {
             var _allKeys = allSpawnedUICaches.Keys.ToList ();
             _allKeys.ForEach (_uiKey => {
                 if (isPersistUI (_uiKey)) return;
 
                 if (allSpawnedUICaches.ContainsKey (_uiKey)) {
                     var _ui = allSpawnedUICaches[_uiKey];
+                    UReflection.CallPrivateMethod (_ui, "HandleHide");
                     GameObject.Destroy (_ui.gameObject);
                     allSpawnedUICaches.Remove (_uiKey);
                     if (popupUIs.Contains (_ui)) popupUIs.Remove (_ui);
@@ -251,10 +253,6 @@ namespace UNIHper {
                         };
                     });
             });
-        }
-
-        public void Uninitialize () {
-
         }
 
         /// <summary>

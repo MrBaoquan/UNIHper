@@ -68,9 +68,11 @@ namespace UNIHper {
             var _internalAssemblies = getAssemblies ("Configs/assemblies");
             var _customAssemblies = getAssemblies (UNIHperConfig.AssemblyConfigPath);
 
-            _internalAssemblies.Concat (_customAssemblies).ToList ().ForEach (_assemblyName => {
-                LoadNewAssembly (_assemblyName);
-            });
+            _internalAssemblies.Concat (_customAssemblies)
+                .ToList ()
+                .ForEach (_assemblyName => {
+                    LoadNewAssembly (_assemblyName);
+                });
         }
 
         private List<string> getAssemblies (string InResPath) {
@@ -111,6 +113,9 @@ namespace UNIHper {
                 .ForEach (_filterType => {
                     var _filterTypes = _assembly.SubClasses (_filterType).ToList ();
                     _filterTypes.ForEach (_type => {
+                        if (UNIHperConfig.ShowDebugLog) {
+                            UnityEngine.Debug.LogFormat ($"Add {InAssemblyName} -> Type:{_type.FullName} ", _type.Name, _type.FullName);
+                        }
                         if (!_allTypes.ContainsKey (_type.Name)) {
                             CachedTypes.Add (new UType { Name = _type.Name, FullName = _type.AssemblyQualifiedName });
                         }

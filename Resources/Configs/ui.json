@@ -1,17 +1,13 @@
 ﻿{
-    "Persistence":{
+    "Persistence": {},
 
-    },
-    
-    "SceneEntry":{
-        
-    },
-    
-    "SceneHall":{
-        "HallUI":{}
+    "SceneEntry": {},
+
+    "SceneHall": {
+        "HallUI": {}
     },
 
-    "SceneGame":{
-        "GameUI":{}
+    "SceneGame": {
+        "GameUI": {}
     }
 }

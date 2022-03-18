@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Timers;
 using DNHper;
 using UniRx;
 using UnityEngine;
 using UNIHper;
-public class UTimerManager : Singleton<UTimerManager>, Manageable {
+public class UTimerManager : Singleton<UTimerManager> {
 
     Timer _timerDbc;
     Timer _timerTrt;
 
-    public void Initialize () { }
-
-    public void Uninitialize () { }
+    internal Task Initialize () { return Task.CompletedTask; }
 
     public IDisposable SetTimeout (Action InHandler, float InTime) {
         return SetTimeout (InHandler, InTime);

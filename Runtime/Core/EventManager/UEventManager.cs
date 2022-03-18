@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mime;
+using System.Threading.Tasks;
 using DNHper;
 using UnityEngine;
 
@@ -18,7 +19,7 @@ namespace UNIHper {
     /// <summary>
     /// 事件管理模块
     /// </summary>
-    public class UEventManager : Singleton<UEventManager>, Manageable {
+    public class UEventManager : Singleton<UEventManager> {
         /// <summary>
         /// 根据事件类型进行分组
         /// </summary>
@@ -88,14 +89,6 @@ namespace UNIHper {
             if (delegates.TryGetValue (InEvent.GetType (), out _internal_action)) {
                 _internal_action.Invoke (InEvent);
             }
-        }
-
-        public void Initialize () {
-
-        }
-
-        public void Uninitialize () {
-
         }
 
     }
