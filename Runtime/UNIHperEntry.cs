@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using DNHper;
 using UniRx;
@@ -19,14 +17,13 @@ using UnityEngine;
 
 namespace UNIHper {
     public class UNIHperEntry : SingletonBehaviour<UNIHperEntry> {
-        private void Awake () {
-            Debug.Log ("UNIHper.Awake");
+        private async void Awake () {
             if (UNIHperEntry.Instance != this) {
-                GameObject.Destroy (this);
+                GameObject.Destroy (this.gameObject);
                 return;
             }
+            Debug.Log ("UNIHper.Awake");
             DontDestroyOnLoad (this.gameObject);
-
             ULog.Initialize ();
 
             GameObject _utilGO = new GameObject ("UNIHperUtils");
@@ -36,22 +33,17 @@ namespace UNIHper {
             AssemblyConfig.Refresh ();
 
             // 1. 配置文件
-            Managements.Config.Initialize ();
-
+            await Managements.Config.Initialize ();
             // 2. 初始化资源管理类
-            ResourceManager.Instance.Initialize ();
-
+            await ResourceManager.Instance.Initialize ();
             // 3. 初始化 UI管理类
-            UIManager.Instance.Initialize ();
-
+            await UIManager.Instance.Initialize ();
             // 4. 初始化场景管理类
-            USceneManager.Instance.Initialize ();
-
+            await USceneManager.Instance.Initialize ();
             // 5. 初始化Timer管理类
-            UTimerManager.Instance.Initialize ();
-
+            await UTimerManager.Instance.Initialize ();
             // 6. 初始化网络模块
-            UNetManager.Instance.Initialize ();
+            await UNetManager.Instance.Initialize ();
             this.Initialize ();
         }
 

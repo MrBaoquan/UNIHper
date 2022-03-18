@@ -1,13 +1,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 using DNHper;
 using Google.Protobuf;
 using UniRx;
 
 namespace UNIHper {
 
-    public class UNetManager : Singleton<UNetManager>, Manageable {
+    public class UNetManager : Singleton<UNetManager> {
         private Dictionary<string, UTcpClient> allTcpClients = new Dictionary<string, UTcpClient> ();
         private Dictionary<string, UTcpServer> allTcpServers = new Dictionary<string, UTcpServer> ();
         private Dictionary<string, UUdpClient> allUdpClients = new Dictionary<string, UUdpClient> ();
@@ -41,24 +42,7 @@ namespace UNIHper {
             }
         }
 
-        public void Initialize () {
-            // Managements.Event.Register<UNetConnectedEvent>(_=>{
-            //     if(!allClients.ContainsKey(_.Key)){
-            //         allClients.Add(_.Key,_.Socket);
-            //         UnityEngine.Debug.LogFormat("添加socket {0}",_.Key);
-            //     }
-            // });
-
-            // Managements.Event.Register<UNetDisconnectedEvent>(_=>{
-            //     if(allClients.ContainsKey(_.Key)){
-            //         allClients.Remove(_.Key);
-            //         UnityEngine.Debug.LogFormat("移除socket {0}",_.Key);
-            //     }
-            // });
-        }
-        public void Uninitialize () {
-
-        }
+        internal Task Initialize () { return Task.CompletedTask; }
 
         public UTcpClient BuildTcpClient (string InRemoteIP, int InRemotePort, UNetMsgReceiver MessageReceiver = null) {
             string _key = string.Format ("{0}_{1}", InRemoteIP, InRemotePort);

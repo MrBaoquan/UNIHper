@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace UNIHper {
     public class CodeTemplateGenerator {
+        const string bundleName = "com.parful.unihper";
         /// Inherits from EndNameAction, must override EndNameAction.Action
         public class DoCreateCodeFile : EndNameEditAction {
             public override void Action (int instanceId, string pathName, string resourceFile) {
@@ -27,7 +28,7 @@ namespace UNIHper {
             CreateFromTemplate
                 (
                     "NewSceneScript.cs", // Class's temporal name.
-                    @"Packages\com.parful.unihper\Editor\Templates\SceneScriptTemplate.txt" // Template's path.
+                    $@"Packages\{bundleName}\Editor\Templates\SceneScriptTemplate.txt" // Template's path.
                 );
         }
 
@@ -37,7 +38,7 @@ namespace UNIHper {
             CreateFromTemplate
                 (
                     "NewUI.cs",
-                    @"Packages/com.parful.unihper/Editor/Templates/UIScriptTemplate.txt"
+                    $@"Packages/{bundleName}/Editor/Templates/UIScriptTemplate.txt"
                 );
         }
 
@@ -47,7 +48,7 @@ namespace UNIHper {
             CreateFromTemplate
                 (
                     "NewConfig.cs",
-                    @"Packages\com.parful.unihper\Editor\Templates\ConfigScriptTemplate.txt"
+                    $@"Packages\{bundleName}\Editor\Templates\ConfigScriptTemplate.txt"
                 );
         }
 
@@ -60,7 +61,7 @@ namespace UNIHper {
             if (!Directory.Exists (_directory)) {
                 Directory.CreateDirectory (_directory);
             }
-            Object o = CreateScript (_relativePath, @"Packages\com.parful.unihper\Editor\Templates\SceneScriptTemplate.txt");
+            Object o = CreateScript (_relativePath, $@"Packages\{bundleName}\Editor\Templates\SceneScriptTemplate.txt");
             ProjectWindowUtil.ShowCreatedAsset (o);
         }
 

@@ -13,7 +13,7 @@ namespace UNIHper {
         public string PortName = string.Empty;
     }
 
-    public class SerialPortManager : Singleton<SerialPortManager>, Manageable {
+    public class SerialPortManager : Singleton<SerialPortManager> {
         private Dictionary<string, USerialPort> serialPorts = new Dictionary<string, USerialPort> ();
         public USerialPort BuildConnect (string InPortName, int InBaudRate = 9600, USPMsgReceiver InReceiver = null) {
             if (serialPorts.ContainsKey (InPortName)) {
@@ -28,9 +28,6 @@ namespace UNIHper {
             if (!serialPorts.ContainsKey (InPortName)) { return; }
             serialPorts[InPortName].Write (InData);
         }
-
-        public void Initialize () { }
-        public void Uninitialize () { }
 
         public void Dispose () {
             serialPorts.Values.ToList ()

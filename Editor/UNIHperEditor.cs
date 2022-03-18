@@ -11,6 +11,7 @@ using UnityEngine.SceneManagement;
 namespace UNIHper {
 
     public class UNIHperEditor : Editor {
+        const string bundleName = "com.parful.unihper";
         const string sceneEntryName = "SceneEntry";
 
         /// <summary>
@@ -18,7 +19,7 @@ namespace UNIHper {
         /// </summary>
         /// <value></value>
         private static string packageRoot {
-            get => Path.GetFullPath (@"Packages\com.parful.unihper");
+            get => Path.GetFullPath ($@"Packages\{bundleName}");
         }
 
         private static string packageResourcesDir {
@@ -84,7 +85,7 @@ namespace UNIHper {
                         DestroyImmediate (_UNIHperGO, true);
                     });
             } else if (_objs.Length <= 0) {
-                string _UNIHperPrefabPath = @"Packages\com.parful.unihper\Resources\Prefabs\UNIHper.prefab";
+                string _UNIHperPrefabPath = $@"Packages\{bundleName}\Resources\Prefabs\UNIHper.prefab";
                 UnityEngine.Object _UNIHperPrefab = AssetDatabase.LoadAssetAtPath (_UNIHperPrefabPath, typeof (GameObject));
                 GameObject _newUNIHper = PrefabUtility.InstantiatePrefab (_UNIHperPrefab) as GameObject;
                 _newUNIHper.name = "__UNIHper";
@@ -103,6 +104,11 @@ namespace UNIHper {
             string _dstUIPath = Path.Combine (ProjectConfigDir, "uis.json");
             if (!File.Exists (_dstUIPath)) {
                 File.Copy (Path.Combine (packageConfigDir, "ui.json"), _dstUIPath);
+            }
+
+            string _dstREADME = Path.Combine (ProjectConfigDir, "README.md");
+            if (!File.Exists (_dstREADME)) {
+                File.Copy (Path.Combine (packageConfigDir, "README.md"), _dstREADME);
             }
 
             string _dstAssembliesConfigPath = Path.Combine (ProjectConfigDir, "assemblies.json");

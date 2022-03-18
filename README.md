@@ -6,7 +6,7 @@
 2. 场景管理
 3. UI 管理
 4. 事件管理
-5. 网络模块 (支持 protobuf)
+5. 网络模块
 6. 串口模块
 7. 配置系统
 8. 编辑器拓展
@@ -17,6 +17,8 @@
 -   Unirx
 -   Rx.net
 -   Google.Protobuf
+-   gRPC
+-   AVPro
 
 ## 安装
 
