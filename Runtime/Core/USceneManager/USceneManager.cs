@@ -14,7 +14,11 @@ namespace UNIHper {
             UNIHperLogger.Log ("SceneManager Initializing ...");
             UIManager.Instance.OnEnterScene (SceneManager.GetActiveScene ().name);
             SceneScriptManager.Instance.TriggerOnStart (SceneManager.GetActiveScene ().name);
+            Application.quitting += () => {
+                SceneScriptManager.Instance.TriggerOnDestroy (SceneManager.GetActiveScene ().name);
+            };
             await Task.CompletedTask;
+
         }
 
         public void LoadSceneAsync (string InSceneName, System.Action<float> InProgress, System.Action InCompleted) {

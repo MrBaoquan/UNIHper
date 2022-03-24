@@ -1,4 +1,7 @@
+using System;
+using UniRx;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace UNIHper {
 
@@ -7,10 +10,17 @@ namespace UNIHper {
     /// </summary>
     public class Indexer {
         private int maxIndex;
+        public int Max { get => maxIndex; }
         private int minIndex = 0;
+        public int Min { get => minIndex; }
         private int current = 0;
         public int Current {
             get { return current; }
+        }
+
+        private UnityEvent<int> onIndexChanged = new UnityEvent<int> ();
+        public IObservable<int> OnIndexChangedAsObservable () {
+            return onIndexChanged.AsObservable ();
         }
 
         public Indexer (int Max) {
@@ -44,17 +54,54 @@ namespace UNIHper {
         /// <param name="Current"></param>
         /// <returns></returns>
         public int Set (int Current) {
+            if (Current < minIndex || Current > maxIndex) {
+                onIndexChanged.Invoke (current);
+                return current;
+            }
             current = Current;
+            onIndexChanged.Invoke (current);
             return current;
         }
 
         public int Next () {
-            current = (int) Mathf.Repeat (current + 1, maxIndex);
+            if (Max == 0) {
+                onIndexChanged.Invoke (0);
+                return 0;
+            }
+            current = (int) Mathf.Repeat (current + 1, Max + 1);
+            Debug.Log ("next: " + current + " max:" + (Max + 1));
+            onIndexChanged.Invoke (current);
+            return current;
+        }
+
+        /// <summary>
+        /// 将索引置为第一个
+        /// </summary>
+        /// <returns></returns>
+        public int Step2First () {
+            current = Min;
+            onIndexChanged.Invoke (current);
+            return current;
+        }
+
+        /// <summary>
+        /// 将索引置位最后一个
+        /// </summary>
+        /// <returns></returns>
+        public int Step2Last () {
+            current = Max;
+            onIndexChanged.Invoke (current);
             return current;
         }
 
         public int Prev () {
-            current = (int) Mathf.Repeat (current - 1, maxIndex);
+            if (Max == 0) {
+                onIndexChanged.Invoke (0);
+                return 0;
+            }
+            current = (int) Mathf.Repeat (current - 1, Max + 1);
+            Debug.Log ("prev: " + current + " max:" + (Max + 1));
+            onIndexChanged.Invoke (current);
             return current;
         }
 
@@ -64,7 +111,7 @@ namespace UNIHper {
         /// <returns>越界则返回True  否则返回False</returns>
         public bool CheckNextOverflow () {
             var _next = current + 1;
-            return _next >= maxIndex;
+            return _next > maxIndex;
         }
 
         public bool CheckPrevOverflow () {
