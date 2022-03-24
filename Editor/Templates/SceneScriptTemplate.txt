@@ -5,22 +5,26 @@ using UNIHper;
 
 public class ##CLASSNAME## : SceneScriptBase
 {
-    public override void Start()
+    // Called once after scene is loaded
+    private void Start()
     {
         
     }
 
-    public override void Update()
+    // Called once per frame after Start
+    private void Update()
     {
     
     }
 
-    public override void OnDestroy()
+    // Called when scene is unloaded
+    private void OnDestroy()
     {
     
     }
 
-    public override void OnApplicationQuit()
+    // Called when application is quit
+    private void OnApplicationQuit()
     {
     
     }

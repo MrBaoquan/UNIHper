@@ -118,12 +118,13 @@ namespace UNIHper {
 
             // 做一些项目结构
             List<string> _frame_dirs = new List<string> {
-                Path.Combine (ProjectAssetRoot, "Develop/Scripts"),
-                Path.Combine (ProjectAssetRoot, "Develop/Scripts/UIs"),
-                Path.Combine (ProjectAssetRoot, "Develop/Scripts/Configs"),
-                Path.Combine (ProjectAssetRoot, "ArtAssets"),
-                Path.Combine (ProjectAssetRoot, "Resources/Textures"),
-                Path.Combine (ProjectAssetRoot, "Resources/Prefabs/UI/SceneEntry"),
+                Path.Combine (ProjectAssetRoot, "Develop/Scripts"), // 脚本目录
+                Path.Combine (ProjectAssetRoot, "Develop/Scripts/UIs"), // UI脚本
+                Path.Combine (ProjectAssetRoot, "Develop/Scripts/Configs"), // 配置文件
+                Path.Combine (ProjectAssetRoot, "Develop/Scripts/Game"), // 游戏逻辑
+                Path.Combine (ProjectAssetRoot, "ArtAssets"), // 美术资源
+                Path.Combine (ProjectAssetRoot, "Resources/Textures"), // 贴图资源
+                Path.Combine (ProjectAssetRoot, "Resources/Prefabs/UI/SceneEntry"), // 入口场景UI
             };
 
             _frame_dirs.ForEach (_path => {

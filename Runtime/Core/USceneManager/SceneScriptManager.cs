@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using DNHper;
 using UniRx;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
 namespace UNIHper {
@@ -19,6 +20,10 @@ namespace UNIHper {
         public class SceneScriptData {
             public SceneScriptBase sceneScript;
             public IDisposable updateObserverable;
+
+            public void OnApplicationQuit () {
+                sceneScript.GetType ().GetMethod ("OnApplicationQuit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).Invoke (sceneScript, null);
+            }
         }
 
         private Dictionary<string, SceneScriptData> sceneScripts = new Dictionary<string, SceneScriptData> ();
@@ -48,12 +53,14 @@ namespace UNIHper {
 
             if (_sceneScript != null) {
                 // 添加 SceneScript.OnQuit 事件监听
-                Application.quitting += _sceneScriptData.sceneScript.OnApplicationQuit;
+                Application.quitting += _sceneScriptData.OnApplicationQuit;
+                var _startAction = _sceneScript.GetType ().GetMethod ("Start", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                var _updateAction = _sceneScript.GetType ().GetMethod ("Update", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 // 添加 SceneScript.OnUpdate 事件监听
                 _sceneScriptData.updateObserverable = Observable.EveryUpdate ().Subscribe (_ => {
-                    _sceneScript.Update ();
+                    _updateAction.Invoke (_sceneScript, null);
                 });
-                _sceneScript.Start ();
+                _startAction.Invoke (_sceneScript, null);
             } else {
                 Debug.LogWarningFormat ("Can not find scene script: {0}", InSceneName + "Script");
             }
@@ -67,12 +74,11 @@ namespace UNIHper {
                     _sceneScriptData.updateObserverable.Dispose ();
                     _sceneScriptData.updateObserverable = null;
                 }
-
-                _sceneScriptData.sceneScript.OnDestroy ();
+                var _sceneScript = _sceneScriptData.sceneScript;
+                _sceneScript.GetType ().GetMethod ("OnDestroy", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).Invoke (_sceneScript, null);
 
                 // 取消 Application.OnQuit 事件监听
-                Application.quitting -= _sceneScriptData.sceneScript.OnApplicationQuit;
-
+                Application.quitting -= _sceneScriptData.OnApplicationQuit;
                 _sceneScriptData.sceneScript = null;
                 sceneScripts.Remove (InSceneName);
             }
