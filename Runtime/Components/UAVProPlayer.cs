@@ -67,7 +67,6 @@ namespace UNIHper {
             }
 
             Action _registerFinishedSeekingEvent = () => {
-
                 playHandlers.Add (OnFinishedSeekingAsObservable ().Subscribe (_ => {
                     MediaPlayer.Play ();
                     bool _bFinished = false;

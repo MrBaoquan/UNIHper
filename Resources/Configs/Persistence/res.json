@@ -1,6 +1,10 @@
 [
     {
-        "type":"GameObject",
-        "path":"Prefabs/UI/UPersistence"
+        "type": "GameObject",
+        "path": "Prefabs/UI/UPersistence"
+    },
+    {
+        "type": "RuntimeAnimatorController",
+        "path": "AnimatorControllers/UI"
     }
 ]
