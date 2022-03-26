@@ -35,7 +35,9 @@ namespace UNIHper {
         // 框架层持久性资源配置项
         private List<ResourceItem> persistConfigData;
 
-        // 所有已加载资源实例
+        /// <summary>
+        ///  所有已加载资源实例 [Persistence,CUSTOM_RES_KEY,SCENE_NAME]
+        /// </summary>
         private Dictionary<string, Dictionary<string, UnityEngine.Object>> resources;
         // 所有AB包实例
         private Dictionary<string, Dictionary<string, AssetBundle>> bundles = new Dictionary<string, Dictionary<string, AssetBundle>> ();
@@ -44,9 +46,10 @@ namespace UNIHper {
             UNIHperLogger.Log ("ResourceManager Initializing ...");
             this.ReadConfigData ();
             resources = new Dictionary<string, Dictionary<string, UnityEngine.Object>> ();
-            foreach (var _resource in resourcesConfigData) {
-                resources.Add (_resource.Key, new Dictionary<string, UnityEngine.Object> ());
-            }
+
+            resources = resourcesConfigData.Keys
+                .Select (_key => new KeyValuePair<string, Dictionary<string, UnityEngine.Object>> (_key, new Dictionary<string, UnityEngine.Object> ()))
+                .ToDictionary (_ => _.Key, _ => _.Value);
 
             // 框架层持久性资源
             await loadResourceAssets (persistConfigData, "Persistence");
@@ -85,6 +88,21 @@ namespace UNIHper {
         }
 
         /// <summary>
+        /// 获取资源名为[InResName]的资源
+        /// </summary>
+        /// <param name="InResName"></param>
+        /// <returns></returns>
+        public List<UnityEngine.Object> Get (string InResName) {
+            var _resources = resources.Keys
+                .Where (_key => new List<string> () { "Persistence", getCurrentSceneName (), CUSTOM_RES_KEY }.Contains (_key))
+                .Select (_key => resources[_key])
+                .SelectMany (_v => _v);
+            return _resources.Where (_res => _res.Key.EndsWith ($"_{InResName}"))
+                .Select (_res => _res.Value)
+                .ToList ();
+        }
+
+        /// <summary>
         /// 获取资源名为{InResName},类型为{InResType}的资源
         /// </summary>
         /// <param name="InResName"></param>
@@ -104,7 +122,7 @@ namespace UNIHper {
             }
 
             if (_resource == null) {
-                UNIHperLogger.LogWarning ($"Can not find asset with name: {InResName}");
+                UNIHperLogger.LogWarning ($"can not find asset with name: {InResName}");
                 return null;
             }
             return _resource;
@@ -219,6 +237,7 @@ namespace UNIHper {
 
         private T getResource<T> (Dictionary<string, UnityEngine.Object> InResources, string InName) where T : UnityEngine.Object {
             string _key = string.Format ("{0}_{1}", typeof (T).FullName, InName);
+            UNIHperLogger.Log ($"try get asset: {_key}");
             if (!InResources.ContainsKey (_key)) return default (T);
             return InResources[_key] as T;
         }

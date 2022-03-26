@@ -1,5 +1,9 @@
 {
-    "DialogUI":{"asset":"DialogUI","type":"Popup","script":"DialogUI"},
-    "LicenseUI":{"asset":"LicenseUI","type":"Standalone","script":"LicenseUI"},
-    "FileDialog":{"type":"Popup"}
+    "DialogUI": { "asset": "DialogUI", "type": "Popup", "script": "DialogUI" },
+    "LicenseUI": {
+        "asset": "LicenseUI",
+        "type": "Popup",
+        "script": "LicenseUI"
+    },
+    "FileDialog": { "type": "Popup" }
 }

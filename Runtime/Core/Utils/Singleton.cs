@@ -20,7 +20,7 @@ namespace UNIHper {
         public static T Instance {
             get {
                 if (instance == null) {
-                    instance = FindObjectOfType (typeof (T)) as T;
+                    instance = FindObjectOfType (typeof (T), true) as T;
                 }
                 return instance;
             }

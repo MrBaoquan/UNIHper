@@ -15,12 +15,10 @@ public class UAnimatorOverrideController : MonoBehaviour {
     private void OnValidate () {
         buildRefs ();
         if (runtimeAnimatorController is null) {
-            Debug.LogWarning ("runtime animator controller is null");
             return;
         };
         if (animationClips.Count <= 0) {
             animationClips = runtimeAnimatorController.animationClips.ToList ();
-            //animationClips = animator.runtimeAnimatorController.animationClips.ToList();   
         }
     }
 
@@ -35,8 +33,13 @@ public class UAnimatorOverrideController : MonoBehaviour {
 
     public void Apply () {
         buildRefs ();
+        if (runtimeAnimatorController is null) return;
+
         AnimatorOverrideController _animController = new AnimatorOverrideController (runtimeAnimatorController);
         var _animClips = new List<KeyValuePair<AnimationClip, AnimationClip>> ();
+        if (animationClips.Count != _animController.animationClips.Length) {
+            animationClips = _animController.animationClips.ToList ();
+        }
         for (int _index = 0; _index < _animController.animationClips.Length; ++_index) {
             _animClips.Add (new KeyValuePair<AnimationClip, AnimationClip> (_animController.animationClips[_index], animationClips[_index]));
         }
