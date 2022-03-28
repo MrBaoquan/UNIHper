@@ -16,7 +16,7 @@ namespace UNIHper {
         public RectTransform PopupUIRoot { get => m_popupUIRoot; }
         public UIRootLayout (Canvas UIRoot) {
             m_root = UIRoot.transform;
-            MonoBehaviour.DontDestroyOnLoad (m_root.gameObject);
+            //MonoBehaviour.DontDestroyOnLoad (m_root.gameObject);
 
             m_normalUIRoot = newUIRoot ("NormalUIRoot");
             m_standaloneUIRoot = newUIRoot ("StandaloneUIRoot");

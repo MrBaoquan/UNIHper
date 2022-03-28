@@ -39,6 +39,7 @@ namespace UNIHper {
         public void TriggerOnStart (string InSceneName) {
             SceneScriptData _sceneScriptData;
             SceneScriptBase _sceneScript = null;
+
             if (!sceneScripts.TryGetValue (InSceneName, out _sceneScriptData)) {
                 string _sceneScriptTypeName = InSceneName + "Script";
                 Type _T = AssemblyConfig.GetUType (_sceneScriptTypeName);
@@ -54,12 +55,14 @@ namespace UNIHper {
             if (_sceneScript != null) {
                 // 添加 SceneScript.OnQuit 事件监听
                 Application.quitting += _sceneScriptData.OnApplicationQuit;
+
                 var _startAction = _sceneScript.GetType ().GetMethod ("Start", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 var _updateAction = _sceneScript.GetType ().GetMethod ("Update", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 // 添加 SceneScript.OnUpdate 事件监听
-                _sceneScriptData.updateObserverable = Observable.EveryUpdate ().Subscribe (_ => {
-                    _updateAction.Invoke (_sceneScript, null);
-                });
+                _sceneScriptData.updateObserverable = Observable
+                    .EveryUpdate ().Subscribe (_ => {
+                        _updateAction.Invoke (_sceneScript, null);
+                    });
                 _startAction.Invoke (_sceneScript, null);
             } else {
                 Debug.LogWarningFormat ("Can not find scene script: {0}", InSceneName + "Script");

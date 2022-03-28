@@ -2,9 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using DNHper;
 using UniRx;
 using UnityEngine;
 using UnityEngine.Events;
+using UNIHper.UI;
 
 namespace UNIHper {
     public abstract partial class UIBase : MonoBehaviour {
@@ -50,8 +52,16 @@ namespace UNIHper {
             m_hideTask = InTask;
         }
 
+        private UIAnimationBase uiAnimComponent {
+            get => GetComponent<UIAnimationBase> ();
+        }
+
         // Called when the ui is loaded
-        protected void OnLoad () { }
+        protected void OnLoad () {
+            if (uiAnimComponent != null)
+                UReflection.CallPrivateMethod (uiAnimComponent, "OnUIAttached");
+            OnLoaded ();
+        }
 
         // Called when the ui is being requested to show
         protected void HandleShow () {
@@ -84,12 +94,22 @@ namespace UNIHper {
         }
 
         protected async virtual Task handleShowAction () {
-            await m_showTask.Invoke ();
+            if (uiAnimComponent != null) {
+                await uiAnimComponent.BuildShowTask ();
+            } else {
+                await Task.CompletedTask;
+            }
         }
 
         protected async virtual Task handleHideAction () {
-            await m_hideTask.Invoke ();
+            if (uiAnimComponent != null) {
+                await uiAnimComponent.BuildHideTask ();
+            } else {
+                await Task.CompletedTask;
+            }
         }
+
+        protected virtual void OnLoaded () { }
 
         protected virtual void OnShow () { }
 

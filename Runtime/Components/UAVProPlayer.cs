@@ -126,6 +126,18 @@ namespace UNIHper {
             }
         }
 
+        public void Play () {
+            MediaPlayer.Control.Play ();
+        }
+
+        public void Pause () {
+            MediaPlayer.Control.Pause ();
+        }
+
+        public void Stop () {
+            MediaPlayer.Control.Stop ();
+        }
+
         public void Seek (double InTime) {
             if (!Ready2Play) {
                 return;

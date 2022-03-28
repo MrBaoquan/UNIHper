@@ -1,14 +1,12 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using DG.Tweening;
 using Sirenix.OdinInspector;
 using UniRx;
 using UnityEngine;
-using UNIHper;
 
-namespace UNIHPer.UI {
+namespace UNIHper.UI {
     public enum UIAnimionDriver {
         Animator,
         Tweener
@@ -22,7 +20,7 @@ namespace UNIHPer.UI {
         Zoom = 110,
     }
 
-    public class AnimatedUI : MonoBehaviour {
+    public class AnimatedUI : UIAnimationBase {
 
         [EnumToggleButtons]
         public UIAnimionDriver Driver = UIAnimionDriver.Tweener;
@@ -43,6 +41,14 @@ namespace UNIHPer.UI {
         [ShowInInspector, PropertyRange (0, 1), ShowIf ("Driver", UIAnimionDriver.Tweener)]
         public float FadeOut_Duration = 0.40f;
 
+        public override Task BuildShowTask () {
+            return getShowTask ();
+        }
+
+        public override Task BuildHideTask () {
+            return getHideTask ();
+        }
+
         private UAnimatorOverrideController animatorOverrideController {
             get {
                 var _controller = this.Get<UAnimatorOverrideController> ();
@@ -59,43 +65,34 @@ namespace UNIHPer.UI {
         }
 
         void Awake () {
-            Observable.EveryUpdate ()
-                .Where (_ => this.Get<UIBase> () != null).First ()
-                .Subscribe (_ => {
-                    onUIAttached ();
-                });
+
         }
 
-        private void onUIAttached () {
+        protected override void OnUIAttached () {
             recordOriginTransform ();
-
-            var _rectTransform = this.Get<RectTransform> ();
-            Debug.Log (_rectTransform.anchoredPosition);
-
-            var _ui = this.Get<UIBase> ();
             if (Driver == UIAnimionDriver.Animator) {
                 var _animatorController = Resources.Load ("AnimatorControllers/UI/UI_Controller") as RuntimeAnimatorController;
                 animatorOverrideController.runtimeAnimatorController = new AnimatorOverrideController (_animatorController);
                 animatorOverrideController.animationClips = new List<AnimationClip> { FadeIn_clip, FadeOut_clip };
                 animatorOverrideController.Apply ();
+            }
+        }
 
-                _ui.SetShowTask (() => Observable.Create<Unit> (_observer => {
+        private void onUIAttached () {
+            recordOriginTransform ();
+        }
+
+        private Task getShowTask () {
+            if (Driver == UIAnimionDriver.Animator) {
+                return Observable.Create<Unit> (_observer => {
                     this.Get<Animator> ().PlayAnimation ("Show", _animator => {
                         _observer.OnNext (Unit.Default);
                         _observer.OnCompleted ();
                     });
                     return new CancellationTokenSource ();
-                }).ToTask ());
-
-                _ui.SetHideTask (() => Observable.Create<Unit> (_observer => {
-                    this.Get<Animator> ().PlayAnimation ("Hide", _animator => {
-                        _observer.OnNext (Unit.Default);
-                        _observer.OnCompleted ();
-                    });
-                    return new CancellationTokenSource ();
-                }).ToTask ());
+                }).ToTask ();
             } else if (Driver == UIAnimionDriver.Tweener) {
-                _ui.SetShowTask (() => Observable.Create<Unit> (_observer => {
+                return Observable.Create<Unit> (_observer => {
                     newFadeTween (FadeIn_Type, 1, FadeIn_Duration)
                         .SetEase (Ease.Linear)
                         .OnComplete (() => {
@@ -103,9 +100,22 @@ namespace UNIHPer.UI {
                             _observer.OnCompleted ();
                         });
                     return new CancellationTokenSource ();
-                }).ToTask ());
+                }).ToTask ();
+            }
+            return Task.CompletedTask;
+        }
 
-                _ui.SetHideTask (() => Observable.Create<Unit> (_observer => {
+        private Task getHideTask () {
+            if (Driver == UIAnimionDriver.Animator) {
+                return Observable.Create<Unit> (_observer => {
+                    this.Get<Animator> ().PlayAnimation ("Hide", _animator => {
+                        _observer.OnNext (Unit.Default);
+                        _observer.OnCompleted ();
+                    });
+                    return new CancellationTokenSource ();
+                }).ToTask ();
+            } else if (Driver == UIAnimionDriver.Tweener) {
+                return Observable.Create<Unit> (_observer => {
                     newFadeTween (FadeOut_Type, 2, FadeOut_Duration)
                         .SetEase (Ease.Linear)
                         .OnComplete (() => {
@@ -113,9 +123,9 @@ namespace UNIHPer.UI {
                             _observer.OnCompleted ();
                         });
                     return new CancellationTokenSource ();
-                }).ToTask ());
+                }).ToTask ();
             }
-
+            return Task.CompletedTask;
         }
 
         private Vector2 m_originAnchoredPosition = Vector2.zero;
