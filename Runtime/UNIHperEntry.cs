@@ -61,6 +61,13 @@ namespace UNIHper {
             activeAllDisplays ();
             KeepWindowTop ();
 #endif
+
+            Observable.EveryUpdate ().Subscribe (_ => {
+                if (Input.GetKey (KeyCode.LeftShift) && Input.GetKeyDown (KeyCode.S)) {
+                    Managements.Config.SerializeAll ();
+                    Debug.Log ("Save config successfully.");
+                }
+            }).AddTo (this);
         }
 
         private void activeAllDisplays () {
@@ -82,13 +89,6 @@ namespace UNIHper {
                 }
                 _index++;
             });
-        }
-
-        private void Update () {
-            if (Input.GetKey (KeyCode.LeftShift) && Input.GetKeyDown (KeyCode.S)) {
-                Managements.Config.SerializeAll ();
-                Debug.Log ("Save config successfully.");
-            }
         }
 
         private void KeepWindowTop () {
