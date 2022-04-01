@@ -90,10 +90,10 @@ namespace UNIHper {
             return _child?_child.gameObject : null;
         }
 
-        public static void SetChildrenActive (this GameObject _self, bool bActive, int StartIndex, int EndIndex = 0, bool bRevertOther = false) {
+        public static void SetChildrenActive (this GameObject _self, bool bActive, int StartIndex, int EndIndex = int.MaxValue, bool bRevertOther = false) {
 
-            int _endIndex = EndIndex == 0 ? _self.transform.childCount : EndIndex < 0 ? _self.transform.childCount + EndIndex : EndIndex;
-            for (int _index = StartIndex; _index < _endIndex; ++_index) {
+            int _endIndex = EndIndex == int.MaxValue ? _self.transform.childCount : EndIndex < 0 ? _self.transform.childCount + EndIndex : EndIndex;
+            for (int _index = StartIndex; _index <= _endIndex; ++_index) {
                 var _go = _self.transform.GetChild (_index).gameObject;
                 if (_go.activeInHierarchy != bActive) {
                     _go.SetActive (bActive);
@@ -109,7 +109,7 @@ namespace UNIHper {
 
             if (!bRevertOther) return;
 
-            for (int _index = _endIndex; _index < _self.transform.childCount; ++_index) {
+            for (int _index = _endIndex + 1; _index < _self.transform.childCount; ++_index) {
                 var _go = _self.transform.GetChild (_index).gameObject;
                 if (_go.activeInHierarchy == bActive) {
                     _go.SetActive (!bActive);

@@ -22,7 +22,12 @@ namespace UNIHper {
             public IDisposable updateObserverable;
 
             public void OnApplicationQuit () {
-                sceneScript.GetType ().GetMethod ("OnApplicationQuit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).Invoke (sceneScript, null);
+                if (sceneScript is null) return;
+
+                var _quitMethod = sceneScript.GetType ().GetMethod ("OnApplicationQuit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (_quitMethod != null) {
+                    _quitMethod.Invoke (sceneScript, null);
+                }
             }
         }
 

@@ -170,24 +170,28 @@ namespace UNIHper {
             allTcpClients.Values.ToList ().ForEach (_socket => {
                 _socket.Disconnect ();
             });
+            allTcpClients.Clear ();
         }
 
         public void DisposeAllUDPServers () {
             allUdpServers.Values.ToList ().ForEach (_socket => {
                 _socket.Dispose ();
             });
+            allUdpServers.Clear ();
         }
 
         public void DisposeAllTCPServers () {
             allTcpServers.Values.ToList ().ForEach (_socket => {
                 _socket.Dispose ();
             });
+            allTcpServers.Clear ();
         }
 
         public void DisposeAllUDPClients () {
             allUdpClients.Values.ToList ().ForEach (_udpClient => {
                 _udpClient.Dispose ();
             });
+            allUdpClients.Clear ();
         }
 
         public void Dispose () {

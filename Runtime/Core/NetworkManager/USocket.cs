@@ -1,193 +1,202 @@
-using System.Net.Sockets;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using System.Net;
+using System.Net.Sockets;
 using UniRx;
+using UnityEngine.Events;
+namespace UNIHper {
 
-namespace UNIHper
-{
-    
-public class UNetConnectedEvent:UEvent{
-    public string RemoteIP = string.Empty;
-    public int RemotePort = -1;
-    public string Key{
-        get{
-            return string.Format("{0}_{1}", RemoteIP, RemotePort);
+    public class UNetConnectedEvent : UEvent {
+        public string RemoteIP = string.Empty;
+        public int RemotePort = -1;
+        public string Key {
+            get {
+                return string.Format ("{0}_{1}", RemoteIP, RemotePort);
+            }
         }
     }
-}
-public class UNetDisconnectedEvent:UEvent{
-    public string RemoteIP = string.Empty;
-    public int RemotePort = -1;
-    public string Key{
-        get{
-            return string.Format("{0}_{1}", RemoteIP, RemotePort);
-        }
-    }
-}
-
-public abstract class USocket : IDisposable
-{
-    const string InValidIP = "Invalid IP";
-    const int InValidPort = -1;
-
-    public NetProtocol Protocol {
-        get{return protocol;}
-    }
-    protected NetProtocol protocol = NetProtocol.Unknown;
-    protected MessageQueeue messageDispatcher = new MessageQueeue();
-    protected IPEndPoint localEndPoint;
-    public IPEndPoint LocalEndPoint{
-        get{return localEndPoint;}
-        set{
-            localEndPoint = value;
-            onLocalEndPointChanged();
-        }
-    }
-    public string LocalIP{
-        get{
-            if(localEndPoint==null) return InValidIP;
-            return localEndPoint.Address.ToString();
-        }
-    }
-    public int LocalPort{
-        get{
-            if(LocalEndPoint==null) return InValidPort;
-            return localEndPoint.Port;
+    public class UNetDisconnectedEvent : UEvent {
+        public string RemoteIP = string.Empty;
+        public int RemotePort = -1;
+        public string Key {
+            get {
+                return string.Format ("{0}_{1}", RemoteIP, RemotePort);
+            }
         }
     }
 
-    public string RemoteIP{
-        get{
-            if(RemoteEndPoint==null) return InValidIP;
-            return RemoteEndPoint.Address.ToString();
-        }
-    }
-    public int RemotePort{
-        get{
-            if(RemoteEndPoint==null) return InValidPort;
-            return RemoteEndPoint.Port;
-        }
-    }
+    public abstract class USocket : IDisposable {
+        const string InValidIP = "Invalid IP";
+        const int InValidPort = -1;
 
-    
-    protected IPEndPoint remoteEndPoint;
-    public IPEndPoint RemoteEndPoint{
-        get{return remoteEndPoint;}
-        set{
-            remoteEndPoint = value;
-            onRemoteEndPointChanged();
+        protected UnityEvent<UNetConnectedEvent> onConnected = new UnityEvent<UNetConnectedEvent> ();
+        public UnityEvent<UNetConnectedEvent> OnConnected {
+            get => onConnected;
         }
-   }
-
-    protected USocket(NetProtocol InProtocol){
-        protocol = InProtocol;
-    }
-
-    public string Key{
-        get{
-            if(remoteEndPoint==null) return string.Empty;
-            return string.Format("{0}_{1}",remoteEndPoint.Address.ToString(),remoteEndPoint.Port);
+        public IObservable<UNetConnectedEvent> OnConnectedAsObservable () {
+            return onConnected.AsObservable ();
         }
-    }
-
-    public virtual void Dispose()
-    {
-        if(messageDispatcherHandler!=null){
-            messageDispatcherHandler.Dispose();
+        protected UnityEvent<UNetDisconnectedEvent> onDisconnected = new UnityEvent<UNetDisconnectedEvent> ();
+        public UnityEvent<UNetDisconnectedEvent> OnDisconnected {
+            get => onDisconnected;
+        }
+        public IObservable<UNetDisconnectedEvent> OnDisconnectedAsObservable () {
+            return onDisconnected.AsObservable ();
         }
 
-        messageReceivers.ForEach(_receiver=>{
-            if(_receiver!=null)
-                _receiver.Dispose();
-        });
-    }
+        public NetProtocol Protocol {
+            get { return protocol; }
+        }
+        protected NetProtocol protocol = NetProtocol.Unknown;
+        protected MessageQueeue messageDispatcher = new MessageQueeue ();
+        protected IPEndPoint localEndPoint;
+        public IPEndPoint LocalEndPoint {
+            get { return localEndPoint; }
+            set {
+                localEndPoint = value;
+                onLocalEndPointChanged ();
+            }
+        }
+        public string LocalIP {
+            get {
+                if (localEndPoint == null) return InValidIP;
+                return localEndPoint.Address.ToString ();
+            }
+        }
+        public int LocalPort {
+            get {
+                if (LocalEndPoint == null) return InValidPort;
+                return localEndPoint.Port;
+            }
+        }
 
-    public USocket SetReceiver(UNetMsgReceiver InMessageReceiver){
-        MsgReceiver = InMessageReceiver;
-        return this;
-    }
+        public string RemoteIP {
+            get {
+                if (RemoteEndPoint == null) return InValidIP;
+                return RemoteEndPoint.Address.ToString ();
+            }
+        }
+        public int RemotePort {
+            get {
+                if (RemoteEndPoint == null) return InValidPort;
+                return RemoteEndPoint.Port;
+            }
+        }
 
-    public USocket OnReceived(Action<NetMessage, USocket> InMessageHandler)
-    {
-        onMessageReceivedHandler = InMessageHandler;
-        return this;
-    }
+        protected IPEndPoint remoteEndPoint;
+        public IPEndPoint RemoteEndPoint {
+            get { return remoteEndPoint; }
+            set {
+                remoteEndPoint = value;
+                onRemoteEndPointChanged ();
+            }
+        }
 
-    protected void setLocalEndPoint(string InIP, int InPort){
-        LocalEndPoint = new IPEndPoint(IPAddress.Parse(InIP),InPort);
-    }
+        protected USocket (NetProtocol InProtocol) {
+            protocol = InProtocol;
+        }
 
-    protected void setLocalEndPoint(IPEndPoint InLocalEndPoint){
-        LocalEndPoint = InLocalEndPoint;
-    }
+        public string Key {
+            get {
+                if (remoteEndPoint == null) return string.Empty;
+                return string.Format ("{0}_{1}", remoteEndPoint.Address.ToString (), remoteEndPoint.Port);
+            }
+        }
 
-    protected void setRemoteEndPoint(string InIP, int InPort){
-        RemoteEndPoint = new IPEndPoint(IPAddress.Parse(InIP),InPort);
-    }
+        public virtual void Dispose () {
+            if (messageDispatcherHandler != null) {
+                messageDispatcherHandler.Dispose ();
+            }
 
-    protected virtual void onLocalEndPointChanged(){
+            messageReceivers.ForEach (_receiver => {
+                if (_receiver != null)
+                    _receiver.Dispose ();
+            });
+        }
 
-    }
+        public USocket SetReceiver (UNetMsgReceiver InMessageReceiver) {
+            MsgReceiver = InMessageReceiver;
+            return this;
+        }
 
-    protected virtual void onRemoteEndPointChanged(){
+        public USocket OnReceived (UnityAction<NetMessage, USocket> InMessageHandler) {
+            onMessageReceived.AddListener (InMessageHandler);
+            return this;
+        }
 
-    }
+        protected void setLocalEndPoint (string InIP, int InPort) {
+            LocalEndPoint = new IPEndPoint (IPAddress.Parse (InIP), InPort);
+        }
 
-    IDisposable messageDispatcherHandler = null;
+        protected void setLocalEndPoint (IPEndPoint InLocalEndPoint) {
+            LocalEndPoint = InLocalEndPoint;
+        }
 
-    Action<NetMessage,USocket> onMessageReceivedHandler = null;
-    protected void dispatchMessages(){
-        if(messageDispatcherHandler!=null) messageDispatcherHandler.Dispose();
-        messageDispatcherHandler = Observable.EveryUpdate().Subscribe(_=>{
-            var _message = messageDispatcher.PopMessage();
-            while(_message!=null){
-                var _netMessage = new NetMessage{Message = _message, Protocol=protocol};
-                if(onMessageReceivedHandler!=null){
-                    onMessageReceivedHandler(_netMessage,this);
-                    //onMessageReceivedHandler.DynamicInvoke(new object[]{_netMessage, this});
+        protected void setRemoteEndPoint (string InIP, int InPort) {
+            RemoteEndPoint = new IPEndPoint (IPAddress.Parse (InIP), InPort);
+        }
+
+        protected virtual void onLocalEndPointChanged () {
+
+        }
+
+        protected virtual void onRemoteEndPointChanged () {
+
+        }
+
+        IDisposable messageDispatcherHandler = null;
+
+        UnityEvent<NetMessage, USocket> onMessageReceived = new UnityEvent<NetMessage, USocket> ();
+        protected void dispatchMessages () {
+            if (messageDispatcherHandler != null) messageDispatcherHandler.Dispose ();
+            messageDispatcherHandler = Observable.EveryUpdate ().Subscribe (_ => {
+                var _message = messageDispatcher.PopMessage ();
+                while (_message != null) {
+                    var _netMessage = new NetMessage { Message = _message, Protocol = protocol };
+                    onMessageReceived.Invoke (_netMessage, this);
+                    Managements.Event.Fire (_netMessage);
+                    _message = messageDispatcher.PopMessage ();
                 }
-                Managements.Event.Fire(_netMessage);
-                _message = messageDispatcher.PopMessage();
-            }
-        });
-    }
-
-    protected UNetMsgReceiver MsgReceiver = null;
-    protected List<UNetMsgReceiver> messageReceivers = new List<UNetMsgReceiver>();
-    protected void startNewReceiver(Socket InSocket){
-        if(MsgReceiver==null) return;
-        UNetMsgReceiver _receiver =  MsgReceiver.Clone(); //Activator.CreateInstance(MsgReceiver) as UMessageReceiver;
-        messageReceivers.Add(_receiver);
-        _receiver.Prepare(InSocket, messageDispatcher, this)
-            .OnDisconnect(onReceiverDisconnected);
-    }
-
-    protected virtual void onReceiverDisconnected(string InKey, Socket InSocket){
-        Managements.Event.Fire(new UNetDisconnectedEvent{RemoteIP=RemoteIP,RemotePort=RemotePort});
-    }
-
-    protected void destroySocket(Socket InSocket)
-    {
-        if(InSocket==null) return;
-        try
-        {
-            if(InSocket.Connected){
-                InSocket.Shutdown(SocketShutdown.Both);
-                InSocket.Disconnect(false);
-            }
-            
-            InSocket.Close();
-            InSocket.Dispose();     
+            });
         }
-        catch (System.Exception e)
-        {
-            UnityEngine.Debug.LogWarning(e.Message);
+
+        protected UNetMsgReceiver MsgReceiver = null;
+        protected List<UNetMsgReceiver> messageReceivers = new List<UNetMsgReceiver> ();
+        protected void startNewReceiver (Socket InSocket) {
+            if (MsgReceiver == null) return;
+            UNetMsgReceiver _receiver = MsgReceiver.Clone (); //Activator.CreateInstance(MsgReceiver) as UMessageReceiver;
+            messageReceivers.Add (_receiver);
+            _receiver.Prepare (InSocket, messageDispatcher, this)
+                .OnDisconnect (onReceiverDisconnected);
         }
-        InSocket = null;
+
+        protected virtual void onReceiverDisconnected (string InKey, Socket InSocket) {
+            var _infoArr = InKey.Split ('_');
+            var _ip = _infoArr[0];
+            var _port = int.Parse (_infoArr[1]);
+            // var _ip = (InSocket.RemoteEndPoint as IPEndPoint).Address.ToString ();
+            // var _port = (InSocket.RemoteEndPoint as IPEndPoint).Port;
+            var _disconnectedEvent = new UNetDisconnectedEvent { RemoteIP = _ip, RemotePort = _port };
+            Managements.Event.Fire (_disconnectedEvent);
+            onDisconnected.Invoke (_disconnectedEvent);
+        }
+
+        protected void destroySocket (ref Socket InSocket) {
+            if (InSocket == null) return;
+            try {
+                if (InSocket.Connected) {
+                    InSocket.Shutdown (SocketShutdown.Both);
+                    InSocket.Disconnect (false);
+                }
+
+                InSocket.Close ();
+                InSocket.Dispose ();
+            } catch (System.Exception e) {
+                UnityEngine.Debug.LogWarning (e.Message);
+            }
+            InSocket = null;
+        }
+
     }
-
-}
-
 
 }

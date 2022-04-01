@@ -34,6 +34,7 @@ namespace UNIHper {
                 .ForEach (_ => {
                     _.Dispose ();
                 });
+            serialPorts.Clear ();
         }
 
     }
