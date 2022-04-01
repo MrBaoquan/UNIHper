@@ -15,7 +15,6 @@ namespace UNIHper {
                 } catch (System.Exception e) {
                     UnityEngine.Debug.Log (e.Message);
                 }
-
             }
         }
 

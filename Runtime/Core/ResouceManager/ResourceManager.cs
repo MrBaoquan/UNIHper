@@ -384,7 +384,12 @@ namespace UNIHper {
         }
 
         private void UnLoadAssetByKey (string InKey) {
-            resources[InKey].Clear ();
+            if (resources.ContainsKey (InKey))
+                resources[InKey].Clear ();
+            if (bundles.ContainsKey (InKey)) {
+                bundles[InKey].Values.ToList ().ForEach (_ => _?.Unload (true));
+                bundles[InKey].Clear ();
+            }
         }
 
         private string getCurrentSceneName () {

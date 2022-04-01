@@ -20,10 +20,22 @@ namespace UNIHper {
             PlayMusic (_clip, InVolume);
         }
 
+        public void PlayMusic () {
+            if (!musicAudioSource.isPlaying)
+                musicAudioSource.Play ();
+        }
+
+        public void PauseMusic () {
+            musicAudioSource.Pause ();
+        }
+
+        public void StopMusic () {
+            musicAudioSource.Stop ();
+        }
+
         public void PlayEffect (AudioClip InEffect, Action<AudioClip> InCallback = null) {
             effectAudioSource.PlayOneShot (InEffect);
-            Observable.Interval (TimeSpan.FromSeconds (InEffect.length + 0.1f))
-                .First ()
+            Observable.Timer (TimeSpan.FromSeconds (InEffect.length + 0.1f))
                 .Subscribe (_1 => {
                     if (InCallback != null) InCallback (InEffect);
                 });
@@ -39,6 +51,10 @@ namespace UNIHper {
         }
 
         private AudioSource musicAudioSource;
+        public AudioSource MusicAudioSource {
+            get => musicAudioSource;
+        }
+
         private AudioSource effectAudioSource;
 
         private void Awake () {

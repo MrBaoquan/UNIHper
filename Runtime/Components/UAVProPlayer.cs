@@ -49,6 +49,34 @@ namespace UNIHper {
             }
         }
 
+        public bool IsPlaying {
+            get {
+                return MediaPlayer.Control.IsPlaying ();
+            }
+        }
+
+        public bool IsPaused {
+            get {
+                return MediaPlayer.Control.IsPaused ();
+            }
+        }
+
+        public double Duration {
+            get {
+                return MediaPlayer.Info.GetDuration ();
+            }
+        }
+
+        /// <summary>
+        /// Current video time in seconds
+        /// </summary>
+        /// <value></value>
+        public double CurrentTime {
+            get {
+                return MediaPlayer.Control.GetCurrentTime ();
+            }
+        }
+
         private List<IDisposable> playHandlers = new List<IDisposable> ();
         /// <summary>
         /// 播放指定地址的视频  可为网络地址 或者本地地址

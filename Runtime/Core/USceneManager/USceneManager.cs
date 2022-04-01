@@ -5,11 +5,13 @@ using System.Threading.Tasks;
 using DNHper;
 using UniRx;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
 namespace UNIHper {
 
     public class USceneManager : Singleton<USceneManager> {
+        private UnityEvent<Scene> m_onSceneLoaded = new UnityEvent<Scene> ();
         internal async Task Initialize () {
             UNIHperLogger.Log ("SceneManager Initializing ...");
             UIManager.Instance.OnEnterScene (SceneManager.GetActiveScene ().name);
@@ -18,14 +20,17 @@ namespace UNIHper {
                 SceneScriptManager.Instance.TriggerOnDestroy (SceneManager.GetActiveScene ().name);
             };
             await Task.CompletedTask;
+        }
 
+        public IObservable<Scene> OnNewSceneLoadedAsObservable () {
+            return m_onSceneLoaded.AsObservable ();
         }
 
         public void LoadSceneAsync (string InSceneName, System.Action<float> InProgress, System.Action InCompleted) {
             MonobehaviourUtil.Instance.StartCoroutine (IE_LoadScene (InSceneName, InProgress, InCompleted));
         }
 
-        public IEnumerator IE_LoadScene (string InSceneName, System.Action<float> InProgress, System.Action InCompleted) {
+        internal IEnumerator IE_LoadScene (string InSceneName, System.Action<float> InProgress, System.Action InCompleted) {
             string _currentSceneName = SceneManager.GetActiveScene ().name;
             // 1. 触发场景脚本->销毁事件
             if (!isCurrentScene (InSceneName)) {
@@ -59,6 +64,8 @@ namespace UNIHper {
 
             // 6. 通知场景脚本 OnStart 事件
             SceneScriptManager.Instance.TriggerOnStart (InSceneName);
+
+            m_onSceneLoaded.Invoke (SceneManager.GetSceneByName (InSceneName));
             yield return null;
         }
 

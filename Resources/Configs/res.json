@@ -9,7 +9,7 @@
     "SceneEntry": [
         {
             "type": "GameObject",
-            "path": "Prefabs/UI/SceneEntry"
+            "path": "Prefabs/UIs/SceneEntry"
         }
     ]
 }

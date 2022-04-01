@@ -41,7 +41,8 @@
         "WatermarkUI": {
             "type": "Normal", // UI类型
             "script": "WatermarkUI", // 脚本名称
-            "asset": "WatermarkUI" // 资源名称
+            "asset": "WatermarkUI", // 资源名称
+            "canvas": "CanvasDefault" // 指定 Canvas 结点
         }
     },
 

@@ -18,6 +18,12 @@ public class ##CLASSNAME## : UIBase
         
     }
 
+    // Called when this ui is loaded
+    protected override void OnLoaded()
+    {
+
+    }
+
     // Called when this ui is showing
     protected override void OnShow()
     {

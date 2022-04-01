@@ -69,7 +69,6 @@ namespace UNIHper {
                 return 0;
             }
             current = (int) Mathf.Repeat (current + 1, Max + 1);
-            Debug.Log ("next: " + current + " max:" + (Max + 1));
             onIndexChanged.Invoke (current);
             return current;
         }

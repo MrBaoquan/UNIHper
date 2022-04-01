@@ -15,5 +15,5 @@ MonoBehaviour:
   resPath: UNIHper/resources
   uiPath: UNIHper/uis
   assemblyPath: UNIHper/assemblies
-  showDebugLog: 1
+  showDebugLog: 0
   configDriver: 0
