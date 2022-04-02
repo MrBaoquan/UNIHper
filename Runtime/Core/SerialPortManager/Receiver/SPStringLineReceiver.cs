@@ -14,7 +14,7 @@ namespace UNIHper {
                 PushMessage (new SPLineMessage { RawData = Encoding.UTF8.GetBytes (_result), Content = _result });
             } catch (System.Exception e) {
                 //UnityEngine.Debug.Log(_result.Length);
-                UnityEngine.Debug.Log (e.Message);
+                //UnityEngine.Debug.Log (e.Message);
             }
         }
 
