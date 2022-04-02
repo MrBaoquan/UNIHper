@@ -147,6 +147,9 @@ namespace UNIHper {
         IDisposable messageDispatcherHandler = null;
 
         UnityEvent<NetMessage, USocket> onMessageReceived = new UnityEvent<NetMessage, USocket> ();
+        public IObservable<Tuple<NetMessage, USocket>> OnReceivedAsObservable () {
+            return onMessageReceived.AsObservable ();
+        }
         protected void dispatchMessages () {
             if (messageDispatcherHandler != null) messageDispatcherHandler.Dispose ();
             messageDispatcherHandler = Observable.EveryUpdate ().Subscribe (_ => {
