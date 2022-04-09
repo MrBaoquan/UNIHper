@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using RenderHeads.Media.AVProVideo;
 using UniRx;
 using UnityEngine;
@@ -67,6 +68,12 @@ namespace UNIHper {
             }
         }
 
+        public bool IsMediaOpened {
+            get {
+                return MediaPlayer.MediaOpened;
+            }
+        }
+
         /// <summary>
         /// Current video time in seconds
         /// </summary>
@@ -87,6 +94,13 @@ namespace UNIHper {
         /// <param name="StartTime">开始时间</param>
         /// <param name="EndTime">结束时间</param>
         IDisposable _readyHandler = null;
+        public void Play (Action<UAVProPlayer> OnFinished, bool bLoop, double StartTime = 0, double EndTime = 0) {
+            if (MediaPlayer.MediaPath.Path == string.Empty || MediaPlayer.Control == null) {
+                return;
+            }
+            Play (mediaPlayer.MediaPath.Path, OnFinished, bLoop, StartTime, EndTime);
+
+        }
         public void Play (string InUrl, Action<UAVProPlayer> OnFinished, bool bLoop, double StartTime = 0, double EndTime = 0) {
             disposeHandlers (playHandlers);
             if (_readyHandler != null) {
@@ -95,46 +109,47 @@ namespace UNIHper {
             }
 
             Action _registerFinishedSeekingEvent = () => {
-                playHandlers.Add (OnFinishedSeekingAsObservable ().Subscribe (_ => {
-                    MediaPlayer.Play ();
-                    bool _bFinished = false;
-                    var _duration = mediaPlayer.Info.GetDuration ();
-                    EndTime = EndTime == 0 ? _duration : EndTime;
+                playHandlers.Add (
+                    OnFinishedSeekingAsObservable ().Subscribe (_ => {
+                        MediaPlayer.Play ();
+                        bool _bFinished = false;
+                        var _duration = mediaPlayer.Info.GetDuration ();
+                        EndTime = EndTime == 0 ? _duration : EndTime;
 
-                    var _startTime = Mathf.Clamp ((float) StartTime, 0, (float) _duration);
-                    var _endTime = Mathf.Clamp ((float) EndTime, _startTime, (float) _duration);
+                        var _startTime = Mathf.Clamp ((float) StartTime, 0, (float) _duration);
+                        var _endTime = Mathf.Clamp ((float) EndTime, _startTime, (float) _duration);
 
-                    // 播放结束回调
-                    Action _onFinished = () => {
-                        if (_bFinished) return;
+                        // 播放结束回调
+                        Action _onFinished = () => {
+                            if (_bFinished) return;
 
-                        _bFinished = true;
-                        if (OnFinished != null) OnFinished (this);
-                        MediaPlayer.Pause ();
+                            _bFinished = true;
+                            if (OnFinished != null) OnFinished (this);
+                            MediaPlayer.Pause ();
 
-                        if (bLoop) {
-                            MediaPlayer.Control.Seek (StartTime);
-                        } else {
-                            disposeHandlers (playHandlers);
-                        }
-                    };
+                            if (bLoop) {
+                                MediaPlayer.Control.Seek (StartTime);
+                            } else {
+                                disposeHandlers (playHandlers);
+                            }
+                        };
 
-                    // 正常播放时间大于指定结束时间
-                    playHandlers.Add (Observable.EveryUpdate ()
-                        .Where (_1 => MediaPlayer.Control.GetCurrentTime () >= EndTime)
-                        .First ()
-                        .Subscribe (_1 => {
+                        // 正常播放时间大于指定结束时间
+                        playHandlers.Add (Observable.EveryUpdate ()
+                            .Where (_1 => MediaPlayer.Control.GetCurrentTime () >= EndTime)
+                            .First ()
+                            .Subscribe (_1 => {
+                                _onFinished ();
+                                //Debug.LogFormat ("UVA: reach end point c1: {0}", MediaPlayer.Control.GetCurrentTime ());
+                            }));
+
+                        // 视频到达结尾
+                        playHandlers.Add (OnFinishedPlayingAsObservable ().Subscribe (_1 => {
+                            //Debug.LogFormat ("UVA: reach end point  c2: {0}", MediaPlayer.Control.GetCurrentTime ());
                             _onFinished ();
-                            //Debug.LogFormat ("UVA: reach end point c1: {0}", MediaPlayer.Control.GetCurrentTime ());
                         }));
 
-                    // 视频到达结尾
-                    playHandlers.Add (OnFinishedPlayingAsObservable ().Subscribe (_1 => {
-                        //Debug.LogFormat ("UVA: reach end point  c2: {0}", MediaPlayer.Control.GetCurrentTime ());
-                        _onFinished ();
                     }));
-
-                }));
 
             };
 
@@ -152,6 +167,22 @@ namespace UNIHper {
                 _registerFinishedSeekingEvent ();
                 MediaPlayer.Control.Seek (StartTime);
             }
+        }
+
+        public IObservable<UAVProPlayer> OpenMedia (string InPath) {
+            return Observable.Create<UAVProPlayer> (_observer => {
+                var _cancelationToken = new CancellationTokenSource ();
+                OnFirstFrameReadyAsObservable ().Subscribe (_ => {
+                    if (_cancelationToken.IsCancellationRequested) {
+                        _observer.OnError (new Exception ("canceled"));
+                        return;
+                    }
+                    _observer.OnNext (this);
+                    _observer.OnCompleted ();
+                });
+                MediaPlayer.OpenMedia (MediaPathType.AbsolutePathOrURL, InPath, false);
+                return _cancelationToken;
+            });
         }
 
         public void Play () {

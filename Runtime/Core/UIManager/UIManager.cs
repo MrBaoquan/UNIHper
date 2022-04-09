@@ -291,10 +291,11 @@ namespace UNIHper {
             UReflection.SetPrivateField<string> (_uiComponent, "__CanvasKey", InUIConfig.canvas);
             UReflection.SetPrivateField<string> (_uiComponent, "__UIKey", InUIKey);
             UReflection.SetPrivateField<UIType> (_uiComponent, "__Type", InUIConfig.Type);
-            UReflection.CallPrivateMethod (_uiComponent, "OnLoad");
 
             _newUI.transform.SetParent (getParentUIAttachTo (_uiComponent.Type, InUIConfig.canvas));
             allSpawnedUICaches.Add (InUIKey, _uiComponent);
+
+            UReflection.CallPrivateMethod (_uiComponent, "OnLoad");
         }
 
         private Transform getParentUIAttachTo (UIType InUIType, string InCanvasKey) {
