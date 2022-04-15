@@ -14,6 +14,8 @@ namespace UNIHper {
         internal string __CanvasKey = string.Empty;
         protected string __UIKey = string.Empty;
         protected UIType __Type = UIType.Normal;
+        internal UIManager.UIConfig __UIConfig = null;
+
         public UIType Type {
             get {
                 return __Type;
@@ -57,11 +59,14 @@ namespace UNIHper {
         }
 
         // Called when the ui is loaded
-        protected void OnLoad () {
+        protected void OnInit () {
+            handleInit ();
             if (uiAnimComponent != null)
                 UReflection.CallPrivateMethod (uiAnimComponent, "OnUIAttached");
             OnLoaded ();
         }
+
+        protected virtual void handleInit () { }
 
         // Called when the ui is being requested to show
         protected void HandleShow () {

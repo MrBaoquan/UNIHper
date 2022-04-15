@@ -12,27 +12,43 @@ using UnityEngine;
 namespace UNIHper {
 
     public class UIManager : Singleton<UIManager> {
-        const string CANVAS_DEFAULT = "CanvasDefault";
-        private Dictionary<string, UIRootLayout> m_uiRootLayoutDic = new Dictionary<string, UIRootLayout> ();
+        const string UGUICANVAS_DEFAULT = "UGUIRoot";
+        const string FGUICANVAS_DEFAULT = "FGUIRoot";
+        const int STANDALONE_ORDER = 0;
+        const int NORMAL_ORDER = 100;
+        const int POPUP_ORDER = 200;
 
-        private class UIConfig {
+        private Dictionary<string, UGUIRootLayout> m_uiRootLayoutDic = new Dictionary<string, UGUIRootLayout> ();
+        private Dictionary<string, FGUIRootLayout> m_fuiRootLayoutDic = new Dictionary<string, FGUIRootLayout> ();
+
+        internal class UIConfig {
             [JsonProperty ("asset")]
             public string Asset = string.Empty;
             [JsonProperty ("type")]
             [JsonConverter (typeof (StringEnumConverter))]
             public UIType Type = UIType.Normal;
 
+            [JsonProperty ("driver")]
+            [JsonConverter (typeof (StringEnumConverter))]
+            public UIDriver Driver = UIDriver.UGUI;
+
             [JsonProperty ("script")]
-            public string script = string.Empty;
+            public string Script = string.Empty;
 
             [JsonProperty ("canvas")]
-            public string canvas = "CanvasDefault";
+            public string Canvas = string.Empty;
+
+            [JsonProperty ("package")]
+            public string Package = string.Empty;
+
+            [JsonProperty ("component")]
+            public string Component = string.Empty;
 
             public string GetScript (string InDefault) {
-                if (script == string.Empty) {
+                if (Script == string.Empty) {
                     return InDefault;
                 }
-                return script;
+                return Script;
             }
 
             public string GetAssetName (string InDefault) {
@@ -40,6 +56,16 @@ namespace UNIHper {
                     return InDefault;
                 }
                 return Asset;
+            }
+
+            [JsonIgnore]
+            public string CanvasName {
+                get {
+                    if (Canvas == string.Empty) {
+                        return Driver == UIDriver.UGUI ? UGUICANVAS_DEFAULT : FGUICANVAS_DEFAULT;
+                    }
+                    return Canvas;
+                }
             }
         }
 
@@ -244,12 +270,14 @@ namespace UNIHper {
         /// </summary>
 
         private void ReadConfigData () {
+
+            var _persistUIAsset = Resources.Load<TextAsset> ("Configs/Persistence/ui");
+            persistConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, UIConfig>> (_persistUIAsset.text);
+
             string _uiPath = UNIHperConfig.UIConfigPath;
             TextAsset _uiAsset = Resources.Load<TextAsset> (_uiPath);
             customUIConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, UIConfig>>> (_uiAsset.text);
 
-            var _persistUIAsset = Resources.Load<TextAsset> ("Configs/Persistence/ui");
-            persistConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, UIConfig>> (_persistUIAsset.text);
         }
 
         private void spawnPersistUIs () {
@@ -264,43 +292,65 @@ namespace UNIHper {
 
         private void SpawnUIS (Dictionary<string, UIConfig> InUIConfigs) {
             foreach (var _uiConfig in InUIConfigs) {
-                SpawnUI (_uiConfig.Key, _uiConfig.Value);
+                SpawnUI (_uiConfig);
             }
         }
 
-        private void SpawnUI (string InUIKey, UIConfig InUIConfig) {
+        private void SpawnUI (KeyValuePair<string, UIConfig> InUIConfig) {
+            var _uiKey = InUIConfig.Key;
+            var _uiConfig = InUIConfig.Value;
             //string _scriptName = InUIConfig.GetScript(InUIKey) + ", MainGame, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null";
-            Type _T = AssemblyConfig.GetUType (InUIKey);
+            Type _T = AssemblyConfig.GetUType (_uiKey);
             if (_T == null) {
-                Debug.LogWarningFormat ("no class name match: {0}, spawn ui {0} failed", InUIKey);
+                Debug.LogWarningFormat ("no class name match: {0}, spawn ui {0} failed", _uiKey);
                 return;
             }
-
-            GameObject _uiPrefab = ResourceManager.Instance.Get<GameObject> (InUIConfig.GetAssetName (InUIKey));
-            if (_uiPrefab is null) {
-                return;
-            }
-            _uiPrefab.SetActive (false);
-
-            GameObject _newUI = GameObject.Instantiate (_uiPrefab, getUIRootLayout (InUIConfig.canvas).NormalUIRoot);
+            var _newUI = createUIInstance (InUIConfig);
+            if (_newUI == null) return;
 
             UIBase _uiComponent = _newUI.GetComponent (_T) as UIBase;
             if (!_uiComponent) {
                 _uiComponent = _newUI.AddComponent (_T) as UIBase;
             }
-            UReflection.SetPrivateField<string> (_uiComponent, "__CanvasKey", InUIConfig.canvas);
-            UReflection.SetPrivateField<string> (_uiComponent, "__UIKey", InUIKey);
-            UReflection.SetPrivateField<UIType> (_uiComponent, "__Type", InUIConfig.Type);
+            UReflection.SetPrivateField<string> (_uiComponent, "__CanvasKey", _uiConfig.CanvasName);
+            UReflection.SetPrivateField<string> (_uiComponent, "__UIKey", _uiKey);
+            UReflection.SetPrivateField<UIType> (_uiComponent, "__Type", _uiConfig.Type);
+            UReflection.SetPrivateField<UIConfig> (_uiComponent, "__UIConfig", _uiConfig);
 
-            _newUI.transform.SetParent (getParentUIAttachTo (_uiComponent.Type, InUIConfig.canvas));
-            allSpawnedUICaches.Add (InUIKey, _uiComponent);
+            _newUI.transform.SetParent (getParentUIAttachTo (_uiConfig));
+            _newUI.layer = _newUI.transform.parent.gameObject.layer;
+            allSpawnedUICaches.Add (_uiKey, _uiComponent);
 
-            UReflection.CallPrivateMethod (_uiComponent, "OnLoad");
+            _newUI.SetActive (false);
+            UReflection.CallPrivateMethod (_uiComponent, "OnInit");
         }
 
-        private Transform getParentUIAttachTo (UIType InUIType, string InCanvasKey) {
-            var _uiLayout = getUIRootLayout (InCanvasKey);
-            switch (InUIType) {
+        private GameObject createUIInstance (KeyValuePair<string, UIConfig> InUIConfig) {
+            var _uiConfig = InUIConfig.Value;
+            if (_uiConfig.Driver == UIDriver.UGUI) {
+                GameObject _uiPrefab = ResourceManager.Instance.Get<GameObject> (_uiConfig.GetAssetName (InUIConfig.Key));
+                if (_uiPrefab is null) {
+                    return null;
+                }
+                GameObject _newUI = GameObject.Instantiate (_uiPrefab, getUGUIRootLayout (_uiConfig.CanvasName).NormalUIRoot);
+                return _newUI;
+            } else if (_uiConfig.Driver == UIDriver.FGUI) {
+                var _uiPrefab = ResourceManager.Instance.Get<GameObject> (_uiConfig.GetAssetName (InUIConfig.Key));
+                if (_uiPrefab != null) {
+                    return GameObject.Instantiate (_uiPrefab, getFGUIRootLayout (_uiConfig.CanvasName).NormalUIRoot);
+                }
+
+                var _newUI = new GameObject (InUIConfig.Key);
+                return _newUI;
+            }
+            return null;
+        }
+
+        private Transform getParentUIAttachTo (UIConfig InUIConfig) {
+
+            UIRootLayout _uiLayout = InUIConfig.Driver == UIDriver.UGUI? getUGUIRootLayout (InUIConfig.CanvasName) as UIRootLayout : getFGUIRootLayout (InUIConfig.CanvasName) as UIRootLayout;
+
+            switch (InUIConfig.Type) {
                 case UIType.Normal:
                     return _uiLayout.NormalUIRoot;
                 case UIType.Standalone:
@@ -311,17 +361,28 @@ namespace UNIHper {
             return null;
         }
 
-        private UIRootLayout getUIRootLayout (string InCanvasKey = CANVAS_DEFAULT) {
+        private UGUIRootLayout getUGUIRootLayout (string InCanvasKey = UGUICANVAS_DEFAULT) {
             if (!m_uiRootLayoutDic.ContainsKey (InCanvasKey)) {
                 var _canvas = GameObject.FindObjectsOfType<Canvas> (true).Where (_ => _.gameObject.name == InCanvasKey).FirstOrDefault ();
                 if (_canvas == null) {
-                    var _uiLayoutGO = GameObject.Instantiate (Resources.Load<GameObject> ("Prefabs/CanvasDefault"));
+                    var _uiLayoutGO = GameObject.Instantiate (Resources.Load<GameObject> ($"Prefabs/{UGUICANVAS_DEFAULT}"));
                     _uiLayoutGO.name = InCanvasKey;
                     _canvas = _uiLayoutGO.GetComponent<Canvas> ();
                 }
-                m_uiRootLayoutDic.Add (InCanvasKey, new UIRootLayout (_canvas));
+                m_uiRootLayoutDic.Add (InCanvasKey, new UGUIRootLayout (_canvas));
             }
             return m_uiRootLayoutDic[InCanvasKey];
+        }
+
+        private FGUIRootLayout getFGUIRootLayout (string InCanvasKey = UGUICANVAS_DEFAULT) {
+            if (!m_fuiRootLayoutDic.ContainsKey (InCanvasKey)) {
+                var _canvas = GameObject.Find (InCanvasKey);
+                if (_canvas == null) {
+                    _canvas = GameObject.Instantiate (Resources.Load<GameObject> ($"Prefabs/{FGUICANVAS_DEFAULT}"));
+                }
+                m_fuiRootLayoutDic.Add (InCanvasKey, new FGUIRootLayout (_canvas.transform));
+            }
+            return m_fuiRootLayoutDic[InCanvasKey];
         }
 
         private void Show (string InKey, UIBase InUIComponent) {
@@ -345,6 +406,8 @@ namespace UNIHper {
 
             UReflection.CallPrivateMethod (_uiComponent, "HandleShow");
             normalUIs.Add (InKey, _uiComponent);
+
+            syncFGUISortingOrders (normalUIs.Values.ToList (), NORMAL_ORDER);
         }
 
         private void hideNormalUI (string InKey) {
@@ -359,9 +422,10 @@ namespace UNIHper {
 
         private void showStandaloneUI (string InKey) {
             UIBase _uiComponent = allSpawnedUICaches[InKey];
-            foreach (var _uiItem in standaloneUIs.Values
-                    .Where (_ui => _ui.__CanvasKey == _uiComponent.__CanvasKey && _ui != _uiComponent)
-                    .ToList ()) {
+            var _standaloneUIs = standaloneUIs.Values
+                .Where (_ui => _ui.__CanvasKey == _uiComponent.__CanvasKey && _ui != _uiComponent)
+                .ToList ();
+            foreach (var _uiItem in _standaloneUIs) {
                 UReflection.CallPrivateMethod (_uiItem, "HandleHide");
             }
 
@@ -370,6 +434,8 @@ namespace UNIHper {
             if (!standaloneUIs.Keys.Contains (InKey)) {
                 standaloneUIs.Add (InKey, _uiComponent);
             }
+
+            syncFGUISortingOrders (standaloneUIs.Values.ToList (), STANDALONE_ORDER);
         }
 
         private void hideStandaloneUI (string InKey) {
@@ -402,6 +468,8 @@ namespace UNIHper {
 
             UReflection.CallPrivateMethod (_uiComponent, "HandleShow");
             _uiComponent.transform.SetAsLastSibling ();
+
+            syncFGUISortingOrders (popupUIs, POPUP_ORDER);
         }
 
         private void hidePopupUI (string InKey = "") {
@@ -421,6 +489,14 @@ namespace UNIHper {
 
             UReflection.CallPrivateMethod (_uiComponent, "HandleHide");
             popupUIs.Remove (_uiComponent);
+        }
+
+        private void syncFGUISortingOrders (List<UIBase> InUIs, int InStartOrder) {
+            InUIs.Where (_ui => _ui is FGUIBase)
+                .Select (_ => _ as FGUIBase)
+                .WithIndex ().ToList ().ForEach (_item => {
+                    _item.item.Panel.SetSortingOrder (InStartOrder + _item.index, true);
+                });
         }
 
         private bool isPersistUI (string InUIKey) {

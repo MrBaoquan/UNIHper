@@ -22,7 +22,7 @@ namespace UNIHper {
         private static Texture2D scriptIcon = (EditorGUIUtility.IconContent ("cs Script Icon").image as Texture2D);
 
         /// <summary>Creates a new C# Class.</summary>
-        [MenuItem ("Assets/Create/UNIHper/SceneScript", priority = 1)]
+        [MenuItem ("Assets/Create/UNIHper/Scene Script", priority = 1)]
         [MenuItem ("UNIHper/Create/SceneScript", priority = 1)]
         private static void CreateSceneScript () {
             CreateFromTemplate
@@ -32,17 +32,27 @@ namespace UNIHper {
                 );
         }
 
-        [MenuItem ("Assets/Create/UNIHper/UIScript", priority = 1)]
-        [MenuItem ("UNIHper/Create/UIScript", priority = 1)]
-        private static void CreateUIScript () {
+        [MenuItem ("Assets/Create/UNIHper/UGUI Script", priority = 1)]
+        [MenuItem ("UNIHper/Create/UGUIScript", priority = 1)]
+        private static void CreateUGUIScript () {
             CreateFromTemplate
                 (
                     "NewUI.cs",
-                    $@"Packages/{bundleName}/Editor/Templates/UIScriptTemplate.txt"
+                    $@"Packages/{bundleName}/Editor/Templates/UGUIScriptTemplate.txt"
                 );
         }
 
-        [MenuItem ("Assets/Create/UNIHper/ConfigScript", priority = 1)]
+        [MenuItem ("Assets/Create/UNIHper/FGUI Script", priority = 1)]
+        [MenuItem ("UNIHper/Create/FGUIScript", priority = 1)]
+        private static void CreateFGUIScript () {
+            CreateFromTemplate
+                (
+                    "NewUI.cs",
+                    $@"Packages/{bundleName}/Editor/Templates/FGUIScriptTemplate.txt"
+                );
+        }
+
+        [MenuItem ("Assets/Create/UNIHper/Config Script", priority = 1)]
         [MenuItem ("UNIHper/Create/ConfigScript", priority = 1)]
         private static void CreateConfigScript () {
             CreateFromTemplate

@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using DNHper;
+using FairyGUI;
 using UniRx;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -41,6 +42,9 @@ namespace UNIHper {
         private Dictionary<string, Dictionary<string, UnityEngine.Object>> resources;
         // 所有AB包实例
         private Dictionary<string, Dictionary<string, AssetBundle>> bundles = new Dictionary<string, Dictionary<string, AssetBundle>> ();
+
+        // 所有加载的uipackages
+        private Dictionary<string, Dictionary<string, UIPackage>> packages = new Dictionary<string, Dictionary<string, UIPackage>> ();
 
         internal async Task Initialize () {
             UNIHperLogger.Log ("ResourceManager Initializing ...");
@@ -97,7 +101,7 @@ namespace UNIHper {
                 .Where (_key => new List<string> () { "Persistence", getCurrentSceneName (), CUSTOM_RES_KEY }.Contains (_key))
                 .Select (_key => resources[_key])
                 .SelectMany (_v => _v);
-            return _resources.Where (_res => _res.Key.EndsWith ($"_{InResName}"))
+            return _resources.Where (_res => _res.Key.EndsWith ($"@{InResName}"))
                 .Select (_res => _res.Value)
                 .ToList ();
         }
@@ -236,10 +240,14 @@ namespace UNIHper {
         /// </summary>
 
         private T getResource<T> (Dictionary<string, UnityEngine.Object> InResources, string InName) where T : UnityEngine.Object {
-            string _key = string.Format ("{0}_{1}", typeof (T).FullName, InName);
+            string _key = buildResKey (InName, typeof (T));
             UNIHperLogger.Log ($"try get asset: {_key}");
             if (!InResources.ContainsKey (_key)) return default (T);
             return InResources[_key] as T;
+        }
+
+        private string buildResKey (string InName, Type InType) {
+            return string.Format ("{0}@{1}", InType.FullName, InName);
         }
 
         private void ReadConfigData () {
@@ -310,7 +318,17 @@ namespace UNIHper {
 
         // 加载Resources文件夹下资源包
         private async Task loadResourceAssets (List<ResourceItem> InItems, string InResID) {
-            foreach (var _item in InItems) {
+            var _fairyGUIPackages = InItems.Where (_ => _.type == "FairyGUI").ToList ();
+
+            // 加载FairyGUI资源包
+            if (!packages.ContainsKey (InResID)) {
+                packages.Add (InResID, new Dictionary<string, UIPackage> ());
+            }
+            _fairyGUIPackages.ForEach (_ => {
+                packages[InResID].Add (_.path, UIPackage.AddPackage (_.path));
+            });
+
+            foreach (var _item in InItems.Except (_fairyGUIPackages)) {
                 var _T = Type.GetType ("UnityEngine." + _item.type + ",UnityEngine");
                 try {
                     UnityEngine.Object[] _resources = await Task.FromResult (Resources.LoadAll (_item.path, _T));
@@ -330,7 +348,24 @@ namespace UNIHper {
                 return;
             }
 
-            foreach (var _resItem in InItems) {
+            var _fairyGUIPackages = InItems.Where (_ => _.type == "FairyGUI").ToList ();
+            var _fairyGUIAssets = await Observable.Merge (
+                _fairyGUIPackages.Select (_ => loadAddressableAssetsAsync<UnityEngine.Object> (_.label))
+            ).ToTask ();
+
+            appendResources (_fairyGUIAssets.ToArray (), InResID);
+
+            _fairyGUIAssets.Where (_r => _r is TextAsset)
+                .Select (_r => _r as TextAsset)
+                .ToList ().ForEach (_obj => {
+                    var _pack = UIPackage.AddPackage (_obj.bytes, _obj.name.Replace ("_fui", ""),
+                        (string _name, string _extesion, Type _type, out DestroyMethod _destroyMethod) => {
+                            _destroyMethod = DestroyMethod.None;
+                            return Get (_name).FirstOrDefault () ?? null;
+                        });
+                });
+
+            foreach (var _resItem in InItems.Except (_fairyGUIPackages)) {
                 UNIHperLogger.Log ($"load addressable assets, label:{_resItem.label}");
                 try {
                     var _T = Type.GetType ("UnityEngine." + _resItem.type + ",UnityEngine");
@@ -373,7 +408,7 @@ namespace UNIHper {
         private void appendResources (UnityEngine.Object[] InResources, string InResID) {
             if (!resources.ContainsKey (InResID)) resources.Add (InResID, new Dictionary<string, UnityEngine.Object> ());
             foreach (var _resource in InResources) {
-                string _key = string.Format ("{0}_{1}", _resource.GetType ().FullName, _resource.name);
+                string _key = buildResKey (_resource.name, _resource.GetType ());
                 if (resources[InResID].ContainsKey (_key)) {
                     UNIHperLogger.LogError ($"resource key can not duplicate, error key: {_key}");
                     continue;
@@ -389,6 +424,12 @@ namespace UNIHper {
             if (bundles.ContainsKey (InKey)) {
                 bundles[InKey].Values.ToList ().ForEach (_ => _?.Unload (true));
                 bundles[InKey].Clear ();
+            }
+            if (packages.ContainsKey (InKey)) {
+                packages[InKey].Values.ToList ().ForEach (_ => {
+                    UIPackage.RemovePackage (_.id);
+                });
+                packages[InKey].Clear ();
             }
         }
 
