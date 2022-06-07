@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 5978f8f3dd274e848fbb7a123bde1fb9
+guid: 6a3c684705042f345975d924f6983e36
 PluginImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -12,87 +12,75 @@ PluginImporter:
   validateReferences: 1
   platformData:
   - first:
-      : N3DS
+      : Linux
     second:
-      enabled: 1
-      settings: {}
+      enabled: 0
+      settings:
+        CPU: x86
   - first:
-      : PSM
+      : OSXIntel
     second:
-      enabled: 1
-      settings: {}
+      enabled: 0
+      settings:
+        CPU: AnyCPU
   - first:
-      : PSP2
+      : OSXIntel64
     second:
-      enabled: 1
-      settings: {}
+      enabled: 0
+      settings:
+        CPU: AnyCPU
   - first:
       : SamsungTV
     second:
       enabled: 1
-      settings: {}
+      settings:
+        STV_MODEL: STANDARD_13
   - first:
       : Tizen
     second:
       enabled: 1
       settings: {}
   - first:
-      : WiiU
+      Android: Android
     second:
       enabled: 1
-      settings: {}
+      settings:
+        CPU: AnyCPU
   - first:
       Any: 
     second:
       enabled: 0
-      settings:
-        Exclude Android: 1
-        Exclude Editor: 1
-        Exclude Linux: 1
-        Exclude Linux64: 1
-        Exclude LinuxUniversal: 1
-        Exclude N3DS: 0
-        Exclude OSXIntel: 1
-        Exclude OSXIntel64: 1
-        Exclude OSXUniversal: 1
-        Exclude PS4: 0
-        Exclude PSM: 0
-        Exclude PSP2: 0
-        Exclude SamsungTV: 0
-        Exclude Tizen: 0
-        Exclude WebGL: 0
-        Exclude WiiU: 0
-        Exclude Win: 1
-        Exclude Win64: 1
-        Exclude WindowsStoreApps: 0
-        Exclude XboxOne: 0
-        Exclude iOS: 0
-        Exclude tvOS: 0
+      settings: {}
   - first:
       Editor: Editor
     second:
       enabled: 0
       settings:
+        CPU: AnyCPU
         DefaultValueInitialized: true
+        OS: AnyOS
   - first:
-      PS4: PS4
+      Standalone: Linux64
     second:
-      enabled: 1
-      settings: {}
+      enabled: 0
+      settings:
+        CPU: AnyCPU
   - first:
       Standalone: Win
     second:
-      enabled: 1
-      settings: {}
+      enabled: 0
+      settings:
+        CPU: AnyCPU
   - first:
       Standalone: Win64
     second:
-      enabled: 1
-      settings: {}
+      enabled: 0
+      settings:
+        CPU: AnyCPU
   - first:
       WebGL: WebGL
     second:
-      enabled: 0
+      enabled: 1
       settings: {}
   - first:
       Windows Store Apps: WindowsStoreApps
@@ -100,16 +88,17 @@ PluginImporter:
       enabled: 1
       settings:
         CPU: AnyCPU
-  - first:
-      XboxOne: XboxOne
-    second:
-      enabled: 1
-      settings: {}
+        DontProcess: False
+        PlaceholderPath: Assets/JsonDotNet/Assemblies/Standalone/Newtonsoft.Json.dll
+        SDK: AnySDK
+        ScriptingBackend: Il2Cpp
   - first:
       iPhone: iOS
     second:
       enabled: 1
-      settings: {}
+      settings:
+        CompileFlags: 
+        FrameworkDependencies: 
   - first:
       tvOS: tvOS
     second:

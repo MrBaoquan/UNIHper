@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !UNITY_WEBGL
+using System;
 using System.IO;
 using System.Linq;
 using UniRx;
@@ -209,3 +210,4 @@ namespace UNIHper {
 	}
 
 }
+#endif

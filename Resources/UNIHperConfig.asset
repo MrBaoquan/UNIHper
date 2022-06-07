@@ -16,4 +16,4 @@ MonoBehaviour:
   uiPath: UNIHper/uis
   assemblyPath: UNIHper/assemblies
   showDebugLog: 0
-  configDriver: 0
+  configDriver: 1
