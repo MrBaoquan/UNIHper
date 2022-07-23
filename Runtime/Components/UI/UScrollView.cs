@@ -219,11 +219,12 @@ namespace UNIHper {
                     _stopHandler = null;
                 }
                 scrollRect.StopMovement ();
-                _stopHandler = Managements.Timer.SetTimeout (() => {
-                    var _rectTransform = ClosetCenterItem () as RectTransform;
-                    ScrollTo (_rectTransform.GetSiblingIndex ());
-                    _stopHandler = null;
-                }, 0.3f);
+                _stopHandler = Observable.Timer (TimeSpan.FromSeconds (0.3))
+                    .Subscribe (_1 => {
+                        var _rectTransform = ClosetCenterItem () as RectTransform;
+                        ScrollTo (_rectTransform.GetSiblingIndex ());
+                        _stopHandler = null;
+                    });
             });
 
             scrollRect.OnBeginDragAsObservable ().Subscribe (_ => {
