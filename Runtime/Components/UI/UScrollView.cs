@@ -7,6 +7,7 @@ using PathologicalGames;
 using UniRx;
 using UniRx.Triggers;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace UNIHper {
@@ -44,8 +45,20 @@ namespace UNIHper {
             content = scrollRect.content;
         }
 
-        public void AddItem (Transform InItem) {
-            InItem.name = string.Format ("item_{0}", Prefabs.Count);
+        public void DestoryAll () {
+            menuPool.DespawnAll ();
+            Debug.Log ("子节点数量 " + contentChildCount);
+        }
+
+        private int contentChildCount {
+            get => content.Children ().Count;
+        }
+
+        public void AddItem (Transform InItem, string InName = "") {
+            if (InName == "")
+                InItem.name = string.Format ("item_{0}", Prefabs.Count);
+            else
+                InItem.name = InName;
             menuPool.CreatePrefabPool (new PrefabPool (InItem));
             Prefabs.Add (InItem);
         }
@@ -55,7 +68,8 @@ namespace UNIHper {
                 spawnNormalLayout ();
                 Managements.Timer.NextFrame (() => {
                     Debug.LogFormat ("max show count:{0}", MaxShowCount);
-                    ScrollTo (MaxShowCount - 1);
+                    //ScrollTo (MaxShowCount - 1);
+                    ScrollTo (HalfShowCount);
                 });
             } else if (scrollLayout == ScrollLayout.Horizontal_Loop) {
                 spawnLoopLayout ();
@@ -76,19 +90,12 @@ namespace UNIHper {
 
         public int ScrollToNext () {
             int _nextID = ClosetCenterItemIndex () + 1;
-            if (_nextID > (content.childCount - HalfShowCount - 1)) {
-                _nextID = content.childCount - HalfShowCount - 1;
+            if (_nextID > (contentChildCount - HalfShowCount - 1)) {
+                _nextID = contentChildCount - HalfShowCount - 1;
             }
             ScrollTo (_nextID);
             return _nextID;
         }
-
-        // public int MaxShowCount()
-        // {
-        //     if(content.childCount<=0) return 0;
-        //     Bounds _bounds = (content.GetChild(0) as RectTransform).TransformBoundsTo(viewport);
-        //     return Mathf.CeilToInt(viewport.rect.width / _bounds.size.x);
-        // }
 
         public int HalfShowCount {
             get {
@@ -97,15 +104,29 @@ namespace UNIHper {
         }
 
         public void ScrollTo (int InIndex) {
-            var _transform = content.GetChild (InIndex);
+            if (InIndex <= HalfShowCount) {
+                InIndex = HalfShowCount;
+                Debug.Log ("DBUG 1");
+            } else if (InIndex > (contentChildCount - HalfShowCount - 1)) {
+                InIndex = contentChildCount - HalfShowCount - 1;
+                Debug.Log ("DBUG 2");
+            }
+
+            Debug.Log ($"halfcount {HalfShowCount}, 现在是 --  " + InIndex);
+
+            var _transform = content.Children ().Skip (InIndex).First ();
             float _position = scrollRect.GetItemNormallizedPosition (_transform as RectTransform);
-            DOTween.To (() => scrollRect.horizontalNormalizedPosition, _ => {
-                scrollRect.horizontalNormalizedPosition = _;
-            }, _position, 0.15f).OnComplete (() => {
-                if (OnRetarget != null) {
-                    OnRetarget (_transform as RectTransform);
-                }
-            });
+            DOTween.To (() => scrollRect.horizontalNormalizedPosition,
+                    _ => {
+                        scrollRect.horizontalNormalizedPosition = _;
+                    }, _position, 0.15f)
+                .OnComplete (() => {
+                    OnRetargetEvent.Invoke (_transform as RectTransform);
+                });
+        }
+
+        public IObservable<Transform> OnRetargetEventAsObservable () {
+            return OnRetargetEvent.AsObservable ();
         }
 
         private void spawnNormalLayout () {
@@ -153,27 +174,30 @@ namespace UNIHper {
         }
 
         private Transform spawnNext () {
-            int _currentID = content.childCount <= 0 ? -1 : getItemID (content.GetChild (content.childCount - 1));
+            var _children = content.Children (true);
+            int _currentID = _children.Count <= 0 ? -1 : getItemID (_children.Last ());
             var _newItem = spawnItem (nextID (_currentID));
             _newItem.SetAsLastSibling ();
             return _newItem;
         }
 
         private Transform spawnPrev () {
-            int _currentID = content.childCount <= 0 ? 0 : getItemID (content.GetChild (0));
+            var _children = content.Children (true);
+            int _currentID = _children.Count <= 0 ? 0 : getItemID (_children.First ());
             var _newItem = spawnItem (prevID (_currentID));
             _newItem.SetAsFirstSibling ();
             return _newItem;
         }
 
         private Transform spawnItem (int InID) {
+            Debug.Log ("spawn " + InID);
             var _item = menuPool.Spawn (Prefabs[InID], content);
             _item.name = string.Format ("item_{0}", InID);
             return _item;
         }
 
         public float NormalizedUnitPosition (float InOffset) {
-            var _bounds = (content.GetChild (0) as RectTransform).TransformBoundsTo (viewport);
+            var _bounds = (content.Children ().First () as RectTransform).TransformBoundsTo (viewport);
             Bounds _contentBounds = content.TransformBoundsTo (viewport);
             Bounds _viewBounds = new Bounds (viewport.rect.center, viewport.rect.size);
             var _hiddenLength = _contentBounds.size[0] - _viewBounds.size[0]; // contentBounds.size[axis] - viewBounds.size[axis];
@@ -191,7 +215,7 @@ namespace UNIHper {
             return ClosetCenterItem ().GetSiblingIndex ();
         }
 
-        public Action<RectTransform> OnRetarget = null;
+        public UnityEvent<RectTransform> OnRetargetEvent = null;
 
         /// 事件穿透
         // private void PassEvent<T>(PointerEventData data, ExecuteEvents.EventFunction<T> function) where T : IEventSystemHandler
@@ -236,12 +260,19 @@ namespace UNIHper {
 
             scrollRect.OnEndDragAsObservable ().Subscribe (_ => {
                 if (_stopHandler != null) _stopHandler.Dispose ();
-                _stopHandler = Observable.EveryUpdate ().Where (_1 => Mathf.Abs (scrollRect.velocity.x) <= 1000f).Subscribe (_2 => {
-                    var _rectTransform = ClosetCenterItem () as RectTransform;
-                    ScrollTo (_rectTransform.GetSiblingIndex ());
-                    _stopHandler.Dispose ();
-                    _stopHandler = null;
-                });
+                _stopHandler = Observable.EveryUpdate ().Where (_1 => Mathf.Abs (scrollRect.velocity.x) <= 1000f)
+                    .Subscribe (_2 => {
+                        try {
+                            var _rectTransform = ClosetCenterItem () as RectTransform;
+                            ScrollTo (_rectTransform.GetSiblingIndex () - content.Children (false).Where (_3 => !_3.gameObject.activeInHierarchy).Count ());
+                            _stopHandler.Dispose ();
+                            _stopHandler = null;
+                        } catch (System.Exception e) {
+                            _stopHandler.Dispose ();
+                            _stopHandler = null;
+                        }
+
+                    });
 
             });
         }
@@ -263,19 +294,19 @@ namespace UNIHper {
             } else if (InDelta < 0) {
                 Debug.LogFormat ("左边移出{0}个", _absDetla);
                 for (int _index = 0; _index < _absDetla; ++_index) {
-                    menuPool.Despawn (content.GetChild (0), menuPoolRoot.transform);
+                    menuPool.Despawn (content.Children ().First (), menuPoolRoot.transform);
                 }
             }
             return _absDetla;
         }
 
         private void syncRight (Transform InCenter) {
-            int InDelta = (content.childCount - 1 - InCenter.GetSiblingIndex ()) - cacheItemsCount;
+            int InDelta = (contentChildCount - 1 - InCenter.GetSiblingIndex ()) - cacheItemsCount;
             var _absDetla = Mathf.Abs (InDelta);
             if (InDelta > 0) {
                 Debug.LogFormat ("右边移出{0}个", _absDetla);
                 for (int _index = 0; _index < _absDetla; ++_index) {
-                    menuPool.Despawn (content.GetChild (content.childCount - 1), menuPoolRoot.transform);
+                    menuPool.Despawn (content.Children ().Last (), menuPoolRoot.transform);
                 }
             } else if (InDelta < 0) {
                 Debug.LogFormat ("右边补充{0}个", _absDetla);
@@ -294,7 +325,7 @@ namespace UNIHper {
                 float _deltaScale = 0f;
                 if (_distance <= _max) {
                     float _percent = Mathf.Clamp (_distance / _max, 0, 1);
-                    _deltaScale = (1 - _percent) * 0.25f;
+                    _deltaScale = (1 - _percent) * 0.55f;
                     // isCenter = true;
                 } else {
                     // isCenter = false;
