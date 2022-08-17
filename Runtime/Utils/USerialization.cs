@@ -6,12 +6,12 @@ using YamlDotNet.Serialization;
 
 namespace UNIHper {
     public static class USerialization {
-        public static void SerializeXML (object item, string path) {
-            XmlSerializer serializer = new XmlSerializer (item.GetType ());
-            StreamWriter writer = new StreamWriter (path);
-            serializer.Serialize (writer.BaseStream, item);
-            writer.Close ();
-        }
+        // public static void SerializeXML (object item, string path) {
+        //     XmlSerializer serializer = new XmlSerializer (item.GetType ());
+        //     StreamWriter writer = new StreamWriter (path);
+        //     serializer.Serialize (writer.BaseStream, item);
+        //     writer.Close ();
+        // }
 
         public static void SerializeYAML (object item, string path) {
 

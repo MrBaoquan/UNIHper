@@ -77,7 +77,7 @@ namespace UNIHper {
                 UNIHper.USerialization.SerializeYAML (target, path);
                 return;
             }
-            USerialization.SerializeXML (target, path);
+            DNHper.USerialization.SerializeXML (target, path);
         }
 
         private UConfig deserializeConfig (Type configClass, string path) {
@@ -102,7 +102,7 @@ namespace UNIHper {
             string _configName = typeof (T).Name;
             UConfig _config;
             if (this.configs.TryGetValue (_configName, out _config)) {
-                USerialization.SerializeXML (_config, _config.__Path);
+                DNHper.USerialization.SerializeXML (_config, _config.__Path);
                 return true;
             }
             return false;
