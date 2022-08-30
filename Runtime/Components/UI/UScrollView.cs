@@ -267,7 +267,7 @@ namespace UNIHper {
                             ScrollTo (_rectTransform.GetSiblingIndex () - content.Children (false).Where (_3 => !_3.gameObject.activeInHierarchy).Count ());
                             _stopHandler.Dispose ();
                             _stopHandler = null;
-                        } catch (System.Exception e) {
+                        } catch (System.Exception) {
                             _stopHandler.Dispose ();
                             _stopHandler = null;
                         }

@@ -40,7 +40,7 @@ namespace UNIHper {
                         Array.Clear (_buffer, 0, _buffer.Length);
                         int _received = socket.Receive (_buffer);
                         pushMessage (new NetStringMessage { Content = Encoding.UTF8.GetString (_buffer), RawData = _buffer.Slice (0, _received) });
-                    } catch (System.Exception e) {
+                    } catch (System.Exception) {
                         //UnityEngine.Debug.LogWarning (e.Message);
                     }
                 }

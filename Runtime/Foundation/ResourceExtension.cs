@@ -20,39 +20,48 @@ namespace UNIHper {
         private static IEnumerator LoadAudioClip (string InPath, AudioType InAudioType, IObserver<AudioClip> observer, CancellationToken cancellationToken) {
             using (UnityWebRequest _www = UnityWebRequestMultimedia.GetAudioClip (InPath, InAudioType)) {
                 yield return _www.SendWebRequest ();
-                if (_www.isNetworkError) {
-                    Debug.LogError (_www.error);
-                    observer.OnError (new Exception (_www.error));
-                } else {
-                    var _audioClip = DownloadHandlerAudioClip.GetContent (_www);
-                    _audioClip.name = System.IO.Path.GetFileNameWithoutExtension (InPath);
-                    observer.OnNext (_audioClip);
-                    observer.OnCompleted ();
-                }
-            }
-        }
 
-        // 加载外部图片资源
-        private static IEnumerator LoadTexture2D (string InPath, IObserver<Texture2D> observer, CancellationToken cancellationToken) {
-            using (UnityWebRequest _www = UnityWebRequestTexture.GetTexture (InPath)) {
-                yield return _www.SendWebRequest ();
-                if (_www.isNetworkError) {
-                    Debug.LogWarning (_www.error);
-                    observer.OnError (new Exception (_www.error));
-                } else {
-                    try {
-                        var _texture = DownloadHandlerTexture.GetContent (_www);
-                        _texture.name = System.IO.Path.GetFileNameWithoutExtension (InPath);
-                        observer.OnNext (_texture);
+#if UNITY_2021_1_OR_NEWER
+                if (_www.result == UnityWebRequest.Result.ConnectionError) {
+#else
+                    if (_www.isNetworkError) {
+#endif
+
+                        Debug.LogError (_www.error);
+                        observer.OnError (new Exception (_www.error));
+                    } else {
+                        var _audioClip = DownloadHandlerAudioClip.GetContent (_www);
+                        _audioClip.name = System.IO.Path.GetFileNameWithoutExtension (InPath);
+                        observer.OnNext (_audioClip);
                         observer.OnCompleted ();
-                    } catch (Exception _e) {
-                        observer.OnError (new Exception (_e.Message));
                     }
-
                 }
             }
+
+            // 加载外部图片资源
+            private static IEnumerator LoadTexture2D (string InPath, IObserver<Texture2D> observer, CancellationToken cancellationToken) {
+                using (UnityWebRequest _www = UnityWebRequestTexture.GetTexture (InPath)) {
+                    yield return _www.SendWebRequest ();
+#if UNITY_2021_1_OR_NEWER
+                    if (_www.result == UnityWebRequest.Result.ConnectionError) {
+#else
+                        if (_www.isNetworkError) {
+#endif
+                            observer.OnError (new Exception (_www.error));
+                        } else {
+                            try {
+                                var _texture = DownloadHandlerTexture.GetContent (_www);
+                                _texture.name = System.IO.Path.GetFileNameWithoutExtension (InPath);
+                                observer.OnNext (_texture);
+                                observer.OnCompleted ();
+                            } catch (Exception _e) {
+                                observer.OnError (new Exception (_e.Message));
+                            }
+
+                        }
+                    }
+                }
+
+            }
+
         }
-
-    }
-
-}
