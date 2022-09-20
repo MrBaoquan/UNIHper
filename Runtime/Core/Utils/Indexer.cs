@@ -68,7 +68,7 @@ namespace UNIHper {
                 onIndexChanged.Invoke (0);
                 return 0;
             }
-            current = (int) Mathf.Repeat (current + 1, Max + 1);
+            current = NextValue; // (int) Mathf.Repeat (current + 1, Max + 1);
             onIndexChanged.Invoke (current);
             return current;
         }
@@ -98,11 +98,13 @@ namespace UNIHper {
                 onIndexChanged.Invoke (0);
                 return 0;
             }
-            current = (int) Mathf.Repeat (current - 1, Max + 1);
-            Debug.Log ("prev: " + current + " max:" + (Max + 1));
+            current = PrevValue; //(int) Mathf.Repeat (current - 1, Max + 1);
             onIndexChanged.Invoke (current);
             return current;
         }
+
+        public int PrevValue { get => (int) Mathf.Repeat (current - 1, Max + 1); }
+        public int NextValue { get => (int) Mathf.Repeat (current + 1, Max + 1); }
 
         /// <summary>
         /// 下一个索引是否会越界

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using RenderHeads.Media.AVProVideo;
 using UniRx;
 using UnityEngine;
@@ -43,6 +44,10 @@ namespace UNIHper {
             }
         }
 
+        /// <summary>
+        /// 标识当前播放器是否准备就绪
+        /// </summary>
+        /// <value></value>
         public bool Ready2Play {
             get {
                 return MediaPlayer.Control != null;
@@ -55,12 +60,20 @@ namespace UNIHper {
             }
         }
 
+        /// <summary>
+        /// 标识当前视频是否处于暂停状态
+        /// </summary>
+        /// <value></value>
         public bool IsPaused {
             get {
                 return MediaPlayer.Control.IsPaused ();
             }
         }
 
+        /// <summary>
+        /// 当前播放的视频的总时长 seconds
+        /// </summary>
+        /// <value></value>
         public double Duration {
             get {
                 return MediaPlayer.Info.GetDuration ();
@@ -77,6 +90,17 @@ namespace UNIHper {
             }
         }
 
+        public double StartTime {
+            get;
+            protected set;
+        }
+
+        public double EndTime {
+            get;
+            protected set;
+        }
+
+        IDisposable _readyHandler = null;
         private List<IDisposable> playHandlers = new List<IDisposable> ();
         /// <summary>
         /// 播放指定地址的视频  可为网络地址 或者本地地址
@@ -86,13 +110,15 @@ namespace UNIHper {
         /// <param name="bLoop">是否循环</param>
         /// <param name="StartTime">开始时间</param>
         /// <param name="EndTime">结束时间</param>
-        IDisposable _readyHandler = null;
         public void Play (string InUrl, Action<UAVProPlayer> OnFinished, bool bLoop, double StartTime = 0, double EndTime = 0) {
             disposeHandlers (playHandlers);
             if (_readyHandler != null) {
                 _readyHandler.Dispose ();
                 _readyHandler = null;
             }
+
+            this.StartTime = StartTime;
+            this.EndTime = EndTime;
 
             Action _registerFinishedSeekingEvent = () => {
                 playHandlers.Add (OnFinishedSeekingAsObservable ().Subscribe (_ => {
@@ -101,8 +127,8 @@ namespace UNIHper {
                     var _duration = mediaPlayer.Info.GetDuration ();
                     EndTime = EndTime == 0 ? _duration : EndTime;
 
-                    var _startTime = Mathf.Clamp ((float) StartTime, 0, (float) _duration);
-                    var _endTime = Mathf.Clamp ((float) EndTime, _startTime, (float) _duration);
+                    // var _startTime = Mathf.Clamp ((float) StartTime, 0, (float) _duration);
+                    // var _endTime = Mathf.Clamp ((float) EndTime, _startTime, (float) _duration);
 
                     // 播放结束回调
                     Action _onFinished = () => {
@@ -112,11 +138,11 @@ namespace UNIHper {
                         if (OnFinished != null) OnFinished (this);
                         MediaPlayer.Pause ();
 
-                        if (bLoop) {
-                            MediaPlayer.Control.Seek (StartTime);
-                        } else {
+                        if (!bLoop) {
+                            // 不循环 直接释放seek回调
                             disposeHandlers (playHandlers);
                         }
+                        MediaPlayer.Control.Seek (StartTime);
                     };
 
                     // 正常播放时间大于指定结束时间
@@ -147,11 +173,25 @@ namespace UNIHper {
                         _readyHandler = null;
                         MediaPlayer.Control.Seek (StartTime);
                     });
-                MediaPlayer.OpenMedia (MediaPathType.AbsolutePathOrURL, InUrl, false);
+                var _mediaPathType = MediaPathType.RelativeToStreamingAssetsFolder;
+                if (Path.IsPathRooted (InUrl)) {
+                    _mediaPathType = MediaPathType.AbsolutePathOrURL;
+                }
+                MediaPlayer.OpenMedia (_mediaPathType, InUrl, false);
             } else {
                 _registerFinishedSeekingEvent ();
                 MediaPlayer.Control.Seek (StartTime);
             }
+        }
+
+        public void ClearPlayHandlers () {
+            disposeHandlers (playHandlers);
+        }
+
+        public void Rewind (bool Pause) {
+            ClearPlayHandlers ();
+            if (Pause) this.Pause ();
+            Seek (this.StartTime);
         }
 
         public void Play () {
@@ -163,14 +203,13 @@ namespace UNIHper {
         }
 
         public void Stop () {
-            MediaPlayer.Control.Stop ();
+            MediaPlayer.Stop ();
         }
 
         public void Seek (double InTime) {
             if (!Ready2Play) {
                 return;
             }
-
             MediaPlayer.Control.Seek (InTime);
         }
 
