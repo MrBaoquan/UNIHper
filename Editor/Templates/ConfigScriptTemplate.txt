@@ -6,4 +6,9 @@ using UNIHper;
 public class ##CLASSNAME## : UConfig
 {
 
+    // Called once when config data is loaded
+    protected override void OnLoaded () {
+        
+    }
+
 }

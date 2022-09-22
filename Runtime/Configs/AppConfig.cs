@@ -9,7 +9,7 @@ namespace UNIHper {
     public class ScreenConfig {
 
         [XmlAttribute ()]
-        public bool Activate = true;
+        public bool Activate = false;
         [XmlAttribute ()]
         public int PosX = 0;
         [XmlAttribute ()]

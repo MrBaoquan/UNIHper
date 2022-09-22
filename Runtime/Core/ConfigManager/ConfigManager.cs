@@ -58,6 +58,9 @@ namespace UNIHper {
                 UReflection.SetPrivateField (_configInstance, "__path", _path);
                 this.configs.Add (_configClass.Name, _configInstance);
             }
+            this.configs.Values.ToList ().ForEach (_config => {
+                UReflection.CallPrivateMethod (_config, "OnLoaded");
+            });
             await Task.CompletedTask;
         }
 
@@ -99,13 +102,15 @@ namespace UNIHper {
         }
 
         public bool Serialize<T> () {
-            string _configName = typeof (T).Name;
-            UConfig _config;
-            if (this.configs.TryGetValue (_configName, out _config)) {
-                DNHper.USerialization.SerializeXML (_config, _config.__Path);
+            if (!this.configs.TryGetValue (typeof (T).Name, out UConfig _config)) return false;
+
+            if (this.driverMode == ConfigDriver.YAML) {
+                UNIHper.USerialization.SerializeYAML (_config, _config.__Path);
                 return true;
             }
-            return false;
+
+            DNHper.USerialization.SerializeXML (_config, _config.__Path);
+            return true;
         }
     }
 

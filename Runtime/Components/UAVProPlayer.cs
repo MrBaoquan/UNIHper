@@ -203,7 +203,7 @@ namespace UNIHper {
         }
 
         public void Stop () {
-            MediaPlayer.Stop ();
+            Rewind (true);
         }
 
         public void Seek (double InTime) {

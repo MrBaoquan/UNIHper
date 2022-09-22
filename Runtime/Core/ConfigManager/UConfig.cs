@@ -37,6 +37,11 @@ namespace UNIHper {
                 return __path;
             }
         }
+
+        /// <summary>
+        /// Called once when config data is loaded
+        /// </summary>
+        protected virtual void OnLoaded () { }
     }
 
 }
