@@ -3,6 +3,9 @@ using System.Linq;
 using DNHper;
 using UniRx;
 using UnityEngine;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 
 /*
  * File: UNIHperEntry.cs
@@ -63,75 +66,81 @@ namespace UNIHper {
 #endif
 
             Observable.EveryUpdate ().Subscribe (_ => {
-                if (Input.GetKey (KeyCode.LeftShift) && Input.GetKeyDown (KeyCode.S)) {
-                    Managements.Config.SerializeAll ();
-                    Debug.Log ("Save config successfully.");
-                }
-            }).AddTo (this);
-        }
+                    if (Keyboard.current == null) return;
+#if ENABLE_INPUT_SYSTEM
+                    if (Keyboard.current.ctrlKey.isPressed && Keyboard.current.sKey.wasPressedThisFrame) {
+#else
+                        if (Input.GetKey (KeyCode.LeftShift) && Input.GetKeyDown (KeyCode.S)) {
+#endif
+                            Managements.Config.SerializeAll ();
+                            Debug.Log ("Save config successfully.");
+                        }
 
-        private void activeAllDisplays () {
-            var _config = Managements.Config.Get<AppConfig> ();
-            if (_config.Displays.Count <= 0) {
-                _config.Displays.Clear ();
-                _config.Displays = Display.displays.Select (_ => new ScreenConfig ()).ToList ();
-                Managements.Config.Serialize<AppConfig> ();
+                    }).AddTo (this);
             }
 
-            int _index = 0;
-            _config.Displays.ForEach (_display => {
-                if (_index >= Display.displays.Length) return;
-                var _displayConfig = _config.Displays[_index];
-
-                if (_displayConfig.Activate) {
-                    Display.displays[_index].Activate ();
-                    Display.displays[_index].SetParams (_displayConfig.Width, _displayConfig.Height, _displayConfig.PosX, _displayConfig.PosY);
-                }
-                _index++;
-            });
-        }
-
-        private void KeepWindowTop () {
-            var _config = Managements.Config.Get<AppConfig> ();
-            if (_config.KeepWindowTop.Interval <= 0) return;
-
-            var _window = WinAPI.CurrentWindow ();
-            Action _syncWindowSettings = () => {
-                if (_config.KeepWindowTop.SetWindowLong) {
-                    WinAPI.SetWindowLong (_window,
-                        (int) _config.KeepWindowTop.SetWindowLongFunction.Index,
-                        (UInt32) _config.KeepWindowTop.SetWindowLongFunction.NewValue
-                    );
+            private void activeAllDisplays () {
+                var _config = Managements.Config.Get<AppConfig> ();
+                if (_config.Displays.Count <= 0) {
+                    _config.Displays.Clear ();
+                    _config.Displays = Display.displays.Select (_ => new ScreenConfig ()).ToList ();
+                    Managements.Config.Serialize<AppConfig> ();
                 }
 
-                if (_config.KeepWindowTop.SetWindowPos) {
-                    WinAPI.SetWindowPos (_window,
-                        (int) _config.KeepWindowTop.SetWindowPosFunction.HWndInsertAfter,
-                        (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.x,
-                        (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.y,
-                        (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.w,
-                        (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.h,
-                        _config.KeepWindowTop.SetWindowPosFunction.SWPFlags.Aggregate ((_flags, _current) => _flags | _current)
-                    );
-                }
-            };
+                int _index = 0;
+                _config.Displays.ForEach (_display => {
+                    if (_index >= Display.displays.Length) return;
+                    var _displayConfig = _config.Displays[_index];
 
-            _syncWindowSettings ();
-            Observable.Interval (TimeSpan.FromSeconds (_config.KeepWindowTop.Interval))
-                .Subscribe (_ => {
-                    _syncWindowSettings ();
+                    if (_displayConfig.Activate) {
+                        Display.displays[_index].Activate ();
+                        Display.displays[_index].SetParams (_displayConfig.Width, _displayConfig.Height, _displayConfig.PosX, _displayConfig.PosY);
+                    }
+                    _index++;
                 });
+            }
+
+            private void KeepWindowTop () {
+                var _config = Managements.Config.Get<AppConfig> ();
+                if (_config.KeepWindowTop.Interval <= 0) return;
+
+                var _window = WinAPI.CurrentWindow ();
+                Action _syncWindowSettings = () => {
+                    if (_config.KeepWindowTop.SetWindowLong) {
+                        WinAPI.SetWindowLong (_window,
+                            (int) _config.KeepWindowTop.SetWindowLongFunction.Index,
+                            (UInt32) _config.KeepWindowTop.SetWindowLongFunction.NewValue
+                        );
+                    }
+
+                    if (_config.KeepWindowTop.SetWindowPos) {
+                        WinAPI.SetWindowPos (_window,
+                            (int) _config.KeepWindowTop.SetWindowPosFunction.HWndInsertAfter,
+                            (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.x,
+                            (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.y,
+                            (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.w,
+                            (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.h,
+                            _config.KeepWindowTop.SetWindowPosFunction.SWPFlags.Aggregate ((_flags, _current) => _flags | _current)
+                        );
+                    }
+                };
+
+                _syncWindowSettings ();
+                Observable.Interval (TimeSpan.FromSeconds (_config.KeepWindowTop.Interval))
+                    .Subscribe (_ => {
+                        _syncWindowSettings ();
+                    });
+            }
+
+            private void OnDestroy () {
+                Debug.Log ("UNIHper.OnDestroy");
+            }
+
+            private void OnApplicationQuit () {
+                Debug.Log ("application quit");
+                ULog.Uninitialize ();
+            }
+
         }
 
-        private void OnDestroy () {
-            Debug.Log ("UNIHper.OnDestroy");
-        }
-
-        private void OnApplicationQuit () {
-            Debug.Log ("application quit");
-            ULog.Uninitialize ();
-        }
-
-    }
-
-};
+    };

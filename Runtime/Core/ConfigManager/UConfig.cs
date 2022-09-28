@@ -1,4 +1,5 @@
 using System;
+using System.Xml;
 using System.Xml.Serialization;
 
 namespace UNIHper {
@@ -38,10 +39,17 @@ namespace UNIHper {
             }
         }
 
+        [XmlAnyElement ("FileComment")]
+        public XmlComment FileComment { get { return new XmlDocument ().CreateComment (Comment ()); } set { } }
+
         /// <summary>
         /// Called once when config data is loaded
         /// </summary>
         protected virtual void OnLoaded () { }
+
+        protected virtual string Comment () {
+            return "Write your descriptions here";
+        }
     }
 
 }

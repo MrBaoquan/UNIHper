@@ -1,5 +1,6 @@
 {
     "name": "UNIHper",
+    "rootNamespace": "",
     "references": [
         "GUID:560b04d1a97f54a4e82edc0cbbb69285",
         "GUID:d84275e519c25fe4c8ea91e96f53ae13",
@@ -8,7 +9,8 @@
         "GUID:b3f49edfedc855a48aa1a9e5d3cba438",
         "GUID:9e24947de15b9834991c9d8411ea37cf",
         "GUID:84651a3751eca9349aac36a66bba901b",
-        "GUID:4db1229c02f3f629bdd928353859c2b3"
+        "GUID:4db1229c02f3f629bdd928353859c2b3",
+        "GUID:75469ad4d38634e559750d17036d5f7c"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
