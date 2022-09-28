@@ -1,9 +1,11 @@
 {
     "name": "GameMain",
+    "rootNamespace": "",
     "references": [
         "GUID:d84275e519c25fe4c8ea91e96f53ae13",
         "GUID:f5880b1b680bf1643b407bffbb50a990",
-        "GUID:560b04d1a97f54a4e82edc0cbbb69285"
+        "GUID:560b04d1a97f54a4e82edc0cbbb69285",
+        "GUID:75469ad4d38634e559750d17036d5f7c"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
