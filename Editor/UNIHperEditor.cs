@@ -63,14 +63,20 @@ namespace UNIHper {
         [MenuItem ("UNIHper/Initialize", priority = 0)]
         public static void CreateDefault () {
             EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo ();
-            var _sceneEntry = EditorSceneManager.GetSceneByName (sceneEntryName);
-            if (!_sceneEntry.IsValid ()) {
-                _sceneEntry = EditorSceneManager.NewScene (NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
+            var _startupScenePath = AssetDatabase.FindAssets ($"{sceneEntryName} t:Scene", null)
+                .Select (_ => AssetDatabase.GUIDToAssetPath (_))
+                .Where (_ => Path.GetFileNameWithoutExtension (_) == sceneEntryName)
+                .FirstOrDefault ();
+
+            if (_startupScenePath == default (string)) {
+                Debug.Log ($"New scene {sceneEntryName} created");
+                var _sceneEntry = EditorSceneManager.NewScene (NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
                 EditorSceneManager.SaveScene (_sceneEntry, string.Format ("Assets/Scenes/{0}.unity", sceneEntryName));
             } else {
                 var _activeScene = EditorSceneManager.GetActiveScene ();
                 if (_activeScene.name != sceneEntryName) {
-                    EditorSceneManager.LoadScene (sceneEntryName, LoadSceneMode.Single);
+                    EditorSceneManager.OpenScene (_startupScenePath, OpenSceneMode.Single);
+                    Debug.Log ($"Scene {sceneEntryName} opened");
                 }
             }
 
