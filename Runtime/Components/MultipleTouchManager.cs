@@ -59,10 +59,11 @@ namespace UNIHper {
                 _secondID = _zoomPairDict[_firstID];
             } else {
                 _secondID = touchID;
-                _firstID = _zoomDeltaDict
+                _firstID = _zoomPairDict
                     .Where (_pair => _pair.Value == _secondID)
                     .First ().Key;
             }
+            Debug.Log ($"FirstID: {_firstID}, SecondID: {_secondID}");
             return (_firstID, _secondID);
         }
 
@@ -76,22 +77,25 @@ namespace UNIHper {
                 var _touches = UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches.ToList ();
                 _touches = _touches.Where (_touch => trueIfUnbind (_touch.touchId))
                     .ToList ();
-
+                Debug.Log ($"down event touch id : {ctx.currentTouch.touchId}");
                 if (_touches.Count < 2) return;
+
                 var _first = _touches.First ();
                 var _others = _touches.Except (new List<UnityEngine.InputSystem.EnhancedTouch.Touch> () { _first });
-                var _second = _others.OrderBy (_touch => (_touch.screenPosition - _first.screenPosition).sqrMagnitude).First ();
-                var _distance = (_second.screenPosition - _first.screenPosition).sqrMagnitude;
+                var _second = _others.OrderBy (_touch => (_touch.screenPosition - _first.screenPosition).sqrMagnitude).FirstOrDefault ();
+                var _distance = (_first.screenPosition - _second.screenPosition).sqrMagnitude;
                 _zoomPairDict.Add (_first.touchId, _second.touchId);
                 _zoomDeltaDict.Add (_first.touchId, _distance);
+                Debug.Log ($"add touch id : {_first.touchId}");
                 Debug.Log (_touches.Aggregate (string.Empty, (_last, _cur) => _last + _cur.touchId + ":" + _cur.phase + "||"));
             };
 
             UnityEngine.InputSystem.EnhancedTouch.Touch.onFingerUp += ctx => {
                 onFingerUp.Invoke (ctx);
 
-                if (trueIfUnbind (ctx.index)) return;
-                var _touchPairID = getPairTouchID (ctx.index);
+                if (trueIfUnbind (ctx.currentTouch.touchId)) return;
+                Debug.Log ("up " + ctx.currentTouch.touchId);
+                var _touchPairID = getPairTouchID (ctx.currentTouch.touchId);
                 _zoomPairDict.Remove (_touchPairID.firstTouchID);
                 _zoomDeltaDict.Remove (_touchPairID.firstTouchID);
 
@@ -99,15 +103,16 @@ namespace UNIHper {
 
             UnityEngine.InputSystem.EnhancedTouch.Touch.onFingerMove += ctx => {
                 onFingerMove.Invoke (ctx);
-                if (trueIfUnbind (ctx.index)) return;
-                var _touchPairID = getPairTouchID (ctx.index);
+
+                if (trueIfUnbind (ctx.currentTouch.touchId)) return;
+                var _touchPairID = getPairTouchID (ctx.currentTouch.touchId);
                 var _firstTouch = UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches.Where (_touch => _touch.touchId == _touchPairID.firstTouchID).First ();
                 var _secondTouch = UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches.Where (_touch => _touch.touchId == _touchPairID.secondTouchdID).First ();
                 var _lastDis = _zoomDeltaDict[_touchPairID.firstTouchID];
                 var _curDis = (_firstTouch.screenPosition - _secondTouch.screenPosition).sqrMagnitude;
                 var _delta = _curDis - _lastDis;
                 _zoomDeltaDict[_touchPairID.firstTouchID] = _curDis;
-                onZoom.Invoke (_touchPairID.firstTouchID, _delta);
+                onZoom.Invoke (_touchPairID.firstTouchID, _delta * 0.0001f);
             };
         }
 
