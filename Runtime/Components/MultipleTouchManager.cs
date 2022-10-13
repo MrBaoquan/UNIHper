@@ -77,7 +77,6 @@ namespace UNIHper {
                 var _touches = UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches.ToList ();
                 _touches = _touches.Where (_touch => trueIfUnbind (_touch.touchId))
                     .ToList ();
-                Debug.Log ($"down event touch id : {ctx.currentTouch.touchId}");
                 if (_touches.Count < 2) return;
 
                 var _first = _touches.First ();
@@ -86,15 +85,12 @@ namespace UNIHper {
                 var _distance = (_first.screenPosition - _second.screenPosition).sqrMagnitude;
                 _zoomPairDict.Add (_first.touchId, _second.touchId);
                 _zoomDeltaDict.Add (_first.touchId, _distance);
-                Debug.Log ($"add touch id : {_first.touchId}");
-                Debug.Log (_touches.Aggregate (string.Empty, (_last, _cur) => _last + _cur.touchId + ":" + _cur.phase + "||"));
             };
 
             UnityEngine.InputSystem.EnhancedTouch.Touch.onFingerUp += ctx => {
                 onFingerUp.Invoke (ctx);
 
                 if (trueIfUnbind (ctx.currentTouch.touchId)) return;
-                Debug.Log ("up " + ctx.currentTouch.touchId);
                 var _touchPairID = getPairTouchID (ctx.currentTouch.touchId);
                 _zoomPairDict.Remove (_touchPairID.firstTouchID);
                 _zoomDeltaDict.Remove (_touchPairID.firstTouchID);
