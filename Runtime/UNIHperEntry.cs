@@ -50,97 +50,36 @@ namespace UNIHper {
             this.Initialize ();
         }
 
-        private void Initialize () {
-            var appConfig = Managements.Config.Get<AppConfig> ();
-#if UNITY_STANDALONE_WIN && !UNITY_EDITOR
-            bool _fullScreen = (
-                    appConfig.PrimaryScreen.Mode == FullScreenMode.ExclusiveFullScreen ||
-                    appConfig.PrimaryScreen.Mode == FullScreenMode.FullScreenWindow) ?
-                true : false;
-            Screen.SetResolution (appConfig.PrimaryScreen.Width, appConfig.PrimaryScreen.Height, _fullScreen);
-            Debug.LogFormat ("set fullScreen:{0}, width:{1}, height:{2}",
-                _fullScreen, appConfig.PrimaryScreen.Width, appConfig.PrimaryScreen.Height);
+        private void Initialize () { }
 
-            activeAllDisplays ();
-            KeepWindowTop ();
-#endif
-
-            Observable.EveryUpdate ().Subscribe (_ => {
-                    if (Keyboard.current == null) return;
+        private void Update () {
+            if (Keyboard.current == null) return;
 #if ENABLE_INPUT_SYSTEM
-                    if (Keyboard.current.ctrlKey.isPressed && Keyboard.current.sKey.wasPressedThisFrame) {
+            if (Keyboard.current.ctrlKey.isPressed && Keyboard.current.sKey.wasPressedThisFrame) {
+                Managements.Config.SerializeAll ();
+                Debug.Log ("Save config successfully.");
+            }
+            if (Keyboard.current.f12Key.wasPressedThisFrame) {
+                Managements.UI.Get<UNIDebuggerPanel> ().Toggle ();
+            }
 #else
-                        if (Input.GetKey (KeyCode.LeftShift) && Input.GetKeyDown (KeyCode.S)) {
+            if (Input.GetKey (KeyCode.LeftShift) && Input.GetKeyDown (KeyCode.S)) {
+                Managements.Config.SerializeAll ();
+                Debug.Log ("Save config successfully.");
+            }
 #endif
-                            Managements.Config.SerializeAll ();
-                            Debug.Log ("Save config successfully.");
-                        }
-
-                    }).AddTo (this);
-            }
-
-            private void activeAllDisplays () {
-                var _config = Managements.Config.Get<AppConfig> ();
-                if (_config.Displays.Count <= 0) {
-                    _config.Displays.Clear ();
-                    _config.Displays = Display.displays.Select (_ => new ScreenConfig ()).ToList ();
-                    Managements.Config.Serialize<AppConfig> ();
-                }
-
-                int _index = 0;
-                _config.Displays.ForEach (_display => {
-                    if (_index >= Display.displays.Length) return;
-                    var _displayConfig = _config.Displays[_index];
-
-                    if (_displayConfig.Activate) {
-                        Display.displays[_index].Activate ();
-                        Display.displays[_index].SetParams (_displayConfig.Width, _displayConfig.Height, _displayConfig.PosX, _displayConfig.PosY);
-                    }
-                    _index++;
-                });
-            }
-
-            private void KeepWindowTop () {
-                var _config = Managements.Config.Get<AppConfig> ();
-                if (_config.KeepWindowTop.Interval <= 0) return;
-
-                var _window = WinAPI.CurrentWindow ();
-                Action _syncWindowSettings = () => {
-                    if (_config.KeepWindowTop.SetWindowLong) {
-                        WinAPI.SetWindowLong (_window,
-                            (int) _config.KeepWindowTop.SetWindowLongFunction.Index,
-                            (UInt32) _config.KeepWindowTop.SetWindowLongFunction.NewValue
-                        );
-                    }
-
-                    if (_config.KeepWindowTop.SetWindowPos) {
-                        WinAPI.SetWindowPos (_window,
-                            (int) _config.KeepWindowTop.SetWindowPosFunction.HWndInsertAfter,
-                            (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.x,
-                            (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.y,
-                            (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.w,
-                            (int) _config.KeepWindowTop.SetWindowPosFunction.SWP_Rect.h,
-                            _config.KeepWindowTop.SetWindowPosFunction.SWPFlags.Aggregate ((_flags, _current) => _flags | _current)
-                        );
-                    }
-                };
-
-                _syncWindowSettings ();
-                Observable.Interval (TimeSpan.FromSeconds (_config.KeepWindowTop.Interval))
-                    .Subscribe (_ => {
-                        _syncWindowSettings ();
-                    });
-            }
-
-            private void OnDestroy () {
-                Debug.Log ("UNIHper.OnDestroy");
-            }
-
-            private void OnApplicationQuit () {
-                Debug.Log ("application quit");
-                ULog.Uninitialize ();
-            }
 
         }
 
-    };
+        private void OnDestroy () {
+            Debug.Log ("UNIHper.OnDestroy");
+        }
+
+        private void OnApplicationQuit () {
+            Debug.Log ("application quit");
+            ULog.Uninitialize ();
+        }
+
+    }
+
+};
