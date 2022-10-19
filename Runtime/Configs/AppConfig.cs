@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
 using DNHper;
+using UniRx;
 using UnityEngine;
 using YamlDotNet.Serialization;
 
@@ -15,12 +17,19 @@ namespace UNIHper {
         [XmlAttribute ()]
         public int PosY = 0;
         [XmlAttribute ()]
-        public int Width = Screen.width;
+        public int Width = -1;
         [XmlAttribute ()]
-        public int Height = Screen.height;
+        public int Height = -1;
 
         [XmlAttribute ()]
         public FullScreenMode Mode = FullScreenMode.FullScreenWindow;
+
+        public void RefreshParameters () {
+            if (Width == -1 || Height == -1) {
+                Width = Screen.width;
+                Height = Screen.height;
+            }
+        }
     }
 
     public class URect {
@@ -51,13 +60,30 @@ namespace UNIHper {
     public class SetWindowPos {
         public HWndInsertAfter HWndInsertAfter = HWndInsertAfter.HWND_TOPMOST;
         public URect SWP_Rect = new URect (0, 0, 1920, 1080);
-        public List<SetWindowPosFlags> SWPFlags = new List<SetWindowPosFlags> () { SetWindowPosFlags.SWP_SHOWWINDOW };
+        public List<SetWindowPosFlags> SWPFlags = new List<SetWindowPosFlags> () { };
+        public void RefreshParameters () {
+            if (SWPFlags.Count <= 0) {
+                SWPFlags = new List<SetWindowPosFlags> () { SetWindowPosFlags.SWP_SHOWWINDOW };
+                this.Serialize ();
+            }
+        }
     }
 
     public class SetWindowLong {
         public SetWindowLongIndex Index = SetWindowLongIndex.GWL_STYLE;
-        public List<GWL_STYLE> GWL_Styles = new List<GWL_STYLE> { GWL_STYLE.WS_POPUP };
+        public List<GWL_STYLE> GWL_Styles = new List<GWL_STYLE> { };
         public List<GWL_EXSTYLE> GWL_EXStyles = new List<GWL_EXSTYLE> ();
+
+        public void RefreshParameters () {
+            if (GWL_Styles.Count <= 0) {
+                GWL_Styles = new List<GWL_STYLE> { GWL_STYLE.WS_POPUP };
+                this.Serialize ();
+            }
+            if (GWL_EXStyles.Count <= 0) {
+                GWL_EXStyles = new List<GWL_EXSTYLE> ();
+                this.Serialize ();
+            }
+        }
 
         [YamlIgnore]
         [XmlIgnore]
@@ -82,9 +108,19 @@ namespace UNIHper {
         public bool SetWindowLong = false;
         public SetWindowPos SetWindowPosFunction = new SetWindowPos ();
         public SetWindowLong SetWindowLongFunction = new SetWindowLong ();
+
+        public void RefreshParameters () {
+            SetWindowLongFunction.RefreshParameters ();
+            SetWindowLongFunction.RefreshParameters ();
+        }
     }
 
     public class AppConfig : UConfig {
+
+        protected override string Comment () {
+            return @"";
+        }
+
         YamlDotNet.Core.Events.Comment _comment = new YamlDotNet.Core.Events.Comment ("AppConfig", true);
         public KeepWindowTop KeepWindowTop = new KeepWindowTop ();
         public ScreenConfig PrimaryScreen = new ScreenConfig ();
@@ -92,5 +128,83 @@ namespace UNIHper {
         [XmlArray ("Displays")]
         [XmlArrayItem ("Display")]
         public List<ScreenConfig> Displays = new List<ScreenConfig> ();
+
+        protected override void OnLoaded () {
+            PrimaryScreen.RefreshParameters ();
+            KeepWindowTop.RefreshParameters ();
+            executeWindowSettings ();
+            activeAllDisplays ();
+
+        }
+
+        private void executeWindowSettings () {
+#if UNITY_STANDALONE_WIN && !UNITY_EDITOR
+            bool _fullScreen = (
+                    PrimaryScreen.Mode == FullScreenMode.ExclusiveFullScreen ||
+                    PrimaryScreen.Mode == FullScreenMode.FullScreenWindow) ?
+                true : false;
+            Screen.SetResolution (PrimaryScreen.Width, PrimaryScreen.Height, _fullScreen);
+            Debug.LogFormat ("set fullScreen:{0}, width:{1}, height:{2}",
+                _fullScreen, PrimaryScreen.Width, PrimaryScreen.Height);
+            keepWindowTop ();
+#endif
+        }
+
+        private void keepWindowTop () {
+            if (KeepWindowTop.Interval <= 0) return;
+
+            var _window = WinAPI.CurrentWindow ();
+            Action _syncWindowSettings = () => {
+                if (KeepWindowTop.SetWindowLong) {
+                    WinAPI.SetWindowLong (_window,
+                        (int) KeepWindowTop.SetWindowLongFunction.Index,
+                        (UInt32) KeepWindowTop.SetWindowLongFunction.NewValue
+                    );
+                }
+
+                if (KeepWindowTop.SetWindowPos) {
+                    WinAPI.SetWindowPos (_window,
+                        (int) KeepWindowTop.SetWindowPosFunction.HWndInsertAfter,
+                        (int) KeepWindowTop.SetWindowPosFunction.SWP_Rect.x,
+                        (int) KeepWindowTop.SetWindowPosFunction.SWP_Rect.y,
+                        (int) KeepWindowTop.SetWindowPosFunction.SWP_Rect.w,
+                        (int) KeepWindowTop.SetWindowPosFunction.SWP_Rect.h,
+                        KeepWindowTop.SetWindowPosFunction.SWPFlags.Aggregate ((_flags, _current) => _flags | _current)
+                    );
+                }
+            };
+
+            _syncWindowSettings ();
+            Observable.Interval (TimeSpan.FromSeconds (KeepWindowTop.Interval))
+                .Subscribe (_ => {
+                    _syncWindowSettings ();
+                });
+        }
+
+        private void activeAllDisplays () {
+            if (Displays.Count <= 0) {
+                Displays = Display.displays
+                    .Select (_ => new ScreenConfig ())
+                    .ToList ();
+                this.Serialize ();
+            }
+
+            int _index = 0;
+            Displays.ForEach (_displayConfig => {
+                if (_index >= Display.displays.Length) return;
+                var _display = Display.displays[_index];
+                if (_displayConfig.Width == -1 || _displayConfig.Height == -1) {
+                    _displayConfig.Width = _display.systemWidth;
+                    _displayConfig.Height = _display.systemHeight;
+                    this.Serialize ();
+                }
+
+                if (_displayConfig.Activate) {
+                    Display.displays[_index].Activate ();
+                    Display.displays[_index].SetParams (_displayConfig.Width, _displayConfig.Height, _displayConfig.PosX, _displayConfig.PosY);
+                }
+                _index++;
+            });
+        }
     }
 }

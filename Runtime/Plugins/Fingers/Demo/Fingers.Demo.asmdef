@@ -1,0 +1,16 @@
+{
+    "name": "Fingers.Demo",
+    "rootNamespace": "",
+    "references": [
+        "GUID:951bebd3a09ee67408dbf1e0bf19ae8c"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -57,12 +57,11 @@ namespace UNIHper {
             if (_zoomPairDict.ContainsKey (touchID)) {
                 _firstID = touchID;
                 _secondID = _zoomPairDict[_firstID];
-            } else {
-                _secondID = touchID;
-                _firstID = _zoomDeltaDict
+                _firstID = _zoomPairDict
                     .Where (_pair => _pair.Value == _secondID)
                     .First ().Key;
             }
+            Debug.Log ($"FirstID: {_firstID}, SecondID: {_secondID}");
             return (_firstID, _secondID);
         }
 
@@ -76,15 +75,14 @@ namespace UNIHper {
                 var _touches = UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches.ToList ();
                 _touches = _touches.Where (_touch => TrueIfUnbind (_touch.touchId))
                     .ToList ();
-
                 if (_touches.Count < 2) return;
+
                 var _first = _touches.First ();
                 var _others = _touches.Except (new List<UnityEngine.InputSystem.EnhancedTouch.Touch> () { _first });
-                var _second = _others.OrderBy (_touch => (_touch.screenPosition - _first.screenPosition).sqrMagnitude).First ();
-                var _distance = (_second.screenPosition - _first.screenPosition).sqrMagnitude;
+                var _second = _others.OrderBy (_touch => (_touch.screenPosition - _first.screenPosition).sqrMagnitude).FirstOrDefault ();
+                var _distance = (_first.screenPosition - _second.screenPosition).sqrMagnitude;
                 _zoomPairDict.Add (_first.touchId, _second.touchId);
                 _zoomDeltaDict.Add (_first.touchId, _distance);
-                Debug.Log (_touches.Aggregate (string.Empty, (_last, _cur) => _last + _cur.touchId + ":" + _cur.phase + "||"));
             };
 
             UnityEngine.InputSystem.EnhancedTouch.Touch.onFingerUp += ctx => {
