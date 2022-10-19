@@ -15,7 +15,7 @@ namespace UNIHper {
         private UnityEvent<Finger> onFingerDown = new UnityEvent<Finger> ();
         private UnityEvent<Finger> onFingerUp = new UnityEvent<Finger> ();
 
-        private UnityEvent<int, float> onZoom = new UnityEvent<int, float> ();
+        private UnityEvent<Finger, float> onZoom = new UnityEvent<Finger, float> ();
 
         public IObservable<Finger> OnFingerUpAsObservable () {
             return onFingerUp.AsObservable ();
@@ -27,7 +27,7 @@ namespace UNIHper {
             return onFingerMove.AsObservable ();
         }
 
-        public IObservable<Tuple<int, float>> OnZoomAsObservable () {
+        public IObservable<Tuple<Finger, float>> OnZoomAsObservable () {
             return onZoom.AsObservable ();
         }
 
@@ -43,7 +43,7 @@ namespace UNIHper {
         private Dictionary<int, int> _zoomPairDict = new Dictionary<int, int> ();
         private Dictionary<int, float> _zoomDeltaDict = new Dictionary<int, float> ();
 
-        private bool trueIfUnbind (int touchID) {
+        public bool TrueIfUnbind (int touchID) {
             return !_zoomPairDict.ContainsKey (touchID) && !_zoomPairDict.ContainsValue (touchID);
         }
 
@@ -74,7 +74,7 @@ namespace UNIHper {
                 onFingerDown.Invoke (ctx);
 
                 var _touches = UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches.ToList ();
-                _touches = _touches.Where (_touch => trueIfUnbind (_touch.touchId))
+                _touches = _touches.Where (_touch => TrueIfUnbind (_touch.touchId))
                     .ToList ();
 
                 if (_touches.Count < 2) return;
@@ -90,7 +90,7 @@ namespace UNIHper {
             UnityEngine.InputSystem.EnhancedTouch.Touch.onFingerUp += ctx => {
                 onFingerUp.Invoke (ctx);
 
-                if (trueIfUnbind (ctx.index)) return;
+                if (TrueIfUnbind (ctx.index)) return;
                 var _touchPairID = getPairTouchID (ctx.index);
                 _zoomPairDict.Remove (_touchPairID.firstTouchID);
                 _zoomDeltaDict.Remove (_touchPairID.firstTouchID);
@@ -99,7 +99,7 @@ namespace UNIHper {
 
             UnityEngine.InputSystem.EnhancedTouch.Touch.onFingerMove += ctx => {
                 onFingerMove.Invoke (ctx);
-                if (trueIfUnbind (ctx.index)) return;
+                if (TrueIfUnbind (ctx.index)) return;
                 var _touchPairID = getPairTouchID (ctx.index);
                 var _firstTouch = UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches.Where (_touch => _touch.touchId == _touchPairID.firstTouchID).First ();
                 var _secondTouch = UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches.Where (_touch => _touch.touchId == _touchPairID.secondTouchdID).First ();
@@ -107,7 +107,7 @@ namespace UNIHper {
                 var _curDis = (_firstTouch.screenPosition - _secondTouch.screenPosition).sqrMagnitude;
                 var _delta = _curDis - _lastDis;
                 _zoomDeltaDict[_touchPairID.firstTouchID] = _curDis;
-                onZoom.Invoke (_touchPairID.firstTouchID, _delta);
+                onZoom.Invoke (_firstTouch.finger, _delta);
             };
         }
 
