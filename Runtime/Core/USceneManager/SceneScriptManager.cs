@@ -66,7 +66,7 @@ namespace UNIHper {
                 // 添加 SceneScript.OnUpdate 事件监听
                 _sceneScriptData.updateObserverable = Observable
                     .EveryUpdate ().Subscribe (_ => {
-                        _updateAction.Invoke (_sceneScript, null);
+                        if (_updateAction != null) _updateAction.Invoke (_sceneScript, null);
                     });
                 _startAction.Invoke (_sceneScript, null);
             } else {
@@ -83,7 +83,8 @@ namespace UNIHper {
                     _sceneScriptData.updateObserverable = null;
                 }
                 var _sceneScript = _sceneScriptData.sceneScript;
-                _sceneScript.GetType ().GetMethod ("OnDestroy", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).Invoke (_sceneScript, null);
+                var _destroyFunc = _sceneScript.GetType ().GetMethod ("OnDestroy", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (_destroyFunc != null) _destroyFunc.Invoke (_sceneScript, null);
 
                 // 取消 Application.OnQuit 事件监听
                 Application.quitting -= _sceneScriptData.OnApplicationQuit;

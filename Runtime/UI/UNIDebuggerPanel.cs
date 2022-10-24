@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using DNHper;
+﻿using DNHper;
 using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,10 +10,9 @@ public class UNIDebuggerPanel : UIBase {
             .OnClickAsObservable ()
             .Subscribe (_ => {
                 Managements.Config.Get<AppConfig> ().Delete ();
-#if UNITY_STANDALONE_WIN
+#if UNITY_STANDALONE_WIN && !UNITY_EDITOR
                 var _process = System.Diagnostics.Process.GetCurrentProcess ();
                 var _executor = _process.MainModule.FileName;
-                Debug.Log (System.Diagnostics.Process.GetCurrentProcess ().MainModule.FileName);
                 WinAPI.OpenProcess ("cmd.exe", $"/C taskkill /f /pid {_process.Id} && ping 127.0.0.1 -n 3 >nul && {_executor}", true);
 #endif
             });
