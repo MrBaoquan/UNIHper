@@ -28,11 +28,11 @@ namespace UNIHper {
                 });
         }
 
-        public void Show (Action<UIBase> InCallback = null) {
+        protected void Show (Action<UIBase> InCallback = null) {
             UIManager.Instance.Show (__UIKey, InCallback);
         }
 
-        public void Hide () {
+        protected void Hide () {
             UIManager.Instance.Hide (__UIKey);
         }
 
