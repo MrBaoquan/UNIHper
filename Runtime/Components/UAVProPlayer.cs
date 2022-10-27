@@ -166,7 +166,6 @@ namespace UNIHper {
                     }));
 
                 }));
-
             };
 
             MediaPlayer.Loop = bLoop;

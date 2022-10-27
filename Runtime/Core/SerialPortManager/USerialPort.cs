@@ -73,13 +73,14 @@ namespace UNIHper {
 
         IDisposable messageDispatcherHandler = null;
         private void dispatchMessages () {
-            messageDispatcherHandler = Observable.EveryUpdate ().Subscribe (_ => {
-                while (messages.Count > 0) {
-                    var _message = messages.Dequeue ();
-                    onReceived.Invoke (_message);
-                    Managements.Event.Fire (_message);
-                }
-            });
+            messageDispatcherHandler = Observable.EveryUpdate ()
+                .Subscribe (_ => {
+                    while (messages.Count > 0) {
+                        var _message = messages.Dequeue ();
+                        onReceived.Invoke (_message);
+                        Managements.Event.Fire (_message);
+                    }
+                });
         }
 
         private byte[] tempBuffer = new byte[4096];
