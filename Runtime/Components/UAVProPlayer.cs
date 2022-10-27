@@ -100,6 +100,11 @@ namespace UNIHper {
             protected set;
         }
 
+        public IObservable<MediaPlayer> Prepare (string path) {
+            MediaPlayer.OpenMedia (MediaPathType.RelativeToStreamingAssetsFolder, path, false);
+            return OnMetaDataReadyAsObservable ().First ();
+        }
+
         IDisposable _readyHandler = null;
         private List<IDisposable> playHandlers = new List<IDisposable> ();
         /// <summary>
