@@ -9,9 +9,10 @@ namespace UNIHper {
 
     public class UAudioManager : SingletonBehaviour<UAudioManager> {
 
-        public void PlayMusic (AudioClip InMusic, float InVolume = 1.0f) {
+        public void PlayMusic (AudioClip InMusic, float InVolume = 1.0f, bool Loop = true) {
             musicAudioSource.clip = InMusic;
             musicAudioSource.volume = InVolume;
+            musicAudioSource.loop = Loop;
             musicAudioSource.Play ();
         }
 
@@ -51,11 +52,10 @@ namespace UNIHper {
         }
 
         private AudioSource musicAudioSource;
-        public AudioSource MusicAudioSource {
-            get => musicAudioSource;
-        }
+        public AudioSource MusicAudioSource { get => musicAudioSource; }
 
         private AudioSource effectAudioSource;
+        public AudioSource EffectAudioSource { get => effectAudioSource; }
 
         private void Awake () {
             AudioSource[] _audioSources = this.GetComponents<AudioSource> ();

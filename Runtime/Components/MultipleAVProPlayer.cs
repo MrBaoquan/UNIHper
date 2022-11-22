@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using DG.Tweening;
 using PathologicalGames;
 using RenderHeads.Media.AVProVideo;
 using UniRx;
@@ -54,12 +55,15 @@ namespace UNIHper {
         public void Play (string Path, Action<UAVProPlayer> OnCompleted, bool Loop = false, double StartTime = 0f, double EndTime = 0f) {
             var _idx = videoPathes.FindIndex (_path => _path == Path);
             if (_idx == -1) return;
-            Debug.Log ($"player index {_idx}");
             stopVideo ();
             videoIndex.Set (_idx);
+
             currentPlayer.Play (Path, OnCompleted, Loop, StartTime, EndTime);
-            this.Get<DisplayUGUI> ().CurrentMediaPlayer = currentPlayer.GetComponent<MediaPlayer> ();
+            DisplayUGUI.CurrentMediaPlayer = currentPlayer.GetComponent<MediaPlayer> ();
+            playFadeEffect ();
         }
+
+        public bool FadePlay { get; set; } = true;
 
         public void Stop () {
             stopVideo ();
@@ -78,11 +82,29 @@ namespace UNIHper {
         }
 
         private UAVProPlayer currentPlayer { get => transform.GetChild (videoIndex.Current).GetComponent<UAVProPlayer> (); }
+        private DisplayUGUI displayUGUI = null;
+        public DisplayUGUI DisplayUGUI {
+            get {
+                if (displayUGUI == null) {
+                    displayUGUI = this.Get<DisplayUGUI> ();
+                }
+                return displayUGUI;
+            }
+        }
 
         private void playVideo () {
             var _mediaPlayer = currentPlayer;
-            this.Get<DisplayUGUI> ().CurrentMediaPlayer = _mediaPlayer.GetComponent<MediaPlayer> ();
+            DisplayUGUI.CurrentMediaPlayer = _mediaPlayer.GetComponent<MediaPlayer> ();
             _mediaPlayer.Play ();
+            playFadeEffect ();
+        }
+
+        private void playFadeEffect () {
+            if (!FadePlay) return;
+            DOTween.Sequence ()
+                .Append (DisplayUGUI.DOColor (Color.clear, 0.15f))
+                .Append (DisplayUGUI.DOColor (Color.white, 0.45f))
+                .PlayForward ();
         }
 
         private void stopVideo () {
