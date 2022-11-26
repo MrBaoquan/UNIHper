@@ -2,10 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using DNHper;
 using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
-
 namespace UNIHper {
 
     public class UInput_Slider : MonoBehaviour {

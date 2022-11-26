@@ -15,6 +15,13 @@ namespace UNIHper {
     [RequireComponent (typeof (DisplayUGUI))]
     public class MultipleAVProPlayer : MonoBehaviour {
 
+        public double CurrentTime {
+            get {
+                if (currentPlayer == null) return 0;
+                return this.currentPlayer.CurrentTime;
+            }
+        }
+
         private Indexer videoIndex = new Indexer (0);
         private List<string> videoPathes = new List<string> ();
         public async Task PrepareVideos (List<string> VideoPathes) {
@@ -48,8 +55,20 @@ namespace UNIHper {
                 }));
         }
 
-        public void Play () {
-            playVideo ();
+        public void Play (bool FadeEffect = true) {
+            playVideo (FadeEffect);
+        }
+
+        public void Pause () {
+            if (currentPlayer == null) return;
+            currentPlayer.Pause ();
+        }
+
+        public bool IsPaused {
+            get {
+                if (currentPlayer == null) return false;
+                return currentPlayer.IsPaused;
+            }
         }
 
         public void Play (string Path, Action<UAVProPlayer> OnCompleted, bool Loop = false, double StartTime = 0f, double EndTime = 0f) {
@@ -92,11 +111,11 @@ namespace UNIHper {
             }
         }
 
-        private void playVideo () {
+        private void playVideo (bool FadeEffect = true) {
             var _mediaPlayer = currentPlayer;
             DisplayUGUI.CurrentMediaPlayer = _mediaPlayer.GetComponent<MediaPlayer> ();
             _mediaPlayer.Play ();
-            playFadeEffect ();
+            if (FadeEffect) playFadeEffect ();
         }
 
         private void playFadeEffect () {
