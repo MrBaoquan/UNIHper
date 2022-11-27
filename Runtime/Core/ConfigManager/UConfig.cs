@@ -22,9 +22,13 @@ namespace UNIHper {
 
     [AttributeUsage (AttributeTargets.Class, Inherited = true, AllowMultiple = false)]
     public class SerializedAt : Attribute {
-        public AppPath SaveTo = AppPath.PersistentDir;
-        public SerializedAt (AppPath InPath) {
-            SaveTo = InPath;
+        // 序列化主目录
+        public AppPath RootDir = AppPath.PersistentDir;
+        // 序列化子目录
+        public string SubDir = string.Empty;
+
+        public SerializedAt (AppPath RootDir, string InSubDir = "Configs") {
+            this.RootDir = RootDir;
         }
     }
 

@@ -30,15 +30,18 @@ namespace UNIHper {
             foreach (var _configClass in _configClasses) {
                 UConfig _configInstance = Activator.CreateInstance (_configClass) as UConfig;
                 // 配置文件默认保存在 %userprofile%\AppData\LocalLow\<companyname>\<productname>
-                string _configDir = Path.Combine (Application.persistentDataPath, configDir);
 
                 var _attributes = Attribute.GetCustomAttributes (_configClass);
                 var _attribute = _attributes.Where (_attr => _attr is SerializedAt).First ();
 
+                string _configDir = Path.Combine (Application.persistentDataPath, configDir);
+
                 if (_attribute != null) {
-                    var _saveTo = (_attribute as SerializedAt).SaveTo;
-                    if (_saveTo == AppPath.StreamingDir) {
-                        _configDir = Path.Combine (Application.streamingAssetsPath, configDir);
+                    var _serializedAttr = (_attribute as SerializedAt);
+                    if (_serializedAttr.RootDir == AppPath.StreamingDir) {
+                        _configDir = Path.Combine (Application.streamingAssetsPath, _serializedAttr.SubDir);
+                    } else if (_serializedAttr.RootDir == AppPath.PersistentDir) {
+                        _configDir = Path.Combine (Application.persistentDataPath, _serializedAttr.SubDir);
                     }
                 }
 
