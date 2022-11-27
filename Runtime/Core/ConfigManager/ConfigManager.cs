@@ -76,10 +76,13 @@ namespace UNIHper {
         }
 
         private void serializeConfig (object target, string path) {
+            UReflection.CallPrivateMethod (target, "OnSerializing");
             if (this.driverMode == ConfigDriver.YAML) {
                 UNIHper.USerialization.SerializeYAML (target, path);
+                UReflection.CallPrivateMethod (target, "OnSerialized");
                 return;
             }
+            UReflection.CallPrivateMethod (target, "OnSerialized");
             DNHper.USerialization.SerializeXML (target, path);
         }
 
