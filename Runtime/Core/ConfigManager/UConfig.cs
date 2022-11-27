@@ -52,6 +52,10 @@ namespace UNIHper {
         /// </summary>
         protected virtual void OnLoaded () { }
 
+        protected virtual void OnSerializing () { }
+
+        protected virtual void OnSerialized () { }
+
         protected virtual string Comment () {
             return "Write your descriptions here";
         }

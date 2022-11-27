@@ -104,12 +104,14 @@ namespace UNIHper {
         public bool Serialize<T> () {
             if (!this.configs.TryGetValue (typeof (T).Name, out UConfig _config)) return false;
 
+            UReflection.CallPrivateMethod (_config, "OnSerializing");
             if (this.driverMode == ConfigDriver.YAML) {
                 UNIHper.USerialization.SerializeYAML (_config, _config.__Path);
                 return true;
             }
 
             DNHper.USerialization.SerializeXML (_config, _config.__Path);
+            UReflection.CallPrivateMethod (_config, "OnSerialized");
             return true;
         }
     }

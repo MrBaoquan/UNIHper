@@ -12,12 +12,22 @@ namespace UNIHper {
             return Observable.FromCoroutine<Texture2D> ((_observer, _cancellationToken) => LoadTexture2D (InPath, _observer, _cancellationToken));
         }
 
-        public static IObservable<AudioClip> LoadAudioClip (this ResourceManager resourceManager, string InPath, AudioType InAudioType) {
-            return Observable.FromCoroutine<AudioClip> ((_observer, _cancellationToken) => LoadAudioClip (InPath, InAudioType, _observer, _cancellationToken));
+        public static IObservable<AudioClip> LoadAudioClip (this ResourceManager resourceManager, string InPath, AudioType InAudioType = AudioType.UNKNOWN) {
+            return Observable.FromCoroutine<AudioClip> ((_observer, _cancellationToken) => LoadAudioClip (InPath, _observer, _cancellationToken, InAudioType));
         }
 
         // 加载外部音频文件
-        private static IEnumerator LoadAudioClip (string InPath, AudioType InAudioType, IObserver<AudioClip> observer, CancellationToken cancellationToken) {
+        private static IEnumerator LoadAudioClip (string InPath, IObserver<AudioClip> observer, CancellationToken cancellationToken, AudioType InAudioType = AudioType.UNKNOWN) {
+
+            if (InAudioType == AudioType.UNKNOWN) {
+                var _fileExtension = System.IO.Path.GetExtension (InPath);
+                if (_fileExtension == ".mp3") {
+                    InAudioType = AudioType.MPEG;
+                } else if (_fileExtension == ".wav") {
+                    InAudioType = AudioType.WAV;
+                }
+            }
+
             using (UnityWebRequest _www = UnityWebRequestMultimedia.GetAudioClip (InPath, InAudioType)) {
                 yield return _www.SendWebRequest ();
 
