@@ -33,6 +33,11 @@ namespace UNIHper {
             _utilGO.transform.parent = this.transform;
             _utilGO.AddComponent (typeof (MonobehaviourUtil));
 
+            // 创建音频管理脚本
+            GameObject _audioManager = new GameObject ("AudioManager");
+            _audioManager.transform.parent = this.transform;
+            await _audioManager.AddComponent<UAudioManager> ().Initialize ();
+
             AssemblyConfig.Refresh ();
 
             // 1. 配置文件
