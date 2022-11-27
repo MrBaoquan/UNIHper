@@ -1,4 +1,4 @@
-﻿Shader "UNIHper/Unlit/TransparentVideo"
+﻿Shader "UNIHper/Unlit/TransparentVideoWithKey"
 {
     Properties
     {
@@ -63,7 +63,7 @@
 
                 _alpha *= _Alpha;
                 // apply fog
-                return fixed4(input_color,_alpha);
+                return fixed4(input_color, _alpha);
             }
             ENDCG
         }

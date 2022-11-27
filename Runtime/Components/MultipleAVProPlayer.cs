@@ -9,11 +9,16 @@ using PathologicalGames;
 using RenderHeads.Media.AVProVideo;
 using UniRx;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace UNIHper {
 
     [RequireComponent (typeof (DisplayUGUI))]
     public class MultipleAVProPlayer : MonoBehaviour {
+        private UnityEvent<UAVProPlayer> onPlayerChanged = new UnityEvent<UAVProPlayer> ();
+        public IObservable<UAVProPlayer> OnPlayerChangedAsObservable () {
+            return onPlayerChanged.AsObservable ();
+        }
 
         public double CurrentTime {
             get {
@@ -21,6 +26,8 @@ namespace UNIHper {
                 return this.currentPlayer.CurrentTime;
             }
         }
+
+        public bool Loop { get; set; } = false;
 
         private Indexer videoIndex = new Indexer (0);
         private List<string> videoPathes = new List<string> ();
@@ -32,12 +39,13 @@ namespace UNIHper {
             var _avproPlayer = _defaultPlayer.AddComponent<UAVProPlayer> ();
             _avproPlayer.MediaPlayer.AutoStart = false;
             _avproPlayer.MediaPlayer.AutoOpen = false;
+            _avproPlayer.MediaPlayer.Loop = Loop;
 
             var _playerPrefabPool = new PrefabPool (_defaultPlayer.transform);
             _playerPrefabPool.cullDespawned = true;
             _playerPrefabPool.preloadAmount = 3;
 
-            var _mediaPlayerPool = PoolManager.Pools.Create ("UNIPlayerPool");
+            var _mediaPlayerPool = PoolManager.Pools.Create (gameObject.name + "_pool");
             _mediaPlayerPool.CreatePrefabPool (_playerPrefabPool);
 
             await Observable.Zip (
@@ -53,10 +61,7 @@ namespace UNIHper {
                     _avproPlayer.MediaPlayer.OpenMedia (_mediaPathType, _path, false);
                     return _avproPlayer.OnMetaDataReadyAsObservable ().First ();
                 }));
-        }
-
-        public void Play (bool FadeEffect = true) {
-            playVideo (FadeEffect);
+            onPlayerChanged.Invoke (currentPlayer);
         }
 
         public void Pause () {
@@ -71,11 +76,40 @@ namespace UNIHper {
             }
         }
 
+        public bool IsFinished {
+            get {
+                if (currentPlayer == null) return false;
+                return currentPlayer.IsFinished;
+            }
+        }
+
+        public int CurrentFrame {
+            get {
+                if (currentPlayer == null) return 0;
+                return currentPlayer.CurrentFrame;
+            }
+        }
+
+        public int MaxFrameNumber {
+            get {
+                if (currentPlayer == null) return 0;
+                return currentPlayer.MaxFrameNumber;
+            }
+        }
+
+        public Material Material { get => displayUGUI.material; }
+
+        public void Play (bool FadeEffect = true) {
+            playVideo (FadeEffect);
+        }
+
         public void Play (string Path, Action<UAVProPlayer> OnCompleted, bool Loop = false, double StartTime = 0f, double EndTime = 0f) {
             var _idx = videoPathes.FindIndex (_path => _path == Path);
             if (_idx == -1) return;
             stopVideo ();
+
             videoIndex.Set (_idx);
+            onPlayerChanged.Invoke (currentPlayer);
 
             currentPlayer.Play (Path, OnCompleted, Loop, StartTime, EndTime);
             DisplayUGUI.CurrentMediaPlayer = currentPlayer.GetComponent<MediaPlayer> ();
@@ -88,19 +122,30 @@ namespace UNIHper {
             stopVideo ();
         }
 
-        public void PlayNext () {
+        public void SwitchNext (bool bAutoPlay = true) {
             stopVideo ();
             videoIndex.Next ();
-            playVideo ();
+            onPlayerChanged.Invoke (currentPlayer);
+            if (bAutoPlay) {
+                playVideo ();
+            }
         }
 
-        public void PlayPrev () {
+        public void SwitchPrev (bool bAutoPlay = true) {
             stopVideo ();
             videoIndex.Prev ();
-            playVideo ();
+            onPlayerChanged.Invoke (currentPlayer);
+            if (bAutoPlay) {
+                playVideo ();
+            }
+        }
+
+        public void SetPlaybackRate (float rate) {
+            currentPlayer.SetPlaybackRate (rate);
         }
 
         private UAVProPlayer currentPlayer { get => transform.GetChild (videoIndex.Current).GetComponent<UAVProPlayer> (); }
+        public UAVProPlayer CurrentPlayer { get => currentPlayer; }
         private DisplayUGUI displayUGUI = null;
         public DisplayUGUI DisplayUGUI {
             get {
@@ -109,6 +154,18 @@ namespace UNIHper {
                 }
                 return displayUGUI;
             }
+        }
+
+        public void SetMaterial (Material NewMaterial) {
+            DisplayUGUI.material = NewMaterial;
+        }
+
+        public void Seek (double NewTime) {
+            currentPlayer.Seek (NewTime);
+        }
+
+        public void SeekToFrame (int Frame) {
+            currentPlayer.SeekToFrame (Frame);
         }
 
         private void playVideo (bool FadeEffect = true) {

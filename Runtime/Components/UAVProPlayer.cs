@@ -70,6 +70,12 @@ namespace UNIHper {
             }
         }
 
+        public bool IsFinished {
+            get {
+                return MediaPlayer.Control.IsFinished ();
+            }
+        }
+
         /// <summary>
         /// 当前播放的视频的总时长 seconds
         /// </summary>
@@ -80,6 +86,18 @@ namespace UNIHper {
             }
         }
 
+        public int DurationFrames {
+            get {
+                return mediaPlayer.Info.GetDurationFrames ();
+            }
+        }
+
+        public int MaxFrameNumber {
+            get {
+                return mediaPlayer.Info.GetMaxFrameNumber ();
+            }
+        }
+
         /// <summary>
         /// Current video time in seconds
         /// </summary>
@@ -87,6 +105,12 @@ namespace UNIHper {
         public double CurrentTime {
             get {
                 return MediaPlayer.Control.GetCurrentTime ();
+            }
+        }
+
+        public int CurrentFrame {
+            get {
+                return mediaPlayer.Control.GetCurrentTimeFrames ();
             }
         }
 
@@ -215,6 +239,15 @@ namespace UNIHper {
                 return;
             }
             MediaPlayer.Control.Seek (InTime);
+        }
+
+        public void SeekToFrame (int Frame) {
+            if (!Ready2Play) return;
+            mediaPlayer.Control.SeekToFrame (Frame);
+        }
+
+        public void SetPlaybackRate (float rate) {
+            mediaPlayer.Control.SetPlaybackRate (rate);
         }
 
         private void disposeHandlers (List<IDisposable> InHandlers) {
