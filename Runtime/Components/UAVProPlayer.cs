@@ -250,6 +250,14 @@ namespace UNIHper {
             mediaPlayer.Control.SetPlaybackRate (rate);
         }
 
+        public void SetVolume (float volume) {
+            mediaPlayer.Control.SetVolume (volume);
+        }
+
+        public void MuteAudio (bool bMute) {
+            mediaPlayer.Control.MuteAudio (bMute);
+        }
+
         private void disposeHandlers (List<IDisposable> InHandlers) {
             InHandlers.ForEach (_handler => {
                 if (_handler != null) {

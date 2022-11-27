@@ -144,6 +144,14 @@ namespace UNIHper {
             currentPlayer.SetPlaybackRate (rate);
         }
 
+        public void SetVolume (float volume) {
+            currentPlayer.SetVolume (volume);
+        }
+
+        public void MuteAudio (bool bMute) {
+            currentPlayer.MuteAudio (bMute);
+        }
+
         private UAVProPlayer currentPlayer { get => transform.GetChild (videoIndex.Current).GetComponent<UAVProPlayer> (); }
         public UAVProPlayer CurrentPlayer { get => currentPlayer; }
         private DisplayUGUI displayUGUI = null;

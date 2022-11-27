@@ -10,12 +10,13 @@ namespace UNIHper {
 
     public class UAudioManager : SingletonBehaviour<UAudioManager> {
 
-        public void PlayMusic (AudioClip InMusic, float InVolume = 1.0f, bool bLoop = true, int Index = 0) {
+        public AudioSource PlayMusic (AudioClip InMusic, float InVolume = 1.0f, bool bLoop = true, int Index = 0) {
             var _audioSource = musicPlayer.GetAudioSource (Index);
             _audioSource.clip = InMusic;
             _audioSource.volume = InVolume;
             _audioSource.loop = bLoop;
             _audioSource.Play ();
+            return _audioSource;
         }
 
         public void PlayMusic (string InMusic, float InVolume = 1.0f, bool bLoop = true, int Index = 0) {

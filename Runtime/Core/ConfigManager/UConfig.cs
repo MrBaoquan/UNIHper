@@ -29,6 +29,7 @@ namespace UNIHper {
 
         public SerializedAt (AppPath RootDir, string InSubDir = "Configs") {
             this.RootDir = RootDir;
+            SubDir = InSubDir;
         }
     }
 
