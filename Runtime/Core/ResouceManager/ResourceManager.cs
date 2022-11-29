@@ -209,9 +209,18 @@ namespace UNIHper {
         /// </summary>
         /// <param name="InPath"></param>
         /// <returns></returns>
-        public AssetBundle LoadAssetBundle (string InPath) {
+        public AssetBundle AppendAssetBundle (string InPath) {
             loadABAssets (new List<ResourceItem> { new ResourceItem { path = InPath, type = "AssetBundle" } }, CUSTOM_RES_KEY);
             return bundles[CUSTOM_RES_KEY][getABFullPath (InPath)];
+        }
+
+        public async Task<IEnumerable<AudioClip>> AppendAudioClips (IEnumerable<string> AudioPathes) {
+            var _validPathes = AudioPathes.Where (_path => File.Exists (_path));
+            if (_validPathes.Count () <= 0) return null;
+
+            var _audioClips = await Observable.Zip (_validPathes.Select (_path => this.LoadAudioClip (_path)));
+            appendResources (_audioClips, CUSTOM_RES_KEY);
+            return _audioClips;
         }
 
         /// <summary>
@@ -225,15 +234,15 @@ namespace UNIHper {
             RefreshResources ();
         }
 
+        /// <summary>
+        /// Private Methods Below
+        /// </summary>
+
         private void RefreshResources () {
             resources = resources.Select (_ => {
                 return new KeyValuePair<string, Dictionary<string, UnityEngine.Object>> (_.Key, _.Value.Where (_1 => _1.Value != null).ToDictionary (_1 => _1.Key, _2 => _2.Value));
             }).ToDictionary (_ => _.Key, _ => _.Value);
         }
-
-        /// <summary>
-        /// Private Methods Below
-        /// </summary>
 
         private T getResource<T> (Dictionary<string, UnityEngine.Object> InResources, string InName) where T : UnityEngine.Object {
             string _key = string.Format ("{0}_{1}", typeof (T).FullName, InName);
@@ -370,7 +379,7 @@ namespace UNIHper {
             return Path.Combine (Application.streamingAssetsPath, "AssetBundles", InPath);
         }
 
-        private void appendResources (UnityEngine.Object[] InResources, string InResID) {
+        private void appendResources (IEnumerable<UnityEngine.Object> InResources, string InResID) {
             if (!resources.ContainsKey (InResID)) resources.Add (InResID, new Dictionary<string, UnityEngine.Object> ());
             foreach (var _resource in InResources) {
                 string _key = string.Format ("{0}_{1}", _resource.GetType ().FullName, _resource.name);
