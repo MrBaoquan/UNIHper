@@ -15,7 +15,7 @@ namespace UNIHper {
         }
 
         public static void PlayAnimation (this Animator animator, string InState, Action<Animator> InCallback = null) {
-            animator.Play (InState);
+            animator.Play (InState, -1, 0);
             syncPlayState (animator);
 
             if (InCallback is null) return;

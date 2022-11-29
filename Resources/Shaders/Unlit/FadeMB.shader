@@ -1,16 +1,16 @@
-﻿Shader "UNIHper/Unlit/FadeAB"
+﻿Shader "UNIHper/Unlit/FadeMB"
 {
     Properties
     {
-		_ATexture ("Src Texture", 2D) = "white" {}
+		_MainTex ("Main Texture", 2D) = "white" {}
 		_BTexture ("Dst Texture", 2D) = "white" {}
 		_Weight ("Weight", Range(0,1)) = 0
+        _Alpha ("Alpha", Range(0,1)) = 1
     }
     SubShader
     {
         Tags { "Queue" = "Transparent" "RenderType" = "Transparent"}
         Blend SrcAlpha OneMinusSrcAlpha
-        LOD 200
         Pass
         {
             CGPROGRAM
@@ -20,9 +20,10 @@
             #include "UnityCG.cginc"
 
             fixed4 _Color;
-            sampler2D _ATexture;
+            sampler2D _MainTex;
             sampler2D _BTexture;
             half _Weight;
+            half _Alpha;
 
             struct appdata
             {
@@ -46,9 +47,10 @@
 
             fixed4 frag(v2f i) : SV_Target
             {
-                fixed4 _colorA = tex2D(_ATexture,i.uv);
+                fixed4 _colorA = tex2D(_MainTex,i.uv);
                 fixed4 _colorB = tex2D(_BTexture,i.uv);
                 fixed4 _final = _colorA*(1-_Weight)+_colorB*_Weight;
+                _final.a *= _Alpha;
                 return _final;
             }
 
