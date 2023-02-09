@@ -90,6 +90,12 @@ namespace UNIHper {
             }
         }
 
+        public double Duration {
+            get {
+                if (currentPlayer == null) return 0;
+                return currentPlayer.Duration;
+            }
+        }
         public int MaxFrameNumber {
             get {
                 if (currentPlayer == null) return 0;
@@ -192,6 +198,7 @@ namespace UNIHper {
         }
 
         private void stopVideo () {
+            if (currentPlayer == null) return;
             currentPlayer.Rewind (true);
         }
 
