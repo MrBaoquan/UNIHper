@@ -4,25 +4,21 @@
 //REMEMBER: To toggle VR Supported normally, go to:
 //		Edit -> Project Settings -> Player -> Other Settings
 
-using UnityEditor;		//Enables the use of editor modifying code
+using UnityEditor; //Enables the use of editor modifying code
 using UnityEngine.XR;
 
-namespace UNIHper
-{
+namespace UNIHper {
 
-    public class VREditorToggle
-    {
-        const string ONNAME = "VR/Enable VR";       //The name of our Enable menu item
-        const string OFFNAME = "VR/Disable VR";     //The name of our Disable menu item
-
+    public class VREditorToggle {
+        const string ONNAME = "VR/Enable VR"; //The name of our Enable menu item
+        const string OFFNAME = "VR/Disable VR"; //The name of our Disable menu item
 
         //This method creates the Enable menu item. When the menu item is clicked, the code
         //inside this method executes
-        [MenuItem(ONNAME)]
-        static void EnableVR()
-        {
+        [MenuItem (ONNAME)]
+        static void EnableVR () {
             //Turn VR Supported on
-#if UNITY_2020
+#if UNITY_2020_1_OR_NEWER
             XRSettings.enabled = true;
 #else
             PlayerSettings.virtualRealitySupported = true;
@@ -32,16 +28,15 @@ namespace UNIHper
 
         //This method "validates" the Enable menu item. It is used by the editor to format
         //the menu item for us
-        [MenuItem(ONNAME, true)]
-        static bool EnableValidate()
-        {
-#if UNITY_2020
+        [MenuItem (ONNAME, true)]
+        static bool EnableValidate () {
+#if UNITY_2020_1_OR_NEWER
             bool enabled = XRSettings.enabled;
 #else
             bool enabled = PlayerSettings.virtualRealitySupported;
 #endif
             //If VR Supported is enabled, add a checkmark next to this menu item
-            Menu.SetChecked(ONNAME, enabled);
+            Menu.SetChecked (ONNAME, enabled);
             //Return the opposite of whether or not VR is supported. Thus, if VR Supported is enabled,
             //this returns "false". The result is that if VR Support is enabled, this menu item is grayed-out
             //and cannot be selected again
@@ -50,11 +45,10 @@ namespace UNIHper
 
         //This method creates the Disable menu item. When the menu item is clicked, the code
         //inside this method executes
-        [MenuItem(OFFNAME)]
-        static void DisableVR()
-        {
+        [MenuItem (OFFNAME)]
+        static void DisableVR () {
             //Turn VR Supported off
-#if UNITY_2020
+#if UNITY_2020_1_OR_NEWER
             XRSettings.enabled = false;
 #else
             PlayerSettings.virtualRealitySupported = false;
@@ -63,16 +57,15 @@ namespace UNIHper
 
         //This method "validates" the Disable menu item. It is used by the editor to format
         //the menu item for us
-        [MenuItem(OFFNAME, true)]
-        static bool DisableValidate()
-        {
-#if UNITY_2020
+        [MenuItem (OFFNAME, true)]
+        static bool DisableValidate () {
+#if UNITY_2020_1_OR_NEWER
             bool enabled = XRSettings.enabled;
 #else
             bool enabled = PlayerSettings.virtualRealitySupported;
 #endif
             //If VR Supported is disabled, add a checkmark next to this menu item
-            Menu.SetChecked(OFFNAME, !enabled);
+            Menu.SetChecked (OFFNAME, !enabled);
             //Return the opposite of whether or not VR is supported. Thus, if VR Supported is disabled,
             //this returns "true". The result is that if VR Support is disabled, this menu item is grayed-out
             //and cannot be selected again
