@@ -71,6 +71,9 @@ namespace UNIHper {
             if (_startupScenePath == default (string)) {
                 Debug.Log ($"New scene {sceneEntryName} created");
                 var _sceneEntry = EditorSceneManager.NewScene (NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
+                if (!Directory.Exists (Path.Combine (ProjectAssetRoot, "Scenes"))) {
+                    Directory.CreateDirectory (Path.Combine (ProjectAssetRoot, "Scenes"));
+                }
                 EditorSceneManager.SaveScene (_sceneEntry, string.Format ("Assets/Scenes/{0}.unity", sceneEntryName));
             } else {
                 var _activeScene = EditorSceneManager.GetActiveScene ();
