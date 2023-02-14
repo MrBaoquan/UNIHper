@@ -5,8 +5,14 @@ using UnityEngine;
 using UNIHper;
 public class ##CLASSNAME## : UConfig
 {
+    // Write your comments here
+    protected override string Comment () {
+        return @"
+        Write your comments here...
+        ";
+    }
 
-    // Called once when config data is loaded
+    // Called once after the config data is loaded
     protected override void OnLoaded () {
         
     }
