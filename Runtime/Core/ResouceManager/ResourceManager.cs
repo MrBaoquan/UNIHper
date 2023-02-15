@@ -223,6 +223,15 @@ namespace UNIHper {
             return _audioClips;
         }
 
+        public async Task<IEnumerable<Texture2D>> AppendTextures (IEnumerable<string> TexturePathes) {
+            var _validPathes = TexturePathes.Where (_path => File.Exists (_path));
+            if (_validPathes.Count () <= 0) return null;
+
+            var _textures = await Observable.Zip (_validPathes.Select (_path => this.LoadTexture2D (_path)));
+            appendResources (_textures, CUSTOM_RES_KEY);
+            return _textures;
+        }
+
         /// <summary>
         /// 卸载AB包
         /// </summary>
