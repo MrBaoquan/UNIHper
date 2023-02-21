@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using DG.Tweening;
@@ -22,14 +23,16 @@ namespace UNIHper.UI {
 
     public class AnimatedUI : UIAnimationBase {
 
-        [EnumToggleButtons]
-        public UIAnimionDriver Driver = UIAnimionDriver.Tweener;
+        public UIAnimionDriver Driver = UIAnimionDriver.Animator;
 
         [ShowIf ("Driver", UIAnimionDriver.Animator)]
-        public AnimationClip FadeIn_clip;
+        public RuntimeAnimatorController UIController = null;
 
         [ShowIf ("Driver", UIAnimionDriver.Animator)]
-        public AnimationClip FadeOut_clip;
+        public AnimationClip enterAnimation;
+
+        [ShowIf ("Driver", UIAnimionDriver.Animator)]
+        public AnimationClip leaveAnimation;
 
         [ShowInInspector, ShowIf ("Driver", UIAnimionDriver.Tweener)]
         public UIAnimationType FadeIn_Type = UIAnimationType.Fly_Left;
@@ -60,8 +63,10 @@ namespace UNIHper.UI {
         }
 
         void Reset () {
-            FadeIn_clip = Resources.Load<AnimationClip> ("Animations/UI/ZoomY");
-            FadeOut_clip = Resources.Load<AnimationClip> ("Animations/UI/ZoomY");
+            enterAnimation = Resources.Load<AnimationClip> ("Animations/UI/ZoomY");
+            leaveAnimation = Resources.Load<AnimationClip> ("Animations/UI/ZoomY");
+            UIController = Resources.Load ("AnimatorControllers/UI/UI_Controller_+-") as RuntimeAnimatorController;
+            // animationClips = new List<AnimationClip> () { enterAnimation.animation, leaveAnimation.animation };
         }
 
         void Awake () {
@@ -71,9 +76,10 @@ namespace UNIHper.UI {
         protected override void OnUIAttached () {
             recordOriginTransform ();
             if (Driver == UIAnimionDriver.Animator) {
-                var _animatorController = Resources.Load ("AnimatorControllers/UI/UI_Controller") as RuntimeAnimatorController;
-                animatorOverrideController.runtimeAnimatorController = new AnimatorOverrideController (_animatorController);
-                animatorOverrideController.animationClips = new List<AnimationClip> { FadeIn_clip, FadeOut_clip };
+                //var _animatorController = Resources.Load ("AnimatorControllers/UI/UI_Controller") as RuntimeAnimatorController;
+                animatorOverrideController.runtimeAnimatorController = new AnimatorOverrideController (UIController);
+                animatorOverrideController.animationClips = new List<AnimationClip> { enterAnimation, leaveAnimation };
+                // animatorOverrideController.animationClips = animationClips;
                 animatorOverrideController.Apply ();
             }
         }
@@ -84,6 +90,7 @@ namespace UNIHper.UI {
 
         private Task getShowTask () {
             if (Driver == UIAnimionDriver.Animator) {
+                //this.Get<Animator> ().speed = enterAnimation.speed;
                 return Observable.Create<Unit> (_observer => {
                     this.Get<Animator> ().PlayAnimation ("Show", _animator => {
                         _observer.OnNext (Unit.Default);

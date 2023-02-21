@@ -64,7 +64,6 @@ namespace UNIHper {
         public void RefreshParameters () {
             if (SWPFlags.Count <= 0) {
                 SWPFlags = new List<SetWindowPosFlags> () { SetWindowPosFlags.SWP_SHOWWINDOW };
-                this.Serialize ();
             }
         }
     }
@@ -77,11 +76,9 @@ namespace UNIHper {
         public void RefreshParameters () {
             if (GWL_Styles.Count <= 0) {
                 GWL_Styles = new List<GWL_STYLE> { GWL_STYLE.WS_POPUP };
-                this.Serialize ();
             }
             if (GWL_EXStyles.Count <= 0) {
                 GWL_EXStyles = new List<GWL_EXSTYLE> ();
-                this.Serialize ();
             }
         }
 
@@ -132,9 +129,9 @@ namespace UNIHper {
         protected override void OnLoaded () {
             PrimaryScreen.RefreshParameters ();
             KeepWindowTop.RefreshParameters ();
+            this.Serialize ();
             executeWindowSettings ();
             activeAllDisplays ();
-
         }
 
         private void executeWindowSettings () {

@@ -76,7 +76,7 @@ public class LicenseUI : UIBase {
     }
 
     // Called when this ui is showing
-    protected override void OnShow () {
+    protected override void OnShowed () {
 
     }
 

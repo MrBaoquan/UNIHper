@@ -73,8 +73,9 @@ namespace UNIHper {
         }
 
         protected async void handleShowEvents () {
+            this.OnShowing ();
             await handleShowAction ();
-            this.OnShow ();
+            this.OnShowed ();
             m_onShowEvent.Invoke ();
         }
 
@@ -86,6 +87,7 @@ namespace UNIHper {
         }
 
         protected async void handleHideEvents () {
+            this.onHiding ();
             await handleHideAction ();
             this.OnHidden ();
             m_onHideEvent.Invoke ();
@@ -111,8 +113,10 @@ namespace UNIHper {
 
         protected virtual void OnLoaded () { }
 
-        protected virtual void OnShow () { }
+        protected virtual void OnShowing () { }
+        protected virtual void OnShowed () { }
 
+        protected virtual void onHiding () { }
         protected virtual void OnHidden () { }
     }
 
