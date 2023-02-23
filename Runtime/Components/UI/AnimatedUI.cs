@@ -21,28 +21,40 @@ namespace UNIHper.UI {
         Zoom = 110,
     }
 
+    [System.Serializable]
+    public class UIClip {
+        public AnimationClip animation;
+        public float Speed = 1.0f;
+    }
+
     public class AnimatedUI : UIAnimationBase {
 
-        public UIAnimionDriver Driver = UIAnimionDriver.Animator;
+        [SerializeField]
+        private UIAnimionDriver driver = UIAnimionDriver.Animator;
 
-        [ShowIf ("Driver", UIAnimionDriver.Animator)]
-        public RuntimeAnimatorController UIController = null;
+        [SerializeField]
+        [ShowIf ("driver", UIAnimionDriver.Animator)]
+        private UIClip enterAnimation = new UIClip { Speed = 1 };
 
-        [ShowIf ("Driver", UIAnimionDriver.Animator)]
-        public AnimationClip enterAnimation;
+        [SerializeField]
+        [ShowIf ("driver", UIAnimionDriver.Animator)]
+        private UIClip exitAnimation = new UIClip { Speed = -1 };
 
-        [ShowIf ("Driver", UIAnimionDriver.Animator)]
-        public AnimationClip leaveAnimation;
+        [SerializeField]
+        [ShowInInspector, ShowIf ("driver", UIAnimionDriver.Tweener)]
+        private UIAnimationType enterAnimType = UIAnimationType.Fly_Left;
 
-        [ShowInInspector, ShowIf ("Driver", UIAnimionDriver.Tweener)]
-        public UIAnimationType FadeIn_Type = UIAnimationType.Fly_Left;
-        [ShowInInspector, PropertyRange (0, 1), ShowIf ("Driver", UIAnimionDriver.Tweener)]
-        public float FadeIn_Duration = 0.40f;
+        [SerializeField]
+        [ShowInInspector, PropertyRange (0, 1), ShowIf ("driver", UIAnimionDriver.Tweener)]
+        private float enterDuration = 0.40f;
 
-        [ShowInInspector, ShowIf ("Driver", UIAnimionDriver.Tweener)]
-        public UIAnimationType FadeOut_Type = UIAnimationType.Fly_Right;
-        [ShowInInspector, PropertyRange (0, 1), ShowIf ("Driver", UIAnimionDriver.Tweener)]
-        public float FadeOut_Duration = 0.40f;
+        [SerializeField]
+        [ShowInInspector, ShowIf ("driver", UIAnimionDriver.Tweener)]
+        private UIAnimationType exitAnimType = UIAnimationType.Fly_Right;
+
+        [SerializeField]
+        [ShowInInspector, PropertyRange (0, 1), ShowIf ("driver", UIAnimionDriver.Tweener)]
+        private float exitDuration = 0.40f;
 
         public override Task BuildShowTask () {
             return getShowTask ();
@@ -63,10 +75,10 @@ namespace UNIHper.UI {
         }
 
         void Reset () {
-            enterAnimation = Resources.Load<AnimationClip> ("Animations/UI/ZoomY");
-            leaveAnimation = Resources.Load<AnimationClip> ("Animations/UI/ZoomY");
-            UIController = Resources.Load ("AnimatorControllers/UI/UI_Controller_+-") as RuntimeAnimatorController;
-            // animationClips = new List<AnimationClip> () { enterAnimation.animation, leaveAnimation.animation };
+            enterAnimation.animation = Resources.Load<AnimationClip> ("Animations/UI/ZoomY");
+            enterAnimation.Speed = 1;
+            exitAnimation.animation = Resources.Load<AnimationClip> ("Animations/UI/ZoomY");
+            exitAnimation.Speed = -1;
         }
 
         void Awake () {
@@ -75,11 +87,9 @@ namespace UNIHper.UI {
 
         protected override void OnUIAttached () {
             recordOriginTransform ();
-            if (Driver == UIAnimionDriver.Animator) {
-                //var _animatorController = Resources.Load ("AnimatorControllers/UI/UI_Controller") as RuntimeAnimatorController;
-                animatorOverrideController.runtimeAnimatorController = new AnimatorOverrideController (UIController);
-                animatorOverrideController.animationClips = new List<AnimationClip> { enterAnimation, leaveAnimation };
-                // animatorOverrideController.animationClips = animationClips;
+            if (driver == UIAnimionDriver.Animator) {
+                animatorOverrideController.runtimeAnimatorController = Resources.Load ("AnimatorControllers/UI/UI_Controller") as RuntimeAnimatorController;
+                animatorOverrideController.animationClips = new List<AnimationClip> { enterAnimation.animation, exitAnimation.animation };
                 animatorOverrideController.Apply ();
             }
         }
@@ -89,8 +99,8 @@ namespace UNIHper.UI {
         }
 
         private Task getShowTask () {
-            if (Driver == UIAnimionDriver.Animator) {
-                //this.Get<Animator> ().speed = enterAnimation.speed;
+            if (driver == UIAnimionDriver.Animator) {
+                this.Get<Animator> ().SetFloat ("ShowSpeed", enterAnimation.Speed);
                 return Observable.Create<Unit> (_observer => {
                     this.Get<Animator> ().PlayAnimation ("Show", _animator => {
                         _observer.OnNext (Unit.Default);
@@ -98,9 +108,9 @@ namespace UNIHper.UI {
                     });
                     return new CancellationTokenSource ();
                 }).ToTask ();
-            } else if (Driver == UIAnimionDriver.Tweener) {
+            } else if (driver == UIAnimionDriver.Tweener) {
                 return Observable.Create<Unit> (_observer => {
-                    newFadeTween (FadeIn_Type, 1, FadeIn_Duration)
+                    newFadeTween (enterAnimType, 1, enterDuration)
                         .SetEase (Ease.Linear)
                         .OnComplete (() => {
                             _observer.OnNext (Unit.Default);
@@ -113,7 +123,8 @@ namespace UNIHper.UI {
         }
 
         private Task getHideTask () {
-            if (Driver == UIAnimionDriver.Animator) {
+            if (driver == UIAnimionDriver.Animator) {
+                this.Get<Animator> ().SetFloat ("HideSpeed", exitAnimation.Speed);
                 return Observable.Create<Unit> (_observer => {
                     this.Get<Animator> ().PlayAnimation ("Hide", _animator => {
                         _observer.OnNext (Unit.Default);
@@ -121,9 +132,9 @@ namespace UNIHper.UI {
                     });
                     return new CancellationTokenSource ();
                 }).ToTask ();
-            } else if (Driver == UIAnimionDriver.Tweener) {
+            } else if (driver == UIAnimionDriver.Tweener) {
                 return Observable.Create<Unit> (_observer => {
-                    newFadeTween (FadeOut_Type, 2, FadeOut_Duration)
+                    newFadeTween (exitAnimType, 2, exitDuration)
                         .SetEase (Ease.Linear)
                         .OnComplete (() => {
                             _observer.OnNext (Unit.Default);

@@ -133,6 +133,7 @@ namespace UNIHper {
                 }
             }).ObserveOnMainThread ().Subscribe (_ => {
                 if (!_) return;
+                UnityEngine.Debug.LogFormat (("Connected to: {0}:{1}"), InRemoteEndPoint.Address.ToString (), InRemoteEndPoint.Port);
                 connected = true;
                 var _event = new UNetConnectedEvent { RemoteIP = remoteEndPoint.Address.ToString (), RemotePort = remoteEndPoint.Port };
                 Managements.Event.Fire (_event);

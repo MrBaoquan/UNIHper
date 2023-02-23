@@ -11,7 +11,7 @@ public class ##CLASSNAME## : SceneScriptBase
         
     }
 
-    // Called once per frame after Start
+    // Called per frame after Start
     private void Update()
     {
     
