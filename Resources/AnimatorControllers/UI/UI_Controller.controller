@@ -43,13 +43,13 @@ AnimatorState:
   m_StateMachineBehaviours: []
   m_Position: {x: 50, y: 50, z: 0}
   m_IKOnFeet: 0
-  m_WriteDefaultValues: 0
+  m_WriteDefaultValues: 1
   m_Mirror: 0
   m_SpeedParameterActive: 1
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: 7400000, guid: 12924e42e45969b4593f88e96e2f0ffc, type: 2}
+  m_Motion: {fileID: 7400000, guid: 64285a43083efa640bc235d18efc4987, type: 2}
   m_Tag: 
   m_SpeedParameter: HideSpeed
   m_MirrorParameter: 
@@ -100,7 +100,7 @@ AnimatorController:
     m_Controller: {fileID: 0}
   - m_Name: HideSpeed
     m_Type: 1
-    m_DefaultFloat: -1
+    m_DefaultFloat: 1
     m_DefaultInt: 0
     m_DefaultBool: 0
     m_Controller: {fileID: 0}
@@ -132,13 +132,13 @@ AnimatorState:
   m_StateMachineBehaviours: []
   m_Position: {x: 50, y: 50, z: 0}
   m_IKOnFeet: 0
-  m_WriteDefaultValues: 0
+  m_WriteDefaultValues: 1
   m_Mirror: 0
   m_SpeedParameterActive: 1
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: 7400000, guid: 12924e42e45969b4593f88e96e2f0ffc, type: 2}
+  m_Motion: {fileID: 7400000, guid: 57e91f8eaefc8ae4a94337064064f594, type: 2}
   m_Tag: 
   m_SpeedParameter: ShowSpeed
   m_MirrorParameter: 

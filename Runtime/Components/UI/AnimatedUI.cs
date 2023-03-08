@@ -21,24 +21,20 @@ namespace UNIHper.UI {
         Zoom = 110,
     }
 
-    [System.Serializable]
-    public class UIClip {
-        public AnimationClip animation;
-        public float Speed = 1.0f;
-    }
-
     public class AnimatedUI : UIAnimationBase {
 
         [SerializeField]
         private UIAnimionDriver driver = UIAnimionDriver.Animator;
 
+        [HideInInspector]
         [SerializeField]
-        [ShowIf ("driver", UIAnimionDriver.Animator)]
-        private UIClip enterAnimation = new UIClip { Speed = 1 };
+        private RuntimeAnimatorController _UIController = null;
+        [SerializeField, ShowIf ("driver", UIAnimionDriver.Animator)]
+        public RuntimeAnimatorController UIController = null;
 
         [SerializeField]
-        [ShowIf ("driver", UIAnimionDriver.Animator)]
-        private UIClip exitAnimation = new UIClip { Speed = -1 };
+        [TableList (ShowIndexLabels = false, HideToolbar = true, IsReadOnly = true), ShowIf ("driver", UIAnimionDriver.Animator)]
+        public List<AnimationClipPair> AnimationClips;
 
         [SerializeField]
         [ShowInInspector, ShowIf ("driver", UIAnimionDriver.Tweener)]
@@ -74,11 +70,28 @@ namespace UNIHper.UI {
             }
         }
 
+        void OnValidate () {
+            if (UIController == null) return;
+            if (UIController == _UIController) return;
+            _UIController = UIController;
+
+            var _overrideController = new AnimatorOverrideController (UIController);
+            var overrides = new List<KeyValuePair<AnimationClip, AnimationClip>> ();
+
+            _overrideController.GetOverrides (overrides);
+            AnimationClips = overrides.Select (_kv => new AnimationClipPair { originalClip = _kv.Key, overrideClip = _kv.Value })
+                .ToList ();
+        }
+
         void Reset () {
-            enterAnimation.animation = Resources.Load<AnimationClip> ("Animations/UI/ZoomY");
-            enterAnimation.Speed = 1;
-            exitAnimation.animation = Resources.Load<AnimationClip> ("Animations/UI/ZoomY");
-            exitAnimation.Speed = -1;
+            UIController = Resources.Load ("AnimatorControllers/UI/UI_Controller") as RuntimeAnimatorController;
+            var _overrideController = new AnimatorOverrideController (UIController);
+            var overrides = new List<KeyValuePair<AnimationClip, AnimationClip>> ();
+
+            _overrideController.GetOverrides (overrides);
+            AnimationClips = overrides.Select (_kv => new AnimationClipPair { originalClip = _kv.Key, overrideClip = _kv.Value })
+                .ToList ();
+
         }
 
         void Awake () {
@@ -88,8 +101,8 @@ namespace UNIHper.UI {
         protected override void OnUIAttached () {
             recordOriginTransform ();
             if (driver == UIAnimionDriver.Animator) {
-                animatorOverrideController.runtimeAnimatorController = Resources.Load ("AnimatorControllers/UI/UI_Controller") as RuntimeAnimatorController;
-                animatorOverrideController.animationClips = new List<AnimationClip> { enterAnimation.animation, exitAnimation.animation };
+                animatorOverrideController.runtimeAnimatorController = UIController;
+                animatorOverrideController.animationClipPairs = AnimationClips;
                 animatorOverrideController.Apply ();
             }
         }
@@ -100,7 +113,7 @@ namespace UNIHper.UI {
 
         private Task getShowTask () {
             if (driver == UIAnimionDriver.Animator) {
-                this.Get<Animator> ().SetFloat ("ShowSpeed", enterAnimation.Speed);
+                // this.Get<Animator> ().SetFloat ("ShowSpeed", enterAnimation.Speed);
                 return Observable.Create<Unit> (_observer => {
                     this.Get<Animator> ().PlayAnimation ("Show", _animator => {
                         _observer.OnNext (Unit.Default);
@@ -124,7 +137,7 @@ namespace UNIHper.UI {
 
         private Task getHideTask () {
             if (driver == UIAnimionDriver.Animator) {
-                this.Get<Animator> ().SetFloat ("HideSpeed", exitAnimation.Speed);
+                // this.Get<Animator> ().SetFloat ("HideSpeed", exitAnimation.Speed);
                 return Observable.Create<Unit> (_observer => {
                     this.Get<Animator> ().PlayAnimation ("Hide", _animator => {
                         _observer.OnNext (Unit.Default);
