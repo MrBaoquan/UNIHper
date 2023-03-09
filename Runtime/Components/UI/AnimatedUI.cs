@@ -26,17 +26,13 @@ namespace UNIHper.UI {
         private UIAnimionDriver driver = UIAnimionDriver.Animator;
 
         [Title ("UI Animation Clips")]
-        [LabelText ("On UI Enter"), LabelWidth (80)]
-        [SerializeField]
-        [ShowIf ("driver", UIAnimionDriver.Animator)]
-        private AnimationClip EnterClip;
-        [LabelText ("On UI Leave"), LabelWidth (80)]
-        [SerializeField]
-        [ShowIf ("driver", UIAnimionDriver.Animator)]
-        private AnimationClip LeaveClip;
+        [SerializeField, Required, AssetsOnly, ShowIf ("driver", UIAnimionDriver.Animator)]
+        private AnimationClip UIEnterClip;
+        [SerializeField, Required, AssetsOnly, ShowIf ("driver", UIAnimionDriver.Animator)]
+        private AnimationClip UILeaveClip;
 
         [SerializeField]
-        [ShowInInspector, ShowIf ("driver", UIAnimionDriver.Tweener)]
+        [Title ("UI Animation Settings"), ShowInInspector, ShowIf ("driver", UIAnimionDriver.Tweener)]
         private UIAnimationType enterAnimType = UIAnimationType.Fly_Left;
 
         [SerializeField]
@@ -70,8 +66,8 @@ namespace UNIHper.UI {
         }
 
         void Reset () {
-            EnterClip = Resources.Load<AnimationClip> ("Animations/UI/UIShow");
-            LeaveClip = Resources.Load<AnimationClip> ("Animations/UI/UIHide");
+            UIEnterClip = Resources.Load<AnimationClip> ("Animations/UI/UIShow");
+            UILeaveClip = Resources.Load<AnimationClip> ("Animations/UI/UIHide");
         }
 
         protected override void OnUIAttached () {
@@ -81,7 +77,7 @@ namespace UNIHper.UI {
                 List<KeyValuePair<AnimationClip, AnimationClip>> _clips = new List<KeyValuePair<AnimationClip, AnimationClip>> ();
                 new AnimatorOverrideController (animatorOverrideController.runtimeAnimatorController).GetOverrides (_clips);
                 animatorOverrideController.animationClipPairs = _clips
-                    .Select (_clip => new AnimationClipPair { originalClip = _clip.Key, overrideClip = _clip.Key.name == "UIShow" ? EnterClip : LeaveClip })
+                    .Select (_clip => new AnimationClipPair { originalClip = _clip.Key, overrideClip = _clip.Key.name == "UIShow" ? UIEnterClip : UILeaveClip })
                     .ToList ();
                 animatorOverrideController.Apply ();
             }

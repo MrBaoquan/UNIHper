@@ -4,52 +4,55 @@ using UnityEngine;
 
 public static class ReverseAnimationContext {
 
-    [MenuItem ("Assets/Create Reversed Clip", false, 14)]
+    [MenuItem ("Assets/Create/Reversed Clip", false, 14)]
     private static void ReverseClip () {
         string directoryPath = Path.GetDirectoryName (AssetDatabase.GetAssetPath (Selection.activeObject));
         string fileName = Path.GetFileName (AssetDatabase.GetAssetPath (Selection.activeObject));
         string fileExtension = Path.GetExtension (AssetDatabase.GetAssetPath (Selection.activeObject));
         fileName = fileName.Split ('.') [0];
+
         string copiedFilePath = directoryPath + Path.DirectorySeparatorChar + fileName + "_Reversed" + fileExtension;
-        var clip = GetSelectedClip ();
+        var originalClip = GetSelectedClip ();
 
         AssetDatabase.CopyAsset (AssetDatabase.GetAssetPath (Selection.activeObject), copiedFilePath);
 
-        clip = (AnimationClip) AssetDatabase.LoadAssetAtPath (copiedFilePath, typeof (AnimationClip));
+        var reversedClip = (AnimationClip) AssetDatabase.LoadAssetAtPath (copiedFilePath, typeof (AnimationClip));
 
-        if (clip == null)
+        if (reversedClip == null)
             return;
-        float clipLength = clip.length;
-        var curves = AnimationUtility.GetAllCurves (clip, true);
-        clip.ClearCurves ();
-        foreach (AnimationClipCurveData curve in curves) {
-            var keys = curve.curve.keys;
+        float clipLength = reversedClip.length;
+        var curves = AnimationUtility.GetCurveBindings (reversedClip);
+        reversedClip.ClearCurves ();
+
+        foreach (EditorCurveBinding binding in curves) {
+            AnimationCurve curve = AnimationUtility.GetEditorCurve (originalClip, binding);
+            Keyframe[] keys = curve.keys;
             int keyCount = keys.Length;
-            var postWrapmode = curve.curve.postWrapMode;
-            curve.curve.postWrapMode = curve.curve.preWrapMode;
-            curve.curve.preWrapMode = postWrapmode;
+            WrapMode postWrapmode = curve.postWrapMode;
+            curve.postWrapMode = curve.preWrapMode;
+            curve.preWrapMode = postWrapmode;
             for (int i = 0; i < keyCount; i++) {
                 Keyframe K = keys[i];
                 K.time = clipLength - K.time;
-                var tmp = -K.inTangent;
+                float tmp = -K.inTangent;
                 K.inTangent = -K.outTangent;
                 K.outTangent = tmp;
                 keys[i] = K;
             }
-            curve.curve.keys = keys;
-            clip.SetCurve (curve.path, curve.type, curve.propertyName, curve.curve);
+            curve.keys = keys;
+            reversedClip.SetCurve (binding.path, binding.type, binding.propertyName, curve);
         }
-        var events = AnimationUtility.GetAnimationEvents (clip);
+        var events = AnimationUtility.GetAnimationEvents (reversedClip);
         if (events.Length > 0) {
             for (int i = 0; i < events.Length; i++) {
                 events[i].time = clipLength - events[i].time;
             }
-            AnimationUtility.SetAnimationEvents (clip, events);
+            AnimationUtility.SetAnimationEvents (reversedClip, events);
         }
         Debug.Log ("Animation reversed!");
     }
 
-    [MenuItem ("Assets/Create Reversed Clip", true)]
+    [MenuItem ("Assets/Create/Reversed Clip", true)]
     static bool ReverseClipValidation () {
         return Selection.activeObject.GetType () == typeof (AnimationClip);
     }

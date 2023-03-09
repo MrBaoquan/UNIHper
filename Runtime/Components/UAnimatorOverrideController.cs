@@ -66,7 +66,6 @@ namespace UNIHper {
         public void Apply () {
             buildRefs ();
             if (runtimeAnimatorController is null) return;
-            Debug.LogError (runtimeAnimatorController);
             overrideController = new AnimatorOverrideController (runtimeAnimatorController);
             overrideController.ApplyOverrides (animationClipPairs.ToDictionary (_ => _.originalClip, _ => _.overrideClip).ToList ());
             animator.runtimeAnimatorController = overrideController;
