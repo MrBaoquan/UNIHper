@@ -22,19 +22,18 @@ namespace UNIHper.UI {
     }
 
     public class AnimatedUI : UIAnimationBase {
-
         [SerializeField]
         private UIAnimionDriver driver = UIAnimionDriver.Animator;
 
-        [HideInInspector]
+        [Title ("UI Animation Clips")]
+        [LabelText ("On UI Enter"), LabelWidth (80)]
         [SerializeField]
-        private RuntimeAnimatorController _UIController = null;
-        [SerializeField, ShowIf ("driver", UIAnimionDriver.Animator)]
-        public RuntimeAnimatorController UIController = null;
-
+        [ShowIf ("driver", UIAnimionDriver.Animator)]
+        private AnimationClip EnterClip;
+        [LabelText ("On UI Leave"), LabelWidth (80)]
         [SerializeField]
-        [TableList (ShowIndexLabels = false, HideToolbar = true, IsReadOnly = true), ShowIf ("driver", UIAnimionDriver.Animator)]
-        public List<AnimationClipPair> AnimationClips;
+        [ShowIf ("driver", UIAnimionDriver.Animator)]
+        private AnimationClip LeaveClip;
 
         [SerializeField]
         [ShowInInspector, ShowIf ("driver", UIAnimionDriver.Tweener)]
@@ -70,39 +69,20 @@ namespace UNIHper.UI {
             }
         }
 
-        void OnValidate () {
-            if (UIController == null) return;
-            if (UIController == _UIController) return;
-            _UIController = UIController;
-
-            var _overrideController = new AnimatorOverrideController (UIController);
-            var overrides = new List<KeyValuePair<AnimationClip, AnimationClip>> ();
-
-            _overrideController.GetOverrides (overrides);
-            AnimationClips = overrides.Select (_kv => new AnimationClipPair { originalClip = _kv.Key, overrideClip = _kv.Value })
-                .ToList ();
-        }
-
         void Reset () {
-            UIController = Resources.Load ("AnimatorControllers/UI/UI_Controller") as RuntimeAnimatorController;
-            var _overrideController = new AnimatorOverrideController (UIController);
-            var overrides = new List<KeyValuePair<AnimationClip, AnimationClip>> ();
-
-            _overrideController.GetOverrides (overrides);
-            AnimationClips = overrides.Select (_kv => new AnimationClipPair { originalClip = _kv.Key, overrideClip = _kv.Value })
-                .ToList ();
-
-        }
-
-        void Awake () {
-
+            EnterClip = Resources.Load<AnimationClip> ("Animations/UI/UIShow");
+            LeaveClip = Resources.Load<AnimationClip> ("Animations/UI/UIHide");
         }
 
         protected override void OnUIAttached () {
             recordOriginTransform ();
             if (driver == UIAnimionDriver.Animator) {
-                animatorOverrideController.runtimeAnimatorController = UIController;
-                animatorOverrideController.animationClipPairs = AnimationClips;
+                animatorOverrideController.runtimeAnimatorController = Resources.Load<RuntimeAnimatorController> ("Animations/Controllers/UI_Controller");
+                List<KeyValuePair<AnimationClip, AnimationClip>> _clips = new List<KeyValuePair<AnimationClip, AnimationClip>> ();
+                new AnimatorOverrideController (animatorOverrideController.runtimeAnimatorController).GetOverrides (_clips);
+                animatorOverrideController.animationClipPairs = _clips
+                    .Select (_clip => new AnimationClipPair { originalClip = _clip.Key, overrideClip = _clip.Key.name == "UIShow" ? EnterClip : LeaveClip })
+                    .ToList ();
                 animatorOverrideController.Apply ();
             }
         }

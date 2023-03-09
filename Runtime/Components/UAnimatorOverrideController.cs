@@ -25,15 +25,21 @@ namespace UNIHper {
     public class UAnimatorOverrideController : MonoBehaviour {
         public bool bAutoApply = true;
         Animator animator;
+
+        [ShowInInspector]
         public RuntimeAnimatorController runtimeAnimatorController = null;
+
+        [HideInInspector]
+        [SerializeField]
         private RuntimeAnimatorController _lastRuntimeController = null;
 
         private AnimatorOverrideController overrideController = null;
 
-        [TableList]
+        [SerializeField]
+        [TableList (ShowIndexLabels = false, HideToolbar = false, IsReadOnly = true)]
         public List<AnimationClipPair> animationClipPairs = new List<AnimationClipPair> ();
 
-        private void Reset () {
+        private void OnValidate () {
             buildRefs ();
             if (runtimeAnimatorController is null) {
                 return;
@@ -54,17 +60,14 @@ namespace UNIHper {
         }
         // Start is called before the first frame update
         void Awake () {
-            if (bAutoApply) Apply ();
+            Apply ();
         }
 
         public void Apply () {
             buildRefs ();
             if (runtimeAnimatorController is null) return;
-
+            Debug.LogError (runtimeAnimatorController);
             overrideController = new AnimatorOverrideController (runtimeAnimatorController);
-            var _clips = new List<KeyValuePair<AnimationClip, AnimationClip>> ();
-            overrideController.GetOverrides (_clips);
-            animationClipPairs = _clips.Select (_clip => new AnimationClipPair { originalClip = _clip.Key, overrideClip = _clip.Value }).ToList ();
             overrideController.ApplyOverrides (animationClipPairs.ToDictionary (_ => _.originalClip, _ => _.overrideClip).ToList ());
             animator.runtimeAnimatorController = overrideController;
         }
