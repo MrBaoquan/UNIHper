@@ -62,6 +62,12 @@ namespace UNIHper {
             UNIHperLogger.Log ("load scene assets finished");
         }
 
+        internal void Shutdown () {
+            this.assetBundlesConfigData.Clear ();
+            this.addressableConfigData.Clear ();
+            this.resources.Clear ();
+        }
+
         /// <summary>
         /// 加载当前场景资源
         /// </summary>
@@ -391,7 +397,7 @@ namespace UNIHper {
         private void appendResources (IEnumerable<UnityEngine.Object> InResources, string InResID) {
             if (!resources.ContainsKey (InResID)) resources.Add (InResID, new Dictionary<string, UnityEngine.Object> ());
             foreach (var _resource in InResources) {
-                string _key = string.Format ("{0}_{1}", _resource.GetType ().FullName, _resource.name);
+                string _key = buildResKey (_resource);
                 if (resources[InResID].ContainsKey (_key)) {
                     UNIHperLogger.LogError ($"resource key can not duplicate, error key: {_key}");
                     continue;
@@ -408,6 +414,10 @@ namespace UNIHper {
                 bundles[InKey].Values.ToList ().ForEach (_ => _?.Unload (true));
                 bundles[InKey].Clear ();
             }
+        }
+
+        private string buildResKey (UnityEngine.Object InRes) {
+            return string.Format ("{0}_{1}", InRes.GetType ().FullName, InRes.name);
         }
 
         private string getCurrentSceneName () {

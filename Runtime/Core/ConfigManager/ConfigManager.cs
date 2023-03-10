@@ -67,6 +67,10 @@ namespace UNIHper {
             await Task.CompletedTask;
         }
 
+        internal void Shutdown () {
+            this.configs.Clear ();
+        }
+
         private void loadConfig () {
             this.driverMode = UNIHperConfig.ConfigDriver;
         }

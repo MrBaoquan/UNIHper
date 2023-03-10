@@ -82,7 +82,10 @@ namespace UNIHper {
 
         private void OnApplicationQuit () {
             Debug.Log ("application quit");
-            ULog.Uninitialize ();
+            ConfigManager.Instance.Shutdown ();
+            UIManager.Instance.Shutdown ();
+            ResourceManager.Instance.Shutdown ();
+            ULog.Shutdown ();
         }
 
     }

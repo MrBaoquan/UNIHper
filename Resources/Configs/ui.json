@@ -3,11 +3,5 @@
 
     "SceneEntry": {},
 
-    "SceneHall": {
-        "HallUI": {}
-    },
-
-    "SceneGame": {
-        "GameUI": {}
-    }
+    "SceneGame": {}
 }
