@@ -56,6 +56,16 @@ namespace UNIHper {
 
         }
 
+        [MenuItem ("UNIHper/Settings")]
+        static void FindResource () {
+            string path = "Assets/Resources/UNIHperConfig.asset";
+            var obj = AssetDatabase.LoadAssetAtPath (path, typeof (UNIHperConfig));
+            if (obj != null) {
+                Selection.activeObject = obj;
+                AssetDatabase.Refresh ();
+            }
+        }
+
         private static void SceneSaved (Scene scene) {
             CodeTemplateGenerator.CreateSceneScriptIfNotExists (scene.name);
         }
@@ -125,6 +135,13 @@ namespace UNIHper {
                 File.Copy (Path.Combine (packageTemplatesDir, "AssembliesTemplate.txt"), _dstAssembliesConfigPath);
             }
 
+            string _configPath = "Assets/Resources/UNIHperConfig.asset";
+            var _configInstance = AssetDatabase.LoadAssetAtPath (_configPath, typeof (UNIHperConfig));
+            if (_configInstance == null) {
+                var _configAsset = ScriptableObject.CreateInstance<UNIHperConfig> ();
+                AssetDatabase.CreateAsset (_configAsset, _configPath);
+            }
+
             // 做一些项目结构
             List<string> _frame_dirs = new List<string> {
                 Path.Combine (ProjectAssetRoot, "Develop/Scripts"), // 脚本目录
@@ -148,6 +165,7 @@ namespace UNIHper {
                 File.Copy (Path.Combine (packageTemplatesDir, "GameMainAssembly.txt"), _dstAssemblyPath);
             }
 
+            AssetDatabase.SaveAssets ();
             AssetDatabase.Refresh ();
             Debug.Log ("UNIHper framework initalize successful.");
             //AssetDatabase.LoadAssetAtPath()

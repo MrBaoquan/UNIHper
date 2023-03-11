@@ -67,7 +67,7 @@ namespace UNIHper {
             await Task.CompletedTask;
         }
 
-        internal void Shutdown () {
+        internal void CleanUp () {
             this.configs.Clear ();
         }
 

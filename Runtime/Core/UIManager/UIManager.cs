@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -51,7 +50,7 @@ namespace UNIHper {
             await Task.CompletedTask;
         }
 
-        internal void Shutdown () {
+        internal void CleanUp () {
             this.allSpawnedPersistentUICaches.Clear ();
             this.allSpawnedUICaches.Clear ();
             this.normalUIs.Clear ();

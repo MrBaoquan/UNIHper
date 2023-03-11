@@ -45,6 +45,7 @@ namespace UNIHper {
         internal async Task Initialize () {
             UNIHperLogger.Log ("ResourceManager Initializing ...");
             this.ReadConfigData ();
+            registerEvents ();
             resources = new Dictionary<string, Dictionary<string, UnityEngine.Object>> ();
 
             resources = resourcesConfigData.Keys
@@ -62,10 +63,14 @@ namespace UNIHper {
             UNIHperLogger.Log ("load scene assets finished");
         }
 
-        internal void Shutdown () {
+        internal void CleanUp () {
             this.assetBundlesConfigData.Clear ();
             this.addressableConfigData.Clear ();
             this.resources.Clear ();
+        }
+
+        private void registerEvents () {
+            UnityEngine.ResourceManagement.ResourceManager.ExceptionHandler = (op, ex) => { };
         }
 
         /// <summary>
@@ -353,7 +358,6 @@ namespace UNIHper {
                 await Task.CompletedTask;
                 return;
             }
-
             foreach (var _resItem in InItems) {
                 UNIHperLogger.Log ($"load addressable assets, label:{_resItem.label}");
                 try {
@@ -364,7 +368,7 @@ namespace UNIHper {
                     );
                     appendResources (_assets.ToArray (), InResID);
                 } catch (Exception /*_ex*/ ) {
-                    UNIHperLogger.LogWarning ($"try load addressable assets {_resItem.label} failed");
+                    UNIHperLogger.LogWarning ($"try load addressable assets [{_resItem.label}] failed");
                     continue;
                 }
             }
