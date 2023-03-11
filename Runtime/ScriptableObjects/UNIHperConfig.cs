@@ -11,7 +11,6 @@ namespace UNIHper {
         YAML
     }
 
-    [CreateAssetMenu (fileName = "UNIHperConfig", menuName = "UNIHper/Assets/UNIHperConfig", order = 1)]
     public class UNIHperConfig : ScriptableObject {
         private static UNIHperConfig instance = null;
         private static UNIHperConfig Self () {

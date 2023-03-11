@@ -16,7 +16,6 @@ namespace UNIHper {
         public string FullName;
     }
 
-    [CreateAssetMenu (fileName = "Assemblies", menuName = "UNIHper/Assets/AssemblyConfig", order = 2)]
     public class AssemblyConfig : ScriptableObject {
         private static AssemblyConfig instance = null;
         private static AssemblyConfig Self () {
