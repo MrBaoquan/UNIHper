@@ -15,8 +15,10 @@ namespace UNIHper {
     public class UNIHperConfig : ScriptableObject {
         private static UNIHperConfig instance = null;
         private static UNIHperConfig Self () {
-            if (instance == null)
-                instance = Resources.Load<UNIHperConfig> ("UNIHperConfig");
+            if (instance == null) {
+                instance = Resources.Load<UNIHperConfig> ("UNIHperConfig") ?? ScriptableObject.CreateInstance<UNIHperConfig> ();
+            }
+
             return instance;
         }
 
@@ -37,7 +39,7 @@ namespace UNIHper {
         }
 
         public static bool ShowDebugLog {
-            get => Self ().showDebugLog;
+            get => Self ().showDebugMessage;
         }
 
         public string resPath = "UNIHper/resources";
@@ -50,8 +52,8 @@ namespace UNIHper {
             public float var2 = 150f;
             public float var3 = 25f;
         }
-        public bool showDebugLog = false;
-        public ConfigDriver configDriver = ConfigDriver.YAML;
+        public bool showDebugMessage = false;
+        public ConfigDriver configDriver = ConfigDriver.XML;
     }
 
 }

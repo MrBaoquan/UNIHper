@@ -81,8 +81,8 @@ namespace UNIHper {
             NLogger.Initialize ();
         }
 
-        public static void Uninitialize () {
-            NLogger.Uninitialize ();
+        public static void Shutdown () {
+            NLogger.Shutdown ();
         }
 
     }

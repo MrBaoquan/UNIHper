@@ -1,5 +1,8 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Text;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEditor.ProjectWindowCallback;
 using UnityEngine;
@@ -12,6 +15,29 @@ namespace UNIHper {
             public override void Action (int instanceId, string pathName, string resourceFile) {
                 Object o = CreateScript (pathName, resourceFile);
                 ProjectWindowUtil.ShowCreatedAsset (o);
+            }
+        }
+
+        public class DoCreateUICodeFile : EndNameEditAction {
+            public override void Action (int instanceId, string pathName, string resourceFile) {
+                Object o = CreateScript (pathName, resourceFile);
+                ProjectWindowUtil.ShowCreatedAsset (o);
+
+                var _scriptName = Path.GetFileNameWithoutExtension (pathName);
+
+                TextAsset _uiAsset = Resources.Load<TextAsset> ("UNIHper/uis");
+                var _jsonObj = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, UNIHper.UIConfig>>> (_uiAsset.text);
+                var _sceneUIs = _jsonObj["Persistence"];
+                if (!_sceneUIs.ContainsKey (_scriptName)) {
+                    _sceneUIs.Add (Path.GetFileNameWithoutExtension (pathName), new UIConfig { Asset = _scriptName, Type = UIType.Normal });
+                    var _content = JsonConvert.SerializeObject (_jsonObj, Formatting.Indented, new JsonSerializerSettings { DefaultValueHandling = DefaultValueHandling.Ignore });
+                    File.WriteAllText (Path.Combine (Application.dataPath, "Resources/UNIHper/uis.json"), JToken.Parse (_content).ToString (Formatting.Indented));
+                    AssetDatabase.SaveAssets ();
+                    AssetDatabase.Refresh ();
+                }
+
+                //JsonUtility.FromJson (_uiAsset.text);
+                Debug.Log (pathName);
             }
         }
 
@@ -38,7 +64,8 @@ namespace UNIHper {
             CreateFromTemplate
                 (
                     "NewUI.cs",
-                    $@"Packages/{bundleName}/Editor/Templates/UIScriptTemplate.txt"
+                    $@"Packages/{bundleName}/Editor/Templates/UIScriptTemplate.txt",
+                    ScriptableObject.CreateInstance<DoCreateUICodeFile> ()
                 );
         }
 
@@ -101,10 +128,10 @@ namespace UNIHper {
         /// <summary>Creates a new code file from a template file.</summary>
         /// <param name="initialName">The initial name to give the file in the UI</param>
         /// <param name="templatePath">The full path of the template file to use</param>
-        public static void CreateFromTemplate (string initialName, string templatePath) {
+        public static void CreateFromTemplate (string initialName, string templatePath, EndNameEditAction endNameEditAction = null) {
             ProjectWindowUtil.StartNameEditingIfProjectWindowExists (
                 0,
-                ScriptableObject.CreateInstance<DoCreateCodeFile> (),
+                endNameEditAction?? ScriptableObject.CreateInstance<DoCreateCodeFile> (),
                 initialName,
                 scriptIcon,
                 templatePath

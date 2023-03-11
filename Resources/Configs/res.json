@@ -1,15 +1,11 @@
 {
     "Persistence": [
         {
-            "type": "Texture2D",
-            "path": "Textures"
+            "driver": "Addressable",
+            "type": "Object",
+            "label": "default"
         }
     ],
 
-    "SceneEntry": [
-        {
-            "type": "GameObject",
-            "path": "Prefabs/UIs/SceneEntry"
-        }
-    ]
+    "SceneEntry": []
 }

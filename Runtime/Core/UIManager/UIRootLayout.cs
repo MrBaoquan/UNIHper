@@ -1,9 +1,11 @@
+using System.Runtime.Serialization;
 using UnityEngine;
 namespace UNIHper {
     public enum UIType {
         Normal,
         Standalone,
-        Popup
+        Popup,
+        None
     }
 
     internal class UIRootLayout {

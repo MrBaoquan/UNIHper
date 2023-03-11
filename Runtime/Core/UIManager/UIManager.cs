@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,38 +11,28 @@ using UniRx;
 using UnityEngine;
 
 namespace UNIHper {
+    public class UIConfig {
+        [JsonProperty ("asset"), DefaultValue ("")]
+        public string Asset = string.Empty;
+
+        [JsonProperty ("type"), DefaultValue (UIType.None)]
+        [JsonConverter (typeof (StringEnumConverter))]
+        public UIType Type = UIType.Normal;
+
+        [JsonProperty ("canvas"), DefaultValue ("")]
+        public string canvas = "CanvasDefault";
+
+        public string GetAssetName (string InDefault) {
+            if (Asset == string.Empty) {
+                return InDefault;
+            }
+            return Asset;
+        }
+    }
 
     public class UIManager : Singleton<UIManager> {
         const string CANVAS_DEFAULT = "CanvasDefault";
         private Dictionary<string, UIRootLayout> m_uiRootLayoutDic = new Dictionary<string, UIRootLayout> ();
-
-        private class UIConfig {
-            [JsonProperty ("asset")]
-            public string Asset = string.Empty;
-            [JsonProperty ("type")]
-            [JsonConverter (typeof (StringEnumConverter))]
-            public UIType Type = UIType.Normal;
-
-            [JsonProperty ("script")]
-            public string script = string.Empty;
-
-            [JsonProperty ("canvas")]
-            public string canvas = "CanvasDefault";
-
-            public string GetScript (string InDefault) {
-                if (script == string.Empty) {
-                    return InDefault;
-                }
-                return script;
-            }
-
-            public string GetAssetName (string InDefault) {
-                if (Asset == string.Empty) {
-                    return InDefault;
-                }
-                return Asset;
-            }
-        }
 
         private Dictionary<string, Dictionary<string, UIConfig>> customUIConfigData = null;
         private Dictionary<string, UIConfig> persistConfigData = null;
@@ -57,6 +48,14 @@ namespace UNIHper {
             ReadConfigData ();
             spawnPersistUIs ();
             await Task.CompletedTask;
+        }
+
+        internal void CleanUp () {
+            this.allSpawnedPersistentUICaches.Clear ();
+            this.allSpawnedUICaches.Clear ();
+            this.normalUIs.Clear ();
+            this.standaloneUIs.Clear ();
+            this.popupUIs.Clear ();
         }
 
         internal void OnEnterScene (string InSceneName) {

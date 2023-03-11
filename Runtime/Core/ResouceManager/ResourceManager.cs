@@ -45,6 +45,7 @@ namespace UNIHper {
         internal async Task Initialize () {
             UNIHperLogger.Log ("ResourceManager Initializing ...");
             this.ReadConfigData ();
+            registerEvents ();
             resources = new Dictionary<string, Dictionary<string, UnityEngine.Object>> ();
 
             resources = resourcesConfigData.Keys
@@ -60,6 +61,16 @@ namespace UNIHper {
             // 加载场景资源
             await this.LoadSceneResources ();
             UNIHperLogger.Log ("load scene assets finished");
+        }
+
+        internal void CleanUp () {
+            this.assetBundlesConfigData.Clear ();
+            this.addressableConfigData.Clear ();
+            this.resources.Clear ();
+        }
+
+        private void registerEvents () {
+            UnityEngine.ResourceManagement.ResourceManager.ExceptionHandler = (op, ex) => { };
         }
 
         /// <summary>
@@ -347,7 +358,6 @@ namespace UNIHper {
                 await Task.CompletedTask;
                 return;
             }
-
             foreach (var _resItem in InItems) {
                 UNIHperLogger.Log ($"load addressable assets, label:{_resItem.label}");
                 try {
@@ -358,7 +368,7 @@ namespace UNIHper {
                     );
                     appendResources (_assets.ToArray (), InResID);
                 } catch (Exception /*_ex*/ ) {
-                    UNIHperLogger.LogWarning ($"try load addressable assets {_resItem.label} failed");
+                    UNIHperLogger.LogWarning ($"try load addressable assets [{_resItem.label}] failed");
                     continue;
                 }
             }
@@ -391,7 +401,7 @@ namespace UNIHper {
         private void appendResources (IEnumerable<UnityEngine.Object> InResources, string InResID) {
             if (!resources.ContainsKey (InResID)) resources.Add (InResID, new Dictionary<string, UnityEngine.Object> ());
             foreach (var _resource in InResources) {
-                string _key = string.Format ("{0}_{1}", _resource.GetType ().FullName, _resource.name);
+                string _key = buildResKey (_resource);
                 if (resources[InResID].ContainsKey (_key)) {
                     UNIHperLogger.LogError ($"resource key can not duplicate, error key: {_key}");
                     continue;
@@ -408,6 +418,10 @@ namespace UNIHper {
                 bundles[InKey].Values.ToList ().ForEach (_ => _?.Unload (true));
                 bundles[InKey].Clear ();
             }
+        }
+
+        private string buildResKey (UnityEngine.Object InRes) {
+            return string.Format ("{0}_{1}", InRes.GetType ().FullName, InRes.name);
         }
 
         private string getCurrentSceneName () {

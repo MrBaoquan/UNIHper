@@ -81,8 +81,11 @@ namespace UNIHper {
         }
 
         private void OnApplicationQuit () {
+            ConfigManager.Instance.CleanUp ();
+            UIManager.Instance.CleanUp ();
+            ResourceManager.Instance.CleanUp ();
+            ULog.Shutdown ();
             Debug.Log ("application quit");
-            ULog.Uninitialize ();
         }
 
     }
