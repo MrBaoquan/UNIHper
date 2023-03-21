@@ -1,13 +1,10 @@
-/// <summary>
-/// 
-/// description:   manager of ghost component in unity editor
-/// 
-/// author:         MrBaoquan
-/// create date:    2023.3.15
-/// email:          mrma617@gmail.com
-/// 
-/// 
-/// </summary>
+/*
+ *  Description: Ghost Component Manager In Editor
+ *  Author: MrBaoquan
+ *  Date: 2023-03-21
+ *  Email: mrma617@gmail.com
+ */
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -66,12 +63,6 @@ namespace UNIHper.GhostComponent {
         private static string progressBarTitle = "Ghost Panel";
         private static void ShowLoading (string info, float progress) {
             EditorUtility.DisplayProgressBar (progressBarTitle, info, progress);
-        }
-
-        [MenuItem ("UNIHper/Test Ghost Unit %g")]
-        private static void Test () {
-            GameObjectUtility.RemoveMonoBehavioursWithMissingScript (Selection.activeGameObject);
-            // Selection.activeGameObject.AddComponent (GhostType);
         }
 
         private static string backupDir = "Temp/__BackupEntities";
@@ -170,8 +161,6 @@ namespace UNIHper.GhostComponent {
                 EditorUtility.SetDirty (GhostData);
                 AssetDatabase.SaveAssets ();
 
-                // restoreWorkingEnv ();
-
                 Debug.Log ("Ghost component enabled");
 
             });
@@ -187,7 +176,7 @@ namespace UNIHper.GhostComponent {
         private static void RestoreGhostEntities () {
             safeThrow (() => {
                 ghostType = null;
-                // if (!stashWorkingEnv ()) return;
+
                 progressBarTitle = "Generate Ghost Entities";
 
                 ShowLoading ("restore asset entities", 0.1f);
@@ -204,8 +193,6 @@ namespace UNIHper.GhostComponent {
                 EditorUtility.SetDirty (GhostData);
                 AssetDatabase.SaveAssets ();
 
-                // restoreWorkingEnv ();
-
                 Debug.Log ("Ghost component disabled");
             });
 
@@ -216,14 +203,11 @@ namespace UNIHper.GhostComponent {
             return GhostData.bGhost;
         }
 
-        //TODO 遍历全部GameObject， 为有额外脚本以来的所有GameObject添加Ghost组件
-        // TODO 菜单项: 1. 生成所有实体    2.  恢复所有实体    3. 清除所有幽灵组
         // TODO 控制哪些程序集的组件认定为内置组件
 
         [MenuItem ("UNIHper/Ghost Mode/Add Ghost For All")]
         public static void AutoGenerateGhost () {
             safeThrow (() => {
-                // stashWorkingEnv ();
                 // 1. Generate for all prefab game objects 
                 AllPrefabComponents (typeof (Transform), (_component, _path) => {
                     if (!_component.gameObject.HasNonBuiltinComponents ()) return;
@@ -243,7 +227,6 @@ namespace UNIHper.GhostComponent {
                     }
                 });
 
-                // restoreWorkingEnv ();
             });
 
         }
@@ -256,7 +239,6 @@ namespace UNIHper.GhostComponent {
         [MenuItem ("UNIHper/Ghost Mode/Remove Ghost From All")]
         public static void ClearAllGhostComponent () {
             safeThrow (() => {
-                // stashWorkingEnv ();
                 AllPrefabComponents (GhostType, (_component, _path) => {
                     var _prefabObj = _component.gameObject;
                     UnityEngine.Object.DestroyImmediate (_component, true);
@@ -268,7 +250,6 @@ namespace UNIHper.GhostComponent {
                     var _prefabObj = ((Component) _component).gameObject;
                     UnityEngine.Object.DestroyImmediate (_component, true);
                 });
-                // restoreWorkingEnv ();
             });
         }
 
