@@ -26,7 +26,7 @@ namespace UNIHper {
                 var _scriptName = Path.GetFileNameWithoutExtension (pathName);
 
                 TextAsset _uiAsset = Resources.Load<TextAsset> ("UNIHper/uis");
-                var _jsonObj = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, UNIHper.UIConfig>>> (_uiAsset.text);
+                var _jsonObj = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, UIConfig>>> (_uiAsset.text);
                 var _sceneUIs = _jsonObj["Persistence"];
                 if (!_sceneUIs.ContainsKey (_scriptName)) {
                     _sceneUIs.Add (Path.GetFileNameWithoutExtension (pathName), new UIConfig { Asset = _scriptName, Type = UIType.Normal });

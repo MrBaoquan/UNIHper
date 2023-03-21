@@ -67,7 +67,8 @@ namespace UNIHper {
         }
 
         private static void SceneSaved (Scene scene) {
-            CodeTemplateGenerator.CreateSceneScriptIfNotExists (scene.name);
+            if (scene.name == sceneEntryName) // 只自动创建SceneEntryScript脚本
+                CodeTemplateGenerator.CreateSceneScriptIfNotExists (scene.name);
         }
 
         [MenuItem ("UNIHper/Initialize", priority = 0)]
@@ -168,8 +169,7 @@ namespace UNIHper {
             AssetDatabase.SaveAssets ();
             AssetDatabase.Refresh ();
             Debug.Log ("UNIHper framework initalize successful.");
-            //AssetDatabase.LoadAssetAtPath()
-            //MonoScript _UNIHperScript = MonoScript.FromMonoBehaviour(UNIHper.UNIHperEntry);
+
         }
     }
 
