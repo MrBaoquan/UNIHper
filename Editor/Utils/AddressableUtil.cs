@@ -9,8 +9,13 @@ public class AddressableUtil {
     static UnityEditor.AddressableAssets.Settings.AddressableAssetSettings addressableSettings () {
         if (!AddressableAssetSettingsDefaultObject.SettingsExists) {
             var _settings = AddressableAssetSettingsDefaultObject.GetSettings (true);
-            _settings.CreateGroup ("Persistence Assets", true, false, true, null);
+            var _group = _settings.CreateGroup ("Persistence Assets", true, false, true, _settings.DefaultGroup.Schemas);
+
             _settings.RemoveGroup (_settings.FindGroup ("Default Local Group"));
+            EditorUtility.SetDirty (_group);
+            AssetDatabase.SaveAssets ();
+            AssetDatabase.Refresh ();
+
         }
         return AddressableAssetSettingsDefaultObject.Settings;
     }
@@ -31,7 +36,8 @@ public class AddressableUtil {
 
         var _entry = settings.CreateOrMoveEntry (guid, settings.DefaultGroup, false, true);
         _entry.SetLabel ("default", true, true);
-
+        AssetDatabase.SaveAssets ();
+        AssetDatabase.Refresh ();
     }
 
     static List<string> builtinDirectories = new List<string> { "Resources", "StreamingAssets", "Packages" };
@@ -46,6 +52,8 @@ public class AddressableUtil {
         var _curDir = UNIEditorUtil.GetSelectedDirectory ();
         string guid = AssetDatabase.AssetPathToGUID (_curDir);
         settings.RemoveAssetEntry (guid, true);
+        AssetDatabase.SaveAssets ();
+        AssetDatabase.Refresh ();
     }
 
     [MenuItem ("Assets/Remove From Addressable System", true)]
