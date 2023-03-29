@@ -86,7 +86,7 @@ namespace UNIHper {
         /// </summary>
         /// <param name="InSceneName"></param>
         internal async Task LoadSceneResources (string InSceneName) {
-            Debug.Log ("Load scene assets " + InSceneName);
+            Debug.Log ($"Load scene resources for [{InSceneName}]");
             await this.LoadAssetByKey (InSceneName);
         }
 

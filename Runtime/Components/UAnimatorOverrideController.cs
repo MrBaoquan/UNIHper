@@ -21,17 +21,12 @@ namespace UNIHper {
         public AnimationClip overrideClip;
     }
 
-    [RequireComponent (typeof (Animator))]
+    [RequireComponent (typeof (Animator)), DisallowMultipleComponent]
     public class UAnimatorOverrideController : MonoBehaviour {
-        public bool bAutoApply = true;
         Animator animator;
 
-        [ShowInInspector]
+        [ShowInInspector, SerializeField, OnValueChanged ("OnChangedController")]
         public RuntimeAnimatorController runtimeAnimatorController = null;
-
-        [HideInInspector]
-        [SerializeField]
-        private RuntimeAnimatorController _lastRuntimeController = null;
 
         private AnimatorOverrideController overrideController = null;
 
@@ -39,14 +34,12 @@ namespace UNIHper {
         [TableList (ShowIndexLabels = false, HideToolbar = false, IsReadOnly = true)]
         public List<AnimationClipPair> animationClipPairs = new List<AnimationClipPair> ();
 
-        private void OnValidate () {
+        private void OnChangedController () {
             buildRefs ();
             if (runtimeAnimatorController is null) {
                 return;
             };
-            if (_lastRuntimeController == runtimeAnimatorController) return;
 
-            _lastRuntimeController = runtimeAnimatorController;
             overrideController = new AnimatorOverrideController (runtimeAnimatorController);
             var _clips = new List<KeyValuePair<AnimationClip, AnimationClip>> ();
             overrideController.GetOverrides (_clips);

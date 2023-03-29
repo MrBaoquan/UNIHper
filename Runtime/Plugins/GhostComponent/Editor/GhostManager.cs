@@ -5,6 +5,11 @@
  *  Email: mrma617@gmail.com
  */
 
+/// <summary>
+///  限制1:  脚本公开变量引用不能引用场景中的对象
+///  限制2： 同一对象上的多个组件不能有多个相同组件
+/// </summary>
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -30,18 +35,57 @@ namespace UNIHper.GhostComponent {
             return self.NonBuiltinComponents ().Count () > 0;
         }
 
+        public static string UniquePath (this GameObject self) {
+            var _prefix = string.IsNullOrEmpty (self.scene.name) ? "Assets" : self.scene.name;
+            return _prefix + "/" + self.transform.GetFullPath ("/");
+        }
+
+        public static List < (GameObject parentObj, string prefabPath) > ParentInstanceRoots (this GameObject self) {
+            List<GameObject> _parentRoots = new List<GameObject> ();
+            var _node = self;
+            while (_node.transform.parent != null) {
+                if (PrefabUtility.IsAnyPrefabInstanceRoot (_node)) {
+                    _parentRoots.Add (_node);
+                }
+                _node = _node.transform.parent.gameObject;
+            }
+            //_parentRoots.Reverse ();
+            return _parentRoots
+                .Select (_parentRoot => (_parentRoot, PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot (_parentRoot)))
+                .ToList ();
+        }
+
+        private static bool DEBUG = false;
+        private static void Log (object msg) {
+            if (DEBUG) {
+                Debug.Log (msg);
+            }
+        }
+
+        private static void LogWarning (object msg) {
+            if (DEBUG) {
+                LogWarning (msg);
+            }
+        }
+
+        private static void LogError (object msg) {
+            if (DEBUG) {
+                LogError (msg);
+            }
+        }
+
         private static Type ghostType = null;
         public static Type GhostType {
             get {
                 if (ghostType == null) {
                     var _assembly = Assembly.Load (new AssemblyName ("UNIHper.Ghost.Art, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"));
                     if (_assembly is null) {
-                        Debug.LogWarning ("can not find assembly");
+                        LogWarning ("can not find assembly");
                         return null;
                     }
                     var _ghostType = _assembly.GetType ("UNIHper.GhostComponent.Art.Ghost");
                     if (_ghostType is null) {
-                        Debug.LogWarning ("can not find Ghost");
+                        LogWarning ("can not find Ghost");
                         return null;
                     }
                     ghostType = _ghostType;
@@ -50,12 +94,12 @@ namespace UNIHper.GhostComponent {
             }
         }
 
-        public static FieldInfo EntityGUIDField {
-            get => GhostType.GetField ("entityGUID", BindingFlags.NonPublic | BindingFlags.Instance);
+        public static PropertyInfo EntityGUIDProperty {
+            get => GhostType.GetProperty ("EntityGUID", BindingFlags.NonPublic | BindingFlags.Instance);
         }
 
-        public static FieldInfo HasEntityField {
-            get => GhostType.GetField ("hasEntity", BindingFlags.NonPublic | BindingFlags.Instance);
+        public static PropertyInfo HasEntityProperty {
+            get => GhostType.GetProperty ("HasEntity", BindingFlags.Public | BindingFlags.Instance);
         }
 
         public static GhostData GhostData { get => GhostData.Instance; }
@@ -135,24 +179,46 @@ namespace UNIHper.GhostComponent {
             AssetDatabase.Refresh ();
         }
 
-        [MenuItem ("UNIHper/Ghost Mode/Enable")]
+        [MenuItem ("UNIHper/Ghost Mode/Enable", false, 0)]
+        public static void EnableGhost () {
+            AutoGenerateGhost ();
+            GenerateGhostEntities ();
+        }
+
+        [MenuItem ("UNIHper/Ghost Mode/Enable", true)]
+        private static bool EnableGhostValidate () {
+            return !GhostData.bGhost;
+        }
+
+        [MenuItem ("UNIHper/Ghost Mode/Disable", false, 1)]
+        public static void DisableGhost () {
+            RestoreGhostEntities ();
+            ClearAllGhostComponent ();
+        }
+
+        [MenuItem ("UNIHper/Ghost Mode/Disable", true)]
+        private static bool DisableGhostValidate () {
+            return GhostData.bGhost;
+        }
+
+        [MenuItem ("UNIHper/Ghost Mode/Advanced/Generate All Ghost Entities")]
         public static void GenerateGhostEntities () {
             safeThrow (() => {
                 ghostType = null;
 
                 progressBarTitle = "Generate Ghost Entities";
-
+                GhostData.ClearGhostMetas ();
                 ShowLoading ("backup older entities", 0.1f);
                 backupEntityFolder ();
 
                 ShowLoading ("delete the entity folder", 0.3f);
                 deleteEntityFolder ();
 
-                ShowLoading ("generate scene entities", 0.4f);
-                GenerateScenesEntities ();
-
-                ShowLoading ("generate asset entities", 0.8f);
+                ShowLoading ("generate asset entities", 0.4f);
                 GenerateAssetsEntities ();
+
+                ShowLoading ("generate scene entities", 0.8f);
+                GenerateScenesEntities ();
 
                 ShowLoading ("restore working environment", 1.0f);
                 EditorUtility.ClearProgressBar ();
@@ -163,20 +229,35 @@ namespace UNIHper.GhostComponent {
 
                 Debug.Log ("Ghost component enabled");
 
+            }, (err) => {
+                EditorUtility.ClearProgressBar ();
+                GhostData.bGhost = true;
+                EditorUtility.SetDirty (GhostData);
+                AssetDatabase.SaveAssets ();
             });
-
         }
 
-        [MenuItem ("UNIHper/Ghost Mode/Enable", true)]
+        [MenuItem ("UNIHper/Ghost Mode/Advanced/Generate All Ghost Entities", true)]
         private static bool GenerateGhostEntitiesValidate () {
             return !GhostData.bGhost;
         }
 
-        [MenuItem ("UNIHper/Ghost Mode/Disable")]
+        // [MenuItem ("UNIHper/Test %g")]
+        private static void Test () {
+            var _gameObj = Selection.activeGameObject;
+            _gameObj.ParentInstanceRoots ()
+                .ToList ()
+                .ForEach (_ => {
+                    LogWarning (_.prefabPath + "::" + _.parentObj.name);
+                });
+        }
+
+        [MenuItem ("UNIHper/Ghost Mode/Advanced/Restore All Ghost Entities")]
         private static void RestoreGhostEntities () {
             safeThrow (() => {
-                ghostType = null;
+                GhostData.MarkAsGhost ();
 
+                ghostType = null;
                 progressBarTitle = "Generate Ghost Entities";
 
                 ShowLoading ("restore asset entities", 0.1f);
@@ -194,41 +275,43 @@ namespace UNIHper.GhostComponent {
                 AssetDatabase.SaveAssets ();
 
                 Debug.Log ("Ghost component disabled");
+            }, (err) => {
+                EditorUtility.ClearProgressBar ();
+                GhostData.bGhost = false;
+                EditorUtility.SetDirty (GhostData);
+                AssetDatabase.SaveAssets ();
             });
-
         }
 
-        [MenuItem ("UNIHper/Ghost Mode/Disable", true)]
-        private static bool RestoreGhostEntitiesValidate () {
-            return GhostData.bGhost;
-        }
-
-        // TODO 控制哪些程序集的组件认定为内置组件
-
-        [MenuItem ("UNIHper/Ghost Mode/Add Ghost For All")]
+        [MenuItem ("UNIHper/Ghost Mode/Advanced/Add Ghost To All")]
         public static void AutoGenerateGhost () {
             safeThrow (() => {
                 // 1. Generate for all prefab game objects 
-                AllPrefabComponents (typeof (Transform), (_component, _path) => {
-                    if (!_component.gameObject.HasNonBuiltinComponents ()) return;
-                    if (_component.gameObject.GetComponent (GhostType) == null) {
-                        _component.gameObject.AddComponent (GhostType);
-                    }
-                    // PrefabUtility.RecordPrefabInstancePropertyModifications (_component.gameObject);
-                    // AssetDatabase.SaveAssetIfDirty (_component.gameObject);
-                });
-
+                AllPrefabComponents (typeof (Transform), (_component, _path) => addGhostComponent (_component));
                 // 2. generate for all scene game objects
-                AllSceneObjects (typeof (Transform), (_component, _scene) => {
-                    var _sceneObj = ((Component) _component).gameObject;
-                    if (!_sceneObj.HasNonBuiltinComponents ()) return;
-                    if (_sceneObj.GetComponent (GhostType) == null) {
-                        _sceneObj.AddComponent (GhostType);
-                    }
+                AllSceneObjects (typeof (Transform), (_go, _scene) => addGhostComponent (_go));
+            });
+        }
+
+        private static void addGhostComponent (GameObject gameObj) {
+            gameObj.ParentInstanceRoots ()
+                .ForEach (_ => {
+                    var _prefabPath = _.prefabPath;
+                    var _prefab = AssetDatabase.LoadAssetAtPath<GameObject> (_prefabPath);
+                    _prefab.GetComponentsInParent (typeof (Transform), true)
+                        .ToList ()
+                        .ForEach (_comp => {
+                            addGhostComponent (_comp.gameObject);
+                        });
+
+                    if (!PrefabUtility.IsPartOfModelPrefab ((UnityEngine.Object) gameObj))
+                        PrefabUtility.SavePrefabAsset (_prefab);
                 });
 
-            });
-
+            if (!gameObj.HasNonBuiltinComponents ()) return;
+            if (gameObj.gameObject.GetComponent (GhostType) == null) {
+                gameObj.gameObject.AddComponent (GhostType);
+            }
         }
 
         // [MenuItem ("UNIHper/Add Ghost For All", true)]
@@ -236,39 +319,71 @@ namespace UNIHper.GhostComponent {
 
         // }
 
-        [MenuItem ("UNIHper/Ghost Mode/Remove Ghost From All")]
+        [MenuItem ("UNIHper/Ghost Mode/Advanced/Remove Ghost From All")]
         public static void ClearAllGhostComponent () {
             safeThrow (() => {
-                AllPrefabComponents (GhostType, (_component, _path) => {
-                    var _prefabObj = _component.gameObject;
-                    UnityEngine.Object.DestroyImmediate (_component, true);
-                    GameObjectUtility.RemoveMonoBehavioursWithMissingScript (_component.gameObject);
-                    PrefabUtility.RecordPrefabInstancePropertyModifications (_prefabObj);
-                    AssetDatabase.SaveAssetIfDirty (_prefabObj);
+                AllPrefabComponents (GhostType, (_go, _path) => {
+                    removeGhostComponent (_go);
                 });
-                AllSceneObjects (GhostType, (_component, _scene) => {
-                    var _prefabObj = ((Component) _component).gameObject;
-                    UnityEngine.Object.DestroyImmediate (_component, true);
+                AllSceneObjects (GhostType, (_go, _scene) => {
+                    removeGhostComponent (_go);
                 });
             });
         }
 
-        [MenuItem ("UNIHper/Ghost Mode/Remove Ghost From All", true)]
+        [MenuItem ("UNIHper/Ghost Mode/Advanced/Remove Ghost From All", true)]
         public static bool ClearAllGhostComponentValidate () {
             return !GhostData.bGhost;
         }
 
-        private static void safeThrow (Action InAction) {
+        private static void removeGhostComponent (GameObject gameObj) {
+
+            gameObj.ParentInstanceRoots ()
+                .ForEach (_ => {
+                    var _prefabPath = _.prefabPath;
+                    var _originPrefab = AssetDatabase.LoadAssetAtPath<GameObject> (_prefabPath);
+                    _originPrefab.GetComponentsInChildren (GhostType, true)
+                        .ToList ()
+                        .ForEach ((c) => {
+                            GameObjectUtility.RemoveMonoBehavioursWithMissingScript (c.gameObject);
+                            UnityEngine.Object.DestroyImmediate (c, true);
+                            PrefabUtility.RecordPrefabInstancePropertyModifications (_originPrefab);
+                        });
+                    if (!PrefabUtility.IsPartOfModelPrefab (_originPrefab))
+                        PrefabUtility.SavePrefabAsset (_originPrefab);
+                });
+
+            var component = gameObj.GetComponent (GhostType);
+            if (component == null) return;
+            GameObjectUtility.RemoveMonoBehavioursWithMissingScript (component.gameObject);
+            PrefabUtility.RecordPrefabInstancePropertyModifications ((UnityEngine.Object) gameObj);
+            UnityEngine.Object.DestroyImmediate (component, true);
+            AssetDatabase.SaveAssetIfDirty ((UnityEngine.Object) gameObj);
+        }
+
+        private static void safeThrow (Action InAction, Action<Exception> OnError = null) {
             if (!stashWorkingEnv ()) return;
             try {
                 InAction ();
             } catch (System.IO.FileNotFoundException err) {
-                Debug.LogWarning (err.Message + " please check if GhostComponent Art scripts exists");
+                LogWarning (err.Message + " please check if GhostComponent Art scripts exists");
+                OnError?.Invoke (err);
+                throw err;
             } catch (Exception err) {
-                Debug.LogError (err.Message);
+                LogError (err.Message);
+                LogError (err.StackTrace);
+                OnError?.Invoke (err);
+                throw err;
             } finally {
                 restoreWorkingEnv ();
             }
+        }
+
+        private static IEnumerable<string> filterDirectories () {
+            var _excludeDirs = GhostData.excludeDirectories.Concat (new [] { "AddressableAssetsData", "GhostEntities", "StreamingAssets" }).ToList ();
+            return new DirectoryInfo (Application.dataPath).GetDirectories ()
+                .Where (_dir => !_excludeDirs.Contains (_dir.Name))
+                .Select (_dir => Path.Combine ("Assets", _dir.Name));
         }
 
         /// <summary>
@@ -277,24 +392,24 @@ namespace UNIHper.GhostComponent {
         private static void GenerateScenesEntities () {
             tempAllEntityPaths.Clear ();
 
-            AllSceneObjects (GhostType, (_item, _scene) => {
-                var _ghostComponent = _item as Component;
-                var _entityPath = Path.Combine ("Assets/GhostEntities/", _scene.name, _ghostComponent.transform.GetFullPath (".") + ".prefab");
-                saveGhostEntity (_ghostComponent, _entityPath);
+            AllSceneObjects (GhostType, (_go, _scene) => {
+                var _entityPath = Path.Combine ("Assets/GhostEntities/", _scene.name, _go.transform.GetFullPath (".") + ".prefab");
+                generateSingleEntity (_go, _entityPath);
             });
 
         }
 
-        private static void AllSceneObjects<T> (T goType, Action<UnityEngine.Object, UnityEngine.SceneManagement.Scene> handler) where T : System.Type {
-            AssetDatabase.FindAssets ("t:Scene", new [] { "Assets" })
+        private static void AllSceneObjects<T> (T goType, Action<UnityEngine.GameObject, UnityEngine.SceneManagement.Scene> handler) where T : System.Type {
+            AssetDatabase.FindAssets ("t:Scene", filterDirectories ().ToArray ())
                 .Select (_guid => AssetDatabase.GUIDToAssetPath (_guid))
                 .Select (_path => (_path, AssetDatabase.LoadAssetAtPath<SceneAsset> (_path)))
                 .ToList ()
                 .ForEach (_item => {
                     var _scene = EditorSceneManager.OpenScene (_item._path, OpenSceneMode.Single);
                     UnityEngine.Object.FindObjectsOfType (goType)
+                        .OfType<Component> ()
                         .ToList ()
-                        .ForEach (_go => handler (_go, _scene));
+                        .ForEach (_component => handler (_component.gameObject, _scene));
                     EditorSceneManager.SaveScene (_scene);
                 });
         }
@@ -308,16 +423,20 @@ namespace UNIHper.GhostComponent {
             AllPrefabComponents (GhostType, (_ghostComponent, _prefabPath) => {
                 var _entityPath = Regex.Replace (_prefabPath, "^Assets/", "Assets/GhostEntities/Assets/");
                 _entityPath = Path.Combine (Path.GetDirectoryName (_entityPath), _ghostComponent.transform.GetFullPath (".") + ".prefab");
-                saveGhostEntity (_ghostComponent, _entityPath);
+                generateSingleEntity (_ghostComponent, _entityPath);
             });
 
             AssetDatabase.SaveAssets ();
             AssetDatabase.Refresh ();
         }
 
-        private static void AllPrefabComponents<T> (T cType, Action<Component, string> handler, Func < (string _path, GameObject prefab), bool > condition = null) where T : System.Type {
+        private static string fetchSceneObjectPath (GameObject go) {
+            return Path.Combine ("Assets/GhostEntities/", go.scene.name, go.transform.GetFullPath (".") + ".prefab");
+        }
+
+        private static void AllPrefabComponents<T> (T cType, Action<GameObject, string> handler, Func < (string _path, GameObject prefab), bool > condition = null) where T : System.Type {
             var _condition = condition??(_ => true);
-            AssetDatabase.FindAssets ("t:Prefab", new [] { "Assets" })
+            AssetDatabase.FindAssets ("t:Prefab", filterDirectories ().ToArray ())
                 .Select (_guid => AssetDatabase.GUIDToAssetPath (_guid))
                 .Select (_path => (_path, AssetDatabase.LoadAssetAtPath<GameObject> (_path)))
                 .Where (_item => !_item._path.StartsWith ("Assets/GhostEntities"))
@@ -326,10 +445,11 @@ namespace UNIHper.GhostComponent {
                 .ForEach (_item => {
                     var _path = _item._path;
                     _item.Item2.GetComponentsInChildren (cType, true)
+                        .Select (_component => _component.gameObject)
                         .ToList ()
-                        .ForEach (_ghostComponent => {
-                            GameObjectUtility.RemoveMonoBehavioursWithMissingScript (_ghostComponent.gameObject);
-                            handler (_ghostComponent, _path);
+                        .ForEach (_go => {
+                            GameObjectUtility.RemoveMonoBehavioursWithMissingScript (_go);
+                            handler (_go, _path);
                         });
                     GameObjectUtility.RemoveMonoBehavioursWithMissingScript (_item.Item2);
                     PrefabUtility.RecordPrefabInstancePropertyModifications (_item.Item2);
@@ -359,14 +479,36 @@ namespace UNIHper.GhostComponent {
                 _entityPath = Regex.Replace (_entityPath, "^Assets/", "Assets/GhostEntities/Assets/");
             }
 
-            saveGhostEntity (ghostComponent, _entityPath, true);
+            generateSingleEntity (ghostComponent.gameObject, _entityPath, true);
             AssetDatabase.SaveAssets ();
             AssetDatabase.Refresh ();
         }
 
         // 恢复单个幽灵实体
         public static void RestoreGhostEntity (Component ghostComponent) {
-            restoreGhostEntity (ghostComponent);
+            var _prefabStage = PrefabStageUtility.GetPrefabStage (ghostComponent.gameObject);
+            var _entityPath = string.Empty;
+            // 1. target is in prefab edit window
+            if (_prefabStage) {
+                _entityPath = Path.GetDirectoryName (_prefabStage.assetPath) + @"\" + ghostComponent.transform.GetFullPath (".", _prefabStage.prefabContentsRoot.transform.parent) + ".prefab";
+                _entityPath = _entityPath.Replace (@"\", "/");
+                _entityPath = Regex.Replace (_entityPath, "^Assets/", "Assets/GhostEntities/Assets/");
+            }
+
+            // 2. target is scene object
+            else if (!string.IsNullOrEmpty (ghostComponent.gameObject.scene.name)) {
+                _entityPath = Path.Combine ("Assets/GhostEntities/", ghostComponent.gameObject.scene.name, ghostComponent.transform.GetFullPath (".") + ".prefab");
+            }
+
+            // 3. target is asset
+            else if (AssetDatabase.Contains (ghostComponent.gameObject)) {
+                _entityPath = AssetDatabase.GetAssetPath (ghostComponent.gameObject);
+                _entityPath = Regex.Replace (_entityPath, "^Assets/", "Assets/GhostEntities/Assets/");
+            }
+
+            restoreSingleEntity (ghostComponent.gameObject, _entityPath);
+            AssetDatabase.SaveAssets ();
+            AssetDatabase.Refresh ();
         }
 
         private static List<string> tempAllEntityPaths = new List<string> ();
@@ -376,9 +518,12 @@ namespace UNIHper.GhostComponent {
         /// </summary>
         /// <param name="ghostEntity"></param>
         /// <param name="entityPath"></param>
-        private static void saveGhostEntity (Component ghostComponent, string entityPath, bool forceOverwrite = false) {
+        private static void generateSingleEntity (GameObject ghostObj, string entityPath, bool forceOverwrite = false) {
 
-            if (!(bool) HasEntityField.GetValue (ghostComponent)) { //当前组件已经是幽灵模式则不进行后续操作
+            var ghostComponent = ghostObj.GetComponent (GhostType);
+            var _ghostMeta = GhostData.GetGhostMeta (entityPath);
+            if (!_ghostMeta.HasEntity) {
+                LogWarning ("组件已是幽灵:" + ghostObj.transform.GetFullPath ("."));
                 return;
             }
 
@@ -386,25 +531,48 @@ namespace UNIHper.GhostComponent {
                 if (tempAllEntityPaths.Contains (entityPath)) {
                     entityPath = AssetDatabase.GenerateUniqueAssetPath (entityPath);
                 }
-
                 tempAllEntityPaths.Add (entityPath);
             }
 
             if (!Directory.Exists (Path.GetDirectoryName (entityPath))) {
                 Directory.CreateDirectory (Path.GetDirectoryName (entityPath));
             }
+            Log ("保存实体开始" + entityPath);
 
-            var ghostEntity = ghostComponent.gameObject;
+            // 如果是预制体实例则需要先保存原始预制体
+            var _parentRoots = ghostObj.ParentInstanceRoots ();
+            _parentRoots.Reverse ();
+            _parentRoots.ForEach (_prefabRoot => {
+                LogError ("保存预制体" + _prefabRoot.prefabPath);
+                var _assetPath = _prefabRoot.prefabPath;
+                var _prefab = AssetDatabase.LoadAssetAtPath<GameObject> (_assetPath);
+                var _entityPath = Regex.Replace (_assetPath, "^Assets/", "Assets/GhostEntities/Assets/");
+                _prefab.GetComponentsInChildren (GhostType, true)
+                    .Select (_component => _component.gameObject)
+                    .ToList ()
+                    .ForEach (_prefabGhostObj => {
+                        GameObjectUtility.RemoveMonoBehavioursWithMissingScript (_prefabGhostObj);
+                        generateSingleEntity (_prefabGhostObj, _entityPath, true);
+                        PrefabUtility.SavePrefabAsset (_prefab);
+                        AssetDatabase.SaveAssets ();
+                        AssetDatabase.Refresh ();
+                    });
+                AssetDatabase.SaveAssets ();
+                AssetDatabase.Refresh ();
+            });
+
+            var ghostEntity = ghostObj;
             var _newEntityPrefab = GameObject.Instantiate (ghostEntity, ghostEntity.transform.position, ghostEntity.transform.rotation, null);
             UnityEngine.Object.DestroyImmediate (_newEntityPrefab.GetComponent (GhostType));
 
             // 移除非内置组件
             var _nonBuiltinComponents = ghostEntity.NonBuiltinComponents ().ToList ();
-
+            LogWarning ("移除非内置组件目标 " + ghostEntity.transform.GetFullPath ("/"));
             while (_nonBuiltinComponents.Count > 0) {
                 var _component = _nonBuiltinComponents
                     .Where (_component => _component.gameObject.CanDestroy (_component.GetType ()))
                     .First ();
+                LogWarning ("移除组件: " + _component.GetType ().Name);
                 _nonBuiltinComponents.Remove (_component);
                 UnityEngine.Object.DestroyImmediate (_component, true);
             };
@@ -417,88 +585,107 @@ namespace UNIHper.GhostComponent {
                     UnityEngine.Object.DestroyImmediate (_child);
                 });
 
+            Log ("保存实体结束: " + entityPath);
             PrefabUtility.SaveAsPrefabAsset (_newEntityPrefab, entityPath, out bool success);
-            EntityGUIDField.SetValue (ghostComponent, AssetDatabase.AssetPathToGUID (entityPath));
-            HasEntityField.SetValue (ghostComponent, false);
-            if (PrefabUtility.IsPartOfAnyPrefab (ghostComponent)) {
-                PrefabUtility.RecordPrefabInstancePropertyModifications (ghostComponent);
+            var _assetGUID = AssetDatabase.AssetPathToGUID (entityPath);
+            EntityGUIDProperty.SetValue (ghostComponent, _assetGUID);
+            _ghostMeta.HasEntity = false;
+            _ghostMeta.GUID = _assetGUID;
+            if (PrefabUtility.IsPartOfAnyPrefab (ghostEntity)) {
+                PrefabUtility.RecordPrefabInstancePropertyModifications (ghostEntity);
             }
             AssetDatabase.SaveAssetIfDirty (ghostEntity);
-
             UnityEngine.Object.DestroyImmediate (_newEntityPrefab);
         }
 
         private static void RestoreSceneEntities () {
             EditorSceneManager.SaveOpenScenes ();
-            AssetDatabase.FindAssets ("t:Scene", new [] { "Assets" })
-                .Select (_guid => AssetDatabase.GUIDToAssetPath (_guid))
-                .Select (_path => (_path, AssetDatabase.LoadAssetAtPath<SceneAsset> (_path)))
-                .ToList ()
-                .ForEach (_item => {
-                    var _scene = EditorSceneManager.OpenScene (_item._path, OpenSceneMode.Single);
-                    UnityEngine.Object.FindObjectsOfType (GhostType)
-                        .OfType<Component> ()
-                        .ToList ()
-                        .ForEach (_ghostComponent => restoreGhostEntity (_ghostComponent));
-                    EditorSceneManager.SaveScene (_scene);
-                });
+            AllSceneObjects (GhostType, (_go, _scene) => {
+                var _entityPath = Path.Combine ("Assets/GhostEntities/", _scene.name, _go.transform.GetFullPath (".") + ".prefab");
+                restoreSingleEntity (_go, _entityPath);
+            });
         }
 
         /// <summary>
         /// 恢复资源目录中幽灵的实体
         /// </summary>
         private static void RestoreAssetsEntities () {
-            AssetDatabase.FindAssets ("t:Prefab", new [] { "Assets" })
-                .Select (_guid => AssetDatabase.GUIDToAssetPath (_guid))
-                .Select (_path => (_path, AssetDatabase.LoadAssetAtPath<GameObject> (_path)))
-                .Where (_item => _item.Item2.GetComponent (GhostType) != null)
-                .ToList ()
-                .ForEach (_item => {
-                    _item.Item2.GetComponentsInChildren (GhostType, true)
-                        .ToList ()
-                        .ForEach (_ghostComponent => restoreGhostEntity (_ghostComponent));
-                    PrefabUtility.SavePrefabAsset (_item.Item2);
-                });
+            AllPrefabComponents (GhostType, (_component, _prefabPath) => {
+                var _entityPath = Regex.Replace (_prefabPath, "^Assets/", "Assets/GhostEntities/Assets/");
+                _entityPath = Path.Combine (Path.GetDirectoryName (_entityPath), _component.transform.GetFullPath (".") + ".prefab");
+
+                AssetDatabase.Refresh ();
+                restoreSingleEntity (_component, _entityPath);
+            });
         }
 
         /// <summary>
         /// 恢复单个实体
         /// </summary>
-        /// <param name="ghostComponent"></param>
-        public static void restoreGhostEntity (Component ghostComponent) {
-            var _originalGhostObject = ghostComponent.gameObject;
+        /// <param name=" ghostComponent "></param>
+        public static void restoreSingleEntity (GameObject gameObj, string entityPath) {
+            Log ("开始恢复实体: " + entityPath);
+            gameObj
+                .ParentInstanceRoots ()
+                .ForEach (_root => {
+                    var _assetPath = _root.prefabPath;
+                    var _prefab = AssetDatabase.LoadAssetAtPath<GameObject> (_assetPath);
+                    _prefab.GetComponentsInChildren (GhostType, true)
+                        .Select (_component => _component.gameObject)
+                        .ToList ()
+                        .ForEach (_go => {
+                            GameObjectUtility.RemoveMonoBehavioursWithMissingScript (_go.gameObject);
+                            var _entityPath = Regex.Replace (_assetPath, "^Assets/", "Assets/GhostEntities/Assets/");
+                            restoreSingleEntity (_go, _entityPath);
+                            PrefabUtility.SavePrefabAsset (_prefab);
+                        });
+                });
 
-            // 如果幽灵的实体已经存在，则不再进行恢复
-            if ((bool) HasEntityField.GetValue (ghostComponent)) {
+            var ghostComponent = gameObj.GetComponent (GhostType);
+
+            var _ghostMeta = GhostData.GetGhostMeta (entityPath);
+            if (_ghostMeta.HasEntity) {
+                LogWarning ("实体已经存在: " + ghostComponent.transform.GetFullPath ("/"));
                 return;
             }
-            HasEntityField.SetValue (ghostComponent, true);
+            _ghostMeta.HasEntity = true;
+
+            HasEntityProperty.SetValue (ghostComponent, true);
             EditorUtility.SetDirty (ghostComponent);
 
             if (PrefabUtility.IsPartOfAnyPrefab (ghostComponent)) {
                 PrefabUtility.RecordPrefabInstancePropertyModifications (ghostComponent);
             }
-            AssetDatabase.SaveAssetIfDirty (ghostComponent);
-            UnityEditor.EditorApplication.QueuePlayerLoopUpdate ();
 
-            var _entityPrefab = AssetDatabase.LoadAssetAtPath<GameObject> (AssetDatabase.GUIDToAssetPath (EntityGUIDField.GetValue (ghostComponent) as string));
+            var _assetPath = AssetDatabase.GUIDToAssetPath (_ghostMeta.GUID);
+            var _entityPrefab = AssetDatabase.LoadAssetAtPath<GameObject> (_assetPath);
             if (_entityPrefab is null) return;
 
             var _nonBuiltinComponents = _entityPrefab.NonBuiltinComponents ()
                 .ToList ();
-            UnityEditor.Selection.activeGameObject = _originalGhostObject;
+            UnityEditor.Selection.activeGameObject = gameObj;
+            LogWarning ("组件目标: " + gameObj.transform.GetFullPath ("/"));
             _nonBuiltinComponents.ForEach (_component => {
-                if (_originalGhostObject.GetComponent (_component.GetType ()) == null) {
+                if (gameObj.GetComponent (_component.GetType ()) == null) {
                     UnityEditorInternal.ComponentUtility.CopyComponent (_component);
-                    UnityEditorInternal.ComponentUtility.PasteComponentAsNew (_originalGhostObject);
+                    UnityEditorInternal.ComponentUtility.PasteComponentAsNew (gameObj);
+                    LogWarning ("添加组件 " + _component.GetType ());
                 } else {
                     UnityEditorInternal.ComponentUtility.PasteComponentValues (_component);
+                    LogWarning ("粘贴组件 " + _component.GetType ());
                 }
+                if (PrefabUtility.IsPartOfAnyPrefab (ghostComponent)) {
+                    PrefabUtility.RecordPrefabInstancePropertyModifications (ghostComponent);
+                }
+                AssetDatabase.SaveAssetIfDirty (gameObj);
+                AssetDatabase.Refresh ();
             });
-
+            Log ("结束恢复: " + entityPath);
             if (PrefabUtility.IsPartOfAnyPrefab (ghostComponent)) {
                 PrefabUtility.RecordPrefabInstancePropertyModifications (ghostComponent);
             }
+            AssetDatabase.SaveAssetIfDirty (gameObj);
+            AssetDatabase.Refresh ();
         }
     }
 }

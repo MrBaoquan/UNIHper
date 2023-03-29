@@ -19,6 +19,7 @@ using UnityEngine.InputSystem;
  */
 
 namespace UNIHper {
+    [DisallowMultipleComponent]
     public class UNIHperEntry : SingletonBehaviour<UNIHperEntry> {
         private async void Awake () {
             if (UNIHperEntry.Instance != this) {
@@ -85,7 +86,7 @@ namespace UNIHper {
             UIManager.Instance.CleanUp ();
             ResourceManager.Instance.CleanUp ();
             ULog.Shutdown ();
-            Debug.Log ("application quit");
+            Debug.Log ("Application Quit");
         }
 
     }
