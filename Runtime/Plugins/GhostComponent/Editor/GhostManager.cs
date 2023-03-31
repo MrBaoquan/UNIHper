@@ -235,7 +235,7 @@ namespace UNIHper.GhostComponent {
             return !GhostData.bGhost;
         }
 
-        [MenuItem ("UNIHper/Test %g")]
+        // [MenuItem ("UNIHper/Test %g")]
         private static void Test () {
             var _gameObj = Selection.activeGameObject;
             LogWarning (AssetDatabase.GetAssetPath (_gameObj));

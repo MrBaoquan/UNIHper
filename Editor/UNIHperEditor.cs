@@ -38,6 +38,9 @@ namespace UNIHper {
         /// 项目相关路径
         /// </summary>
         /// <value></value>
+        private static string ProjectRoot {
+            get => Path.GetDirectoryName (Application.dataPath);
+        }
         private static string ProjectAssetRoot {
             get => Application.dataPath;
         }
@@ -106,7 +109,12 @@ namespace UNIHper {
                     });
             } else if (_objs.Length <= 0) {
                 string _UNIHperPrefabPath = $@"Packages\{bundleName}\Resources\Prefabs\UNIHper.prefab";
-                UnityEngine.Object _UNIHperPrefab = AssetDatabase.LoadAssetAtPath (_UNIHperPrefabPath, typeof (GameObject));
+                var _projectUnihperPrefabPath = "Assets/Resources/UNIHper/UNIHper.prefab";
+                if (!File.Exists (Path.Combine (ProjectRoot, _projectUnihperPrefabPath))) {
+                    AssetDatabase.CopyAsset (_UNIHperPrefabPath, _projectUnihperPrefabPath);
+                }
+                UnityEngine.Object _UNIHperPrefab = AssetDatabase.LoadAssetAtPath (_projectUnihperPrefabPath, typeof (GameObject));
+
                 GameObject _newUNIHper = PrefabUtility.InstantiatePrefab (_UNIHperPrefab) as GameObject;
                 _newUNIHper.name = "__UNIHper";
             }
@@ -137,10 +145,12 @@ namespace UNIHper {
             }
 
             string _configPath = "Assets/Resources/UNIHperConfig.asset";
-            var _configInstance = AssetDatabase.LoadAssetAtPath (_configPath, typeof (UNIHperConfig));
-            if (_configInstance == null) {
-                var _configAsset = ScriptableObject.CreateInstance<UNIHperConfig> ();
-                AssetDatabase.CreateAsset (_configAsset, _configPath);
+            if (!File.Exists (Path.Combine (ProjectRoot, _configPath))) {
+                var _configInstance = AssetDatabase.LoadAssetAtPath (_configPath, typeof (UNIHperConfig));
+                if (_configInstance == null) {
+                    var _configAsset = ScriptableObject.CreateInstance<UNIHperConfig> ();
+                    AssetDatabase.CreateAsset (_configAsset, _configPath);
+                }
             }
 
             // 做一些项目结构
