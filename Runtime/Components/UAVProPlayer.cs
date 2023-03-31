@@ -33,6 +33,12 @@ namespace UNIHper {
         private UnityEvent<MediaPlayer> OnPlaylistFinished = new UnityEvent<MediaPlayer> (); // Triggered when the playlist reaches the end
         private UnityEvent<MediaPlayer> OnTextTracksChanged = new UnityEvent<MediaPlayer> (); // Triggered when the text tracks are added or removed
         #endregion
+
+        void Reset () {
+            MediaPlayer.AutoOpen = false;
+            MediaPlayer.AutoStart = false;
+        }
+
         private MediaPlayer mediaPlayer;
         public MediaPlayer MediaPlayer {
             get {
