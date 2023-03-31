@@ -56,7 +56,7 @@ namespace UNIHper {
 
         }
 
-        [MenuItem ("UNIHper/Settings")]
+        [MenuItem ("UNIHper/Settings", false, 100)]
         static void FindResource () {
             string path = "Assets/Resources/UNIHperConfig.asset";
             var obj = AssetDatabase.LoadAssetAtPath (path, typeof (UNIHperConfig));
@@ -71,7 +71,7 @@ namespace UNIHper {
                 CodeTemplateGenerator.CreateSceneScriptIfNotExists (scene.name);
         }
 
-        [MenuItem ("UNIHper/Initialize", priority = 0)]
+        [MenuItem ("UNIHper/Initialize", priority = -1)]
         public static void CreateDefault () {
             EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo ();
             var _startupScenePath = AssetDatabase.FindAssets ($"{sceneEntryName} t:Scene", null)

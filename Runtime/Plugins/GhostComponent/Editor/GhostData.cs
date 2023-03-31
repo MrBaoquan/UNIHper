@@ -29,24 +29,24 @@ namespace UNIHper.GhostComponent {
         public List<string> excludeDirectories = new List<string> () { };
 
         [SerializeField, HideInInspector]
-        private List<GhostMeta> ghostMetas = new List<GhostMeta> () { };
+        private List<GhostMeta> ghostMetaData = new List<GhostMeta> () { };
 
         /// <summary>
         /// 清除幽灵数据缓存
         /// </summary>
-        public void ClearGhostMetas () {
-            ghostMetas.Clear ();
+        public void ClearGhostMetaData () {
+            ghostMetaData.Clear ();
         }
 
         public void MarkAsGhost () {
-            ghostMetas.ForEach (_meta => _meta.HasEntity = false);
+            ghostMetaData.ForEach (_meta => _meta.HasEntity = false);
         }
 
         public GhostMeta GetGhostMeta (string assetID) {
-            var _ghostMeta = ghostMetas.FirstOrDefault (_ghostMeta => _ghostMeta.AssetID == assetID);
+            var _ghostMeta = ghostMetaData.FirstOrDefault (_ghostMeta => _ghostMeta.AssetID == assetID);
             if (_ghostMeta is null) {
                 _ghostMeta = new GhostMeta () { AssetID = assetID };
-                ghostMetas.Add (_ghostMeta);
+                ghostMetaData.Add (_ghostMeta);
             }
             return _ghostMeta;
         }
