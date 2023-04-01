@@ -18,30 +18,30 @@
         
         Pass {
             CGPROGRAM
-                #pragma vertex vert_img
-                #pragma fragment frag
-                #pragma fragmentoption ARB_precision_hint_fastest
+            #pragma vertex vert_img
+            #pragma fragment frag
+            #pragma fragmentoption ARB_precision_hint_fastest
 
-                sampler2D _MainTex;
-                float3 _keyingColor;
-                float _thresh; // 0.8
-                float _slope; // 0.2
+            sampler2D _MainTex;
+            float3 _keyingColor;
+            float _thresh; // 0.8
+            float _slope; // 0.2
 
-                #include "UnityCG.cginc"
+            #include "UnityCG.cginc"
 
-              float4 frag(v2f_img i) : COLOR{
-              float3 input_color = tex2D(_MainTex,i.uv).rgb;
-              float d = abs(length(abs(_keyingColor.rgb - input_color.rgb)));
-              float edge0 = _thresh*(1 - _slope);
-              float alpha = smoothstep(edge0,_thresh,d);
-              return float4(input_color,alpha);
-              
+            float4 frag(v2f_img i) : COLOR{
+                float3 input_color = tex2D(_MainTex,i.uv).rgb;
+                float d = abs(length(abs(_keyingColor.rgb - input_color.rgb)));
+                float edge0 = _thresh*(1 - _slope);
+                float alpha = smoothstep(edge0,_thresh,d);
+                return float4(input_color,alpha);
+                
+                
+            } 
             
-              } 
-              
             ENDCG
         }
     } 
     
-     FallBack "Unlit/Texture"
+    FallBack "Unlit/Texture"
 }

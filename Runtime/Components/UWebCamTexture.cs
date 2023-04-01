@@ -4,36 +4,43 @@ using UniRx;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace UNIHper {
+namespace UNIHper
+{
+    public class UWebCamTexture : MonoBehaviour
+    {
+        private UnityEvent<WebCamTexture> onCapture = new UnityEvent<WebCamTexture>();
+        private UnityEvent<WebCamTexture> onReady = new UnityEvent<WebCamTexture>();
 
-    public class UWebCamTexture : MonoBehaviour {
-        private UnityEvent<WebCamTexture> onCapture = new UnityEvent<WebCamTexture> ();
-        private UnityEvent<WebCamTexture> onReady = new UnityEvent<WebCamTexture> ();
-        private void Start () {
+        private void Start() { }
 
-        }
+        public UWebCamTexture StartCapture(int width = 640, int height = 480)
+        {
+            var _device = WebCamTexture.devices.FirstOrDefault();
+            WebCamTexture _webcamTexture = new WebCamTexture(_device.name, width, height, 30);
+            _webcamTexture.Play();
+            onReady.Invoke(_webcamTexture);
 
-        public UWebCamTexture StartCapture (int width = 640, int height = 480) {
-            var _device = WebCamTexture.devices.FirstOrDefault ();
-            WebCamTexture _webcamTexture = new WebCamTexture (_device.name, width, height, 30);
-            _webcamTexture.Play ();
-            onReady.Invoke (_webcamTexture);
-
-            Observable.EveryUpdate ().Subscribe (_ => {
-                if (_webcamTexture.didUpdateThisFrame) {
-                    onCapture.Invoke (_webcamTexture);
-                }
-            }).AddTo (this);
+            Observable
+                .EveryUpdate()
+                .Subscribe(_ =>
+                {
+                    if (_webcamTexture.didUpdateThisFrame)
+                    {
+                        onCapture.Invoke(_webcamTexture);
+                    }
+                })
+                .AddTo(this);
             return this;
         }
 
-        public IObservable<WebCamTexture> OnCaptureAsObserable () {
-            return onCapture.AsObservable ();
+        public IObservable<WebCamTexture> OnCaptureAsObserable()
+        {
+            return onCapture.AsObservable();
         }
 
-        public IObservable<WebCamTexture> OnReadyAsObservable () {
-            return onReady.AsObservable ();
+        public IObservable<WebCamTexture> OnReadyAsObservable()
+        {
+            return onReady.AsObservable();
         }
     }
-
 }

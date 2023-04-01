@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using UniRx;
 using UnityEngine;
 using UnityEngine.Events;
-namespace UNIHper {
 
-    public abstract class SceneScriptBase {
+namespace UNIHper
+{
+    public abstract class SceneScriptBase
+    {
 
         // private UnityEvent m_onStartEvent = new UnityEvent ();
         // private UnityEvent m_onDestroyEvent = new UnityEvent ();
@@ -46,7 +48,5 @@ namespace UNIHper {
         // /// called when application quit
         // /// </summary>
         // protected virtual void OnApplicationQuit () { }
-
     }
-
 }

@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using DNHper;
 using UnityEngine;
-namespace UNIHper {
-    public class MonobehaviourUtil : SingletonBehaviour<MonobehaviourUtil> { }
 
+namespace UNIHper
+{
+    public class MonobehaviourUtil : SingletonBehaviour<MonobehaviourUtil> { }
 }

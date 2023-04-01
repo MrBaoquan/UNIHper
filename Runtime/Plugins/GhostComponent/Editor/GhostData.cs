@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
-namespace UNIHper.GhostComponent {
 
+namespace UNIHper.GhostComponent
+{
     [Serializable]
-    public class GhostMeta {
+    public class GhostMeta
+    {
         [SerializeField]
         public string AssetID;
 
@@ -18,53 +20,69 @@ namespace UNIHper.GhostComponent {
         public bool HasEntity = true;
     }
 
-    public class GhostData : ScriptableObject {
+    public class GhostData : ScriptableObject
+    {
         const string defaultConfigPath = "Assets/Resources/Ghost.asset";
+
         /// <summary>
         /// true if ghost mode now
         /// </summary>
         [HideInInspector]
         public bool bGhost = false;
 
-        public List<string> excludeDirectories = new List<string> () { };
+        public List<string> excludeDirectories = new List<string>() { };
 
         [SerializeField, HideInInspector]
-        private List<GhostMeta> ghostMetaData = new List<GhostMeta> () { };
+        private List<GhostMeta> ghostMetaData = new List<GhostMeta>() { };
 
         /// <summary>
         /// 清除幽灵数据缓存
         /// </summary>
-        public void ClearGhostMetaData () {
-            ghostMetaData.Clear ();
+        public void ClearGhostMetaData()
+        {
+            ghostMetaData.Clear();
         }
 
-        public void MarkAsGhost () {
-            ghostMetaData.ForEach (_meta => _meta.HasEntity = false);
+        public void MarkAsGhost()
+        {
+            ghostMetaData.ForEach(_meta => _meta.HasEntity = false);
         }
 
-        public GhostMeta GetGhostMeta (string assetID) {
-            var _ghostMeta = ghostMetaData.FirstOrDefault (_ghostMeta => _ghostMeta.AssetID == assetID);
-            if (_ghostMeta is null) {
-                _ghostMeta = new GhostMeta () { AssetID = assetID };
-                ghostMetaData.Add (_ghostMeta);
+        public GhostMeta GetGhostMeta(string assetID)
+        {
+            var _ghostMeta = ghostMetaData.FirstOrDefault(
+                _ghostMeta => _ghostMeta.AssetID == assetID
+            );
+            if (_ghostMeta is null)
+            {
+                _ghostMeta = new GhostMeta() { AssetID = assetID };
+                ghostMetaData.Add(_ghostMeta);
             }
             return _ghostMeta;
         }
 
         private static GhostData instance = null;
-        public static GhostData Instance {
-            get {
-                if (instance) return instance;
+        public static GhostData Instance
+        {
+            get
+            {
+                if (instance)
+                    return instance;
 
-                var _ghostData = AssetDatabase.FindAssets ("t:GhostData", new [] { "Assets" }).FirstOrDefault ();
-                if (_ghostData is null) {
-                    AssetDatabase.CreateAsset (ScriptableObject.CreateInstance<GhostData> (), defaultConfigPath);
-                    Debug.Log ("create ghost config data successfully");
+                var _ghostData = AssetDatabase
+                    .FindAssets("t:GhostData", new[] { "Assets" })
+                    .FirstOrDefault();
+                if (_ghostData is null)
+                {
+                    AssetDatabase.CreateAsset(
+                        ScriptableObject.CreateInstance<GhostData>(),
+                        defaultConfigPath
+                    );
+                    Debug.Log("create ghost config data successfully");
                 }
-                instance = AssetDatabase.LoadAssetAtPath<GhostData> (defaultConfigPath);
+                instance = AssetDatabase.LoadAssetAtPath<GhostData>(defaultConfigPath);
                 return instance;
             }
-
         }
     }
 }

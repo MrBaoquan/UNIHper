@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public class TextLetterSpacing : BaseMeshEffect
 {
     public float spacing = 0;
+
     public override void ModifyMesh(VertexHelper vh)
     {
         List<UIVertex> vertexs = new List<UIVertex>();
@@ -27,4 +28,3 @@ public class TextLetterSpacing : BaseMeshEffect
         }
     }
 }
-

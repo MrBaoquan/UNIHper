@@ -2,40 +2,47 @@ using System;
 using UniRx;
 using UniRx.Triggers;
 using UnityEngine;
-namespace UNIHper {
 
-    public abstract partial class UIBase {
-
-        public void EnableDragMove () {
-            if (!this.Contains<ObservableBeginDragTrigger> ()) {
-                this.AddComponent<ObservableBeginDragTrigger> ();
+namespace UNIHper
+{
+    public abstract partial class UIBase
+    {
+        public void EnableDragMove()
+        {
+            if (!this.Contains<ObservableBeginDragTrigger>())
+            {
+                this.AddComponent<ObservableBeginDragTrigger>();
             }
-            if (!this.Contains<ObservableDragTrigger> ()) {
-                this.AddComponent<ObservableDragTrigger> ();
+            if (!this.Contains<ObservableDragTrigger>())
+            {
+                this.AddComponent<ObservableDragTrigger>();
             }
 
             var _delta = Vector2.zero;
-            this.GetComponent<ObservableBeginDragTrigger> ()
-                .OnBeginDragAsObservable ()
-                .Subscribe (_event => {
-                    _delta = _event.position - new Vector2 (transform.position.x, transform.position.y);
+            this.GetComponent<ObservableBeginDragTrigger>()
+                .OnBeginDragAsObservable()
+                .Subscribe(_event =>
+                {
+                    _delta =
+                        _event.position - new Vector2(transform.position.x, transform.position.y);
                 });
 
-            this.GetComponent<ObservableDragTrigger> ()
-                .OnDragAsObservable ()
-                .Subscribe (_event => {
+            this.GetComponent<ObservableDragTrigger>()
+                .OnDragAsObservable()
+                .Subscribe(_event =>
+                {
                     transform.position = _event.position - _delta;
                 });
         }
 
-        protected void Show (Action<UIBase> InCallback = null) {
-            UIManager.Instance.Show (__UIKey, InCallback);
+        protected void Show(Action<UIBase> InCallback = null)
+        {
+            UIManager.Instance.Show(__UIKey, InCallback);
         }
 
-        protected void Hide () {
-            UIManager.Instance.Hide (__UIKey);
+        protected void Hide()
+        {
+            UIManager.Instance.Hide(__UIKey);
         }
-
     }
-
 }

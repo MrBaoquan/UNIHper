@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
 /*
  * File: Singleton.cs
  * File Created: 2019-10-11 10:17:17
@@ -13,21 +14,24 @@ using UnityEngine;
  * Copyright 2019 - 2019 mrma617@gmail.com
  */
 
-namespace UNIHper {
-
-    public class SingletonBehaviour<T> : MonoBehaviour where T : MonoBehaviour {
+namespace UNIHper
+{
+    public class SingletonBehaviour<T> : MonoBehaviour
+        where T : MonoBehaviour
+    {
         private static T instance;
-        public static T Instance {
-            get {
-                if (instance == null) {
-                    instance = FindObjectOfType (typeof (T), true) as T;
+        public static T Instance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    instance = FindObjectOfType(typeof(T), true) as T;
                 }
                 return instance;
             }
         }
 
-        private void OnDestroy () {
-
-        }
+        private void OnDestroy() { }
     }
 }

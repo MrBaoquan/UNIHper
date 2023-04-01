@@ -1,6 +1,6 @@
 using UnityEngine.InputSystem;
-namespace UNIHper {
-    public class UNIInput {
 
-    }
+namespace UNIHper
+{
+    public class UNIInput { }
 }

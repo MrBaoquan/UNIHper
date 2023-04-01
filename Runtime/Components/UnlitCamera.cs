@@ -6,9 +6,7 @@ public class UnlitCamera : MonoBehaviour
 {
     float shadowDistance = 0.0f;
     public Light[] SoftLights;
-     public Light[] HardLights;
-
-
+    public Light[] HardLights;
 
     // Start is called before the first frame update
     void Start()
@@ -18,23 +16,32 @@ public class UnlitCamera : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    void Update() { }
 
     void OnPreRender()
     {
         shadowDistance = QualitySettings.shadowDistance;
         QualitySettings.shadowDistance = 0;
-        foreach (Light l in SoftLights) { l.shadows = LightShadows.None; }
-        foreach (Light l in HardLights) { l.shadows = LightShadows.None; }
+        foreach (Light l in SoftLights)
+        {
+            l.shadows = LightShadows.None;
+        }
+        foreach (Light l in HardLights)
+        {
+            l.shadows = LightShadows.None;
+        }
     }
- 
+
     void OnPostRender()
     {
         QualitySettings.shadowDistance = shadowDistance;
-        foreach (Light l in SoftLights) { l.shadows = LightShadows.Soft; }
-        foreach (Light l in HardLights) { l.shadows = LightShadows.Hard; }
+        foreach (Light l in SoftLights)
+        {
+            l.shadows = LightShadows.Soft;
+        }
+        foreach (Light l in HardLights)
+        {
+            l.shadows = LightShadows.Hard;
+        }
     }
 }

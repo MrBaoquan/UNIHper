@@ -10,15 +10,17 @@ using UnityEngine.UI;
 /// 2. MeshType = Full Rect
 /// 3. Read/Write Enabled = true
 /// </summary>
-namespace UNIHper {
+namespace UNIHper
+{
+    [RequireComponent(typeof(Image))]
+    public class IrregularButton : MonoBehaviour
+    {
+        public float alphaHitTestMinimumThreshold = 0.1f;
 
-    [RequireComponent (typeof (Image))]
-    public class IrregularButton : MonoBehaviour {
-        public float alphaHitTestMinimumThreshold=0.1f;
         // Start is called before the first frame update
-        void Start () {
-            this.Get<Image> ().alphaHitTestMinimumThreshold = alphaHitTestMinimumThreshold;
+        void Start()
+        {
+            this.Get<Image>().alphaHitTestMinimumThreshold = alphaHitTestMinimumThreshold;
         }
     }
-
 }

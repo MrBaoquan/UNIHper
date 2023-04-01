@@ -3,37 +3,24 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-
 namespace UNIHper
 {
-    
-public class FileItem : MonoBehaviour
-{
-
-    public void SetFileName(string InName){
-        this.Get<Text>("text_fileName").text = InName;
-    }
-
-    public void SetSelected(bool bSelected=true)
+    public class FileItem : MonoBehaviour
     {
-        this.Get<Image>().color = bSelected? Color.gray: Color.clear;
-    }
+        public void SetFileName(string InName)
+        {
+            this.Get<Text>("text_fileName").text = InName;
+        }
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+        public void SetSelected(bool bSelected = true)
+        {
+            this.Get<Image>().color = bSelected ? Color.gray : Color.clear;
+        }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+        // Start is called before the first frame update
+        void Start() { }
+
+        // Update is called once per frame
+        void Update() { }
     }
 }
-
-
-
-
-}
-
