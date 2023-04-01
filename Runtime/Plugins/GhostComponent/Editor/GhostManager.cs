@@ -273,7 +273,7 @@ namespace UNIHper.GhostComponent
         [MenuItem("UNIHper/Ghost Mode/Advanced/Generate All Ghost Entities")]
         public static void GenerateGhostEntities()
         {
-            safeThrow(
+            safeTransaction(
                 () =>
                 {
                     ghostType = null;
@@ -304,7 +304,7 @@ namespace UNIHper.GhostComponent
                 (err) =>
                 {
                     EditorUtility.ClearProgressBar();
-                    GhostData.bGhost = true;
+                    GhostData.bGhost = false;
                     EditorUtility.SetDirty(GhostData);
                     AssetDatabase.SaveAssets();
                 }
@@ -328,7 +328,7 @@ namespace UNIHper.GhostComponent
         [MenuItem("UNIHper/Ghost Mode/Advanced/Restore All Ghost Entities")]
         private static void RestoreGhostEntities()
         {
-            safeThrow(
+            safeTransaction(
                 () =>
                 {
                     GhostData.MarkAsGhost();
@@ -355,7 +355,7 @@ namespace UNIHper.GhostComponent
                 (err) =>
                 {
                     EditorUtility.ClearProgressBar();
-                    GhostData.bGhost = false;
+                    GhostData.bGhost = true;
                     EditorUtility.SetDirty(GhostData);
                     AssetDatabase.SaveAssets();
                 }
@@ -365,7 +365,7 @@ namespace UNIHper.GhostComponent
         [MenuItem("UNIHper/Ghost Mode/Advanced/Add Ghost To All")]
         public static void AutoGenerateGhost()
         {
-            safeThrow(() =>
+            safeTransaction(() =>
             {
                 // 1. Generate for all prefab game objects
                 AllPrefabComponents(
@@ -413,7 +413,7 @@ namespace UNIHper.GhostComponent
         [MenuItem("UNIHper/Ghost Mode/Advanced/Remove Ghost From All")]
         public static void ClearAllGhostComponent()
         {
-            safeThrow(() =>
+            safeTransaction(() =>
             {
                 AllPrefabComponents(
                     GhostType,
@@ -476,7 +476,7 @@ namespace UNIHper.GhostComponent
 
         private static bool IsBusyNow = false;
 
-        private static void safeThrow(Action InAction, Action<Exception> OnError = null)
+        private static void safeTransaction(Action InAction, Action<Exception> OnError = null)
         {
             if (!stashWorkingEnv())
                 return;

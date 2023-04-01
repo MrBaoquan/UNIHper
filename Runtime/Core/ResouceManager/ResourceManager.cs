@@ -502,7 +502,7 @@ namespace UNIHper
                 )
                 {
                     UNIHperLogger.LogWarning(
-                        $"try load addressable assets [{_resItem.label}] failed"
+                        $"try load addressable assets with label [{_resItem.label}] failed"
                     );
                     continue;
                 }
