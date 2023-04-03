@@ -21,12 +21,48 @@ namespace UNIHper
             return _target.GetComponent<T>();
         }
 
+        public static T Get<T>(this Transform _transform)
+            where T : Component
+        {
+            return _transform.GetComponent<T>();
+        }
+
+        public static T Get<T>(this Transform _transform, string InPath)
+            where T : Component
+        {
+            Transform _target = Get(_transform, InPath);
+            return _target.GetComponent<T>();
+        }
+
+        public static T Get<T>(this GameObject _gameObject, string InPath)
+            where T : Component
+        {
+            Transform _target = Get(_gameObject.transform, InPath);
+            return _target.GetComponent<T>();
+        }
+
+        public static T Get<T>(this GameObject _gameObject)
+            where T : Component
+        {
+            return _gameObject.GetComponent<T>();
+        }
+
         public static Transform Get(this MonoBehaviour _behaviour, string InPath)
         {
             Transform _target = _behaviour.transform.Find(InPath);
             if (_target == null)
             {
                 //Debug.LogWarningFormat("Can not find gameobjet with path: {0}",InPath);
+                return null;
+            }
+            return _target;
+        }
+
+        public static Transform Get(this Transform _transform, string InPath)
+        {
+            Transform _target = _transform.Find(InPath);
+            if (_target == null)
+            {
                 return null;
             }
             return _target;
@@ -300,6 +336,13 @@ namespace UNIHper
             }
         }
 
+        /// <summary>
+        /// Get the normalized position of the target element in the scroll rect's viewport.
+        /// </summary>
+        /// <param name="scrollRect"></param>
+        /// <param name="target"></param>
+        /// <param name="axis"></param>
+        /// <returns></returns>
         public static float GetItemNormallizedPosition(
             this ScrollRect scrollRect,
             RectTransform target,

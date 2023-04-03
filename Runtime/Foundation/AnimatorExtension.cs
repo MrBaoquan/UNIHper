@@ -18,13 +18,10 @@ namespace UNIHper
                 .FirstOrDefault();
         }
 
-        public static void PlayAnimation(
-            this Animator animator,
-            string InState,
-            Action<Animator> InCallback = null
-        )
+        // csharpier-ignore
+        public static void PlayAnimation(this Animator animator, string InState, Action<Animator> InCallback = null)
         {
-            animator.Play(InState, -1, 0);
+            animator.Play(InState, 0, 0);
             syncPlayState(animator);
 
             if (InCallback is null)
@@ -57,12 +54,12 @@ namespace UNIHper
         // private methods
         private static void syncPlayState(Animator animator)
         {
-            animator.SetBool("Stop", false);
+            //animator.SetBool ("Stop", false);
         }
 
         private static void syncStopState(Animator animator)
         {
-            animator.SetBool("Stop", true);
+            //animator.SetBool ("Stop", true);
         }
     }
 }
