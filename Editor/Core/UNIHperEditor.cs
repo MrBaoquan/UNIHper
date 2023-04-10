@@ -64,13 +64,9 @@ namespace UNIHper
             EditorSceneManager.sceneSaved += SceneSaved;
         }
 
-        private static void NewSceneCreatedCallback(
-            Scene scene,
-            NewSceneSetup setup,
-            NewSceneMode mode
-        ) { }
+        private static void NewSceneCreatedCallback(Scene scene, NewSceneSetup setup, NewSceneMode mode) { }
 
-        [MenuItem("UNIHper/Settings", false, 100)]
+        [MenuItem("UNIHper/Settings", priority = 1000)]
         static void FindResource()
         {
             string path = "Assets/Resources/UNIHperConfig.asset";
@@ -88,7 +84,7 @@ namespace UNIHper
                 CodeTemplateGenerator.CreateSceneScriptIfNotExists(scene.name);
         }
 
-        [MenuItem("UNIHper/Initialize", priority = -1)]
+        [MenuItem("UNIHper/Initialize", priority = 0)]
         public static void CreateDefault()
         {
             EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo();
@@ -158,7 +154,12 @@ namespace UNIHper
                 }
                 if (!File.Exists(Path.Combine(ProjectRoot, _projectStartupPrefabPath)))
                 {
-                    AssetDatabase.CopyAsset(_UNIHperPrefabPath, _projectStartupPrefabPath);
+                    var _tempUNIHper = GameObject.Instantiate<GameObject>(
+                        AssetDatabase.LoadAssetAtPath(_UNIHperPrefabPath, typeof(GameObject)) as GameObject
+                    );
+
+                    PrefabUtility.SaveAsPrefabAsset(_tempUNIHper, _projectStartupPrefabPath);
+                    DestroyImmediate(_tempUNIHper);
                 }
 
                 UnityEngine.Object _UNIHperPrefab = AssetDatabase.LoadAssetAtPath(

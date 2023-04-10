@@ -5,7 +5,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace UNIHper.GhostComponent
+namespace UNIHper.Ghost
 {
     [Serializable]
     public class GhostMeta
@@ -66,21 +66,23 @@ namespace UNIHper.GhostComponent
         {
             get
             {
-                if (instance)
-                    return instance;
-
-                var _ghostData = AssetDatabase
-                    .FindAssets("t:GhostData", new[] { "Assets" })
-                    .FirstOrDefault();
-                if (_ghostData is null)
+                if (instance is null)
                 {
-                    AssetDatabase.CreateAsset(
-                        ScriptableObject.CreateInstance<GhostData>(),
-                        defaultConfigPath
-                    );
-                    Debug.Log("create ghost config data successfully");
+                    var _ghostData = AssetDatabase
+                            .FindAssets("t:GhostData", new[] { "Assets" })
+                            .FirstOrDefault();
+                    if (_ghostData is null)
+                    {
+                        AssetDatabase.CreateAsset(
+                            ScriptableObject.CreateInstance<GhostData>(),
+                            defaultConfigPath
+                        );
+                        Debug.Log("create ghost config data successfully");
+                    }
+                    instance = AssetDatabase.LoadAssetAtPath<GhostData>(defaultConfigPath);
                 }
-                instance = AssetDatabase.LoadAssetAtPath<GhostData>(defaultConfigPath);
+
+
                 return instance;
             }
         }

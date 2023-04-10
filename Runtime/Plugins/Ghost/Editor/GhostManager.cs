@@ -19,9 +19,9 @@ using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using UNIHper.GhostComponent.Util;
+using UNIHper.Ghost.Util;
 
-namespace UNIHper.GhostComponent
+namespace UNIHper.Ghost.Editor
 {
     public static class GhostManager
     {
@@ -50,14 +50,14 @@ namespace UNIHper.GhostComponent
         public static List<(GameObject parentObj, string prefabPath)> ParentInstanceRoots(this GameObject self)
         {
             List<GameObject> _parentRoots = new List<GameObject>();
-            var _node = self;
-            while (_node.transform.parent != null)
+            var _node = self.transform;
+            while (_node is not null)
             {
-                if (PrefabUtility.IsAnyPrefabInstanceRoot(_node))
+                if (PrefabUtility.IsAnyPrefabInstanceRoot(_node.gameObject))
                 {
-                    _parentRoots.Add(_node);
+                    _parentRoots.Add(_node.gameObject);
                 }
-                _node = _node.transform.parent.gameObject;
+                _node = _node.transform.parent ?? null;
             }
             //_parentRoots.Reverse ();
             return _parentRoots
@@ -106,7 +106,7 @@ namespace UNIHper.GhostComponent
                 {
                     var _assembly = Assembly.Load(
                         new AssemblyName(
-                            "UNIHper.Ghost.Art, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"
+                            "UNIHper.Art, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"
                         )
                     );
                     if (_assembly is null)
@@ -114,7 +114,7 @@ namespace UNIHper.GhostComponent
                         LogWarning("can not find assembly");
                         return null;
                     }
-                    var _ghostType = _assembly.GetType("UNIHper.GhostComponent.Art.Ghost");
+                    var _ghostType = _assembly.GetType("UNIHper.Art.Ghost");
                     if (_ghostType is null)
                     {
                         LogWarning("can not find Ghost");
@@ -244,7 +244,7 @@ namespace UNIHper.GhostComponent
             IsBusyNow = false;
         }
 
-        [MenuItem("UNIHper/Ghost Mode/Enable", false, 10)]
+        [MenuItem("UNIHper/Ghost Mode/Enable", priority = 101)]
         public static void EnableGhost()
         {
             AutoGenerateGhost();
@@ -257,7 +257,7 @@ namespace UNIHper.GhostComponent
             return !GhostData.bGhost;
         }
 
-        [MenuItem("UNIHper/Ghost Mode/Disable", false, 11)]
+        [MenuItem("UNIHper/Ghost Mode/Disable", priority = 102)]
         public static void DisableGhost()
         {
             RestoreGhostEntities();
@@ -270,7 +270,7 @@ namespace UNIHper.GhostComponent
             return GhostData.bGhost;
         }
 
-        [MenuItem("UNIHper/Ghost Mode/Advanced/Generate All Ghost Entities")]
+        [MenuItem("UNIHper/Ghost Mode/Advanced/Generate All Ghost Entities", priority = 11)]
         public static void GenerateGhostEntities()
         {
             safeTransaction(
@@ -317,15 +317,15 @@ namespace UNIHper.GhostComponent
             return !GhostData.bGhost;
         }
 
-        // [MenuItem ("UNIHper/Test %g")]
+        // [MenuItem("UNIHper/Test %g")]
         private static void Test()
         {
             var _gameObj = Selection.activeGameObject;
-            LogWarning(AssetDatabase.GetAssetPath(_gameObj));
-            Debug.Log(buildSceneObjectEntitySavePath(_gameObj));
+            Debug.Log(PrefabUtility.IsAnyPrefabInstanceRoot(_gameObj));
+            //PrefabUtility.UnpackPrefabInstance(_gameObj, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
         }
 
-        [MenuItem("UNIHper/Ghost Mode/Advanced/Restore All Ghost Entities")]
+        [MenuItem("UNIHper/Ghost Mode/Advanced/Restore All Ghost Entities", priority = 12)]
         private static void RestoreGhostEntities()
         {
             safeTransaction(
@@ -362,7 +362,7 @@ namespace UNIHper.GhostComponent
             );
         }
 
-        [MenuItem("UNIHper/Ghost Mode/Advanced/Add Ghost To All")]
+        [MenuItem("UNIHper/Ghost Mode/Advanced/Add Ghost To All", priority = 13)]
         public static void AutoGenerateGhost()
         {
             safeTransaction(() =>
@@ -410,7 +410,7 @@ namespace UNIHper.GhostComponent
 
         // }
 
-        [MenuItem("UNIHper/Ghost Mode/Advanced/Remove Ghost From All")]
+        [MenuItem("UNIHper/Ghost Mode/Advanced/Remove Ghost From All", priority = 14)]
         public static void ClearAllGhostComponent()
         {
             safeTransaction(() =>

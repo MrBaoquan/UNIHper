@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace UNIHper.GhostComponent.Util
+namespace UNIHper.Ghost.Util
 {
     public static class GameObjectExtensions
     {
