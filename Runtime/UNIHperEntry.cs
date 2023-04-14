@@ -53,9 +53,9 @@ namespace UNIHper
 
         private void Update()
         {
+#if ENABLE_INPUT_SYSTEM
             if (Keyboard.current == null)
                 return;
-#if ENABLE_INPUT_SYSTEM
             if (Keyboard.current.ctrlKey.isPressed && Keyboard.current.sKey.wasPressedThisFrame)
             {
                 Managements.Config.SerializeAll();
