@@ -155,7 +155,7 @@ namespace RenderHeads.Media.AVProVideo
 			: base(TrackType.Video, uid, name, language, isDefault) { }
 	
 		// Optional
-		public int Bitrate { get; private set; }
+		public int Bitrate { get; set; }
 	}
 
 	public class AudioTrack : TrackBase

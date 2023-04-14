@@ -1,10 +1,10 @@
-﻿Shader "AVProVideo/VR/InsideSphere Unlit (stereo) - Android OES ONLY" 
+﻿Shader "AVProVideo/VR/InsideSphere Unlit (stereo+color) - Android OES ONLY" 
 {
 	Properties 
 	{
 		_MainTex ("Base (RGB)", 2D) = "black" {}
+		_ChromaTex("Chroma", 2D) = "white" {}			// For fallback shader
 		_Color("Color", Color) = (0.0, 1.0, 0.0, 1.0)
-		_CroppingScalars("Cropping Scalars", Vector) = (1, 1, 1, 1)
 		[KeywordEnum(None, Top_Bottom, Left_Right, Custom_UV)] Stereo("Stereo Mode", Float) = 0
 		[KeywordEnum(None, Left, Right)] ForceEye("Force Eye Mode", Float) = 0
 		[KeywordEnum(None, EquiRect180)] Layout("Layout", Float) = 0
@@ -41,8 +41,23 @@
 			#ifdef VERTEX
 
 #include "UnityCG.glslinc"
+#if defined(STEREO_MULTIVIEW_ON)
+	UNITY_SETUP_STEREO_RENDERING
+#endif
 #define SHADERLAB_GLSL
 #include "AVProVideo.cginc"
+
+
+		INLINE bool Android_IsStereoEyeLeft()
+		{
+			#if defined(STEREO_MULTIVIEW_ON)
+				int eyeIndex = SetupStereoEyeIndex();
+				return (eyeIndex == 0);
+			#else
+				return IsStereoEyeLeft();
+			#endif
+		}
+
 
 #if defined(HIGH_QUALITY)
 		varying vec3 texNormal;
@@ -52,6 +67,7 @@
 #else
 		varying vec3 texVal;
 		uniform vec4 _MainTex_ST;
+		uniform mat4 _TextureMatrix;
 #endif
 #if defined(STEREO_DEBUG)
 		varying vec4 tint;
@@ -66,36 +82,40 @@
 
 			void main()
 			{
+#if defined(STEREO_MULTIVIEW_ON)
+				int eyeIndex = SetupStereoEyeIndex();
+				mat4 vpMatrix = GetStereoMatrixVP(eyeIndex);
+				gl_Position = vpMatrix * unity_ObjectToWorld * gl_Vertex;
+#else
 				gl_Position = XFormObjectToClip(gl_Vertex);
+#endif
 
 #if defined(HIGH_QUALITY)
 				texNormal = normalize(gl_Normal.xyz);
 	#if defined(STEREO_TOP_BOTTOM) || defined(STEREO_LEFT_RIGHT)
-				bool isLeftEye = IsStereoEyeLeft();
-				texScaleOffset = GetStereoScaleOffset(isLeftEye, false);
+				texScaleOffset = GetStereoScaleOffset(Android_IsStereoEyeLeft(), false);
 	#endif
 #else
 				texVal.xy = gl_MultiTexCoord0.xy;
 				texVal.xy = transformTex(gl_MultiTexCoord0.xy, _MainTex_ST);
-				texVal.xy = vec2(1.0, 1.0) - texVal.xy;
-	#if defined(LAYOUT_EQUIRECT180)
+				texVal.x = 1.0 - texVal.x;
+#if defined(LAYOUT_EQUIRECT180)
 				texVal.x = ((texVal.x - 0.5) * 2.0) + 0.5;
 
 				// Set value for clipping if UV area is behind viewer
 				texVal.z = (gl_MultiTexCoord0.x > 0.25 && gl_MultiTexCoord0.x < 0.75) ? 1.0 : -1.0;
 	#endif
 
-				// Adjust for cropping (when the decoder decodes in blocks that overrun the video frame size, it pads)
-				texVal.xy *= _CroppingScalars.xy;
+				// Apply texture transformation matrix - adjusts for offset/cropping (when the decoder decodes in blocks that overrun the video frame size, it pads)
+				texVal.xy = (_TextureMatrix * vec4(texVal.x, texVal.y, 0.0, 1.0)).xy;
 
 	#if defined(STEREO_TOP_BOTTOM) || defined(STEREO_LEFT_RIGHT)
-				bool isLeftEye = IsStereoEyeLeft();
-				vec4 scaleOffset = GetStereoScaleOffset(isLeftEye, false);
+				vec4 scaleOffset = GetStereoScaleOffset(Android_IsStereoEyeLeft(), false);
 
 				texVal.xy *= scaleOffset.xy;
 				texVal.xy += scaleOffset.zw;
 	#elif defined(STEREO_CUSTOM_UV)
-				if (!IsStereoEyeLeft())
+				if(!Android_IsStereoEyeLeft())
 				{
 					texVal.xy= transformTex(gl_MultiTexCoord1.xy, _MainTex_ST);
 					texVal.xy = vec2(1.0, 1.0) - texVal.xy;
@@ -104,10 +124,10 @@
 #endif
 
 #if defined(STEREO_DEBUG)
-				tint = GetStereoDebugTint(IsStereoEyeLeft());
+				tint = GetStereoDebugTint(Android_IsStereoEyeLeft());
 #endif
-            }
-            #endif
+			}
+			#endif
 
 			#ifdef FRAGMENT
 
@@ -119,10 +139,10 @@
 	#if defined(STEREO_TOP_BOTTOM) || defined(STEREO_LEFT_RIGHT)
 			varying vec4 texScaleOffset;
 	#endif
+			uniform mat4 _TextureMatrix;
 #else
 			varying vec3 texVal;
 #endif
-			uniform vec4 _CroppingScalars;
 #if defined(STEREO_DEBUG)
 			varying vec4 tint;
 #endif
@@ -141,7 +161,7 @@
 				const float M_1_2PI = 0.15915494309189533576888376337251; // 2.0/PI
 				vec2 uv;
 				uv.x = 0.5 - atan(n.z, n.x) * M_1_2PI;
-				uv.y = 0.5 - asin(n.y) * M_1_PI;
+				uv.y = 0.5 - asin(-n.y) * M_1_PI;
 				return uv;
 			}
 
@@ -162,8 +182,8 @@
 			uniform samplerExternalOES _MainTex;
 #endif
 
-            void main()
-            {
+			void main()
+			{
 				vec2 uv;
 
 #if defined(HIGH_QUALITY)
@@ -185,8 +205,8 @@
 				uv.x = ((uv.x - 0.5) * 2.0) + 0.5;
 	#endif
 
-				// Adjust for cropping (when the decoder decodes in blocks that overrun the video frame size, it pads)
-				uv.xy *= _CroppingScalars.xy;
+				// Apply texture transformation matrix - adjusts for offset/cropping (when the decoder decodes in blocks that overrun the video frame size, it pads)
+				uv.xy = (_TextureMatrix * vec4(uv.x, uv.y, 0.0, 1.0)).xy;
 
 	#if defined(STEREO_TOP_BOTTOM) || defined(STEREO_LEFT_RIGHT)
 				uv.xy *= texScaleOffset.xy;
@@ -223,11 +243,11 @@
 
 				gl_FragColor = col;
 			}
-            #endif       
-				
+			#endif
+
 			ENDGLSL
 		}
 	}
-	
+
 	Fallback "AVProVideo/VR/InsideSphere Unlit (stereo+fog)"
 }

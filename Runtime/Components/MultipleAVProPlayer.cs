@@ -16,9 +16,9 @@ namespace UNIHper
     [RequireComponent(typeof(DisplayUGUI))]
     public class MultipleAVProPlayer : MonoBehaviour
     {
-        private UnityEvent<UAVProPlayer> onPlayerChanged = new UnityEvent<UAVProPlayer>();
+        private UnityEvent<AVProPlayer> onPlayerChanged = new UnityEvent<AVProPlayer>();
 
-        public IObservable<UAVProPlayer> OnPlayerChangedAsObservable()
+        public IObservable<AVProPlayer> OnPlayerChangedAsObservable()
         {
             return onPlayerChanged.AsObservable();
         }
@@ -36,18 +36,23 @@ namespace UNIHper
         public bool Loop { get; set; } = false;
 
         private Indexer videoIndex = new Indexer(0);
-        private List<string> videoPathes = new List<string>();
+        private List<string> videoPaths = new List<string>();
 
-        public async Task PrepareVideos(List<string> VideoPathes)
+        public async Task PrepareVideos(
+            IEnumerable<string> VideoPaths,
+            Action<AVProPlayer> settingCallback = null
+        )
         {
-            videoIndex.SetMax(VideoPathes.Count - 1);
-            this.videoPathes = VideoPathes;
+            videoIndex.SetMax(VideoPaths.Count() - 1);
+            this.videoPaths = VideoPaths.ToList();
 
             var _defaultPlayer = new GameObject("mediaPlayer_default");
-            var _avproPlayer = _defaultPlayer.AddComponent<UAVProPlayer>();
-            _avproPlayer.MediaPlayer.AutoStart = false;
-            _avproPlayer.MediaPlayer.AutoOpen = false;
-            _avproPlayer.MediaPlayer.Loop = Loop;
+            var _avProPlayer = _defaultPlayer.AddComponent<AVProPlayer>();
+            _avProPlayer.MediaPlayer.AutoStart = false;
+            _avProPlayer.MediaPlayer.AutoOpen = false;
+            _avProPlayer.MediaPlayer.Loop = Loop;
+
+            settingCallback?.Invoke(_avProPlayer);
 
             var _playerPrefabPool = new PrefabPool(_defaultPlayer.transform);
             _playerPrefabPool.cullDespawned = true;
@@ -57,11 +62,11 @@ namespace UNIHper
             _mediaPlayerPool.CreatePrefabPool(_playerPrefabPool);
 
             await Observable.Zip(
-                VideoPathes.Select(_path =>
+                VideoPaths.Select(_path =>
                 {
                     var _mediaPlayer = _mediaPlayerPool.Spawn(_defaultPlayer.transform, transform);
                     _mediaPlayer.SetAsLastSibling();
-                    var _avproPlayer = _mediaPlayer.GetComponent<UAVProPlayer>();
+                    var _avproPlayer = _mediaPlayer.GetComponent<AVProPlayer>();
                     var _mediaPathType = MediaPathType.RelativeToStreamingAssetsFolder;
                     if (Path.IsPathRooted(_path))
                     {
@@ -71,6 +76,7 @@ namespace UNIHper
                     return _avproPlayer.OnMetaDataReadyAsObservable().First();
                 })
             );
+            GameObject.DestroyImmediate(_defaultPlayer);
             onPlayerChanged.Invoke(currentPlayer);
         }
 
@@ -142,15 +148,18 @@ namespace UNIHper
 
         public void Play(
             string Path,
-            Action<UAVProPlayer> OnCompleted,
+            Action<AVProPlayer> OnCompleted,
             bool Loop = false,
             double StartTime = 0f,
             double EndTime = 0f
         )
         {
-            var _idx = videoPathes.FindIndex(_path => _path == Path);
+            var _idx = videoPaths.FindIndex(_path => _path == Path);
             if (_idx == -1)
+            {
+                Debug.LogWarning("Video path not found: " + Path);
                 return;
+            }
             stopVideo();
 
             videoIndex.Set(_idx);
@@ -205,11 +214,11 @@ namespace UNIHper
             currentPlayer.MuteAudio(bMute);
         }
 
-        private UAVProPlayer currentPlayer
+        private AVProPlayer currentPlayer
         {
-            get => transform.GetChild(videoIndex.Current).GetComponent<UAVProPlayer>();
+            get => transform.GetChild(videoIndex.Current).GetComponent<AVProPlayer>();
         }
-        public UAVProPlayer CurrentPlayer
+        public AVProPlayer CurrentPlayer
         {
             get => currentPlayer;
         }

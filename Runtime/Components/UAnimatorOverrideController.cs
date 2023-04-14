@@ -43,7 +43,6 @@ namespace UNIHper
             {
                 return;
             }
-            ;
 
             overrideController = new AnimatorOverrideController(runtimeAnimatorController);
             var _clips = new List<KeyValuePair<AnimationClip, AnimationClip>>();

@@ -51,16 +51,24 @@ public class AddressableUtil
 
     static List<string> builtinDirectories = new List<string>
     {
-        "Resources",
-        "StreamingAssets",
+        "Assets/Resources",
+        "Assets/StreamingAssets",
         "Packages"
     };
 
     [MenuItem("Assets/Add to Addressable System", true)]
     static bool Add2AddressableValidate()
     {
-        return !isEntryExist()
-            && !builtinDirectories.Contains(Path.GetFileName(UNIEditorUtil.GetSelectedDirectory()));
+        var _curDir = UNIEditorUtil.GetSelectedDirectory();
+        if (string.IsNullOrEmpty(_curDir))
+            return false;
+        foreach (var _buildinDir in builtinDirectories)
+        {
+            if (_curDir.StartsWith(_buildinDir))
+                return false;
+        }
+
+        return !isEntryExist();
     }
 
     [MenuItem("Assets/Remove From Addressable System")]

@@ -542,16 +542,23 @@ namespace UNIHper
         {
             if (!resources.ContainsKey(InResID))
                 resources.Add(InResID, new Dictionary<string, UnityEngine.Object>());
-            foreach (var _resource in InResources)
+
+            Action<UnityEngine.Object> _appendResource = (_resource) =>
             {
                 string _key = buildResKey(_resource);
                 if (resources[InResID].ContainsKey(_key))
                 {
                     UNIHperLogger.LogError($"resource key can not duplicate, error key: {_key}");
-                    continue;
+                    return;
                 }
                 UNIHperLogger.Log($"{InResID} add asset {_key}");
                 resources[InResID].Add(_key, _resource);
+            };
+
+            foreach (var _resource in InResources)
+            {
+                // TODO: 子资源的加载处理
+                _appendResource(_resource);
             }
         }
 

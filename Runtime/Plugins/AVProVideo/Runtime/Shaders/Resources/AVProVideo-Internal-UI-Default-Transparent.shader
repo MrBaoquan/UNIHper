@@ -1,4 +1,4 @@
-Shader "AVProVideo/Internal/UI/Transparent Packed"
+Shader "AVProVideo/Internal/UI/Transparent Packed (stereo)"
 {
 	Properties
 	{
@@ -13,10 +13,14 @@ Shader "AVProVideo/Internal/UI/Transparent Packed"
 		_StencilReadMask ("Stencil Read Mask", Float) = 255
 
 		_ColorMask ("Color Mask", Float) = 15
+		_ClipRect ("Clip Rect", vector) = (-32767, -32767, 32767, 32767)
 
 		_VertScale("Vertical Scale", Range(-1, 1)) = 1.0
 
 		[KeywordEnum(None, Top_Bottom, Left_Right)] AlphaPack("Alpha Pack", Float) = 0
+		[KeywordEnum(None, Top_Bottom, Left_Right)] Stereo("Stereo Mode", Float) = 0
+		[KeywordEnum(None, Left, Right)] ForceEye ("Force Eye Mode", Float) = 0
+		[Toggle(STEREO_DEBUG)] _StereoDebug("Stereo Debug Tinting", Float) = 0
 		[Toggle(APPLY_GAMMA)] _ApplyGamma("Apply Gamma", Float) = 0
 		[Toggle(USE_YPCBCR)] _UseYpCbCr("Use YpCbCr", Float) = 0
 	}
@@ -56,7 +60,10 @@ Shader "AVProVideo/Internal/UI/Transparent Packed"
 			#pragma fragment frag
 			// TODO: replace use multi_compile_local instead (Unity 2019.1 feature)
 			#pragma multi_compile ALPHAPACK_NONE ALPHAPACK_TOP_BOTTOM ALPHAPACK_LEFT_RIGHT
+			#pragma multi_compile MONOSCOPIC STEREO_TOP_BOTTOM STEREO_LEFT_RIGHT
+			#pragma multi_compile FORCEEYE_NONE FORCEEYE_LEFT FORCEEYE_RIGHT
 			#pragma multi_compile __ APPLY_GAMMA
+			#pragma multi_compile __ STEREO_DEBUG
 			#pragma multi_compile __ USE_YPCBCR
 
 #if APPLY_GAMMA
@@ -76,9 +83,9 @@ Shader "AVProVideo/Internal/UI/Transparent Packed"
 
 			struct v2f
 			{
-				float4 vertex   : SV_POSITION;
-				fixed4 color    : COLOR;
-				half4 uv  : TEXCOORD0;
+				float4 vertex		 : SV_POSITION;
+				fixed4 color		 : COLOR;
+				half4 uv			 : TEXCOORD0;
 				float4 worldPosition : TEXCOORD1;
 			};
 			
@@ -117,9 +124,18 @@ Shader "AVProVideo/Internal/UI/Transparent Packed"
 					OUT.uv.y = 1.0 - OUT.uv.y;
 				}
 
+#if STEREO_TOP_BOTTOM | STEREO_LEFT_RIGHT
+				float4 scaleOffset = GetStereoScaleOffset(IsStereoEyeLeft(), _MainTex_TexelSize.y < 0.0);
+				OUT.uv.xy *= scaleOffset.xy;
+				OUT.uv.xy += scaleOffset.zw;
+#endif
+
 				OUT.uv = OffsetAlphaPackingUV(_MainTex_TexelSize.xy, OUT.uv.xy, _VertScale < 0.0);
 
 				OUT.color = IN.color * _Color;
+#if STEREO_DEBUG
+				OUT.color *= GetStereoDebugTint(IsStereoEyeLeft());
+#endif			
 				return OUT;
 			}
 

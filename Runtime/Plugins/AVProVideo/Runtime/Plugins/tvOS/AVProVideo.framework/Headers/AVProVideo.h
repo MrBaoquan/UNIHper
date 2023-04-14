@@ -45,6 +45,7 @@ void         AVPPlayerSetRate(AVPPlayerRef player, float rate);
 void         AVPPlayerSetVolume(AVPPlayerRef player, float volume);
 void         AVPPlayerSetExternalPlaybackVideoGravity(AVPPlayerRef player, AVPPlayerExternalPlaybackVideoGravity externalPlaybackVideoGravity);
 bool         AVPPlayerSetTrack(AVPPlayerRef player, AVPPlayerTrackType type, int index);
+void         AVPPlayerSetPlayerSettings(AVPPlayerRef player, AVPPlayerSettings settings);
 
 void         AVPPlayerSeek(AVPPlayerRef player, double toTime, double toleranceBefore, double toleranceAfter);
 
@@ -53,6 +54,11 @@ void         AVPPlayerSetKeyServerAuthToken(AVPPlayerRef player, const char *tok
 void         AVPPlayerSetDecryptionKey(AVPPlayerRef player, const char *key, int length);
 
 void         AVPPluginUnityRegisterRenderingPlugin(void *registerRenderingPluginFunction);
+
+void         AVPPluginCacheMediaForURL(const char *url, const char *headers, AVPMediaCachingOptions options);
+void         AVPPluginCancelDownloadOfMediaForURL(const char *url);
+void         AVPPluginRemoveCachedMediaForURL(const char *url);
+int          AVPPluginGetCachedMediaStatusForURL(const char *url, float *progress);
 
 NS_ASSUME_NONNULL_END
 

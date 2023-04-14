@@ -10,7 +10,7 @@ using UnityEngine.Events;
 namespace UNIHper
 {
     [RequireComponent(typeof(MediaPlayer))]
-    public class UAVProPlayer : MonoBehaviour
+    public class AVProPlayer : MonoBehaviour
     {
         #region 事件列表
         private UnityEvent<MediaPlayer> OnMetaDataReady = new UnityEvent<MediaPlayer>(); // Triggered when meta data(width, duration etc) is available
@@ -131,17 +131,17 @@ namespace UNIHper
         /// <summary>
         /// 播放指定地址的视频  可为网络地址 或者本地地址
         /// </summary>
-        /// <param name="InUrl">视频地址</param>
-        /// <param name="OnFinished">播放到结尾回调</param>
+        /// <param name="videoPath">视频地址</param>
+        /// <param name="onFinished">播放到结尾回调</param>
         /// <param name="bLoop">是否循环</param>
-        /// <param name="StartTime">开始时间</param>
-        /// <param name="EndTime">结束时间</param>
+        /// <param name="startTime">开始时间</param>
+        /// <param name="endTime">结束时间</param>
         public void Play(
-            string InUrl,
-            Action<UAVProPlayer> OnFinished,
+            string videoPath,
+            Action<AVProPlayer> onFinished,
             bool bLoop,
-            double StartTime = 0,
-            double EndTime = 0
+            double startTime = 0,
+            double endTime = 0
         )
         {
             disposeHandlers(playHandlers);
@@ -151,8 +151,8 @@ namespace UNIHper
                 _readyHandler = null;
             }
 
-            this.StartTime = StartTime;
-            this.EndTime = EndTime;
+            this.StartTime = startTime;
+            this.EndTime = endTime;
 
             Action _registerFinishedSeekingEvent = () =>
             {
@@ -163,10 +163,7 @@ namespace UNIHper
                             MediaPlayer.Play();
                             bool _bFinished = false;
                             var _duration = mediaPlayer.Info.GetDuration();
-                            EndTime = EndTime == 0 ? _duration : EndTime;
-
-                            // var _startTime = Mathf.Clamp ((float) StartTime, 0, (float) _duration);
-                            // var _endTime = Mathf.Clamp ((float) EndTime, _startTime, (float) _duration);
+                            endTime = endTime == 0 ? _duration : endTime;
 
                             // 播放结束回调
                             Action _onFinished = () =>
@@ -175,8 +172,8 @@ namespace UNIHper
                                     return;
 
                                 _bFinished = true;
-                                if (OnFinished != null)
-                                    OnFinished(this);
+                                if (onFinished != null)
+                                    onFinished(this);
                                 MediaPlayer.Pause();
 
                                 if (!bLoop)
@@ -184,14 +181,14 @@ namespace UNIHper
                                     // 不循环 直接释放seek回调
                                     disposeHandlers(playHandlers);
                                 }
-                                MediaPlayer.Control.Seek(StartTime);
+                                MediaPlayer.Control.Seek(startTime);
                             };
 
                             // 正常播放时间大于指定结束时间
                             playHandlers.Add(
                                 Observable
                                     .EveryUpdate()
-                                    .Where(_1 => MediaPlayer.Control.GetCurrentTime() >= EndTime)
+                                    .Where(_1 => MediaPlayer.Control.GetCurrentTime() >= endTime)
                                     .First()
                                     .Subscribe(_1 =>
                                     {
@@ -214,7 +211,7 @@ namespace UNIHper
             };
 
             MediaPlayer.Loop = bLoop;
-            if (MediaPlayer.MediaPath.Path != InUrl || MediaPlayer.Control == null)
+            if (MediaPlayer.MediaPath.Path != videoPath || MediaPlayer.Control == null)
             {
                 _readyHandler = OnFirstFrameReadyAsObservable()
                     .Subscribe(_ =>
@@ -222,19 +219,19 @@ namespace UNIHper
                         _registerFinishedSeekingEvent();
                         _readyHandler.Dispose();
                         _readyHandler = null;
-                        MediaPlayer.Control.Seek(StartTime);
+                        MediaPlayer.Control.Seek(startTime);
                     });
                 var _mediaPathType = MediaPathType.RelativeToStreamingAssetsFolder;
-                if (Path.IsPathRooted(InUrl))
+                if (Path.IsPathRooted(videoPath))
                 {
                     _mediaPathType = MediaPathType.AbsolutePathOrURL;
                 }
-                MediaPlayer.OpenMedia(_mediaPathType, InUrl, false);
+                MediaPlayer.OpenMedia(_mediaPathType, videoPath, false);
             }
             else
             {
                 _registerFinishedSeekingEvent();
-                MediaPlayer.Control.Seek(StartTime);
+                MediaPlayer.Control.Seek(startTime);
             }
         }
 
