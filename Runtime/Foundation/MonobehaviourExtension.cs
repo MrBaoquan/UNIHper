@@ -244,7 +244,7 @@ namespace UNIHper
             return _children;
         }
 
-        public static List<Transform> Children(this Transform _self, bool bOnlyEnabled = true)
+        public static List<Transform> Children(this Transform _self, bool bOnlyEnabled = false)
         {
             return _self.gameObject.Children(bOnlyEnabled);
         }

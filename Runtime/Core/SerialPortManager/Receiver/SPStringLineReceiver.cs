@@ -24,7 +24,7 @@ namespace UNIHper
                     }
                 );
             }
-            catch (System.Exception e)
+            catch (System.Exception)
             {
                 //UnityEngine.Debug.Log(_result.Length);
                 //UnityEngine.Debug.Log (e.Message);

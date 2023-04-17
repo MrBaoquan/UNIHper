@@ -250,6 +250,20 @@ namespace UNIHper
             currentPlayer.SeekToFrame(Frame);
         }
 
+        public void SetRenderMedia(int mediaIndex)
+        {
+            videoIndex.Set(mediaIndex);
+            ReferenceRenderMedia();
+        }
+
+        /// <summary>
+        /// Reference the current media player to the display UGUI
+        /// </summary>
+        public void ReferenceRenderMedia()
+        {
+            DisplayUGUI.CurrentMediaPlayer = currentPlayer.GetComponent<MediaPlayer>();
+        }
+
         private void playVideo(bool FadeEffect = true)
         {
             var _mediaPlayer = currentPlayer;
