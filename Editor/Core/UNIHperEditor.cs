@@ -59,8 +59,11 @@ namespace UNIHper.Editor
                 .Where(_ => Path.GetFileNameWithoutExtension(_) == sceneEntryName)
                 .FirstOrDefault();
 
+            // 0. 默认场景设置
             if (_startupScenePath == default(string))
             {
+                _startupScenePath = $"Assets/Scenes/{sceneEntryName}.unity";
+
                 Debug.Log($"New scene {sceneEntryName} created");
                 var _sceneEntry = EditorSceneManager.NewScene(
                     NewSceneSetup.DefaultGameObjects,
@@ -71,10 +74,7 @@ namespace UNIHper.Editor
                     Directory.CreateDirectory(UNIPaths.ProjectAssetPath("Scenes"));
                 }
 
-                EditorSceneManager.SaveScene(
-                    _sceneEntry,
-                    string.Format("Assets/Scenes/{0}.unity", sceneEntryName)
-                );
+                EditorSceneManager.SaveScene(_sceneEntry, _startupScenePath);
             }
             else
             {
@@ -85,6 +85,20 @@ namespace UNIHper.Editor
                     Debug.Log($"Scene {sceneEntryName} opened");
                 }
             }
+
+            var _sceneBuildSettings = EditorBuildSettings.scenes.ToList();
+            _sceneBuildSettings.RemoveAll(
+                _ => AssetDatabase.LoadAssetAtPath<SceneAsset>(_.path) == null
+            );
+
+            if (!_sceneBuildSettings.Exists(_ => _.path == _startupScenePath))
+            {
+                _sceneBuildSettings.Insert(
+                    0,
+                    new EditorBuildSettingsScene(_startupScenePath, true)
+                );
+            }
+            EditorBuildSettings.scenes = _sceneBuildSettings.ToArray();
 
             // 1. 复制  UNIHper.prefab
             Component[] _objs =
