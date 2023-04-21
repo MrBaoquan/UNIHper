@@ -8,9 +8,9 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace UNIHper
+namespace UNIHper.Editor
 {
-    public class UNIHperEditor : Editor
+    public class UNIHperEditor : UnityEditor.Editor
     {
         const string sceneEntryName = "SceneEntry";
 

@@ -7,7 +7,7 @@ using UnityEditor;
 using UnityEditor.ProjectWindowCallback;
 using UnityEngine;
 
-namespace UNIHper
+namespace UNIHper.Editor
 {
     public class CodeTemplateGenerator
     {

@@ -5,7 +5,7 @@ using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEngine;
 
-namespace UNIHper
+namespace UNIHper.Editor
 {
     public class BuildUNIHper
     {

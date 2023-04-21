@@ -7,7 +7,7 @@
 using UnityEditor; //Enables the use of editor modifying code
 using UnityEngine.XR;
 
-namespace UNIHper
+namespace UNIHper.Editor
 {
     public class VREditorToggle
     {

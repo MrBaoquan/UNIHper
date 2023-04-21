@@ -1,7 +1,7 @@
 using System.IO;
 using UnityEngine;
 
-namespace UNIHper
+namespace UNIHper.Editor
 {
     public static class UNIPaths
     {
