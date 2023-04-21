@@ -6,10 +6,11 @@ using UnityEngine.Events;
 namespace UNIHper
 {
     /// <summary>
-    /// 数组索引迭代器 迭代范围 [Min,Max)
+    /// 索引迭代器 迭代范围 [Min,Max)
     /// </summary>
     public class Indexer
     {
+        public bool Loop { get; set; } = true;
         private int maxIndex;
         public int Max
         {
@@ -32,6 +33,8 @@ namespace UNIHper
         {
             return onIndexChanged.AsObservable();
         }
+
+        public Indexer() { }
 
         public Indexer(int Max)
         {
@@ -71,8 +74,10 @@ namespace UNIHper
         {
             if (Current < minIndex || Current > maxIndex)
             {
-                onIndexChanged.Invoke(current);
-                return current;
+                if (Loop)
+                    Current = (int)Mathf.Repeat(Current, maxIndex - minIndex + 1) + Min;
+                else
+                    Current = Mathf.Clamp(Current, minIndex, maxIndex);
             }
             current = Current;
             onIndexChanged.Invoke(current);
@@ -81,12 +86,14 @@ namespace UNIHper
 
         public int Next()
         {
-            if (Max == 0)
-            {
-                onIndexChanged.Invoke(0);
-                return 0;
-            }
-            current = NextValue; // (int) Mathf.Repeat (current + 1, Max + 1);
+            current = NextValue();
+            onIndexChanged.Invoke(current);
+            return current;
+        }
+
+        public int Prev()
+        {
+            current = PrevValue();
             onIndexChanged.Invoke(current);
             return current;
         }
@@ -95,7 +102,7 @@ namespace UNIHper
         /// 将索引置为第一个
         /// </summary>
         /// <returns></returns>
-        public int Step2First()
+        public int SetToMin()
         {
             current = Min;
             onIndexChanged.Invoke(current);
@@ -106,32 +113,27 @@ namespace UNIHper
         /// 将索引置位最后一个
         /// </summary>
         /// <returns></returns>
-        public int Step2Last()
+        public int SetToMax()
         {
             current = Max;
             onIndexChanged.Invoke(current);
             return current;
         }
 
-        public int Prev()
+        private int PrevValue()
         {
-            if (Max == 0)
-            {
-                onIndexChanged.Invoke(0);
-                return 0;
-            }
-            current = PrevValue; //(int) Mathf.Repeat (current - 1, Max + 1);
-            onIndexChanged.Invoke(current);
-            return current;
+            if (Loop)
+                return (int)Mathf.Repeat(current - 1, Max - Min + 1) + Min;
+            else
+                return (int)Mathf.Clamp(current - 1, Min, Max);
         }
 
-        public int PrevValue
+        private int NextValue()
         {
-            get => (int)Mathf.Repeat(current - 1, Max + 1);
-        }
-        public int NextValue
-        {
-            get => (int)Mathf.Repeat(current + 1, Max + 1);
+            if (Loop)
+                return (int)Mathf.Repeat(current + 1, Max - Min + 1) + Min;
+            else
+                return (int)Mathf.Clamp(current + 1, Min, Max);
         }
 
         /// <summary>
@@ -147,7 +149,7 @@ namespace UNIHper
         public bool CheckPrevOverflow()
         {
             var _next = current - 1;
-            return _next < 0;
+            return _next < minIndex;
         }
     }
 }

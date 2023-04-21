@@ -12,50 +12,7 @@ namespace UNIHper
 {
     public class UNIHperEditor : Editor
     {
-        const string bundleName = "com.parful.unihper";
         const string sceneEntryName = "SceneEntry";
-
-        /// <summary>
-        /// 包相关路径
-        /// </summary>
-        /// <value></value>
-        private static string packageRoot
-        {
-            get => Path.GetFullPath($@"Packages\{bundleName}");
-        }
-
-        private static string packageResourcesDir
-        {
-            get => Path.Combine(packageRoot, "Resources");
-        }
-
-        private static string packageConfigDir
-        {
-            get => Path.Combine(packageRoot, @"Resources\Configs");
-        }
-
-        private static string packageTemplatesDir
-        {
-            get => Path.Combine(packageRoot, @"Editor\Templates");
-        }
-
-        /// <summary>
-        /// 项目相关路径
-        /// </summary>
-        /// <value></value>
-        private static string ProjectRoot
-        {
-            get => Path.GetDirectoryName(Application.dataPath);
-        }
-        private static string ProjectAssetRoot
-        {
-            get => Application.dataPath;
-        }
-
-        private static string ProjectConfigDir
-        {
-            get => Path.Combine(ProjectAssetRoot, @"Resources\UNIHper");
-        }
 
         [InitializeOnLoadMethod]
         public static void OnLoad()
@@ -64,17 +21,25 @@ namespace UNIHper
             EditorSceneManager.sceneSaved += SceneSaved;
         }
 
-        private static void NewSceneCreatedCallback(Scene scene, NewSceneSetup setup, NewSceneMode mode) { }
+        private static void NewSceneCreatedCallback(
+            Scene scene,
+            NewSceneSetup setup,
+            NewSceneMode mode
+        ) { }
 
         [MenuItem("UNIHper/Settings", priority = 1000)]
         static void FindResource()
         {
-            string path = "Assets/Resources/UNIHperConfig.asset";
-            var obj = AssetDatabase.LoadAssetAtPath(path, typeof(UNIHperConfig));
+            string path = "Assets/Resources/UNIHperSettings.asset";
+            var obj = AssetDatabase.LoadAssetAtPath(path, typeof(UNIHperSettings));
             if (obj != null)
             {
                 Selection.activeObject = obj;
                 AssetDatabase.Refresh();
+            }
+            else
+            {
+                Debug.LogError("please click UNIHper initialize first");
             }
         }
 
@@ -101,9 +66,9 @@ namespace UNIHper
                     NewSceneSetup.DefaultGameObjects,
                     NewSceneMode.Single
                 );
-                if (!Directory.Exists(Path.Combine(ProjectAssetRoot, "Scenes")))
+                if (!Directory.Exists(UNIPaths.ProjectAssetPath("Scenes")))
                 {
-                    Directory.CreateDirectory(Path.Combine(ProjectAssetRoot, "Scenes"));
+                    Directory.CreateDirectory(UNIPaths.ProjectAssetPath("Scenes"));
                 }
 
                 EditorSceneManager.SaveScene(
@@ -143,19 +108,21 @@ namespace UNIHper
             else if (_objs.Length <= 0)
             {
                 // csharpier-ignore
-                string _UNIHperPrefabPath = $@"Packages\{bundleName}\Resources\Prefabs\UNIHper.prefab";
+                string _UNIHperPrefabPath = UNIPaths.PackagePath("Resources/Prefabs/UNIHper.prefab");
+
                 var _projectStartupPrefabPath = "Assets/Resources/UNIHper/Prefabs/UNIHper.prefab";
                 // csharpier-ignore
-                var _fullProjectStartupPrefabPath = Path.Combine(ProjectRoot, _projectStartupPrefabPath);
+                var _fullProjectStartupPrefabPath =  UNIPaths.ProjectPath(_projectStartupPrefabPath);
 
                 if (!Directory.Exists(Path.GetDirectoryName(_fullProjectStartupPrefabPath)))
                 {
                     Directory.CreateDirectory(Path.GetDirectoryName(_fullProjectStartupPrefabPath));
                 }
-                if (!File.Exists(Path.Combine(ProjectRoot, _projectStartupPrefabPath)))
+                if (!File.Exists(UNIPaths.ProjectPath(_projectStartupPrefabPath)))
                 {
                     var _tempUNIHper = GameObject.Instantiate<GameObject>(
-                        AssetDatabase.LoadAssetAtPath(_UNIHperPrefabPath, typeof(GameObject)) as GameObject
+                        AssetDatabase.LoadAssetAtPath(_UNIHperPrefabPath, typeof(GameObject))
+                            as GameObject
                     );
 
                     PrefabUtility.SaveAsPrefabAsset(_tempUNIHper, _projectStartupPrefabPath);
@@ -172,64 +139,71 @@ namespace UNIHper
             }
 
             // 2.   复制 配置文件
-            if (!Directory.Exists(UNIHperEditor.ProjectConfigDir))
+            var _projectConfigDir = UNIPaths.ProjectAssetPath("Resources/UNIHper");
+
+            if (!Directory.Exists(_projectConfigDir))
             {
-                Directory.CreateDirectory(UNIHperEditor.ProjectConfigDir);
+                Directory.CreateDirectory(_projectConfigDir);
             }
 
-            string _dstResPath = Path.Combine(ProjectConfigDir, "resources.json");
+            var _packageConfigDir = UNIPaths.PackagePath("Resources/Configs");
+            string _dstResPath = Path.Combine(_projectConfigDir, "resources.json");
             if (!File.Exists(_dstResPath))
             {
-                File.Copy(Path.Combine(packageConfigDir, "res.json"), _dstResPath);
+                File.Copy(Path.Combine(_packageConfigDir, "res.json"), _dstResPath);
             }
 
-            string _dstUIPath = Path.Combine(ProjectConfigDir, "uis.json");
+            string _dstUIPath = Path.Combine(_projectConfigDir, "uis.json");
             if (!File.Exists(_dstUIPath))
             {
-                File.Copy(Path.Combine(packageConfigDir, "ui.json"), _dstUIPath);
+                File.Copy(Path.Combine(_packageConfigDir, "ui.json"), _dstUIPath);
             }
 
-            string _dstREADME = Path.Combine(ProjectConfigDir, "README.md");
+            string _dstREADME = Path.Combine(_projectConfigDir, "README.md");
             if (!File.Exists(_dstREADME))
             {
-                File.Copy(Path.Combine(packageConfigDir, "README.md"), _dstREADME);
+                File.Copy(Path.Combine(_packageConfigDir, "README.md"), _dstREADME);
             }
 
-            string _dstAssembliesConfigPath = Path.Combine(ProjectConfigDir, "assemblies.json");
+            string _dstAssembliesConfigPath = Path.Combine(_projectConfigDir, "assemblies.json");
             if (!File.Exists(_dstAssembliesConfigPath))
             {
                 File.Copy(
-                    Path.Combine(packageTemplatesDir, "AssembliesTemplate.txt"),
+                    Path.Combine(UNIPaths.PackagePath(@"Editor\Templates\AssembliesTemplate.txt")),
                     _dstAssembliesConfigPath
                 );
             }
 
-            string _configPath = "Assets/Resources/UNIHperConfig.asset";
-            if (!File.Exists(Path.Combine(ProjectRoot, _configPath)))
+            string _configPath = "Assets/Resources/UNIHperSettings.asset";
+            if (!File.Exists(UNIPaths.ProjectPath(_configPath)))
             {
                 var _configInstance = AssetDatabase.LoadAssetAtPath(
                     _configPath,
-                    typeof(UNIHperConfig)
+                    typeof(UNIHperSettings)
                 );
 
                 if (_configInstance == null)
                 {
-                    var _configAsset = ScriptableObject.CreateInstance<UNIHperConfig>();
+                    var _configAsset = ScriptableObject.CreateInstance<UNIHperSettings>();
+                    _configAsset.defaultClickSound = AssetDatabase.LoadAssetAtPath<AudioClip>(
+                        UNIPaths.PackagePathRelativeToProject(
+                            "Resources/Persistence/AudioClips/click_effect_00.wav"
+                        )
+                    );
                     AssetDatabase.CreateAsset(_configAsset, _configPath);
                 }
             }
 
+            var _projectAssetRoot = UNIPaths.ProjectAssetPath("Assets");
             // 做一些项目结构
-            List<string> _frame_dirs = new List<string>
+            new List<string>
             {
-                Path.Combine(ProjectAssetRoot, "Develop/Scripts"), // 脚本目录
-                Path.Combine(ProjectAssetRoot, "Develop/Scripts/UIs"), // UI脚本
-                Path.Combine(ProjectAssetRoot, "Develop/Scripts/Configs"), // 配置文件
-                Path.Combine(ProjectAssetRoot, "Develop/Scripts/Game"), // 游戏逻辑
-                Path.Combine(ProjectAssetRoot, "ArtAssets"), // 美术资源
-            };
-
-            _frame_dirs.ForEach(_path =>
+                UNIPaths.ProjectAssetPath("Develop/Scripts"),
+                UNIPaths.ProjectAssetPath("Develop/Scripts/UIs"),
+                UNIPaths.ProjectAssetPath("Develop/Scripts/Configs"),
+                UNIPaths.ProjectAssetPath("Develop/Scripts/Game"),
+                UNIPaths.ProjectAssetPath("ArtAssets"),
+            }.ForEach(_path =>
             {
                 if (!Directory.Exists(_path))
                 {
@@ -245,7 +219,7 @@ namespace UNIHper
             if (!File.Exists(_dstAssemblyPath))
             {
                 File.Copy(
-                    Path.Combine(packageTemplatesDir, "GameMainAssembly.txt"),
+                    UNIPaths.PackagePath("Editor/Templates/GameMainAssembly.txt"),
                     _dstAssemblyPath
                 );
             }

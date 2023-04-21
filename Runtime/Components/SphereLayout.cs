@@ -2,163 +2,261 @@
 using UnityEngine;
 using DG.Tweening;
 using UNIHper;
+using DigitalRubyShared;
+using Sirenix.OdinInspector;
 
 public class SphereLayout : MonoBehaviour
 {
-    public float distance = 1000f;
-    public float angle = 60f;
-    public float rotation = 0f;
+    enum BaseAxis
+    {
+        X,
+        Y,
+        Z
+    }
 
-    public float delta = 40f;
+    [Title("Layout Settings")]
+    [SerializeField]
+    private BaseAxis baseAxis = BaseAxis.Y;
 
     [SerializeField]
-    bool loop = false;
+    private float radius = 1000f;
 
-    private int currentIndex = 0;
-    private int NextIndex
-    {
-        get
-        {
-            return currentIndex + 1 >= transform.childCount
-                ? loop
-                    ? 0
-                    : transform.childCount - 1
-                : currentIndex + 1;
-        }
-    }
+    [SerializeField]
+    private float angleInterval = 60f;
 
-    private int PrevIndex
-    {
-        get
-        {
-            return currentIndex - 1 < 0
-                ? loop
-                    ? transform.childCount
-                    : 0
-                : currentIndex - 1;
-        }
-    }
+    [SerializeField, HideInInspector]
+    private float _defaultAngleInterval = 0;
+
+    [SerializeField]
+    private float angleOffset = 0;
+
+    [Title("Display Settings")]
+    [SerializeField]
+    private Vector2 displayRange = new Vector2(0, 360);
+
+    Indexer indexer = new Indexer();
 
     private void OnEnable()
     {
-        syncRotation();
+        alignToCurrent();
     }
 
     private void OnValidate()
     {
-        syncLayout();
+        _defaultAngleInterval = angleInterval;
+        reGenerateLayout();
     }
 
     public int SelectNext()
     {
-        currentIndex = NextIndex;
-        syncRotation();
-        return currentIndex;
+        indexer.Next();
+        alignToCurrent();
+        return indexer.Current;
     }
 
     public int SelectPrev()
     {
-        currentIndex = PrevIndex;
-        syncRotation();
-        return currentIndex;
+        indexer.Prev();
+        alignToCurrent();
+        return indexer.Current;
     }
 
     public void Select(int ChildIndex)
     {
-        currentIndex = ChildIndex;
-        syncRotation();
+        indexer.Set(ChildIndex);
+        alignToCurrent();
     }
 
-    public void Collapse(float InEnd = 10.0f, Action InCallback = null, float InDuration = 0.3f)
+    public void Collapse(bool forceCollapse = false)
     {
-        DoAngle(InEnd, InDuration, InCallback);
+        if (forceCollapse)
+            angleInterval = _defaultAngleInterval;
+        if (angleInterval == 0)
+            return;
+        DOInterval(0, 0.5f);
     }
 
-    public void Expand(float InEnd = 45, float InDuration = 0.3f)
+    public void Expand(bool forceExpand = false)
     {
-        DoAngle(InEnd, InDuration);
+        if (forceExpand)
+            angleInterval = 0;
+        if (angleInterval == _defaultAngleInterval)
+            return;
+        DOInterval(_defaultAngleInterval, 0.35f);
     }
 
-    private void DoAngle(float InEnd, float InDuration = 0.3f, Action InCallback = null)
+    public void DOInterval(float endInterval, float duration = 0.35f, Action callback = null)
     {
         DOTween
             .To(
-                () => angle,
+                () => angleInterval,
                 _ =>
                 {
-                    angle = _;
-                    syncRotation();
+                    angleInterval = _;
+                    alignToCurrent();
                 },
-                InEnd,
-                0.3f
+                endInterval,
+                duration
             )
             .OnComplete(() =>
             {
-                if (InCallback != null)
-                    InCallback();
+                if (callback != null)
+                    callback();
             });
     }
 
-    void syncLayout()
+    void reGenerateLayout()
     {
-        Vector3 _startPoint = transform.position + transform.forward * -distance;
+        Vector3 _startPoint = Vector3.zero;
+        switch (baseAxis)
+        {
+            case BaseAxis.X:
+                _startPoint = transform.position + transform.forward * -radius;
+                break;
+            case BaseAxis.Y:
+                _startPoint = transform.position + transform.right * -radius;
+                break;
+            case BaseAxis.Z:
+                _startPoint = transform.position + transform.up * -radius;
+                break;
+        }
+        // transform.position + transform.right * -distance;
         int _index = 0;
         var _children = gameObject.Children();
         _children.ForEach(_transform =>
         {
-            //_transform.position = _startPoint.Rotate(transform.right * _index * - angle, transform.position);
             _transform.position = _startPoint;
-            _transform.RotateAround(transform.position, -transform.right, angle * _index);
+            switch (baseAxis)
+            {
+                case BaseAxis.X:
+                    _transform.RotateAround(
+                        transform.position,
+                        -transform.right,
+                        angleInterval * _index + angleOffset
+                    );
+                    break;
+                case BaseAxis.Y:
+                    _transform.RotateAround(
+                        transform.position,
+                        -transform.up,
+                        angleInterval * _index + angleOffset
+                    );
+                    break;
+                case BaseAxis.Z:
+                    _transform.RotateAround(
+                        transform.position,
+                        transform.forward,
+                        angleInterval * _index + angleOffset
+                    );
+                    break;
+            }
+
             var _euler = transform.eulerAngles;
-            _euler.x = 0; // 舍弃 X 轴方向的旋转
-            _transform.eulerAngles = _euler;
-            float _delta = (transform.childCount - Mathf.Abs(currentIndex - _index)) * delta;
-            _transform.DOScale(Vector3.one * _delta, 0.3f);
+            _transform.eulerAngles = Vector3.zero;
             ++_index;
         });
     }
 
     Vector3 eulerAngle(float InAxisX)
     {
-        Vector3 _angle = transform.localEulerAngles;
-        _angle.x = InAxisX;
-        return _angle;
+        switch (baseAxis)
+        {
+            case BaseAxis.X:
+                return new Vector3(InAxisX, 0, 0);
+            case BaseAxis.Y:
+                return new Vector3(0, InAxisX, 0);
+            case BaseAxis.Z:
+                return new Vector3(0, 0, InAxisX);
+            default:
+                return Vector3.zero;
+        }
     }
 
-    void syncRotation()
+    void alignToCurrent()
     {
-        DOTween.To(
-            () => rotation,
-            _ =>
+        transform
+            .DOLocalRotateQuaternion(
+                Quaternion.Euler(eulerAngle(indexer.Current * angleInterval)),
+                0.35f
+            )
+            .OnUpdate(() =>
             {
-                rotation = _;
-                Vector3 _angle = transform.localEulerAngles;
-                _angle.x = _;
-                transform.localRotation = Quaternion.Euler(_angle);
-                syncLayout();
-            },
-            (currentIndex * angle),
-            0.3f
-        );
+                reGenerateLayout();
+            });
     }
+
+    private void addOffsetRotation(float InAngle)
+    {
+        var _rotation = Quaternion.Euler(Vector3.zero);
+        switch (baseAxis)
+        {
+            case BaseAxis.X:
+                _rotation = Quaternion.Euler(new Vector3(InAngle, 0, 0));
+                break;
+            case BaseAxis.Y:
+                _rotation = Quaternion.Euler(new Vector3(0, InAngle, 0));
+                break;
+            case BaseAxis.Z:
+                _rotation = Quaternion.Euler(new Vector3(0, 0, InAngle));
+                break;
+        }
+        transform.rotation = startRotation * _rotation;
+    }
+
+    private Quaternion startRotation;
 
     private void Start()
     {
-        syncLayout();
-    }
+        Debug.LogWarning("default angle interval: " + angleInterval + "");
+        indexer.Loop = false;
+        indexer.SetMin((int)displayRange.x);
+        indexer.SetMax((int)displayRange.y);
+        startRotation = transform.rotation;
+        reGenerateLayout();
+        var _moveGesture = new PanGestureRecognizer();
 
-    void Update()
-    {
-        // if(Input.GetKeyDown(KeyCode.G)){
-        //     syncRotation();
-        // }
+        _moveGesture.StateUpdated += (InGesture) =>
+        {
+            if (InGesture.State == GestureRecognizerState.Began)
+            {
+                startRotation = transform.rotation;
+            }
+            else if (InGesture.State == GestureRecognizerState.Executing)
+            {
+                var _pan = InGesture as PanGestureRecognizer;
+                var _startPos = new Vector3(_pan.StartFocusX, 1080 - _pan.StartFocusY, 0);
+                var _curPos = new Vector3(_pan.FocusX, 1080 - _pan.FocusY, 0);
 
-        // if(Input.GetKeyDown(KeyCode.S)){
-        //     syncLayout();
-        // }
+                var _startDir = _startPos - transform.position;
+                var _curDir = _curPos - transform.position;
+                var _deltaAngle = Vector3.Angle(_startDir, _curDir);
+                var _cross = Vector3.Cross(_startDir, _curDir);
+                if (_cross.z > 0)
+                {
+                    _deltaAngle = -_deltaAngle;
+                }
+                addOffsetRotation(_deltaAngle);
+                reGenerateLayout();
+            }
+            else if (InGesture.State == GestureRecognizerState.Ended)
+            {
+                var _pan = InGesture as PanGestureRecognizer;
+                var _startPos = new Vector3(_pan.StartFocusX, 1080 - _pan.StartFocusY, 0);
+                var _curPos = new Vector3(_pan.FocusX, 1080 - _pan.FocusY, 0);
 
-        // if(Input.GetKeyDown(KeyCode.N)){
-        //     SelectNext();
-        // }
+                var _startDir = _startPos - transform.position;
+                var _curDir = _curPos - transform.position;
+                var _deltaAngle = Vector3.Angle(_startDir, _curDir);
+                var _cross = Vector3.Cross(_startDir, _curDir);
+                if (_cross.z > 0)
+                {
+                    _deltaAngle = -_deltaAngle;
+                }
+                var _deltaIndex = Mathf.RoundToInt(_deltaAngle / angleInterval);
+                indexer.Set(indexer.Current + _deltaIndex);
+                alignToCurrent();
+            }
+        };
+        FingersScript.Instance.AddGesture(_moveGesture);
     }
 }

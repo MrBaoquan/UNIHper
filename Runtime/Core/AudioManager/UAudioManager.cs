@@ -55,22 +55,24 @@ namespace UNIHper
             _audioSource.Stop();
         }
 
-        public void PlayEffect(AudioClip InEffect, float InVolume = 1.0f, int Index = 0)
+        public void PlayEffect(AudioClip effect, float InVolume = 1.0f, int Index = 0)
         {
+            if (effect == null)
+                return;
             var _audioSource = effectPlayer.GetAudioSource(Index);
             _audioSource.volume = InVolume;
-            _audioSource.PlayOneShot(InEffect);
+            _audioSource.PlayOneShot(effect);
         }
 
-        public void PlayEffect(string InEffect, float InVolume = 1.0f, int Index = 0)
+        public void PlayEffect(string effectName, float volume = 1.0f, int index = 0)
         {
-            AudioClip _clip = Managements.Resource.Get<AudioClip>(InEffect);
-            PlayEffect(_clip, InVolume, Index);
+            AudioClip _clip = Managements.Resource.Get<AudioClip>(effectName);
+            PlayEffect(_clip, volume, index);
         }
 
-        public void StopEffect(int Index = 0)
+        public void StopEffect(int index = 0)
         {
-            var _audioSource = effectPlayer.GetAudioSource(Index);
+            var _audioSource = effectPlayer.GetAudioSource(index);
             _audioSource.Stop();
         }
 

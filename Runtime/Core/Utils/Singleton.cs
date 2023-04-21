@@ -27,6 +27,12 @@ namespace UNIHper
                 if (instance == null)
                 {
                     instance = FindObjectOfType(typeof(T), true) as T;
+                    if (instance == null)
+                    {
+                        var go = new GameObject(typeof(T).Name);
+                        instance = go.AddComponent<T>();
+                        DontDestroyOnLoad(go);
+                    }
                 }
                 return instance;
             }

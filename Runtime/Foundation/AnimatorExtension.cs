@@ -19,24 +19,28 @@ namespace UNIHper
         }
 
         // csharpier-ignore
-        public static void PlayAnimation(this Animator animator, string InState, Action<Animator> InCallback = null)
+        public static void Play(this Animator animator, string InState, Action<Animator> InCallback = null)
         {
+            if(animator.gameObject.activeInHierarchy == false)
+                return;
+            
             animator.Play(InState, 0, 0);
             syncPlayState(animator);
-
-            if (InCallback is null)
-                return;
+            
             Observable
                 .NextFrame()
                 .Subscribe(_ =>
                 {
-                    float _duration = animator.GetCurrentAnimatorStateInfo(0).length + 0.1f;
+                    float _duration = animator.GetCurrentAnimatorStateInfo(0).length;
+                    if(_duration <= 0){
+                        InCallback?.Invoke(animator);
+                        return;
+                    }
                     Observable
                         .Timer(TimeSpan.FromSeconds(_duration))
                         .Subscribe(_1 =>
                         {
-                            if (InCallback != null)
-                                InCallback(animator);
+                            InCallback?.Invoke(animator);
                         });
                 });
         }
@@ -46,10 +50,7 @@ namespace UNIHper
             return animator.GetCurrentAnimatorStateInfo(InLayer).IsName(InState);
         }
 
-        public static void StopAnimation(this Animator animator)
-        {
-            syncStopState(animator);
-        }
+        public static void Stop(this Animator animator) { }
 
         // private methods
         private static void syncPlayState(Animator animator)

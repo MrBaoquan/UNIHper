@@ -6,6 +6,10 @@ using DG.Tweening;
 using Sirenix.OdinInspector;
 using UniRx;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+using UnityEditor.Animations;
+#endif
 
 namespace UNIHper.UI
 {
@@ -29,12 +33,19 @@ namespace UNIHper.UI
         [SerializeField]
         private UIAnimionDriver driver = UIAnimionDriver.Animator;
 
-        [Title("UI Animation Clips")]
+        [Title("UI Override Controller"), OnValueChanged("OnAnimatorChanged")]
         [SerializeField, Required, AssetsOnly, ShowIf("driver", UIAnimionDriver.Animator)]
-        private AnimationClip UIEnterClip;
+        private RuntimeAnimatorController overrideController;
 
-        [SerializeField, Required, AssetsOnly, ShowIf("driver", UIAnimionDriver.Animator)]
-        private AnimationClip UILeaveClip;
+        [Title("UI Override Clips")]
+        [SerializeField, AssetsOnly, ShowIf("driver", UIAnimionDriver.Animator)]
+        private AnimationClip UIShow;
+
+        [SerializeField, AssetsOnly, ShowIf("driver", UIAnimionDriver.Animator)]
+        private AnimationClip UIHide;
+
+        [SerializeField, AssetsOnly, HideInInspector]
+        private AnimationClip UINone;
 
         [SerializeField]
         [Title("UI Animation Settings"), ShowInInspector, ShowIf("driver", UIAnimionDriver.Tweener)]
@@ -51,6 +62,51 @@ namespace UNIHper.UI
         [SerializeField]
         [ShowInInspector, PropertyRange(0, 1), ShowIf("driver", UIAnimionDriver.Tweener)]
         private float exitDuration = 0.40f;
+
+        private void OnAnimatorChanged()
+        {
+#if UNITY_EDITOR
+            if (overrideController is null)
+                return;
+            AnimatorController _controller = overrideController as AnimatorController;
+            var _stateMachine = _controller.layers[0].stateMachine;
+            var _defaultStateNames = new List<string> { "UIShow", "UIHide", "DONothing" };
+            var _machineStates = _stateMachine.states.Select(_ => _.state);
+
+            var _clips = AssetDatabase
+                .LoadAllAssetRepresentationsAtPath(
+                    @"Packages\com.parful.unihper\Resources\Animations\Controllers\UI_Controller.controller"
+                )
+                .Where(_ => _ is AnimationClip)
+                .OfType<AnimationClip>()
+                .ToList();
+            UINone = UINone ?? _clips.Where(_clip => _clip.name == "UINone").First();
+
+            _defaultStateNames.ForEach(_name =>
+            {
+                var _state = _machineStates.Where(_state => _state.name == _name).FirstOrDefault();
+                if (_state is null)
+                {
+                    _state = _stateMachine.AddState(_name);
+                    if (_name == "DONothing")
+                    {
+                        _stateMachine.defaultState = _state;
+                        _state.motion = _clips.Where(_clip => _clip.name == "UINone").First();
+                    }
+                    else if (_name == "UIShow")
+                    {
+                        UIShow = UIShow ?? _clips.Where(_clip => _clip.name == "UIShow").First();
+                        _state.motion = _clips.Where(_clip => _clip.name == "UIShow").First();
+                    }
+                    else if (_name == "UIHide")
+                    {
+                        UIHide = UIHide ?? _clips.Where(_clip => _clip.name == "UIHide").First();
+                        _state.motion = _clips.Where(_clip => _clip.name == "UIHide").First();
+                    }
+                }
+            });
+#endif
+        }
 
         public override Task BuildShowTask()
         {
@@ -77,8 +133,22 @@ namespace UNIHper.UI
 
         void Reset()
         {
-            UIEnterClip = Resources.Load<AnimationClip>("Animations/UI/UIShow");
-            UILeaveClip = Resources.Load<AnimationClip>("Animations/UI/UIHide");
+#if UNITY_EDITOR
+            overrideController = AssetDatabase.LoadAssetAtPath<AnimatorController>(
+                @"Packages\com.parful.unihper\Resources\Animations\Controllers\UI_Controller.controller"
+            );
+            var _clips = AssetDatabase
+                .LoadAllAssetRepresentationsAtPath(
+                    @"Packages\com.parful.unihper\Resources\Animations\Controllers\UI_Controller.controller"
+                )
+                .Where(_ => _ is AnimationClip)
+                .OfType<AnimationClip>()
+                .ToList();
+
+            UIShow = _clips.Where(_ => _.name == "UIShow").FirstOrDefault();
+            UIHide = _clips.Where(_ => _.name == "UIHide").FirstOrDefault();
+            UINone = _clips.Where(_ => _.name == "UINone").FirstOrDefault();
+#endif
         }
 
         protected override void OnUIAttached()
@@ -86,15 +156,18 @@ namespace UNIHper.UI
             recordOriginTransform();
             if (driver == UIAnimionDriver.Animator)
             {
-                animatorOverrideController.runtimeAnimatorController =
-                    Resources.Load<RuntimeAnimatorController>(
-                        "Animations/Controllers/UI_Controller"
-                    );
+                if (overrideController is null)
+                {
+                    Debug.LogWarning($"{this.name} has no override controller, please assign one.");
+                    return;
+                }
+                animatorOverrideController.runtimeAnimatorController = overrideController;
                 List<KeyValuePair<AnimationClip, AnimationClip>> _clips =
                     new List<KeyValuePair<AnimationClip, AnimationClip>>();
                 new AnimatorOverrideController(
                     animatorOverrideController.runtimeAnimatorController
                 ).GetOverrides(_clips);
+
                 animatorOverrideController.animationClipPairs = _clips
                     .Select(
                         _clip =>
@@ -102,7 +175,9 @@ namespace UNIHper.UI
                             {
                                 originalClip = _clip.Key,
                                 overrideClip =
-                                    _clip.Key.name == "UIShow" ? UIEnterClip : UILeaveClip
+                                    _clip.Key.name == "UIShow"
+                                        ? (UIShow == null ? UINone : UIShow)
+                                        : (UIHide == null ? UINone : UIHide)
                             }
                     )
                     .ToList();
@@ -119,13 +194,15 @@ namespace UNIHper.UI
         {
             if (driver == UIAnimionDriver.Animator)
             {
-                // this.Get<Animator> ().SetFloat ("ShowSpeed", enterAnimation.Speed);
+                if (UIShow is null)
+                    return Task.CompletedTask;
+
                 return Observable
                     .Create<Unit>(_observer =>
                     {
                         this.Get<Animator>()
-                            .PlayAnimation(
-                                "Show",
+                            .Play(
+                                "UIShow",
                                 _animator =>
                                 {
                                     _observer.OnNext(Unit.Default);
@@ -159,13 +236,14 @@ namespace UNIHper.UI
         {
             if (driver == UIAnimionDriver.Animator)
             {
-                // this.Get<Animator> ().SetFloat ("HideSpeed", exitAnimation.Speed);
+                if (UIHide is null)
+                    return Task.CompletedTask;
                 return Observable
                     .Create<Unit>(_observer =>
                     {
                         this.Get<Animator>()
-                            .PlayAnimation(
-                                "Hide",
+                            .Play(
+                                "UIHide",
                                 _animator =>
                                 {
                                     _observer.OnNext(Unit.Default);

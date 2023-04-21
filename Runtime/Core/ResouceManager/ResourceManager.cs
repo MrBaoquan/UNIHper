@@ -353,7 +353,7 @@ namespace UNIHper
 
         private void ReadConfigData()
         {
-            string _resPath = UNIHperConfig.ResourceConfigPath;
+            string _resPath = UNIHperSettings.ResourceConfigPath;
             TextAsset _resAsset = Resources.Load<TextAsset>(_resPath);
 
             // 应用层自定义资源加载配置项
@@ -548,7 +548,7 @@ namespace UNIHper
                 string _key = buildResKey(_resource);
                 if (resources[InResID].ContainsKey(_key))
                 {
-                    UNIHperLogger.LogError($"resource key can not duplicate, error key: {_key}");
+                    UNIHperLogger.LogWarning($"resource key can not duplicate, error key: {_key}");
                     return;
                 }
                 UNIHperLogger.Log($"{InResID} add asset {_key}");

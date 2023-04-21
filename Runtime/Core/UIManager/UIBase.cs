@@ -113,7 +113,7 @@ namespace UNIHper
             await handleHideAction();
             this.OnHidden();
             m_onHideEvent.Invoke();
-            if (!bShow)
+            if (!bShow && this.gameObject)
                 this.gameObject.SetActive(false);
         }
 

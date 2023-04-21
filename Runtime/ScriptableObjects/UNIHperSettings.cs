@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using Sirenix.OdinInspector;
 
 namespace UNIHper
 {
@@ -12,17 +13,17 @@ namespace UNIHper
         YAML
     }
 
-    public class UNIHperConfig : ScriptableObject
+    public class UNIHperSettings : ScriptableObject
     {
-        private static UNIHperConfig instance = null;
+        private static UNIHperSettings instance = null;
 
-        private static UNIHperConfig Self()
+        private static UNIHperSettings Self()
         {
             if (instance == null)
             {
                 instance =
-                    Resources.Load<UNIHperConfig>("UNIHperConfig")
-                    ?? ScriptableObject.CreateInstance<UNIHperConfig>();
+                    Resources.Load<UNIHperSettings>("UNIHperSettings")
+                    ?? ScriptableObject.CreateInstance<UNIHperSettings>();
             }
 
             return instance;
@@ -53,19 +54,19 @@ namespace UNIHper
             get => Self().showDebugMessage;
         }
 
+        public static AudioClip DefaultClickSound
+        {
+            get => Self().defaultClickSound;
+        }
+
+        [Title("UNIHper Config File Paths")]
         public string resPath = "UNIHper/resources";
         public string uiPath = "UNIHper/uis";
         public string assemblyPath = "UNIHper/assemblies";
 
-        [Serializable]
-        public class VariableHolder
-        {
-            public bool var1;
-            public float var2 = 150f;
-            public float var3 = 25f;
-        }
-
         public bool showDebugMessage = false;
         public ConfigDriver configDriver = ConfigDriver.XML;
+
+        public AudioClip defaultClickSound;
     }
 }

@@ -4,7 +4,7 @@ namespace UNIHper
     {
         public static void Log(string message)
         {
-            if (!UNIHperConfig.ShowDebugLog)
+            if (!UNIHperSettings.ShowDebugLog)
                 return;
             UnityEngine.Debug.Log(message);
         }

@@ -69,10 +69,14 @@ namespace UNIHper.Ghost
                 if (instance is null)
                 {
                     var _ghostData = AssetDatabase
-                            .FindAssets("t:GhostData", new[] { "Assets" })
-                            .FirstOrDefault();
+                        .FindAssets("t:GhostData", new[] { "Assets" })
+                        .FirstOrDefault();
                     if (_ghostData is null)
                     {
+                        if (!AssetDatabase.IsValidFolder("Assets/Resources"))
+                        {
+                            AssetDatabase.CreateFolder("Assets", "Resources");
+                        }
                         AssetDatabase.CreateAsset(
                             ScriptableObject.CreateInstance<GhostData>(),
                             defaultConfigPath
@@ -81,7 +85,6 @@ namespace UNIHper.Ghost
                     }
                     instance = AssetDatabase.LoadAssetAtPath<GhostData>(defaultConfigPath);
                 }
-
 
                 return instance;
             }

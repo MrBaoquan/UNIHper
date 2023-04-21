@@ -8,12 +8,25 @@ namespace UNIHper
 {
     public static class MonobehaviourExtension
     {
+        /// <summary>
+        /// Find type T component
+        /// </summary>
+        /// <param name="_behaviour"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public static T Get<T>(this MonoBehaviour _behaviour)
             where T : Component
         {
             return _behaviour.GetComponent<T>();
         }
 
+        /// <summary>
+        /// Find type T component with path
+        /// </summary>
+        /// <param name="_behaviour"></param>
+        /// <param name="InPath"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public static T Get<T>(this MonoBehaviour _behaviour, string InPath)
             where T : Component
         {
@@ -21,12 +34,25 @@ namespace UNIHper
             return _target.GetComponent<T>();
         }
 
+        /// <summary>
+        /// Find type component
+        /// </summary>
+        /// <param name="_transform"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public static T Get<T>(this Transform _transform)
             where T : Component
         {
             return _transform.GetComponent<T>();
         }
 
+        /// <summary>
+        /// Find type T component with path
+        /// </summary>
+        /// <param name="_transform"></param>
+        /// <param name="InPath"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public static T Get<T>(this Transform _transform, string InPath)
             where T : Component
         {
@@ -247,12 +273,6 @@ namespace UNIHper
         public static List<Transform> Children(this Transform _self, bool bOnlyEnabled = false)
         {
             return _self.gameObject.Children(bOnlyEnabled);
-        }
-
-        public static T GetComponent<T>(this Transform _self)
-            where T : Component
-        {
-            return _self.gameObject.GetComponent<T>();
         }
 
         static Vector3[] corners = new Vector3[4];

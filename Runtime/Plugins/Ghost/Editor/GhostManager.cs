@@ -244,7 +244,7 @@ namespace UNIHper.Ghost.Editor
             IsBusyNow = false;
         }
 
-        [MenuItem("UNIHper/Ghost Mode/Enable", priority = 101)]
+        [MenuItem("UNIHper/Ghost Mode/Enable", priority = 1)]
         public static void EnableGhost()
         {
             AutoGenerateGhost();
@@ -257,7 +257,7 @@ namespace UNIHper.Ghost.Editor
             return !GhostData.bGhost;
         }
 
-        [MenuItem("UNIHper/Ghost Mode/Disable", priority = 102)]
+        [MenuItem("UNIHper/Ghost Mode/Disable", priority = 2)]
         public static void DisableGhost()
         {
             RestoreGhostEntities();

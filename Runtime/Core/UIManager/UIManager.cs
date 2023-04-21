@@ -316,7 +316,7 @@ namespace UNIHper
 
         private void ReadConfigData()
         {
-            string _uiPath = UNIHperConfig.UIConfigPath;
+            string _uiPath = UNIHperSettings.UIConfigPath;
             TextAsset _uiAsset = Resources.Load<TextAsset>(_uiPath);
             customUIConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<
                 Dictionary<string, Dictionary<string, UIConfig>>

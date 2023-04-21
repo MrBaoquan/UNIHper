@@ -98,7 +98,7 @@ namespace UNIHper
 
         private void loadConfig()
         {
-            this.driverMode = UNIHperConfig.ConfigDriver;
+            this.driverMode = UNIHperSettings.ConfigDriver;
         }
 
         public void SerializeAll()

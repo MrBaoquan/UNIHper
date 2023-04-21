@@ -88,7 +88,7 @@ GameObject:
   - component: {fileID: 2259023469296544595}
   - component: {fileID: 1181601411384247997}
   m_Layer: 5
-  m_Name: URangeInput
+  m_Name: Input_Range
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

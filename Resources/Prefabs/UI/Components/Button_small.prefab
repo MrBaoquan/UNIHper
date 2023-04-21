@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 1813400796458381779}
   - component: {fileID: 3870677178831579168}
   m_Layer: 5
-  m_Name: UButton_small
+  m_Name: Button_small
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

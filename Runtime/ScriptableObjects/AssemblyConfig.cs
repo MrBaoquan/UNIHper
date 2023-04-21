@@ -78,7 +78,7 @@ namespace UNIHper
             allTypeMaps.Clear();
             CachedTypes.Clear();
             var _internalAssemblies = getAssemblies("Configs/assemblies");
-            var _customAssemblies = getAssemblies(UNIHperConfig.AssemblyConfigPath);
+            var _customAssemblies = getAssemblies(UNIHperSettings.AssemblyConfigPath);
 
             _internalAssemblies
                 .Concat(_customAssemblies)
@@ -134,7 +134,7 @@ namespace UNIHper
                     var _filterTypes = _assembly.SubClasses(_filterType).ToList();
                     _filterTypes.ForEach(_type =>
                     {
-                        if (UNIHperConfig.ShowDebugLog)
+                        if (UNIHperSettings.ShowDebugLog)
                         {
                             UnityEngine.Debug.LogFormat(
                                 $"Add {InAssemblyName} -> Type:{_type.FullName} ",
