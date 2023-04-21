@@ -77,7 +77,7 @@ namespace UNIHper
         );
 
         /// <summary>Creates a new C# Class.</summary>
-        [MenuItem("Assets/Create/UNIHper/SceneScript", priority = 11)]
+        [MenuItem("Assets/Create/UNIHper/SceneScript", priority = 5)]
         [MenuItem("UNIHper/Create/SceneScript", priority = 11)]
         private static void CreateSceneScript()
         {
@@ -87,7 +87,7 @@ namespace UNIHper
             );
         }
 
-        [MenuItem("Assets/Create/UNIHper/UIScript", priority = 12)]
+        [MenuItem("Assets/Create/UNIHper/UIScript", priority = 6)]
         [MenuItem("UNIHper/Create/UIScript", priority = 12)]
         private static void CreateUIScript()
         {
@@ -98,7 +98,7 @@ namespace UNIHper
             );
         }
 
-        [MenuItem("Assets/Create/UNIHper/ConfigScript", priority = 13)]
+        [MenuItem("Assets/Create/UNIHper/ConfigScript", priority = 7)]
         [MenuItem("UNIHper/Create/ConfigScript", priority = 13)]
         private static void CreateConfigScript()
         {

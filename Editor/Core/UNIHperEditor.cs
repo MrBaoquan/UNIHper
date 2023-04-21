@@ -107,6 +107,9 @@ namespace UNIHper
             }
             else if (_objs.Length <= 0)
             {
+                // csharpier-ignore
+                string _UNIHperPrefabPath = UNIPaths.PackagePath("Resources/Prefabs/UNIHper.prefab");
+
                 var _projectStartupPrefabPath = "Assets/Resources/UNIHper/Prefabs/UNIHper.prefab";
                 // csharpier-ignore
                 var _fullProjectStartupPrefabPath =  UNIPaths.ProjectPath(_projectStartupPrefabPath);
@@ -117,9 +120,6 @@ namespace UNIHper
                 }
                 if (!File.Exists(UNIPaths.ProjectPath(_projectStartupPrefabPath)))
                 {
-                    string _UNIHperPrefabPath = UNIPaths.PackagePathRelativeToProject(
-                        "Resources/Prefabs/UNIHper.prefab"
-                    );
                     var _tempUNIHper = GameObject.Instantiate<GameObject>(
                         AssetDatabase.LoadAssetAtPath(_UNIHperPrefabPath, typeof(GameObject))
                             as GameObject
