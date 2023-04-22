@@ -3,6 +3,7 @@ using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
 using UNIHper;
+using System.Collections.Generic;
 
 public class UNIDebuggerPanel : UIBase
 {
@@ -48,6 +49,43 @@ public class UNIDebuggerPanel : UIBase
                 );
             });
 #endif
+
+        var _screenWidth = 1920;
+        var _screenHeight = 1080;
+        this.Get<UInput>("Input_width")
+            .OnValueChangedAsObservable()
+            .Subscribe(_ => _screenWidth = _.Parse2Int());
+        this.Get<UInput>("Input_height")
+            .OnValueChangedAsObservable()
+            .Subscribe(_ => _screenHeight = _.Parse2Int());
+
+        var _fullScreen = true;
+        this.Get<Toggle>("toggle_fullScreen")
+            .OnValueChangedAsObservable()
+            .Subscribe(_ =>
+            {
+                _fullScreen = _;
+                Screen.SetResolution(_screenWidth, _screenHeight, _fullScreen);
+            });
+
+        this.Get<Button>("btn_resolutionConfirm")
+            .OnClickAsObservable()
+            .Subscribe(_ =>
+            {
+                Screen.SetResolution(_screenWidth, _screenHeight, true);
+
+                var _layouts = new List<DisplayInfo>();
+                Screen.GetDisplayLayout(_layouts);
+                _layouts.ForEach(_layout =>
+                {
+                    Debug.Log(
+                        _layout.width + "x" + _layout.height + " " + _layout.refreshRate + "Hz"
+                    );
+                    Debug.Log("workArea: " + _layout.workArea);
+
+                    _layout.workArea = new RectInt(100, 100, 1280, 720);
+                });
+            });
     }
 
     // Update is called once per frame

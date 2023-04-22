@@ -28,6 +28,7 @@ namespace UNIHper.UI
         Zoom = 110,
     }
 
+    [RequireComponent(typeof(Animator))]
     public class AnimatedUI : UIAnimationBase
     {
         [SerializeField]

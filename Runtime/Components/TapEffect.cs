@@ -12,6 +12,7 @@ using UnityEngine.InputSystem.EnhancedTouch;
 #endif
 using UniRx;
 using Sirenix.OdinInspector;
+using UnityEditor;
 
 namespace UNIHper
 {
@@ -56,6 +57,9 @@ namespace UNIHper
         [SerializeField, ShowIf("@this.customPrefab==false")]
         public AnimationClip effectClip;
 
+        [SerializeField, ShowIf("@this.customPrefab==false")]
+        public Vector2 effectSize = new Vector2(50, 50);
+
         [
             SerializeField,
             ShowIf("customPrefab"),
@@ -72,7 +76,9 @@ namespace UNIHper
                 {
                     _effectPrefab = new GameObject("TapEffect");
                     var _animator = _effectPrefab.AddComponent<Animator>();
-                    _effectPrefab.AddComponent<RectTransform>();
+                    var _rectTransform = _effectPrefab.AddComponent<RectTransform>();
+                    _rectTransform.sizeDelta = effectSize;
+
                     var _image = _effectPrefab.AddComponent<Image>();
                     _image.raycastTarget = false;
 
@@ -99,6 +105,15 @@ namespace UNIHper
                 }
                 return _effectPrefab;
             }
+        }
+
+        private void Reset()
+        {
+#if UNITY_EDITOR
+            effectClip = AssetDatabase.LoadAssetAtPath<AnimationClip>(
+                "Packages/com.parful.unihper/Resources/Animations/TapEffect.anim"
+            );
+#endif
         }
 
         private void showEffect(Vector2 position)

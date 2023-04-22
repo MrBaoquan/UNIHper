@@ -244,7 +244,7 @@ namespace UNIHper.Ghost.Editor
             IsBusyNow = false;
         }
 
-        [MenuItem("UNIHper/Ghost Mode/Enable", priority = 1)]
+        [MenuItem("UNIHper/Ghost Mode/Enable", priority = 21)]
         public static void EnableGhost()
         {
             AutoGenerateGhost();
@@ -257,7 +257,7 @@ namespace UNIHper.Ghost.Editor
             return !GhostData.bGhost;
         }
 
-        [MenuItem("UNIHper/Ghost Mode/Disable", priority = 2)]
+        [MenuItem("UNIHper/Ghost Mode/Disable", priority = 22)]
         public static void DisableGhost()
         {
             RestoreGhostEntities();
@@ -270,7 +270,7 @@ namespace UNIHper.Ghost.Editor
             return GhostData.bGhost;
         }
 
-        [MenuItem("UNIHper/Ghost Mode/Advanced/Generate All Ghost Entities", priority = 11)]
+        [MenuItem("UNIHper/Ghost Mode/Advanced/Generate All Ghost Entities", priority = 33)]
         public static void GenerateGhostEntities()
         {
             safeTransaction(
@@ -325,7 +325,7 @@ namespace UNIHper.Ghost.Editor
             //PrefabUtility.UnpackPrefabInstance(_gameObj, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
         }
 
-        [MenuItem("UNIHper/Ghost Mode/Advanced/Restore All Ghost Entities", priority = 12)]
+        [MenuItem("UNIHper/Ghost Mode/Advanced/Restore All Ghost Entities", priority = 34)]
         private static void RestoreGhostEntities()
         {
             safeTransaction(
@@ -362,7 +362,7 @@ namespace UNIHper.Ghost.Editor
             );
         }
 
-        [MenuItem("UNIHper/Ghost Mode/Advanced/Add Ghost To All", priority = 13)]
+        [MenuItem("UNIHper/Ghost Mode/Advanced/Add Ghost To All", priority = 35)]
         public static void AutoGenerateGhost()
         {
             safeTransaction(() =>
@@ -410,7 +410,7 @@ namespace UNIHper.Ghost.Editor
 
         // }
 
-        [MenuItem("UNIHper/Ghost Mode/Advanced/Remove Ghost From All", priority = 14)]
+        [MenuItem("UNIHper/Ghost Mode/Advanced/Remove Ghost From All", priority = 36)]
         public static void ClearAllGhostComponent()
         {
             safeTransaction(() =>
