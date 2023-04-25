@@ -154,72 +154,89 @@ namespace UNIHper
             this.StartTime = startTime;
             this.EndTime = endTime;
 
+            Action _playVideo = () =>
+            {
+                MediaPlayer.Play();
+                bool _bFinished = false;
+                var _duration = mediaPlayer.Info.GetDuration();
+                endTime = endTime == 0 ? _duration : endTime;
+
+                // 播放结束回调
+                Action _onFinished = () =>
+                {
+                    if (_bFinished)
+                        return;
+
+                    _bFinished = true;
+                    if (onFinished != null)
+                        onFinished(this);
+                    MediaPlayer.Pause();
+
+                    if (!bLoop)
+                    {
+                        // 不循环 直接释放seek回调
+                        disposeHandlers(playHandlers);
+                    }
+                    MediaPlayer.Control.Seek(startTime);
+                };
+
+                // 正常播放时间大于指定结束时间
+                playHandlers.Add(
+                    Observable
+                        .EveryUpdate()
+                        .Where(_1 => MediaPlayer.Control.GetCurrentTime() >= endTime)
+                        .First()
+                        .Subscribe(_1 =>
+                        {
+                            _onFinished();
+                            //Debug.LogFormat ("UVA: reach end point c1: {0}", MediaPlayer.Control.GetCurrentTime ());
+                        })
+                );
+
+                // 视频到达结尾
+                playHandlers.Add(
+                    OnFinishedPlayingAsObservable()
+                        .Subscribe(_1 =>
+                        {
+                            //Debug.LogFormat ("UVA: reach end point  c2: {0}", MediaPlayer.Control.GetCurrentTime ());
+                            _onFinished();
+                        })
+                );
+            };
+
             Action _registerFinishedSeekingEvent = () =>
             {
                 playHandlers.Add(
                     OnFinishedSeekingAsObservable()
                         .Subscribe(_ =>
                         {
-                            MediaPlayer.Play();
-                            bool _bFinished = false;
-                            var _duration = mediaPlayer.Info.GetDuration();
-                            endTime = endTime == 0 ? _duration : endTime;
-
-                            // 播放结束回调
-                            Action _onFinished = () =>
-                            {
-                                if (_bFinished)
-                                    return;
-
-                                _bFinished = true;
-                                if (onFinished != null)
-                                    onFinished(this);
-                                MediaPlayer.Pause();
-
-                                if (!bLoop)
-                                {
-                                    // 不循环 直接释放seek回调
-                                    disposeHandlers(playHandlers);
-                                }
-                                MediaPlayer.Control.Seek(startTime);
-                            };
-
-                            // 正常播放时间大于指定结束时间
-                            playHandlers.Add(
-                                Observable
-                                    .EveryUpdate()
-                                    .Where(_1 => MediaPlayer.Control.GetCurrentTime() >= endTime)
-                                    .First()
-                                    .Subscribe(_1 =>
-                                    {
-                                        _onFinished();
-                                        //Debug.LogFormat ("UVA: reach end point c1: {0}", MediaPlayer.Control.GetCurrentTime ());
-                                    })
-                            );
-
-                            // 视频到达结尾
-                            playHandlers.Add(
-                                OnFinishedPlayingAsObservable()
-                                    .Subscribe(_1 =>
-                                    {
-                                        //Debug.LogFormat ("UVA: reach end point  c2: {0}", MediaPlayer.Control.GetCurrentTime ());
-                                        _onFinished();
-                                    })
-                            );
+                            _playVideo();
                         })
                 );
             };
 
+            Action _startSeek = () =>
+            {
+                _registerFinishedSeekingEvent();
+                var _currentTime = MediaPlayer.Control.GetCurrentTime();
+                if (_currentTime != startTime)
+                {
+                    MediaPlayer.Control.Seek(startTime);
+                }
+                else
+                {
+                    _playVideo();
+                }
+            };
             MediaPlayer.Loop = bLoop;
             if (MediaPlayer.MediaPath.Path != videoPath || MediaPlayer.Control == null)
             {
                 _readyHandler = OnFirstFrameReadyAsObservable()
                     .Subscribe(_ =>
                     {
-                        _registerFinishedSeekingEvent();
                         _readyHandler.Dispose();
                         _readyHandler = null;
-                        MediaPlayer.Control.Seek(startTime);
+                        _startSeek();
                     });
                 var _mediaPathType = MediaPathType.RelativeToStreamingAssetsFolder;
                 if (Path.IsPathRooted(videoPath))
@@ -230,8 +247,7 @@ namespace UNIHper
             }
             else
             {
-                _registerFinishedSeekingEvent();
-                MediaPlayer.Control.Seek(startTime);
+                _startSeek();
             }
         }
 
