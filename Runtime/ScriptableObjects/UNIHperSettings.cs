@@ -31,17 +31,17 @@ namespace UNIHper
 
         public static string ResourceConfigPath
         {
-            get => Self().resPath;
+            get => Self().ResourcePath;
         }
 
         public static string UIConfigPath
         {
-            get => Self().uiPath;
+            get => Self().UIPath;
         }
 
         public static string AssemblyConfigPath
         {
-            get => Self().assemblyPath;
+            get => Self().AssemblyPath;
         }
 
         public static ConfigDriver ConfigDriver
@@ -51,7 +51,7 @@ namespace UNIHper
 
         public static bool ShowDebugLog
         {
-            get => Self().showDebugMessage;
+            get => Self().ShowDebugMessage;
         }
 
         public static AudioClip DefaultClickSound
@@ -60,13 +60,13 @@ namespace UNIHper
         }
 
         [Title("UNIHper Config File Paths")]
-        public string resPath = "UNIHper/resources";
-        public string uiPath = "UNIHper/uis";
-        public string assemblyPath = "UNIHper/assemblies";
+        public string ResourcePath = "UNIHper/resources";
+        public string UIPath = "UNIHper/uis";
+        public string AssemblyPath = "UNIHper/assemblies";
 
-        public bool showDebugMessage = false;
+        [Title("UNIHper Other Settings")]
+        public bool ShowDebugMessage = false;
         public ConfigDriver configDriver = ConfigDriver.XML;
-
         public AudioClip defaultClickSound;
     }
 }
