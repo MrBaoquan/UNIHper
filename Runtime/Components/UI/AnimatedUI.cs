@@ -34,7 +34,7 @@ namespace UNIHper.UI
         [SerializeField]
         private UIAnimionDriver driver = UIAnimionDriver.Animator;
 
-        [Title("UI Override Controller"), OnValueChanged("OnAnimatorChanged")]
+        [Title("UI Override Controller"), OnValueChanged("OnControllerChanged")]
         [SerializeField, Required, AssetsOnly, ShowIf("driver", UIAnimionDriver.Animator)]
         private RuntimeAnimatorController overrideController;
 
@@ -64,14 +64,14 @@ namespace UNIHper.UI
         [ShowInInspector, PropertyRange(0, 1), ShowIf("driver", UIAnimionDriver.Tweener)]
         private float exitDuration = 0.40f;
 
-        private void OnAnimatorChanged()
+        private void OnControllerChanged()
         {
 #if UNITY_EDITOR
             if (overrideController is null)
                 return;
             AnimatorController _controller = overrideController as AnimatorController;
             var _stateMachine = _controller.layers[0].stateMachine;
-            var _defaultStateNames = new List<string> { "UIShow", "UIHide", "DONothing" };
+            var _defaultStateNames = new List<string> { "UIShow", "UIHide", "UIDefault" };
             var _machineStates = _stateMachine.states.Select(_ => _.state);
 
             var _clips = AssetDatabase
@@ -89,10 +89,10 @@ namespace UNIHper.UI
                 if (_state is null)
                 {
                     _state = _stateMachine.AddState(_name);
-                    if (_name == "DONothing")
+                    if (_name == "UIDefault")
                     {
                         _stateMachine.defaultState = _state;
-                        _state.motion = _clips.Where(_clip => _clip.name == "UINone").First();
+                        _state.motion = UINone;
                     }
                     else if (_name == "UIShow")
                     {
@@ -170,17 +170,31 @@ namespace UNIHper.UI
                 ).GetOverrides(_clips);
 
                 animatorOverrideController.animationClipPairs = _clips
-                    .Select(
-                        _clip =>
-                            new AnimationClipPair
+                    .Select(_clip =>
+                    {
+                        if (_clip.Key.name == "UIShow")
+                        {
+                            return new AnimationClipPair
                             {
                                 originalClip = _clip.Key,
-                                overrideClip =
-                                    _clip.Key.name == "UIShow"
-                                        ? (UIShow == null ? UINone : UIShow)
-                                        : (UIHide == null ? UINone : UIHide)
-                            }
-                    )
+                                overrideClip = UIShow == null ? UINone : UIShow
+                            };
+                        }
+                        else if (_clip.Key.name == "UIHide")
+                        {
+                            return new AnimationClipPair
+                            {
+                                originalClip = _clip.Key,
+                                overrideClip = UIHide == null ? UINone : UIHide
+                            };
+                        }
+
+                        return new AnimationClipPair
+                        {
+                            originalClip = _clip.Key,
+                            overrideClip = _clip.Value
+                        };
+                    })
                     .ToList();
                 animatorOverrideController.Apply();
             }
@@ -247,6 +261,7 @@ namespace UNIHper.UI
                                 "UIHide",
                                 _animator =>
                                 {
+                                    _animator.Rebind();
                                     _observer.OnNext(Unit.Default);
                                     _observer.OnCompleted();
                                 }
