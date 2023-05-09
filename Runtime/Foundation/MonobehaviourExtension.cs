@@ -207,6 +207,11 @@ namespace UNIHper
                 }
             }
 
+            if (!bRevertOther)
+            {
+                return;
+            }
+
             for (int _index = 0; _index < StartIndex; ++_index)
             {
                 var _go = _self.transform.GetChild(_index).gameObject;
@@ -216,9 +221,6 @@ namespace UNIHper
                 }
             }
 
-            if (!bRevertOther)
-                return;
-
             for (int _index = _endIndex + 1; _index < _self.transform.childCount; ++_index)
             {
                 var _go = _self.transform.GetChild(_index).gameObject;
@@ -227,6 +229,42 @@ namespace UNIHper
                     _go.SetActive(!bActive);
                 }
             }
+
+            // int _endIndex =
+            //     EndIndex == int.MaxValue
+            //         ? _self.transform.childCount
+            //         : EndIndex < 0
+            //             ? _self.transform.childCount + EndIndex
+            //             : EndIndex;
+            // for (int _index = StartIndex; _index <= _endIndex; ++_index)
+            // {
+            //     var _go = _self.transform.GetChild(_index).gameObject;
+            //     if (_go.activeInHierarchy != bActive)
+            //     {
+            //         _go.SetActive(bActive);
+            //     }
+            // }
+
+            // for (int _index = 0; _index < StartIndex; ++_index)
+            // {
+            //     var _go = _self.transform.GetChild(_index).gameObject;
+            //     if (_go.activeInHierarchy == bActive)
+            //     {
+            //         _go.SetActive(!bActive);
+            //     }
+            // }
+
+            // if (!bRevertOther)
+            //     return;
+
+            // for (int _index = _endIndex + 1; _index < _self.transform.childCount; ++_index)
+            // {
+            //     var _go = _self.transform.GetChild(_index).gameObject;
+            //     if (_go.activeInHierarchy == bActive)
+            //     {
+            //         _go.SetActive(!bActive);
+            //     }
+            // }
         }
 
         // 获取指定子元素激活状态

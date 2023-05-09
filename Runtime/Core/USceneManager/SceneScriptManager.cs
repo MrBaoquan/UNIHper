@@ -102,10 +102,9 @@ namespace UNIHper
                     .EveryUpdate()
                     .Subscribe(_ =>
                     {
-                        if (_updateAction != null)
-                            _updateAction.Invoke(_sceneScript, null);
+                        _updateAction?.Invoke(_sceneScript, null);
                     });
-                _startAction.Invoke(_sceneScript, null);
+                _startAction?.Invoke(_sceneScript, null);
             }
             else
             {

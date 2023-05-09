@@ -7,6 +7,8 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using TMPro;
+using TMPro.EditorUtilities;
 
 namespace UNIHper.Editor
 {
@@ -50,7 +52,7 @@ namespace UNIHper.Editor
         }
 
         [MenuItem("UNIHper/Initialize", priority = 0)]
-        public static void CreateDefault()
+        public static void Initialize()
         {
             EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo();
             var _startupScenePath = AssetDatabase
@@ -241,6 +243,23 @@ namespace UNIHper.Editor
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log("UNIHper framework initalize successful.");
+
+            importTMPEssentialResourcesIfNotExists();
+        }
+
+        private static void importTMPEssentialResourcesIfNotExists()
+        {
+            string[] _settings = AssetDatabase.FindAssets("t:TMP_Settings");
+            if (_settings.Length > 0)
+                return;
+            string packageFullPath = TMP_EditorUtility.packageFullPath;
+
+            //TMP Menu import way: TMP_PackageUtilities.ImportProjectResourcesMenu();
+
+            AssetDatabase.ImportPackage(
+                packageFullPath + "/Package Resources/TMP Essential Resources.unitypackage",
+                false
+            );
         }
     }
 }
