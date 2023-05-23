@@ -1,3 +1,4 @@
+using System.IO;
 using System;
 using System.Collections;
 using System.Threading;
@@ -11,24 +12,32 @@ namespace UNIHper
     {
         public static IObservable<Texture2D> LoadTexture2D(
             this ResourceManager resourceManager,
-            string InPath
+            string filePath
         )
         {
+            if (!Path.IsPathRooted(filePath))
+            {
+                filePath = Path.Combine(Application.streamingAssetsPath, filePath);
+            }
             return Observable.FromCoroutine<Texture2D>(
                 (_observer, _cancellationToken) =>
-                    LoadTexture2D(InPath, _observer, _cancellationToken)
+                    LoadTexture2D(filePath, _observer, _cancellationToken)
             );
         }
 
         public static IObservable<AudioClip> LoadAudioClip(
             this ResourceManager resourceManager,
-            string InPath,
+            string filePath,
             AudioType InAudioType = AudioType.UNKNOWN
         )
         {
+            if (!Path.IsPathRooted(filePath))
+            {
+                filePath = Path.Combine(Application.streamingAssetsPath, filePath);
+            }
             return Observable.FromCoroutine<AudioClip>(
                 (_observer, _cancellationToken) =>
-                    LoadAudioClip(InPath, _observer, _cancellationToken, InAudioType)
+                    LoadAudioClip(filePath, _observer, _cancellationToken, InAudioType)
             );
         }
 

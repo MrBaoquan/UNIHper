@@ -13,12 +13,12 @@ namespace UNIHper
     {
         public static void Register<T>()
         {
-            Debug.Log(typeof(T).FullName);
+            //Debug.Log(typeof(T).FullName);
         }
 
         public static void Register(string InType)
         {
-            Debug.Log(Type.GetType(InType).FullName);
+            //Debug.Log(Type.GetType(InType).FullName);
         }
 
         public class SceneScriptData

@@ -297,6 +297,17 @@ namespace UNIHper
             return _audioClips;
         }
 
+        public async Task<IEnumerable<AudioClip>> AppendAudioClips(
+            string audioDir,
+            string searchPattern = "*.wav",
+            SearchOption searchOption = SearchOption.AllDirectories
+        )
+        {
+            return await AppendAudioClips(
+                Directory.GetFiles(audioDir, searchPattern, searchOption)
+            );
+        }
+
         public async Task<IEnumerable<Texture2D>> AppendTextures(IEnumerable<string> TexturePathes)
         {
             var _validPathes = TexturePathes.Where(_path => File.Exists(_path));
@@ -308,6 +319,37 @@ namespace UNIHper
             );
             appendResources(_textures, CUSTOM_RES_KEY);
             return _textures;
+        }
+
+        public async Task<IEnumerable<Texture2D>> AppendTextures(
+            string textureDir,
+            string searchPattern = "*.png",
+            SearchOption searchOption = SearchOption.AllDirectories
+        )
+        {
+            return await AppendTextures(
+                Directory
+                    .GetFiles(textureDir, "*.*", searchOption)
+                    .Where(_path =>
+                    {
+                        var _ext = Path.GetExtension(_path).ToLower();
+                        return _ext == ".png" || _ext == ".jpg" || _ext == ".jpeg";
+                    })
+            );
+        }
+
+        public async Task<Texture2D> AppendTexture2D(string InPath)
+        {
+            try
+            {
+                var _texture = await this.LoadTexture2D(InPath);
+                appendResources(new List<Texture2D> { _texture }, CUSTOM_RES_KEY);
+                return _texture;
+            }
+            catch (System.Exception)
+            {
+                return null;
+            }
         }
 
         /// <summary>

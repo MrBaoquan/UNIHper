@@ -12,18 +12,21 @@ namespace UNIHper
     public class ConfigManager : Singleton<ConfigManager>
     {
         private Dictionary<string, UConfig> configs = new Dictionary<string, UConfig>();
-        private ConfigDriver driverMode = ConfigDriver.YAML;
+
+        //private ConfigDriver driverMode = ConfigDriver.XML;
         private const string configDir = "Configs";
-        private string suffix
+
+        private string suffix(ConfigDriver driverMode)
         {
-            get
+            if (driverMode == ConfigDriver.YAML)
             {
-                if (driverMode == ConfigDriver.YAML)
-                {
-                    return ".yaml";
-                }
-                return ".xml";
+                return ".yaml";
             }
+            else if (driverMode == ConfigDriver.JSON)
+            {
+                return ".json";
+            }
+            return ".xml";
         }
 
         internal async Task Initialize()
@@ -39,13 +42,14 @@ namespace UNIHper
                 // 配置文件默认保存在 %userprofile%\AppData\LocalLow\<companyname>\<productname>
 
                 var _attributes = Attribute.GetCustomAttributes(_configClass);
-                var _attribute = _attributes.Where(_attr => _attr is SerializedAt).First();
+                var _serializeAtAttr = _attributes.Where(_attr => _attr is SerializedAt).First();
+                var _serializeWithAttr = _attributes.Where(_attr => _attr is SerializeWith).First();
 
                 string _configDir = Path.Combine(Application.persistentDataPath, configDir);
 
-                if (_attribute != null)
+                if (_serializeAtAttr != null)
                 {
-                    var _serializedAttr = (_attribute as SerializedAt);
+                    var _serializedAttr = (_serializeAtAttr as SerializedAt);
                     if (_serializedAttr.RootDir == AppPath.StreamingDir)
                     {
                         _configDir = Path.Combine(
@@ -62,24 +66,33 @@ namespace UNIHper
                     }
                 }
 
+                ConfigDriver _driverMode = ConfigDriver.XML;
+                if (_serializeWithAttr is not null)
+                {
+                    var _serializeWith = (_serializeWithAttr as SerializeWith);
+                    _driverMode = _serializeWith.Mode;
+                }
+
                 if (!Directory.Exists(_configDir))
                 {
                     Directory.CreateDirectory(_configDir);
                 }
 
-                string _path = Path.Combine(_configDir, _configClass.Name + this.suffix);
+                string _path = Path.Combine(
+                    _configDir,
+                    _configClass.Name + this.suffix(_driverMode)
+                );
                 if (!File.Exists(_path))
                 {
-                    this.serializeConfig(_configInstance, _path);
+                    this.serializeConfig(_configInstance, _path, _driverMode);
                 }
                 else
                 {
-                    //MethodInfo _method = typeof (USerialization).GetMethod ("DeserializeYAML").MakeGenericMethod (new Type[] { _configClass });
-                    _configInstance = this.deserializeConfig(_configClass, _path);
-                    // _method.Invoke (null, new object[] { _path }) as UConfig;
+                    _configInstance = this.deserializeConfig(_configClass, _path, _driverMode);
                 }
 
                 UReflection.SetPrivateField(_configInstance, "__path", _path);
+                UReflection.SetPrivateField(_configInstance, "__driver", _driverMode);
                 this.configs.Add(_configClass.Name, _configInstance);
             }
             this.configs.Values
@@ -98,7 +111,7 @@ namespace UNIHper
 
         private void loadConfig()
         {
-            this.driverMode = UNIHperSettings.ConfigDriver;
+            //this.driverMode = UNIHperSettings.ConfigDriver;
         }
 
         public void SerializeAll()
@@ -107,17 +120,27 @@ namespace UNIHper
                 .ToList()
                 .ForEach(_config =>
                 {
-                    this.serializeConfig(_config, _config.__Path);
+                    this.serializeConfig(_config, _config.FilePath);
                     //USerialization.SerializeXML (_config, _config.__Path);
                 });
         }
 
-        private void serializeConfig(object target, string path)
+        private void serializeConfig(
+            object target,
+            string path,
+            ConfigDriver driver = ConfigDriver.XML
+        )
         {
             UReflection.CallPrivateMethod(target, "OnSerializing");
-            if (this.driverMode == ConfigDriver.YAML)
+            if (driver == ConfigDriver.YAML)
             {
                 USerialization.SerializeYAML(target, path);
+                UReflection.CallPrivateMethod(target, "OnSerialized");
+                return;
+            }
+            else if (driver == ConfigDriver.JSON)
+            {
+                USerialization.SerializeJSON(target, path);
                 UReflection.CallPrivateMethod(target, "OnSerialized");
                 return;
             }
@@ -125,14 +148,25 @@ namespace UNIHper
             DNHper.USerialization.SerializeXML(target, path);
         }
 
-        private UConfig deserializeConfig(Type configClass, string path)
+        private UConfig deserializeConfig(
+            Type configClass,
+            string path,
+            ConfigDriver driver = ConfigDriver.XML
+        )
         {
-            if (this.driverMode == ConfigDriver.YAML)
+            if (driver == ConfigDriver.YAML)
             {
                 var _methodYAML = typeof(USerialization)
                     .GetMethod("DeserializeYAML")
                     .MakeGenericMethod(new Type[] { configClass });
                 return _methodYAML.Invoke(null, new object[] { path }) as UConfig;
+            }
+            else if (driver == ConfigDriver.JSON)
+            {
+                var _methodJSON = typeof(USerialization)
+                    .GetMethod("DeserializeJSON")
+                    .MakeGenericMethod(new Type[] { configClass });
+                return _methodJSON.Invoke(null, new object[] { path }) as UConfig;
             }
             MethodInfo _method = typeof(DNHper.USerialization)
                 .GetMethod("DeserializeXML")
@@ -156,15 +190,17 @@ namespace UNIHper
         {
             if (!this.configs.TryGetValue(typeof(T).Name, out UConfig _config))
                 return false;
-
+            ConfigDriver _driver = (ConfigDriver)
+                UReflection.GetPropertyValue("__driver", _config).Parse2Int();
+            Debug.LogWarning("Serialize " + _config.FilePath + " with " + _driver.ToString());
             UReflection.CallPrivateMethod(_config, "OnSerializing");
-            if (this.driverMode == ConfigDriver.YAML)
+            if (_driver == ConfigDriver.YAML)
             {
-                USerialization.SerializeYAML(_config, _config.__Path);
+                USerialization.SerializeYAML(_config, _config.FilePath);
                 return true;
             }
 
-            DNHper.USerialization.SerializeXML(_config, _config.__Path);
+            DNHper.USerialization.SerializeXML(_config, _config.FilePath);
             UReflection.CallPrivateMethod(_config, "OnSerialized");
             return true;
         }

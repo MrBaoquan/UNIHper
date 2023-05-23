@@ -7,12 +7,6 @@ using Sirenix.OdinInspector;
 
 namespace UNIHper
 {
-    public enum ConfigDriver
-    {
-        XML,
-        YAML
-    }
-
     public class UNIHperSettings : ScriptableObject
     {
         private static UNIHperSettings instance = null;

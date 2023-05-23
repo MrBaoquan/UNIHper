@@ -2,9 +2,17 @@ using System;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
+using Newtonsoft.Json;
 
 namespace UNIHper
 {
+    public enum ConfigDriver
+    {
+        XML,
+        JSON,
+        YAML
+    }
+
     public enum AppPath
     {
         /// <summary>
@@ -39,28 +47,49 @@ namespace UNIHper
         }
     }
 
-    [SerializedAt(AppPath.PersistentDir)]
+    [AttributeUsage(AttributeTargets.Class, Inherited = true, AllowMultiple = false)]
+    public class SerializeWith : Attribute
+    {
+        // 序列化主目录
+        public ConfigDriver Mode = ConfigDriver.XML;
+
+        public SerializeWith(ConfigDriver InMode)
+        {
+            Mode = InMode;
+        }
+    }
+
+    [SerializedAt(AppPath.PersistentDir), SerializeWith(ConfigDriver.XML)]
     public class UConfig
     {
         [XmlIgnore]
         protected string __path;
 
-        [XmlIgnore]
-        public string __Path
+        [XmlIgnore, JsonIgnore]
+        public string FilePath
         {
             get { return __path; }
         }
 
+        [XmlIgnore]
+        protected string __driver;
+
         public void Delete()
         {
-            File.Delete(__Path);
+            File.Delete(__path);
         }
 
+        [JsonIgnore]
         [XmlAnyElement("FileComment")]
         public XmlComment FileComment
         {
             get { return new XmlDocument().CreateComment(Comment()); }
             set { }
+        }
+
+        public string ToJson()
+        {
+            return JsonConvert.SerializeObject(this);
         }
 
         /// <summary>

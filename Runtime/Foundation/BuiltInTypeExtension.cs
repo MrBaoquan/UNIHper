@@ -1,0 +1,46 @@
+using UnityEngine.UI;
+using UnityEngine;
+
+namespace UNIHper
+{
+    public static class BuiltInTypeExtension
+    {
+        public static Sprite ToSprite(this Texture2D texture2D)
+        {
+            return texture2D.ToSprite(
+                new Rect(0, 0, texture2D.width, texture2D.height),
+                Vector2.one * 0.5f
+            );
+        }
+
+        public static Sprite ToSprite(this Texture2D texture2D, Rect rect)
+        {
+            return texture2D.ToSprite(rect, Vector2.one * 0.5f);
+        }
+
+        public static Sprite ToSprite(this Texture2D texture2D, Vector2 pivot)
+        {
+            return texture2D.ToSprite(new Rect(0, 0, texture2D.width, texture2D.height), pivot);
+        }
+
+        public static Sprite ToSprite(this Texture2D texture2D, Rect rect, Vector2 pivot)
+        {
+            return Sprite.Create(texture2D, rect, pivot);
+        }
+
+        public static Vector2 ToVector2(this Vector3 InVector3)
+        {
+            return new Vector2(InVector3.x, InVector3.y);
+        }
+
+        public static Vector3 ToVector3(this Vector2 InVector2)
+        {
+            return new Vector3(InVector2.x, InVector2.y, 0);
+        }
+
+        public static Vector3 ToVector3(this Vector2 InVector2, float InZ)
+        {
+            return new Vector3(InVector2.x, InVector2.y, InZ);
+        }
+    }
+}
