@@ -1,3 +1,6 @@
 [submodule "Runtime/Plugins/DNHper"]
 	path = Runtime/Plugins/DNHper
 	url = https://github.com/mrbaoquan/dnhper.git
+[submodule "Runtime/Plugins/UNIArt"]
+	path = Runtime/Plugins/UNIArt
+	url = https://github.com/mrbaoquan/uniart.git
