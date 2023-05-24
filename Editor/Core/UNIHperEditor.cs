@@ -242,7 +242,8 @@ namespace UNIHper.Editor
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log("UNIHper framework initalize successful.");
+
+            Debug.Log("<color=#00ff00>UNIHper framework initialized successfully</color>");
 
             importTMPEssentialResourcesIfNotExists();
         }

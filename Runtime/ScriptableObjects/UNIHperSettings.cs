@@ -38,10 +38,10 @@ namespace UNIHper
             get => Self().AssemblyPath;
         }
 
-        public static ConfigDriver ConfigDriver
-        {
-            get => Self().configDriver;
-        }
+        // public static ConfigDriver ConfigDriver
+        // {
+        //     get => Self().configDriver;
+        // }
 
         public static bool ShowDebugLog
         {
@@ -58,9 +58,12 @@ namespace UNIHper
         public string UIPath = "UNIHper/uis";
         public string AssemblyPath = "UNIHper/assemblies";
 
+        [Title("UNIHper Interaction Settings")]
+        public AudioClip defaultClickSound;
+
         [Title("UNIHper Other Settings")]
         public bool ShowDebugMessage = false;
-        public ConfigDriver configDriver = ConfigDriver.XML;
-        public AudioClip defaultClickSound;
+
+        //public ConfigDriver configDriver = ConfigDriver.XML;
     }
 }
