@@ -39,6 +39,7 @@ namespace UNIHper
             foreach (var _configClass in _configClasses)
             {
                 UConfig _configInstance = Activator.CreateInstance(_configClass) as UConfig;
+
                 // 配置文件默认保存在 %userprofile%\AppData\LocalLow\<companyname>\<productname>
 
                 var _attributes = Attribute.GetCustomAttributes(_configClass);
@@ -92,7 +93,8 @@ namespace UNIHper
                 }
 
                 UReflection.SetPrivateField(_configInstance, "__path", _path);
-                UReflection.SetPrivateField(_configInstance, "__driver", _driverMode);
+                UReflection.SetPrivateField(_configInstance, "__driver", (int)_driverMode);
+
                 this.configs.Add(_configClass.Name, _configInstance);
             }
             this.configs.Values
@@ -109,10 +111,7 @@ namespace UNIHper
             this.configs.Clear();
         }
 
-        private void loadConfig()
-        {
-            //this.driverMode = UNIHperSettings.ConfigDriver;
-        }
+        private void loadConfig() { }
 
         public void SerializeAll()
         {
@@ -121,7 +120,6 @@ namespace UNIHper
                 .ForEach(_config =>
                 {
                     this.serializeConfig(_config, _config.FilePath);
-                    //USerialization.SerializeXML (_config, _config.__Path);
                 });
         }
 
@@ -190,13 +188,17 @@ namespace UNIHper
         {
             if (!this.configs.TryGetValue(typeof(T).Name, out UConfig _config))
                 return false;
-            ConfigDriver _driver = (ConfigDriver)
-                UReflection.GetPropertyValue("__driver", _config).Parse2Int();
-            Debug.LogWarning("Serialize " + _config.FilePath + " with " + _driver.ToString());
+
+            ConfigDriver _driver = UReflection.GetPrivateField<ConfigDriver>(_config, "__driver");
             UReflection.CallPrivateMethod(_config, "OnSerializing");
             if (_driver == ConfigDriver.YAML)
             {
                 USerialization.SerializeYAML(_config, _config.FilePath);
+                return true;
+            }
+            else if (_driver == ConfigDriver.JSON)
+            {
+                USerialization.SerializeJSON(_config, _config.FilePath);
                 return true;
             }
 

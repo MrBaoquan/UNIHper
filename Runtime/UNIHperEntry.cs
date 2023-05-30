@@ -12,6 +12,26 @@ namespace UNIHper
     [DisallowMultipleComponent]
     public class UNIHperEntry : SingletonBehaviour<UNIHperEntry>
     {
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void initialize()
+        {
+            Debug.Log("UNIHper.Initialize");
+            var _entry = GameObject.FindObjectOfType<UNIHperEntry>();
+            if (_entry == null)
+            {
+                var _unihperEntry = Resources.Load<GameObject>("UNIHper/Prefabs/UNIHper");
+                if (_unihperEntry == null)
+                {
+                    Debug.LogWarning(
+                        "UNIHperEntry not found, Please click UNIHper/Initialize menu to create UNIHperEntry."
+                    );
+                    return;
+                }
+                var _unihperEntryGO = GameObject.Instantiate(_unihperEntry);
+                _unihperEntryGO.name = "__UNIHper";
+            }
+        }
+
         private async void Awake()
         {
             if (UNIHperEntry.Instance != this)
@@ -64,12 +84,22 @@ namespace UNIHper
             if (Keyboard.current.f12Key.wasPressedThisFrame)
             {
                 Managements.UI.Get<UNIDebuggerPanel>().Toggle();
+                Debug.Log(
+                    $"Toggle UNIDebuggerPanel: {Managements.UI.Get<UNIDebuggerPanel>().isShowing}"
+                );
             }
 #else
             if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.S))
             {
                 Managements.Config.SerializeAll();
                 Debug.Log("Save config successfully.");
+            }
+            if (Input.GetKeyDown(KeyCode.F12))
+            {
+                Managements.UI.Get<UNIDebuggerPanel>().Toggle();
+                Debug.Log(
+                    $"Toggle UNIDebuggerPanel: {Managements.UI.Get<UNIDebuggerPanel>().isShowing}"
+                );
             }
 #endif
         }

@@ -46,6 +46,13 @@ namespace UNIHper
         /// </summary>
         private Dictionary<string, Dictionary<string, UnityEngine.Object>> resources;
 
+        /// <summary>
+        /// Addressable 按标签分组的资源实例
+        /// </summary>
+        /// <returns></returns>
+        private Dictionary<string, List<UnityEngine.Object>> addressableLabelAssets =
+            new Dictionary<string, List<UnityEngine.Object>>();
+
         // 所有AB包实例
         private Dictionary<string, Dictionary<string, AssetBundle>> bundles =
             new Dictionary<string, Dictionary<string, AssetBundle>>();
@@ -188,7 +195,7 @@ namespace UNIHper
         /// <param name="InResKey"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public IObservable<IList<T>> LoadAddressableAssetsAsync<T>(string InResKey)
+        private IObservable<IList<T>> LoadAddressableAssetsAsync<T>(string InResKey)
         {
             return Addressables
                 .LoadAssetsAsync<T>(InResKey, null)
@@ -284,6 +291,42 @@ namespace UNIHper
             return bundles[CUSTOM_RES_KEY][getABFullPath(InPath)];
         }
 
+        // 按标签加载Addressable资源
+        public async Task<IEnumerable<UnityEngine.Object>> AppendAddressableLabelAssets<T>(
+            string labelName
+        )
+            where T : UnityEngine.Object
+        {
+            var _labelKey = buildLabelAssetKey(labelName, typeof(T));
+            if (addressableLabelAssets.ContainsKey(_labelKey))
+                return addressableLabelAssets[_labelKey];
+
+            var _assets = await loadAddressableAssetsAsync<T>(labelName);
+            appendResources(_assets, labelName);
+            addressableLabelAssets.Add(_labelKey, _assets.Cast<UnityEngine.Object>().ToList());
+
+            return _assets;
+        }
+
+        /// <summary>
+        /// 获取按标签分组的资源
+        /// </summary>
+        /// <param name="labelName"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public List<T> GetLabelAssets<T>(string labelName)
+            where T : UnityEngine.Object
+        {
+            var _labelKey = buildLabelAssetKey(labelName, typeof(T));
+            if (!addressableLabelAssets.ContainsKey(_labelKey))
+            {
+                UNIHperLogger.LogWarning($"can not find label assets with key: {labelName}");
+                return null;
+            }
+
+            return addressableLabelAssets[_labelKey].OfType<T>().ToList();
+        }
+
         public async Task<IEnumerable<AudioClip>> AppendAudioClips(IEnumerable<string> AudioPathes)
         {
             var _validPathes = AudioPathes.Where(_path => File.Exists(_path));
@@ -306,6 +349,13 @@ namespace UNIHper
             return await AppendAudioClips(
                 Directory.GetFiles(audioDir, searchPattern, searchOption)
             );
+        }
+
+        public async Task<AudioClip> AppendAudioClip(string InPath)
+        {
+            var _audioClip = await this.LoadAudioClip(InPath);
+            appendResources(new List<AudioClip> { _audioClip }, CUSTOM_RES_KEY);
+            return _audioClip;
         }
 
         public async Task<IEnumerable<Texture2D>> AppendTextures(IEnumerable<string> TexturePathes)
@@ -538,6 +588,7 @@ namespace UNIHper
                             .Invoke(this, new object[] { _resItem.label })
                         as IObservable<List<UnityEngine.Object>>
                     );
+                    addressableLabelAssets.Add(buildLabelAssetKey(_resItem.label, _T), _assets);
                     appendResources(_assets.ToArray(), InResID);
                 }
                 catch (Exception /*_ex*/
@@ -604,20 +655,25 @@ namespace UNIHper
             }
         }
 
-        private void UnLoadAssetByKey(string InKey)
+        private void UnLoadAssetByKey(string sceneKey)
         {
-            if (resources.ContainsKey(InKey))
-                resources[InKey].Clear();
-            if (bundles.ContainsKey(InKey))
+            if (resources.ContainsKey(sceneKey))
+                resources[sceneKey].Clear();
+            if (bundles.ContainsKey(sceneKey))
             {
-                bundles[InKey].Values.ToList().ForEach(_ => _?.Unload(true));
-                bundles[InKey].Clear();
+                bundles[sceneKey].Values.ToList().ForEach(_ => _?.Unload(true));
+                bundles[sceneKey].Clear();
             }
         }
 
-        private string buildResKey(UnityEngine.Object InRes)
+        private string buildResKey(UnityEngine.Object resObj)
         {
-            return string.Format("{0}_{1}", InRes.GetType().FullName, InRes.name);
+            return string.Format("{0}_{1}", resObj.GetType().FullName, resObj.name);
+        }
+
+        private string buildLabelAssetKey(string label, Type resType)
+        {
+            return string.Format("{0}_{1}", label, resType.FullName);
         }
 
         private string getCurrentSceneName()
