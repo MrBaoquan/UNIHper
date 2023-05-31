@@ -12,24 +12,24 @@ namespace UNIHper
     [DisallowMultipleComponent]
     public class UNIHperEntry : SingletonBehaviour<UNIHperEntry>
     {
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void initialize()
         {
-            Debug.Log("UNIHper.Initialize");
             var _entry = GameObject.FindObjectOfType<UNIHperEntry>();
-            if (_entry == null)
+            if (_entry is not null)
+                return;
+
+            var _unihperEntry = Resources.Load<GameObject>("UNIHper/Prefabs/UNIHper");
+
+            if (_unihperEntry is null)
             {
-                var _unihperEntry = Resources.Load<GameObject>("UNIHper/Prefabs/UNIHper");
-                if (_unihperEntry == null)
-                {
-                    Debug.LogWarning(
-                        "UNIHperEntry not found, Please click UNIHper/Initialize menu to create UNIHperEntry."
-                    );
-                    return;
-                }
-                var _unihperEntryGO = GameObject.Instantiate(_unihperEntry);
-                _unihperEntryGO.name = "__UNIHper";
+                Debug.LogWarning(
+                    "UNIHperEntry not found, Please click UNIHper/Initialize menu to create UNIHperEntry."
+                );
+                return;
             }
+            var _unihperEntryGO = GameObject.Instantiate(_unihperEntry);
+            _unihperEntryGO.name = "__UNIHper";
         }
 
         private async void Awake()
