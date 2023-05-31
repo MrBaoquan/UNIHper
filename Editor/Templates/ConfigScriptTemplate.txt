@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using UNIHper;
+
+[SerializedAt(AppPath.StreamingDir)]
 public class ##CLASSNAME## : UConfig
 {
     // Write your comments here

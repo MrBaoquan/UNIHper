@@ -219,7 +219,7 @@ namespace UNIHper
         private void Update() { }
 
         // Called when this ui is showing
-        protected override void OnShowed() { }
+        protected override void OnShown() { }
 
         // Called when this ui is hidden
         protected override void OnHidden() { }

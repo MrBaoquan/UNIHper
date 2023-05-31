@@ -25,8 +25,8 @@ public class ##CLASSNAME## : UIBase
 
     }
 
-    // Called when this ui is showed
-    protected override void OnShowed()
+    // Called when this ui is shown
+    protected override void OnShown()
     {
 
     }

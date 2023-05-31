@@ -20,25 +20,21 @@ namespace UNIHper
             get { return __Type; }
         }
 
-        private UnityEvent m_onShowEvent = new UnityEvent();
+        private UnityEvent onShownEvent = new UnityEvent();
 
         public IObservable<Unit> OnShowAsObservable()
         {
-            return m_onShowEvent.AsObservable();
+            return onShownEvent.AsObservable();
         }
 
-        private UnityEvent m_onHideEvent = new UnityEvent();
+        private UnityEvent onHiddenEvent = new UnityEvent();
 
         public IObservable<Unit> OnHideAsObservable()
         {
-            return m_onHideEvent.AsObservable();
+            return onHiddenEvent.AsObservable();
         }
 
-        protected bool bShow = false;
-        public bool isShowing
-        {
-            get { return bShow; }
-        }
+        public bool isShowing { get; private set; } = false;
 
         public void Toggle()
         {
@@ -86,7 +82,7 @@ namespace UNIHper
             {
                 this.gameObject.SetActive(true);
             }
-            bShow = true;
+            isShowing = true;
             handleShowEvents();
         }
 
@@ -94,26 +90,26 @@ namespace UNIHper
         {
             this.OnShowing();
             await handleShowAction();
-            this.OnShowed();
-            m_onShowEvent.Invoke();
+            this.OnShown();
+            onShownEvent.Invoke();
         }
 
         // Called when the ui is being requested to hide
         protected void HandleHide()
         {
-            if (!bShow)
+            if (!isShowing)
                 return;
-            bShow = false;
+            isShowing = false;
             this.handleHideEvents();
         }
 
         protected async void handleHideEvents()
         {
-            this.onHiding();
+            this.OnHiding();
             await handleHideAction();
             this.OnHidden();
-            m_onHideEvent.Invoke();
-            if (!bShow && this.gameObject)
+            onHiddenEvent.Invoke();
+            if (!isShowing && this.gameObject)
                 this.gameObject.SetActive(false);
         }
 
@@ -145,9 +141,9 @@ namespace UNIHper
 
         protected virtual void OnShowing() { }
 
-        protected virtual void OnShowed() { }
+        protected virtual void OnShown() { }
 
-        protected virtual void onHiding() { }
+        protected virtual void OnHiding() { }
 
         protected virtual void OnHidden() { }
     }

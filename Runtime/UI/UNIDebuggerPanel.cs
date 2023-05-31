@@ -81,7 +81,7 @@ public class UNIDebuggerPanel : UIBase
     protected override void OnLoaded() { }
 
     // Called when this ui is showing
-    protected override void OnShowed() { }
+    protected override void OnShown() { }
 
     // Called when this ui is hidden
     protected override void OnHidden() { }
