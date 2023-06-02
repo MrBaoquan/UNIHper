@@ -15,6 +15,7 @@ namespace UNIHper
             : base(NetProtocol.Udp)
         {
             udpClient = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            LocalEndPoint = new IPEndPoint(IPAddress.Any, 0);
         }
 
         public UUdpClient(string InLocalIP, int InLocalPort, UNetMsgReceiver messageReceiver)
@@ -98,6 +99,14 @@ namespace UNIHper
         public int SendTo(byte[] InData, string InIP, int InPort)
         {
             return SendTo(InData, new IPEndPoint(IPAddress.Parse(InIP), InPort));
+        }
+
+        public int SendTo(string InData, string InIP, int InPort)
+        {
+            return SendTo(
+                System.Text.Encoding.UTF8.GetBytes(InData),
+                new IPEndPoint(IPAddress.Parse(InIP), InPort)
+            );
         }
 
         public int SendTo(byte[] InData, EndPoint InRemote)

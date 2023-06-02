@@ -170,16 +170,38 @@ namespace UNIHper
             activeAllDisplays();
         }
 
+        public void ResetPrimaryScreen()
+        {
+            bool _fullScreen =
+                (
+                    PrimaryScreen.Mode == FullScreenMode.ExclusiveFullScreen
+                    || PrimaryScreen.Mode == FullScreenMode.FullScreenWindow
+                )
+                    ? true
+                    : false;
+            Screen.SetResolution(PrimaryScreen.Width, PrimaryScreen.Height, _fullScreen);
+            if (!_fullScreen)
+            {
+                List<DisplayInfo> _displays = new List<DisplayInfo>();
+                Screen.GetDisplayLayout(_displays);
+                Screen.MoveMainWindowTo(
+                    _displays.First(),
+                    new Vector2Int(PrimaryScreen.PosX, PrimaryScreen.PosY)
+                );
+            }
+
+            Debug.LogFormat(
+                "set fullScreen:{0}, width:{1}, height:{2}",
+                _fullScreen,
+                PrimaryScreen.Width,
+                PrimaryScreen.Height
+            );
+        }
+
         private void executeWindowSettings()
         {
 #if UNITY_STANDALONE_WIN && !UNITY_EDITOR
-            bool _fullScreen = (
-                    PrimaryScreen.Mode == FullScreenMode.ExclusiveFullScreen ||
-                    PrimaryScreen.Mode == FullScreenMode.FullScreenWindow) ?
-                true : false;
-            Screen.SetResolution (PrimaryScreen.Width, PrimaryScreen.Height, _fullScreen);
-            Debug.LogFormat ("set fullScreen:{0}, width:{1}, height:{2}",
-                _fullScreen, PrimaryScreen.Width, PrimaryScreen.Height);
+            ResetPrimaryScreen();
             keepWindowTop ();
 #endif
         }

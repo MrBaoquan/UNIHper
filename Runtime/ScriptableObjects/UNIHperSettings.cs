@@ -53,6 +53,11 @@ namespace UNIHper
             get => Self().defaultClickSound;
         }
 
+        public static bool ShowTapEffect
+        {
+            get => Self().showTapEffect;
+        }
+
         [Title("UNIHper Config File Paths")]
         public string ResourcePath = "UNIHper/resources";
         public string UIPath = "UNIHper/uis";
@@ -60,10 +65,9 @@ namespace UNIHper
 
         [Title("UNIHper Interaction Settings")]
         public AudioClip defaultClickSound;
+        public bool showTapEffect = true;
 
         [Title("UNIHper Other Settings")]
         public bool ShowDebugMessage = false;
-
-        //public ConfigDriver configDriver = ConfigDriver.XML;
     }
 }

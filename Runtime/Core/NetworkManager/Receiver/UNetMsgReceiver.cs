@@ -29,14 +29,14 @@ namespace UNIHper
             }
         }
         protected Socket socket;
-        protected MessageQueeue messageQueeue;
+        protected MessageQueue messageQueue;
         protected string RemoteIP = string.Empty;
         protected int RemotePort = -1;
         protected string LocalIP = string.Empty;
         protected int LocalPort = -1;
         protected string ConnectionKey = string.Empty;
 
-        public UNetMsgReceiver Prepare(Socket InSocket, MessageQueeue InQueue, USocket InUSocket)
+        public UNetMsgReceiver Prepare(Socket InSocket, MessageQueue InQueue, USocket InUSocket)
         {
             socket = InSocket;
             var _ipEndPoint = socket.RemoteEndPoint as IPEndPoint;
@@ -51,7 +51,7 @@ namespace UNIHper
             LocalPort = _localEP.Port;
 
             ConnectionKey = string.Format("{0}_{1}", RemoteIP, RemotePort);
-            messageQueeue = InQueue;
+            messageQueue = InQueue;
             uSocket = InUSocket;
             OnConnected();
             return this;
@@ -91,7 +91,7 @@ namespace UNIHper
             InMessage.LocalPort = LocalPort;
             InMessage.RemoteIP = RemoteIP;
             InMessage.RemotePort = RemotePort;
-            messageQueeue.PushMessage(InMessage);
+            messageQueue.PushMessage(InMessage);
         }
 
         public UNetMsgReceiver Clone()

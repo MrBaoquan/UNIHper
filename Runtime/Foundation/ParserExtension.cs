@@ -1,3 +1,4 @@
+using System.Text;
 using UnityEngine;
 
 namespace UNIHper
@@ -35,6 +36,11 @@ namespace UNIHper
                 System.Globalization.NumberStyles.HexNumber
             );
             return new Color32(r, g, b, a);
+        }
+
+        public static byte[] ToUTF8Bytes(this string content)
+        {
+            return Encoding.UTF8.GetBytes(content);
         }
     }
 }

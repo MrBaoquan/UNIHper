@@ -209,6 +209,16 @@ namespace UNIHper
             Hide<UIBase>(InKey);
         }
 
+        public T Toggle<T>()
+            where T : UIBase
+        {
+            var _ui = Get<T>();
+            if (_ui is null)
+                return null;
+            _ui.Toggle();
+            return _ui;
+        }
+
         // 对话框类
         public void ShowAlert(string InContent, Action OnConfirm = null)
         {

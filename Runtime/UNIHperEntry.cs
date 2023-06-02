@@ -69,7 +69,13 @@ namespace UNIHper
             this.Initialize();
         }
 
-        private void Initialize() { }
+        private void Initialize()
+        {
+            if (UNIHperSettings.ShowTapEffect)
+            {
+                TapEffect.Instance.Initialize();
+            }
+        }
 
         private void Update()
         {
@@ -84,9 +90,14 @@ namespace UNIHper
             if (Keyboard.current.f12Key.wasPressedThisFrame)
             {
                 Managements.UI.Get<UNIDebuggerPanel>().Toggle();
-                Debug.Log(
-                    $"Toggle UNIDebuggerPanel: {Managements.UI.Get<UNIDebuggerPanel>().isShowing}"
-                );
+            }
+
+            if (Keyboard.current.f10Key.wasPressedThisFrame)
+            {
+                if (SRDebug.Instance.IsDebugPanelVisible)
+                    SRDebug.Instance.HideDebugPanel();
+                else
+                    SRDebug.Instance.ShowDebugPanel(SRDebugger.DefaultTabs.Console);
             }
 #else
             if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.S))
@@ -97,9 +108,14 @@ namespace UNIHper
             if (Input.GetKeyDown(KeyCode.F12))
             {
                 Managements.UI.Get<UNIDebuggerPanel>().Toggle();
-                Debug.Log(
-                    $"Toggle UNIDebuggerPanel: {Managements.UI.Get<UNIDebuggerPanel>().isShowing}"
-                );
+            }
+
+            if (Input.GetKeyDown(KeyCode.F10))
+            {
+                if (SRDebug.Instance.IsDebugPanelVisible)
+                    SRDebug.Instance.HideDebugPanel();
+                else
+                    SRDebug.Instance.ShowDebugPanel(SRDebugger.DefaultTabs.Console);
             }
 #endif
         }

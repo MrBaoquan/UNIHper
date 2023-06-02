@@ -54,23 +54,33 @@ namespace UNIHper
             destroySocket(ref socket);
         }
 
-        public void Send2Client(byte[] InData, string InKey = "")
+        public void Send2Client(byte[] InData, string InKey)
         {
             if (InData == null)
                 return;
-            if (InKey == "")
-            {
-                connections.Values
-                    .ToList()
-                    .ForEach(_connection =>
-                    {
-                        _connection.Send(InData);
-                    });
-                return;
-            }
             if (!connections.ContainsKey(InKey))
                 return;
             connections[InKey].Send(InData);
+        }
+
+        public void Send2Client(string InData, string InKey)
+        {
+            Send2Client(Encoding.UTF8.GetBytes(InData), InKey);
+        }
+
+        public void Send2Clients(byte[] InData)
+        {
+            connections.Values
+                .ToList()
+                .ForEach(_connection =>
+                {
+                    _connection.Send(InData);
+                });
+        }
+
+        public void Send2Clients(string InData)
+        {
+            Send2Clients(Encoding.UTF8.GetBytes(InData));
         }
 
         protected override void onLocalEndPointChanged()

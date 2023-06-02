@@ -1,3 +1,4 @@
+using System.Text;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -109,6 +110,11 @@ namespace UNIHper
                 doDisconnect(true);
             }
             return 0;
+        }
+
+        public int Send2Server(string InData)
+        {
+            return Send2Server(Encoding.UTF8.GetBytes(InData));
         }
 
         protected override void onReceiverDisconnected(string InKey, Socket InSocket)

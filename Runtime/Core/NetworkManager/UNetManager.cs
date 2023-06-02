@@ -122,7 +122,8 @@ namespace UNIHper
             if (allUdpClients.ContainsKey(_key))
                 return allUdpClients[_key];
             var _udpClient = new UUdpClient();
-            _udpClient.SetRemoteEP(InRemoteIP, InRemotePort).SetReceiver(messageReceiver);
+            _udpClient.SetRemoteEP(InRemoteIP, InRemotePort);
+            _udpClient.SetReceiver(messageReceiver);
             allUdpClients.Add(_key, _udpClient);
             return _udpClient;
         }

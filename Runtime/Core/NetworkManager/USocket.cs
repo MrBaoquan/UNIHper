@@ -60,7 +60,7 @@ namespace UNIHper
             get { return protocol; }
         }
         protected NetProtocol protocol = NetProtocol.Unknown;
-        protected MessageQueeue messageDispatcher = new MessageQueeue();
+        protected MessageQueue messageDispatcher = new MessageQueue();
         protected IPEndPoint localEndPoint;
         public IPEndPoint LocalEndPoint
         {

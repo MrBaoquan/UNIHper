@@ -48,7 +48,7 @@ public class UNIDebuggerPanel : UIBase
                 var _fullScreen = this.Get<SwitchManager>(
                     "panel_resolution/switch_fullscreen"
                 ).isOn;
-                Screen.SetResolution(_width, _height, _fullScreen);
+                //Screen.SetResolution(_width, _height, _fullScreen);
                 var _appConfig = Managements.Config.Get<AppConfig>();
                 _appConfig.PrimaryScreen.Width = _width;
                 _appConfig.PrimaryScreen.Height = _height;
@@ -56,6 +56,8 @@ public class UNIDebuggerPanel : UIBase
                     ? FullScreenMode.FullScreenWindow
                     : FullScreenMode.Windowed;
                 _appConfig.Serialize();
+
+                Managements.Config.Get<AppConfig>().ResetPrimaryScreen();
             });
     }
 

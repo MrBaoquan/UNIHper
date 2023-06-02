@@ -38,7 +38,7 @@ namespace UNIHper
         public NetProtocol Protocol = NetProtocol.Tcp;
     }
 
-    public class MessageQueeue
+    public class MessageQueue
     {
         private Queue<UMessage> messages = new Queue<UMessage>();
 

@@ -36,7 +36,7 @@ public class AddressableUtil
         return entry != null;
     }
 
-    [MenuItem("Assets/Add to Addressable System")]
+    [MenuItem("Assets/Add To Addressable System")]
     static void Add2Addressable()
     {
         var settings = addressableSettings();
@@ -56,7 +56,7 @@ public class AddressableUtil
         "Packages"
     };
 
-    [MenuItem("Assets/Add to Addressable System", true)]
+    [MenuItem("Assets/Add To Addressable System", true)]
     static bool Add2AddressableValidate()
     {
         var _curDir = UNIEditorUtil.GetSelectedDirectory();

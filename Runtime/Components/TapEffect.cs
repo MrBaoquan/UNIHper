@@ -16,7 +16,7 @@ using UnityEditor;
 
 namespace UNIHper
 {
-    enum TapArea
+    public enum TapArea
     {
         EmptyArea,
         FullScreen,
@@ -31,24 +31,24 @@ namespace UNIHper
             )
         ]
         private Canvas _canvas;
-        private Canvas canvas
+        public Canvas RootCanvas
         {
             get
             {
                 if (_canvas == null)
                 {
-                    _canvas = GameObject.FindObjectOfType<Canvas>();
-                    if (_canvas == null)
-                        _canvas = new GameObject("TapEffectCanvas").AddComponent<Canvas>();
+                    _canvas = new GameObject("TapEffectRootCanvas").AddComponent<Canvas>();
+                    _canvas.transform.SetParent(transform);
                     _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
                 }
 
                 return _canvas;
             }
+            set { _canvas = value; }
         }
 
         [SerializeField, Tooltip("The area where the tap effect can be instantiated")]
-        private TapArea tapArea = TapArea.FullScreen;
+        public TapArea TapArea = TapArea.EmptyArea;
 
         [Title("Tap Effect Settings ")]
         [SerializeField]
@@ -67,6 +67,8 @@ namespace UNIHper
                 "The prefab of the tap effect, it should have an Animator component and an Image component, and the Animator should have a state named 'Idle'"
             )
         ]
+        public void Initialize() { }
+
         private GameObject _effectPrefab;
         private GameObject effectPrefab
         {
@@ -87,6 +89,11 @@ namespace UNIHper
                         Resources.Load<RuntimeAnimatorController>(
                             "Animations/Controllers/OneClip_Idle"
                         );
+
+                    effectClip =
+                        effectClip == null
+                            ? Resources.Load<AnimationClip>("Animations/TapEffect")
+                            : effectClip;
 
                     _controller.animationClipPairs =
                         _controller.runtimeAnimatorController.animationClips
@@ -119,7 +126,7 @@ namespace UNIHper
         private void showEffect(Vector2 position)
         {
             var _spawnPool = PoolManager.Pools["TapEffect"];
-            var _effect = _spawnPool.Spawn("TapEffect", canvas.transform);
+            var _effect = _spawnPool.Spawn("TapEffect", RootCanvas.transform);
             _effect.transform.position = position;
             _effect.transform.SetAsLastSibling();
             _effect.SetActive(true);
@@ -141,14 +148,15 @@ namespace UNIHper
             _rectTrans.anchorMin = Vector2.zero;
             _rectTrans.anchorMax = Vector2.zero;
 
-            var _tapSpawnPool = PoolManager.Pools.Create("TapEffect");
-            effectPrefab.transform.parent = _tapSpawnPool.transform;
+            var _tapSpawnPool = PoolManager.Pools.Create("TapEffect", gameObject);
+            effectPrefab.transform.SetParent(_tapSpawnPool.transform);
 
             _tapSpawnPool.CreatePrefabPool(new PrefabPool(effectPrefab.transform));
 
-            if (tapArea == TapArea.EmptyArea)
+            if (TapArea == TapArea.EmptyArea)
             {
                 var _tapGesture = new TapGestureRecognizer();
+
                 FingersScript.Instance.TreatMousePointerAsFinger = true;
                 _tapGesture.AllowSimultaneousExecutionWithAllGestures();
 
@@ -158,14 +166,18 @@ namespace UNIHper
                         showEffect(new Vector2(gesture.FocusX, gesture.FocusY));
                 };
                 FingersScript.Instance.AddGesture(_tapGesture);
+                FingersScript.Instance.ShowTouches = false;
             }
-            else if (tapArea == TapArea.FullScreen)
+            else if (TapArea == TapArea.FullScreen)
             {
-                MultipleTouchManager.Instance
-                    .OnFingerDownAsObservable()
+                Observable
+                    .EveryUpdate()
+                    .Where(
+                        _ => Pointer.current != null && Pointer.current.press.wasPressedThisFrame
+                    )
                     .Subscribe(_ =>
                     {
-                        showEffect(_.screenPosition);
+                        showEffect(Pointer.current.position.ReadValue());
                     })
                     .AddTo(this);
             }

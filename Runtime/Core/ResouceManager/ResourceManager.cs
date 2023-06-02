@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.Text.RegularExpressions;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -340,14 +341,24 @@ namespace UNIHper
             return _audioClips;
         }
 
+        /// <summary>
+        /// 加载指定目录下的音频文件
+        /// </summary>
+        /// <param name="audioDir">音频目录</param>
+        /// <param name="searchPattern">匹配模式</param>
+        /// <param name="searchOption">搜索模式</param>
+        /// <returns></returns>
         public async Task<IEnumerable<AudioClip>> AppendAudioClips(
             string audioDir,
-            string searchPattern = "*.wav",
+            string searchPattern = "*.wav|*.mp3",
             SearchOption searchOption = SearchOption.AllDirectories
         )
         {
+            var _searchPatterns = searchPattern.Split('|');
             return await AppendAudioClips(
-                Directory.GetFiles(audioDir, searchPattern, searchOption)
+                Directory
+                    .GetFiles(audioDir, "*.*", searchOption)
+                    .Where(_path => _searchPatterns.Contains(Path.GetExtension(_path).ToLower()))
             );
         }
 
@@ -358,7 +369,14 @@ namespace UNIHper
             return _audioClip;
         }
 
-        public async Task<IEnumerable<Texture2D>> AppendTextures(IEnumerable<string> TexturePathes)
+        /// <summary>
+        /// 加载指定路径的图片
+        /// </summary>
+        /// <param name="TexturePathes">资源路径列表</param>
+        /// <returns></returns>
+        public async Task<IEnumerable<Texture2D>> AppendTexture2Ds(
+            IEnumerable<string> TexturePathes
+        )
         {
             var _validPathes = TexturePathes.Where(_path => File.Exists(_path));
             if (_validPathes.Count() <= 0)
@@ -371,20 +389,24 @@ namespace UNIHper
             return _textures;
         }
 
-        public async Task<IEnumerable<Texture2D>> AppendTextures(
+        /// <summary>
+        /// 加载指定目录下的图片
+        /// </summary>
+        /// <param name="textureDir">资源目录</param>
+        /// <param name="searchPattern">匹配方式</param>
+        /// <param name="searchOption">搜索模式</param>
+        /// <returns></returns>
+        public async Task<IEnumerable<Texture2D>> AppendTexture2Ds(
             string textureDir,
-            string searchPattern = "*.png",
+            string searchPattern = "*.png|*.jpg|*.jpeg",
             SearchOption searchOption = SearchOption.AllDirectories
         )
         {
-            return await AppendTextures(
+            var _searchPatterns = searchPattern.Split('|');
+            return await AppendTexture2Ds(
                 Directory
                     .GetFiles(textureDir, "*.*", searchOption)
-                    .Where(_path =>
-                    {
-                        var _ext = Path.GetExtension(_path).ToLower();
-                        return _ext == ".png" || _ext == ".jpg" || _ext == ".jpeg";
-                    })
+                    .Where(_path => _searchPatterns.Contains(Path.GetExtension(_path).ToLower()))
             );
         }
 
