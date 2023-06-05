@@ -237,7 +237,7 @@ namespace UNIHper
             });
         }
 
-        public void ShowConfrim(string InContent, Action OnConfirm = null, Action OnCancel = null)
+        public void ShowConfirm(string InContent, Action OnConfirm = null, Action OnCancel = null)
         {
             Show<DialogUI>(InUI =>
             {

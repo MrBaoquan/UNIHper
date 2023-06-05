@@ -101,7 +101,7 @@ namespace UNIHper
                 .ToList()
                 .ForEach(_config =>
                 {
-                    UReflection.CallPrivateMethod(_config, "OnLoaded");
+                    UReflection.CallPrivateMethod(_config, "OnUnloaded");
                 });
             await Task.CompletedTask;
         }

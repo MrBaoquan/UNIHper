@@ -74,6 +74,7 @@ public class UNIDebuggerPanel : UIBase
             _screenHeight.ToString();
         this.Get<SwitchManager>("panel_resolution/switch_fullscreen").isOn =
             _fullScreen == FullScreenMode.FullScreenWindow;
+        this.Get<SwitchManager>("panel_resolution/switch_fullscreen").UpdateUI();
     }
 
     // Update is called once per frame

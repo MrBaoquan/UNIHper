@@ -15,7 +15,7 @@ namespace UNIHper
             : base(NetProtocol.Udp)
         {
             udpClient = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            LocalEndPoint = new IPEndPoint(IPAddress.Any, 0);
+            //LocalEndPoint = new IPEndPoint(IPAddress.Any, 0);
         }
 
         public UUdpClient(string InLocalIP, int InLocalPort, UNetMsgReceiver messageReceiver)

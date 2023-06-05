@@ -170,6 +170,20 @@ namespace UNIHper
             playFadeEffect();
         }
 
+        public void TogglePlay()
+        {
+            if (currentPlayer == null)
+                return;
+            if (currentPlayer.IsPaused)
+            {
+                playVideo();
+            }
+            else
+            {
+                Pause();
+            }
+        }
+
         public bool FadePlay { get; set; } = true;
 
         public void Stop()

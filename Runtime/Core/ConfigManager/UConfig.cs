@@ -97,11 +97,11 @@ namespace UNIHper
         /// </summary>
         protected virtual void OnLoaded() { }
 
+        protected virtual void OnUnloaded() { }
+
         protected virtual void OnSerializing() { }
 
         protected virtual void OnSerialized() { }
-
-        protected virtual void OnDestroy() { }
 
         protected virtual string Comment()
         {
