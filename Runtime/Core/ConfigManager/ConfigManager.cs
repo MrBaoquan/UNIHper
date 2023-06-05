@@ -108,6 +108,12 @@ namespace UNIHper
 
         internal void CleanUp()
         {
+            configs.Values
+                .ToList()
+                .ForEach(_config =>
+                {
+                    UReflection.CallPrivateMethod(_config, "OnDestroy");
+                });
             this.configs.Clear();
         }
 

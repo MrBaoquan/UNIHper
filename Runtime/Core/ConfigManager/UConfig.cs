@@ -101,6 +101,8 @@ namespace UNIHper
 
         protected virtual void OnSerialized() { }
 
+        protected virtual void OnDestroy() { }
+
         protected virtual string Comment()
         {
             return "Write your descriptions here";

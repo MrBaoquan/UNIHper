@@ -10,17 +10,31 @@ using UNIHper;
 
 public class UTimerManager : Singleton<UTimerManager>
 {
-    Timer _timerDbc;
-    Timer _timerTrt;
-
     internal Task Initialize()
     {
         return Task.CompletedTask;
     }
 
+    public IDisposable CountDown(Action<int> update, Action completed, int duration)
+    {
+        update?.Invoke(duration);
+        return Observable
+            .Interval(TimeSpan.FromSeconds(1))
+            .Take(duration + 1)
+            .Subscribe(_ =>
+            {
+                if (duration <= 0)
+                {
+                    completed?.Invoke();
+                    return;
+                }
+                update?.Invoke(Mathf.Max(--duration, 0));
+            });
+    }
+
     public IDisposable SetTimeout(Action InHandler, float InTime)
     {
-        return SetTimeout(InHandler, InTime);
+        return SetTimeout(InHandler, null, InTime);
     }
 
     public IDisposable SetTimeout(
@@ -60,14 +74,13 @@ public class UTimerManager : Singleton<UTimerManager>
         return _timerHandler;
     }
 
-    public IDisposable SetInterval(Action InCallback, float InInterval)
+    public IDisposable SetInterval(Action callback, float interval)
     {
         return Observable
-            .Interval(TimeSpan.FromSeconds(InInterval))
+            .Interval(TimeSpan.FromSeconds(interval))
             .Subscribe(_ =>
             {
-                if (InCallback != null)
-                    InCallback();
+                callback?.Invoke();
             });
     }
 
@@ -77,7 +90,7 @@ public class UTimerManager : Singleton<UTimerManager>
     /// <param name="InTime"></param>
     /// <param name="InCallback"></param>   主动调用时: 计时器小于InTime时  调用将会被忽略  计时器大于InTime时，回调一次  计时器清零
     /// <returns></returns>
-    public Action Throttle(float InTime, Action InAction)
+    public Action Throttle(float InTime, Action callback)
     {
         float _last = 0;
         return () =>
@@ -85,7 +98,7 @@ public class UTimerManager : Singleton<UTimerManager>
             float _delta = Time.time - _last;
             if (_delta >= InTime)
             {
-                InAction();
+                callback();
                 _last = Time.time;
             }
         };
@@ -130,14 +143,13 @@ public class UTimerManager : Singleton<UTimerManager>
         return _debounceDelegate;
     }
 
-    public void NextFrame(Action InAction)
+    public void NextFrame(Action callback)
     {
         Observable
             .NextFrame()
             .Subscribe(_ =>
             {
-                if (InAction != null)
-                    InAction();
+                callback?.Invoke();
             });
     }
 }
