@@ -152,6 +152,9 @@ namespace UNIHper.Editor
                 GameObject _newUNIHper =
                     PrefabUtility.InstantiatePrefab(_UNIHperPrefab) as GameObject;
                 _newUNIHper.name = "__UNIHper";
+                var _activeScene = EditorSceneManager.GetActiveScene();
+                EditorSceneManager.MarkSceneDirty(_activeScene);
+                EditorSceneManager.SaveScene(_activeScene);
             }
 
             // 2.   复制 配置文件
@@ -239,7 +242,6 @@ namespace UNIHper.Editor
                     _dstAssemblyPath
                 );
             }
-
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
