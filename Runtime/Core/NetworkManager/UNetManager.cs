@@ -282,6 +282,7 @@ namespace UNIHper
             DisposeAllTCPClients();
             DisposeAllUDPServers();
             DisposeAllTCPServers();
+            DisposeAllUDPClients();
         }
     }
 }
