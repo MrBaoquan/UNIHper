@@ -3,18 +3,22 @@ using System.Linq;
 using DNHper;
 using UniRx;
 using UnityEngine;
+using UnityEngine.EventSystems;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
 
 namespace UNIHper
 {
-    [DisallowMultipleComponent]
+    [DisallowMultipleComponent, DefaultExecutionOrder(-50000)]
     public class UNIHperEntry : SingletonBehaviour<UNIHperEntry>
     {
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void initialize()
         {
+            if (!UNIHperSettings.AutoInitIfNotStarted)
+                return;
+
             var _entry = GameObject.FindObjectOfType<UNIHperEntry>();
             if (_entry is not null)
                 return;
@@ -43,9 +47,9 @@ namespace UNIHper
             DontDestroyOnLoad(this.gameObject);
             ULog.Initialize();
 
-            GameObject _utilGO = new GameObject("UNIHperUtils");
+            GameObject _utilGO = new GameObject("UNIBehaviour");
             _utilGO.transform.parent = this.transform;
-            _utilGO.AddComponent(typeof(MonobehaviourUtil));
+            _utilGO.AddComponent(typeof(UNIBehaviour));
 
             // 创建音频管理脚本
             GameObject _audioManager = new GameObject("AudioManager");
@@ -53,6 +57,16 @@ namespace UNIHper
             await _audioManager.AddComponent<UAudioManager>().Initialize();
 
             AssemblyConfig.Refresh();
+
+            var _eventSystem = UnityEngine.Object.FindObjectOfType<EventSystem>();
+            if (
+                _eventSystem is null || !_eventSystem.gameObject.activeSelf || !_eventSystem.enabled
+            )
+            {
+                CreateDefaultEventSystem();
+            }
+
+            USceneManager.Instance.Awake();
 
             // 1. 配置文件
             await Managements.Config.Initialize();
@@ -68,6 +82,43 @@ namespace UNIHper
             await UNetManager.Instance.Initialize();
             this.Initialize();
         }
+
+        private void CreateDefaultEventSystem()
+        {
+            var go = new GameObject("EventSystem (Created by UNIHper)");
+            go.transform.SetParent(this.transform);
+            go.AddComponent<EventSystem>();
+
+#if ENABLE_INPUT_SYSTEM
+            AddInputSystem(go);
+#elif ENABLE_LEGACY_INPUT_MANAGER || (!ENABLE_INPUT_SYSTEM && !UNITY_2019_3_OR_NEWER)
+            AddLegacyInputSystem(go);
+#endif
+        }
+
+#if ENABLE_INPUT_SYSTEM
+        private void AddInputSystem(GameObject go)
+        {
+            var _inputModule =
+                go.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+            _inputModule.pointerBehavior = UnityEngine
+                .InputSystem
+                .UI
+                .UIPointerBehavior
+                .AllPointersAsIs;
+            // Disable/re-enable to force some initialization.
+            // fix for input not being recognized until component is toggled off then on
+            go.SetActive(false);
+            go.SetActive(true);
+        }
+#endif
+
+#if ENABLE_LEGACY_INPUT_MANAGER || (!ENABLE_INPUT_SYSTEM && !UNITY_2019_3_OR_NEWER)
+        private void AddLegacyInputSystem(GameObject go)
+        {
+            go.AddComponent<StandaloneInputModule>();
+        }
+#endif
 
         private void Initialize()
         {

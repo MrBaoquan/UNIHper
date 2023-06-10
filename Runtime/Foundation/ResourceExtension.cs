@@ -67,7 +67,6 @@ namespace UNIHper
             )
             {
                 yield return _www.SendWebRequest();
-
 #if UNITY_2021_1_OR_NEWER
                 if (_www.result == UnityWebRequest.Result.ConnectionError)
                 {
@@ -106,6 +105,7 @@ namespace UNIHper
                 if (_www.isNetworkError)
                 {
 #endif
+                    Debug.LogError(_www.error);
                     observer.OnError(new Exception(_www.error));
                 }
                 else

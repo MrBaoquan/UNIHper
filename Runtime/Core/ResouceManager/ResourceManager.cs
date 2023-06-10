@@ -42,6 +42,10 @@ namespace UNIHper
         // 框架层持久性资源配置项
         private List<ResourceItem> persistConfigData;
 
+        // 额外附加的资源配置项
+        private Dictionary<string, List<ResourceItem>> additionalConfigData =
+            new Dictionary<string, List<ResourceItem>>();
+
         /// <summary>
         ///  所有已加载资源实例 [Persistence,CUSTOM_RES_KEY,SCENE_NAME]
         /// </summary>
@@ -354,7 +358,10 @@ namespace UNIHper
             SearchOption searchOption = SearchOption.AllDirectories
         )
         {
-            var _searchPatterns = searchPattern.Split('|');
+            var _searchPatterns = searchPattern
+                .Split('|')
+                .Select(_pattern => _pattern.Replace("*", ""));
+            ;
             return await AppendAudioClips(
                 Directory
                     .GetFiles(audioDir, "*.*", searchOption)
@@ -402,7 +409,9 @@ namespace UNIHper
             SearchOption searchOption = SearchOption.AllDirectories
         )
         {
-            var _searchPatterns = searchPattern.Split('|');
+            var _searchPatterns = searchPattern
+                .Split('|')
+                .Select(_pattern => _pattern.Replace("*", ""));
             return await AppendTexture2Ds(
                 Directory
                     .GetFiles(textureDir, "*.*", searchOption)
@@ -465,6 +474,31 @@ namespace UNIHper
             return InResources[_key] as T;
         }
 
+        public void AddConfig(string configPath)
+        {
+            var _resAsset = Resources.Load<TextAsset>(configPath);
+            var _additionalConfig = Newtonsoft.Json.JsonConvert.DeserializeObject<
+                Dictionary<string, List<ResourceItem>>
+            >(_resAsset.text);
+            mergeResourceConfig(additionalConfigData, _additionalConfig);
+        }
+
+        private void mergeResourceConfig(
+            Dictionary<string, List<ResourceItem>> dstConfig,
+            Dictionary<string, List<ResourceItem>> srcConfig
+        )
+        {
+            foreach (var _configNode in srcConfig)
+            {
+                if (!dstConfig.ContainsKey(_configNode.Key))
+                {
+                    dstConfig.Add(_configNode.Key, _configNode.Value);
+                    continue;
+                }
+                dstConfig[_configNode.Key].AddRange(_configNode.Value);
+            }
+        }
+
         private void ReadConfigData()
         {
             string _resPath = UNIHperSettings.ResourceConfigPath;
@@ -474,6 +508,8 @@ namespace UNIHper
             var _appConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<
                 Dictionary<string, List<ResourceItem>>
             >(_resAsset.text);
+
+            mergeResourceConfig(_appConfigData, additionalConfigData);
 
             resourcesConfigData = _appConfigData
                 .Select(_configNode =>

@@ -170,7 +170,7 @@ namespace UNIHper
         public Dictionary<string, FileItem> fileItems = new Dictionary<string, FileItem>();
         FileItem lastSelected = null;
 
-        private void syncFileList(DirectoryInfo InDirectoryInfo, string SearchPattern = "*.*")
+        private void syncFileList(DirectoryInfo directoryInfo, string searchPattern = "*.*")
         {
             fileInfos.Clear();
             fileItems.Clear();
@@ -178,8 +178,13 @@ namespace UNIHper
             var _content = this.Get("scroll_fileList/Viewport/Content");
             _content.Children().ForEach(_file => Destroy(_file.gameObject));
 
-            fileInfos = InDirectoryInfo
-                .GetFiles(SearchPattern)
+            var _searchPatterns = searchPattern
+                .Split('|')
+                .Select(_pattern => _pattern.Replace("*", ""));
+
+            fileInfos = directoryInfo
+                .GetFiles("*.*", SearchOption.TopDirectoryOnly)
+                .Where(_fileInfo => _searchPatterns.Contains(_fileInfo.Extension.ToLower()))
                 .ToDictionary(_fileInfo => _fileInfo.Name, _fileInfo => _fileInfo);
 
             var _fileItem = Managements.Resource.Get<GameObject>("FileItem");

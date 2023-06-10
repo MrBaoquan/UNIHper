@@ -228,7 +228,7 @@ namespace UNIHper.Ghost.Editor
                 if (!string.IsNullOrEmpty(selectedGameObjectPath))
                     Selection.activeGameObject = _prefabStage.prefabContentsRoot.transform
                         .Find(selectedGameObjectPath)
-                        .gameObject;
+                        ?.gameObject;
             }
             else if (selectObject != null && AssetDatabase.Contains(selectObject))
             {
@@ -692,6 +692,7 @@ namespace UNIHper.Ghost.Editor
         {
             return Regex
                 .Replace(prefabPath, "^Assets/", "Assets/GhostEntities/Assets/")
+                .Replace("Resources", "Resources_ghost")
                 .ToForwardSlash();
         }
 

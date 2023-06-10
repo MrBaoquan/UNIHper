@@ -87,12 +87,12 @@ namespace UNIHper
                     var _controller = _effectPrefab.AddComponent<UAnimatorOverrideController>();
                     _controller.runtimeAnimatorController =
                         Resources.Load<RuntimeAnimatorController>(
-                            "Animations/Controllers/OneClip_Idle"
+                            "__Animations/Controllers/OneClip_Idle"
                         );
 
                     effectClip =
                         effectClip == null
-                            ? Resources.Load<AnimationClip>("Animations/TapEffect")
+                            ? Resources.Load<AnimationClip>("__Animations/TapEffect")
                             : effectClip;
 
                     _controller.animationClipPairs =
@@ -118,7 +118,7 @@ namespace UNIHper
         {
 #if UNITY_EDITOR
             effectClip = AssetDatabase.LoadAssetAtPath<AnimationClip>(
-                "Packages/com.parful.unihper/Resources/Animations/TapEffect.anim"
+                "Packages/com.parful.unihper/Resources/__Animations/TapEffect.anim"
             );
 #endif
         }

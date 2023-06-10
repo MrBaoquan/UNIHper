@@ -64,6 +64,15 @@ namespace UNIHper.Editor
             }
         }
 
+        private class DoCreateAssemblyDefinition : EndNameEditAction
+        {
+            public override void Action(int instanceId, string pathName, string resourceFile)
+            {
+                Object o = CreateScript(pathName, resourceFile);
+                ProjectWindowUtil.ShowCreatedAsset(o);
+            }
+        }
+
         private const string REPLACABLE_NAME_TAG = "##CLASSNAME##";
 
         ///< <summary>NAME's replacement tag.</summary>
@@ -76,12 +85,16 @@ namespace UNIHper.Editor
             EditorGUIUtility.IconContent("cs Script Icon").image as Texture2D
         );
 
+        private static Texture2D assemblyIcon = (
+            EditorGUIUtility.IconContent("AssemblyDefinitionAsset Icon").image as Texture2D
+        );
+
         /// <summary>Creates a new C# Class.</summary>
         [MenuItem("Assets/Create/UNIHper/SceneScript", priority = 5)]
         [MenuItem("UNIHper/Create/SceneScript", priority = 11)]
         private static void CreateSceneScript()
         {
-            CreateFromTemplate(
+            CreateCodeFileFromTemplate(
                 "NewSceneScript.cs", // Class's temporal name.
                 $@"Packages\{bundleName}\Editor\Templates\SceneScriptTemplate.txt" // Template's path.
             );
@@ -91,7 +104,7 @@ namespace UNIHper.Editor
         [MenuItem("UNIHper/Create/UIScript", priority = 12)]
         private static void CreateUIScript()
         {
-            CreateFromTemplate(
+            CreateCodeFileFromTemplate(
                 "NewUI.cs",
                 $@"Packages/{bundleName}/Editor/Templates/UIScriptTemplate.txt",
                 ScriptableObject.CreateInstance<DoCreateUICodeFile>()
@@ -102,9 +115,19 @@ namespace UNIHper.Editor
         [MenuItem("UNIHper/Create/ConfigScript", priority = 13)]
         private static void CreateConfigScript()
         {
-            CreateFromTemplate(
+            CreateCodeFileFromTemplate(
                 "NewConfig.cs",
                 $@"Packages\{bundleName}\Editor\Templates\ConfigScriptTemplate.txt"
+            );
+        }
+
+        [MenuItem("Assets/Create/UNIHper/Game Assembly Definition", priority = 8)]
+        [MenuItem("UNIHper/Create/Game Assembly Definition", priority = 14)]
+        private static void CreateGameAssemblyDefinition()
+        {
+            CreateGameAssemblyDefinitionFromTemplate(
+                "NewGame.asmdef",
+                $@"Packages\{bundleName}\Editor\Templates\GameAssemblyDefinitionTemplate.txt"
             );
         }
 
@@ -126,6 +149,26 @@ namespace UNIHper.Editor
             Object o = CreateScript(
                 _relativePath,
                 $@"Packages\{bundleName}\Editor\Templates\SceneScriptTemplate.txt"
+            );
+            ProjectWindowUtil.ShowCreatedAsset(o);
+        }
+
+        public static void CreateGameMainAssemblyIfNotExists()
+        {
+            string _relativePath = "Assets/Develop/Scripts/GameMain.asmdef";
+            string _scriptPath = Path.GetFullPath(_relativePath);
+
+            if (File.Exists(_scriptPath))
+                return;
+
+            var _directory = Path.GetDirectoryName(_scriptPath);
+            if (!Directory.Exists(_directory))
+            {
+                Directory.CreateDirectory(_directory);
+            }
+            Object o = CreateScript(
+                _relativePath,
+                $@"Packages\{bundleName}\Editor\Templates\GameAssemblyDefinitionTemplate.txt"
             );
             ProjectWindowUtil.ShowCreatedAsset(o);
         }
@@ -170,7 +213,7 @@ namespace UNIHper.Editor
         /// <summary>Creates a new code file from a template file.</summary>
         /// <param name="initialName">The initial name to give the file in the UI</param>
         /// <param name="templatePath">The full path of the template file to use</param>
-        public static void CreateFromTemplate(
+        public static void CreateCodeFileFromTemplate(
             string initialName,
             string templatePath,
             EndNameEditAction endNameEditAction = null
@@ -181,6 +224,21 @@ namespace UNIHper.Editor
                 endNameEditAction ?? ScriptableObject.CreateInstance<DoCreateCodeFile>(),
                 initialName,
                 scriptIcon,
+                templatePath
+            );
+        }
+
+        public static void CreateGameAssemblyDefinitionFromTemplate(
+            string initialName,
+            string templatePath,
+            EndNameEditAction endNameEditAction = null
+        )
+        {
+            ProjectWindowUtil.StartNameEditingIfProjectWindowExists(
+                0,
+                endNameEditAction ?? ScriptableObject.CreateInstance<DoCreateAssemblyDefinition>(),
+                initialName,
+                assemblyIcon,
                 templatePath
             );
         }

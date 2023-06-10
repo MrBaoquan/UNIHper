@@ -76,7 +76,7 @@ namespace UNIHper.UI
 
             var _clips = AssetDatabase
                 .LoadAllAssetRepresentationsAtPath(
-                    @"Packages\com.parful.unihper\Resources\Animations\Controllers\UI_Controller.controller"
+                    @"Packages\com.parful.unihper\Resources\__Animations\Controllers\UI_Controller.controller"
                 )
                 .Where(_ => _ is AnimationClip)
                 .OfType<AnimationClip>()
@@ -136,11 +136,11 @@ namespace UNIHper.UI
         {
 #if UNITY_EDITOR
             overrideController = AssetDatabase.LoadAssetAtPath<AnimatorController>(
-                @"Packages\com.parful.unihper\Resources\Animations\Controllers\UI_Controller.controller"
+                @"Packages\com.parful.unihper\Resources\__Animations\Controllers\UI_Controller.controller"
             );
             var _clips = AssetDatabase
                 .LoadAllAssetRepresentationsAtPath(
-                    @"Packages\com.parful.unihper\Resources\Animations\Controllers\UI_Controller.controller"
+                    @"Packages\com.parful.unihper\Resources\__Animations\Controllers\UI_Controller.controller"
                 )
                 .Where(_ => _ is AnimationClip)
                 .OfType<AnimationClip>()

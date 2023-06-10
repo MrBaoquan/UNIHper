@@ -14,6 +14,11 @@ namespace UNIHper
     {
         private UnityEvent<Scene> m_onSceneLoaded = new UnityEvent<Scene>();
 
+        internal void Awake()
+        {
+            SceneScriptManager.Instance.TriggerOnAwake(SceneManager.GetActiveScene().name);
+        }
+
         internal async Task Initialize()
         {
             UNIHperLogger.Log("SceneManager Initializing ...");
@@ -37,7 +42,7 @@ namespace UNIHper
             System.Action InCompleted
         )
         {
-            MonobehaviourUtil.Instance.StartCoroutine(
+            UNIBehaviour.Instance.StartCoroutine(
                 IE_LoadScene(InSceneName, InProgress, InCompleted)
             );
         }
@@ -83,6 +88,7 @@ namespace UNIHper
             UIManager.Instance.OnEnterScene(InSceneName);
 
             // 6. 通知场景脚本 OnStart 事件
+            SceneScriptManager.Instance.TriggerOnAwake(InSceneName);
             SceneScriptManager.Instance.TriggerOnStart(InSceneName);
 
             m_onSceneLoaded.Invoke(SceneManager.GetSceneByName(InSceneName));
@@ -94,9 +100,9 @@ namespace UNIHper
             get { return SceneManager.GetActiveScene(); }
         }
 
-        private bool isCurrentScene(string InSceneName)
+        private bool isCurrentScene(string sceneName)
         {
-            return SceneManager.GetActiveScene().name == InSceneName;
+            return SceneManager.GetActiveScene().name == sceneName;
         }
     }
 }

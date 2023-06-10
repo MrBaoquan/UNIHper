@@ -24,23 +24,24 @@ namespace UNIHper
                 .Subscribe(_event =>
                 {
                     _delta =
-                        _event.position - new Vector2(transform.position.x, transform.position.y);
+                        _event.position
+                        - new Vector2(transform.localPosition.x, transform.localPosition.y);
                 });
 
             this.GetComponent<ObservableDragTrigger>()
                 .OnDragAsObservable()
                 .Subscribe(_event =>
                 {
-                    transform.position = _event.position - _delta;
+                    transform.localPosition = _event.position - _delta;
                 });
         }
 
-        protected void Show(Action<UIBase> InCallback = null)
+        public void Show(Action<UIBase> InCallback = null)
         {
             UIManager.Instance.Show(__UIKey, InCallback);
         }
 
-        protected void Hide()
+        public void Hide()
         {
             UIManager.Instance.Hide(__UIKey);
         }

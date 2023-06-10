@@ -11,17 +11,7 @@ namespace UNIHper
 {
     public class SceneScriptManager : Singleton<SceneScriptManager>
     {
-        public static void Register<T>()
-        {
-            //Debug.Log(typeof(T).FullName);
-        }
-
-        public static void Register(string InType)
-        {
-            //Debug.Log(Type.GetType(InType).FullName);
-        }
-
-        public class SceneScriptData
+        internal class SceneScriptData
         {
             public SceneScriptBase sceneScript;
             public IDisposable updateObserverable;
@@ -48,7 +38,7 @@ namespace UNIHper
         private Dictionary<string, SceneScriptData> sceneScripts =
             new Dictionary<string, SceneScriptData>();
 
-        public T GetSceneScript<T>()
+        internal T GetSceneScript<T>()
             where T : SceneScriptBase
         {
             SceneScriptData _sceneScriptData;
@@ -59,24 +49,68 @@ namespace UNIHper
             return _sceneScriptData.sceneScript as T;
         }
 
-        public void TriggerOnStart(string InSceneName)
+        internal SceneScriptBase GetSceneScript(string sceneName)
         {
             SceneScriptData _sceneScriptData;
-            SceneScriptBase _sceneScript = null;
-
-            if (!sceneScripts.TryGetValue(InSceneName, out _sceneScriptData))
+            if (!sceneScripts.TryGetValue(sceneName, out _sceneScriptData))
             {
-                string _sceneScriptTypeName = InSceneName + "Script";
-                Type _T = AssemblyConfig.GetUType(_sceneScriptTypeName);
-                if (_T != null)
+                return null;
+            }
+            return _sceneScriptData.sceneScript;
+        }
+
+        internal SceneScriptData GetSceneData(string sceneName)
+        {
+            if (sceneScripts.ContainsKey(sceneName))
+            {
+                return sceneScripts[sceneName];
+            }
+
+            var _sceneScriptTypeName = sceneName + "Script";
+            var _T = AssemblyConfig.GetUType(_sceneScriptTypeName);
+            if (_T != null)
+            {
+                SceneScriptData _sceneScriptData = new SceneScriptData();
+                var _sceneScript = Activator.CreateInstance(_T) as SceneScriptBase;
+                _sceneScriptData.sceneScript = _sceneScript;
+                sceneScripts.Add(sceneName, _sceneScriptData);
+                return _sceneScriptData;
+            }
+            Debug.LogWarning("SceneScript for " + sceneName + " not found!");
+            return null;
+        }
+
+        internal void TriggerOnAwake(string sceneName)
+        {
+            var _sceneScriptData = GetSceneData(sceneName);
+            if (_sceneScriptData is null)
+                return;
+
+            var _sceneScript = _sceneScriptData.sceneScript;
+            if (_sceneScript != null)
+            {
+                var _awakeAction = _sceneScript
+                    .GetType()
+                    .GetMethod(
+                        "Awake",
+                        System.Reflection.BindingFlags.NonPublic
+                            | System.Reflection.BindingFlags.Instance
+                    );
+
+                if (_awakeAction != null)
                 {
-                    // 重新初始化 SceneScript 实例
-                    _sceneScriptData = new SceneScriptData();
-                    _sceneScript = Activator.CreateInstance(_T) as SceneScriptBase;
-                    _sceneScriptData.sceneScript = _sceneScript;
-                    sceneScripts.Add(InSceneName, _sceneScriptData);
+                    _awakeAction.Invoke(_sceneScript, null);
                 }
             }
+        }
+
+        internal void TriggerOnStart(string sceneName)
+        {
+            var _sceneScriptData = GetSceneData(sceneName);
+            if (_sceneScriptData is null)
+                return;
+
+            var _sceneScript = _sceneScriptData.sceneScript;
 
             if (_sceneScript != null)
             {
@@ -108,11 +142,11 @@ namespace UNIHper
             }
             else
             {
-                Debug.LogWarningFormat("Can not find scene script: {0}", InSceneName + "Script");
+                Debug.LogWarningFormat("Can not find scene script: {0}", sceneName + "Script");
             }
         }
 
-        public void TriggerOnDestroy(string InSceneName)
+        internal void TriggerOnDestroy(string InSceneName)
         {
             SceneScriptData _sceneScriptData;
             if (sceneScripts.TryGetValue(InSceneName, out _sceneScriptData))

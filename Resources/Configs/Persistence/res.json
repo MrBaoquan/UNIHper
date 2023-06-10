@@ -1,11 +1,11 @@
 [
     {
         "type": "GameObject",
-        "path": "Prefabs/UI/Persistence"
+        "path": "__Prefabs/UI/Persistence"
     },
     {
         "type": "RuntimeAnimatorController",
-        "path": "Animations/Controllers"
+        "path": "__Animations/Controllers"
     },
     {
         "type": "AudioClip",

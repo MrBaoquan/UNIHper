@@ -53,7 +53,14 @@ namespace UNIHper
         /// <param name="Max">索引最大值</param>
         public void SetMax(int Max)
         {
+            if (Max < minIndex)
+            {
+                Debug.LogError("Max index must greater than Min index!");
+                return;
+            }
             maxIndex = Max;
+            if (current > maxIndex)
+                Set(maxIndex);
         }
 
         /// <summary>
@@ -62,7 +69,14 @@ namespace UNIHper
         /// <param name="Min">索引最小值</param>
         public void SetMin(int Min)
         {
+            if (Min > maxIndex)
+            {
+                Debug.LogError("Min index must less than Max index!");
+                return;
+            }
             minIndex = Min;
+            if (current < minIndex)
+                Set(minIndex);
         }
 
         /// <summary>
@@ -116,6 +130,16 @@ namespace UNIHper
         public int SetToMax()
         {
             current = Max;
+            onIndexChanged.Invoke(current);
+            return current;
+        }
+
+        /// <summary>
+        /// Force Notify Index Changed
+        /// </summary>
+        /// <returns></returns>
+        public int Notify()
+        {
             onIndexChanged.Invoke(current);
             return current;
         }

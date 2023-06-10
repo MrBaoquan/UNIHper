@@ -10,5 +10,12 @@ namespace UNIHper
         {
             return _buttonManager.onClick.AsObservable();
         }
+
+        public static IObservable<float> OnValueChangedAsObservable(
+            this SliderManager _sliderManager
+        )
+        {
+            return _sliderManager.mainSlider.onValueChanged.AsObservable();
+        }
     }
 }

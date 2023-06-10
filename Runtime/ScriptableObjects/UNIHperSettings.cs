@@ -38,11 +38,6 @@ namespace UNIHper
             get => Self().AssemblyPath;
         }
 
-        // public static ConfigDriver ConfigDriver
-        // {
-        //     get => Self().configDriver;
-        // }
-
         public static bool ShowDebugLog
         {
             get => Self().ShowDebugMessage;
@@ -58,6 +53,12 @@ namespace UNIHper
             get => Self().showTapEffect;
         }
 
+        public static bool AutoInitIfNotStarted
+        {
+            get => Self().autoInitialize;
+        }
+        public bool autoInitialize = true;
+
         [Title("UNIHper Config File Paths")]
         public string ResourcePath = "UNIHper/resources";
         public string UIPath = "UNIHper/uis";
@@ -69,5 +70,28 @@ namespace UNIHper
 
         [Title("UNIHper Other Settings")]
         public bool ShowDebugMessage = false;
+
+#if UNITY_EDITOR
+        public static void AddAssemblyToSettingsIfNotExists(string assemblyName)
+        {
+            var _textAsset = Resources.Load<TextAsset>(UNIHperSettings.AssemblyConfigPath);
+            var _assemblies = Newtonsoft.Json.JsonConvert.DeserializeObject<List<string>>(
+                _textAsset.text
+            );
+            var _currentAssembly = assemblyName;
+            if (!_assemblies.Contains(_currentAssembly))
+            {
+                _assemblies.Add(_currentAssembly);
+                var _newAssemblyContent = Newtonsoft.Json.JsonConvert.SerializeObject(_assemblies);
+                System.IO.File.WriteAllText(
+                    UnityEditor.AssetDatabase.GetAssetPath(_textAsset),
+                    _newAssemblyContent
+                );
+                UnityEditor.EditorUtility.SetDirty(_textAsset);
+                UnityEditor.AssetDatabase.SaveAssets();
+                UnityEditor.AssetDatabase.Refresh();
+            }
+        }
+#endif
     }
 }

@@ -13,12 +13,10 @@ namespace UNIHper
     public abstract partial class UIBase : MonoBehaviour
     {
         internal string __CanvasKey = string.Empty;
-        protected string __UIKey = string.Empty;
-        protected UIType __Type = UIType.Normal;
-        public UIType Type
-        {
-            get { return __Type; }
-        }
+        internal string __UIKey = string.Empty;
+        internal UIType __Type = UIType.Normal;
+        public UIType Type => __Type;
+        public string Key => __UIKey;
 
         private UnityEvent onShownEvent = new UnityEvent();
 

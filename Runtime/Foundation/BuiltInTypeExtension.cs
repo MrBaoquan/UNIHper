@@ -1,3 +1,4 @@
+using System.IO;
 using UnityEngine.UI;
 using UnityEngine;
 
@@ -41,6 +42,26 @@ namespace UNIHper
         public static Vector3 ToVector3(this Vector2 InVector2, float InZ)
         {
             return new Vector3(InVector2.x, InVector2.y, InZ);
+        }
+
+        public static bool SaveToFile(this Texture2D texture2D, string savePath, int quality = 90)
+        {
+            try
+            {
+                var _bytes = texture2D.EncodeToJPG(90);
+                var _saveDir = Path.GetDirectoryName(savePath);
+                if (!Directory.Exists(_saveDir))
+                {
+                    Directory.CreateDirectory(_saveDir);
+                }
+                File.WriteAllBytes(savePath, _bytes);
+                return true;
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError(e);
+                return false;
+            }
         }
     }
 }

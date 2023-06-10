@@ -43,12 +43,22 @@ namespace UNIHper
         private Dictionary<string, Dictionary<string, UIConfig>> customUIConfigData = null;
         private Dictionary<string, UIConfig> persistConfigData = null;
 
+        // 额外附加的配置
+        private Dictionary<string, Dictionary<string, UIConfig>> additionalConfigData =
+            new Dictionary<string, Dictionary<string, UIConfig>>();
+
         // 所有已实例化的UI集合
         private Dictionary<string, UIBase> allSpawnedUICaches = new Dictionary<string, UIBase>();
         private Dictionary<string, UIBase> allSpawnedPersistentUICaches =
             new Dictionary<string, UIBase>();
+
+        // 当前管理中的normalUIs
         private Dictionary<string, UIBase> normalUIs = new Dictionary<string, UIBase>();
+
+        // 当前管理中的standaloneUIs
         private Dictionary<string, UIBase> standaloneUIs = new Dictionary<string, UIBase>();
+
+        // 当前管理中的popupUIs
         private List<UIBase> popupUIs = new List<UIBase>();
 
         internal async Task Initialize()
@@ -68,7 +78,7 @@ namespace UNIHper
             this.popupUIs.Clear();
         }
 
-        internal void OnEnterScene(string InSceneName)
+        internal void OnEnterScene(string sceneName)
         {
             var _allKeys = allSpawnedUICaches.Keys.ToList();
             _allKeys.ForEach(_uiKey =>
@@ -90,69 +100,63 @@ namespace UNIHper
             });
 
             Dictionary<string, UIConfig> _uis = null;
-            if (!customUIConfigData.TryGetValue(InSceneName, out _uis))
+            if (!customUIConfigData.TryGetValue(sceneName, out _uis))
             {
-                Debug.LogWarningFormat("Find nothing ui in scene {0}", InSceneName);
+                Debug.LogWarningFormat("Find nothing ui in scene {0}", sceneName);
                 return;
             }
             SpawnUIS(_uis);
         }
 
-        public void Show(string InKey, Action<UIBase> InHandler = null)
+        public void Show(string uiKey, Action<UIBase> callback = null)
         {
             UIBase _uiComponent = null;
-            if (!allSpawnedUICaches.TryGetValue(InKey, out _uiComponent))
+            if (!allSpawnedUICaches.TryGetValue(uiKey, out _uiComponent))
             {
-                Debug.LogWarningFormat("Show ui {0} failed. UI {0} not exits.", InKey);
+                Debug.LogWarningFormat("Show ui {0} failed. UI {0} not exits.", uiKey);
                 return;
             }
-            Show(InKey, _uiComponent);
-            if (InHandler != null)
-            {
-                InHandler(_uiComponent);
-            }
+            Show(uiKey, _uiComponent);
+            callback?.Invoke(_uiComponent);
         }
 
-        public T Show<T>(Action<T> InHandler = null)
+        public T Show<T>(Action<T> callback = null)
             where T : UIBase
         {
             string _uiKey = typeof(T).Name;
-            return Show<T>(_uiKey, InHandler);
+            return Show<T>(_uiKey, callback);
         }
 
-        public T Show<T>(string InKey, Action<T> InHandler = null)
+        public T Show<T>(string uiKey, Action<T> callback = null)
             where T : UIBase
         {
             UIBase _uiComponent = null;
-            if (!allSpawnedUICaches.TryGetValue(InKey, out _uiComponent))
+            if (!allSpawnedUICaches.TryGetValue(uiKey, out _uiComponent))
             {
-                Debug.LogWarningFormat("Show ui {0} failed. UI {0} not exits.", InKey);
+                Debug.LogWarningFormat("Show ui {0} failed. UI {0} not exits.", uiKey);
                 return null;
             }
-            Show(InKey, _uiComponent);
-            if (InHandler != null)
-            {
-                InHandler(_uiComponent as T);
-            }
+            Show(uiKey, _uiComponent);
+            callback?.Invoke(_uiComponent as T);
             return _uiComponent as T;
         }
 
-        public T Get<T>(string InKey)
+        public T Get<T>(string uiKey)
             where T : UIBase
         {
-            if (InKey == "")
+            if (uiKey == "")
             {
-                InKey = typeof(T).Name;
+                uiKey = typeof(T).Name;
             }
             UIBase _uiComponent = null;
-            if (!allSpawnedUICaches.TryGetValue(InKey, out _uiComponent))
+            if (!allSpawnedUICaches.TryGetValue(uiKey, out _uiComponent))
             {
                 return null;
             }
             return _uiComponent as T;
         }
 
-        public T Get<T>(Action<T> InHandler = null)
+        public T Get<T>(Action<T> callback = null)
             where T : UIBase
         {
             string InKey = typeof(T).Name;
@@ -161,47 +165,89 @@ namespace UNIHper
             {
                 return null;
             }
-            if (InHandler != null)
-                InHandler(_uiComponent as T);
+
+            callback?.Invoke(_uiComponent as T);
             return _uiComponent as T;
         }
 
-        public T Hide<T>(Action<T> InHandler = null)
+        public T Hide<T>(Action<T> uiKey = null)
             where T : UIBase
         {
             string _key = typeof(T).Name;
-            return Hide<T>(_key, InHandler);
+            return Hide<T>(_key, uiKey);
         }
 
-        public T Hide<T>(string InKey, Action<T> InHandler = null)
+        public T Hide<T>(string uiKey, Action<T> callback = null)
             where T : UIBase
         {
-            if (InKey == "")
+            if (uiKey == "")
             {
-                InKey = typeof(T).Name;
+                uiKey = typeof(T).Name;
             }
             UIBase _uiComponent;
-            if (!allSpawnedUICaches.TryGetValue(InKey, out _uiComponent))
+            if (!allSpawnedUICaches.TryGetValue(uiKey, out _uiComponent))
             {
-                Debug.LogWarningFormat("Hide ui {0} failed. UI {0} not exits.", InKey);
+                Debug.LogWarningFormat("Hide ui {0} failed. UI {0} not exits.", uiKey);
                 return null;
             }
             UIType _uiType = _uiComponent.Type;
             switch (_uiType)
             {
                 case UIType.Normal:
-                    hideNormalUI(InKey);
+                    hideNormalUI(uiKey);
                     break;
                 case UIType.Standalone:
-                    hideStandaloneUI(InKey);
+                    hideStandaloneUI(uiKey);
                     break;
                 case UIType.Popup:
-                    hidePopupUI(InKey);
+                    hidePopupUI(uiKey);
                     break;
             }
-            if (InHandler != null)
-                InHandler(_uiComponent as T);
+            if (callback != null)
+                callback(_uiComponent as T);
             return _uiComponent as T;
+        }
+
+        public void HideAll()
+        {
+            allSpawnedUICaches
+                .Where(_ui => _ui.Value.isShowing)
+                .ToList()
+                .ForEach(_ui => Hide(_ui.Key));
+        }
+
+        private bool isStashing = false;
+        List<UIBase> stashedUIs = new List<UIBase>();
+
+        public void StashActiveUI()
+        {
+            if (isStashing)
+                return;
+            isStashing = true;
+            var _normalUIs = normalUIs.Values.Where(_ui => _ui.isShowing).ToList();
+            var _standaloneUIs = standaloneUIs.Values.Where(_ui => _ui.isShowing).ToList();
+            var _popupUIs = popupUIs.Where(_ui => _ui.isShowing).ToList();
+            stashedUIs = _normalUIs.Concat(_standaloneUIs).Concat(_popupUIs).ToList();
+            stashedUIs.ForEach(_ui => Hide(_ui.__UIKey));
+        }
+
+        public List<UIBase> ActiveUIs
+        {
+            get
+            {
+                var _normalUIs = normalUIs.Values.Where(_ui => _ui.isShowing).ToList();
+                var _standaloneUIs = standaloneUIs.Values.Where(_ui => _ui.isShowing).ToList();
+                var _popupUIs = popupUIs.Where(_ui => _ui.isShowing).ToList();
+                return _normalUIs.Concat(_standaloneUIs).Concat(_popupUIs).ToList();
+            }
+        }
+
+        public void PopStashedUI()
+        {
+            if (!isStashing)
+                return;
+            stashedUIs.ForEach(_ui => Show(_ui.__UIKey));
+            isStashing = false;
         }
 
         public void Hide(string InKey)
@@ -237,7 +283,11 @@ namespace UNIHper
             });
         }
 
-        public void ShowConfirm(string InContent, Action OnConfirm = null, Action OnCancel = null)
+        public void ShowConfirmPanel(
+            string InContent,
+            Action OnConfirm = null,
+            Action OnCancel = null
+        )
         {
             Show<DialogUI>(InUI =>
             {
@@ -266,6 +316,11 @@ namespace UNIHper
             });
         }
 
+        public void HideConfirmPanel()
+        {
+            Hide<DialogUI>();
+        }
+
         public void ShowSaveFileDialog(string BaseDir, Func<string, bool> OnSaved)
         {
             ShowSaveFileDialog(BaseDir, "*.*", OnSaved);
@@ -288,9 +343,13 @@ namespace UNIHper
                             Utility.Dispose(ref _clear);
                             Hide<FileDialog>();
                         }
-                        ;
                     });
             });
+        }
+
+        public void HideSaveFileDialog()
+        {
+            Hide<FileDialog>();
         }
 
         public void ShowOpenFileDialog(string FileDir, Func<string, bool> OnOpened)
@@ -320,9 +379,54 @@ namespace UNIHper
             });
         }
 
+        public void AddConfig(string configPath)
+        {
+            var _textAsset = Resources.Load<TextAsset>(configPath);
+            if (_textAsset == null)
+            {
+                Debug.LogErrorFormat(
+                    "Append config path {0} failed. Config file not exits.",
+                    configPath
+                );
+                return;
+            }
+            var _configData = Newtonsoft.Json.JsonConvert.DeserializeObject<
+                Dictionary<string, Dictionary<string, UIConfig>>
+            >(_textAsset.text);
+            mergeUIConfig(additionalConfigData, _configData);
+        }
+
         /// <summary>
         /// Private Methods
         /// </summary>
+
+        private void mergeUIConfig(
+            Dictionary<string, Dictionary<string, UIConfig>> dstConfig,
+            Dictionary<string, Dictionary<string, UIConfig>> srcConfig
+        )
+        {
+            srcConfig
+                .ToList()
+                .ForEach(_ =>
+                {
+                    if (!dstConfig.ContainsKey(_.Key))
+                    {
+                        dstConfig.Add(_.Key, _.Value);
+                    }
+                    else
+                    {
+                        _.Value
+                            .ToList()
+                            .ForEach(__ =>
+                            {
+                                if (!dstConfig[_.Key].ContainsKey(__.Key))
+                                {
+                                    dstConfig[_.Key].Add(__.Key, __.Value);
+                                }
+                            });
+                    }
+                });
+        }
 
         private void ReadConfigData()
         {
@@ -331,6 +435,8 @@ namespace UNIHper
             customUIConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<
                 Dictionary<string, Dictionary<string, UIConfig>>
             >(_uiAsset.text);
+
+            mergeUIConfig(customUIConfigData, additionalConfigData);
 
             var _persistUIAsset = Resources.Load<TextAsset>("Configs/Persistence/ui");
             persistConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<
@@ -358,18 +464,18 @@ namespace UNIHper
             }
         }
 
-        private void SpawnUI(string InUIKey, UIConfig InUIConfig)
+        private void SpawnUI(string uiKey, UIConfig uiConfig)
         {
             //string _scriptName = InUIConfig.GetScript(InUIKey) + ", MainGame, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null";
-            Type _T = AssemblyConfig.GetUType(InUIKey);
+            Type _T = AssemblyConfig.GetUType(uiKey);
             if (_T == null)
             {
-                Debug.LogWarningFormat("no class name match: {0}, spawn ui {0} failed", InUIKey);
+                Debug.LogWarningFormat("no class name match: {0}, spawn ui {0} failed", uiKey);
                 return;
             }
 
             GameObject _uiPrefab = ResourceManager.Instance.Get<GameObject>(
-                InUIConfig.GetAssetName(InUIKey)
+                uiConfig.GetAssetName(uiKey)
             );
             if (_uiPrefab is null)
             {
@@ -379,7 +485,7 @@ namespace UNIHper
 
             GameObject _newUI = GameObject.Instantiate(
                 _uiPrefab,
-                getUIRootLayout(InUIConfig.canvas).NormalUIRoot
+                getUIRootLayout(uiConfig.canvas).NormalUIRoot
             );
 
             UIBase _uiComponent = _newUI.GetComponent(_T) as UIBase;
@@ -387,13 +493,13 @@ namespace UNIHper
             {
                 _uiComponent = _newUI.AddComponent(_T) as UIBase;
             }
-            UReflection.SetPrivateField<string>(_uiComponent, "__CanvasKey", InUIConfig.canvas);
-            UReflection.SetPrivateField<string>(_uiComponent, "__UIKey", InUIKey);
-            UReflection.SetPrivateField<UIType>(_uiComponent, "__Type", InUIConfig.Type);
+            UReflection.SetPrivateField<string>(_uiComponent, "__CanvasKey", uiConfig.canvas);
+            UReflection.SetPrivateField<string>(_uiComponent, "__UIKey", uiKey);
+            UReflection.SetPrivateField<UIType>(_uiComponent, "__Type", uiConfig.Type);
             UReflection.CallPrivateMethod(_uiComponent, "OnLoad");
 
-            _newUI.transform.SetParent(getParentUIAttachTo(_uiComponent.Type, InUIConfig.canvas));
-            allSpawnedUICaches.Add(InUIKey, _uiComponent);
+            _newUI.transform.SetParent(getParentUIAttachTo(_uiComponent.Type, uiConfig.canvas));
+            allSpawnedUICaches.Add(uiKey, _uiComponent);
         }
 
         private Transform getParentUIAttachTo(UIType InUIType, string InCanvasKey)
@@ -411,25 +517,25 @@ namespace UNIHper
             return null;
         }
 
-        private UIRootLayout getUIRootLayout(string InCanvasKey = CANVAS_DEFAULT)
+        private UIRootLayout getUIRootLayout(string canvasKey = CANVAS_DEFAULT)
         {
-            if (!m_uiRootLayoutDic.ContainsKey(InCanvasKey))
+            if (!m_uiRootLayoutDic.ContainsKey(canvasKey))
             {
                 var _canvas = GameObject
                     .FindObjectsOfType<Canvas>(true)
-                    .Where(_ => _.gameObject.name == InCanvasKey)
+                    .Where(_ => _.gameObject.name == canvasKey)
                     .FirstOrDefault();
                 if (_canvas == null)
                 {
                     var _uiLayoutGO = GameObject.Instantiate(
-                        Resources.Load<GameObject>("Prefabs/CanvasDefault")
+                        Resources.Load<GameObject>("__Prefabs/CanvasDefault")
                     );
-                    _uiLayoutGO.name = InCanvasKey;
+                    _uiLayoutGO.name = canvasKey;
                     _canvas = _uiLayoutGO.GetComponent<Canvas>();
                 }
-                m_uiRootLayoutDic.Add(InCanvasKey, new UIRootLayout(_canvas));
+                m_uiRootLayoutDic.Add(canvasKey, new UIRootLayout(_canvas));
             }
-            return m_uiRootLayoutDic[InCanvasKey];
+            return m_uiRootLayoutDic[canvasKey];
         }
 
         private void Show(string InKey, UIBase InUIComponent)
@@ -537,20 +643,20 @@ namespace UNIHper
             _uiComponent.transform.SetAsLastSibling();
         }
 
-        private void hidePopupUI(string InKey = "")
+        private void hidePopupUI(string uiKey = "")
         {
             if (popupUIs.Count <= 0)
             {
                 return;
             }
             UIBase _uiComponent = null;
-            if (InKey == "")
+            if (string.IsNullOrEmpty(uiKey))
             {
-                _uiComponent = popupUIs.FirstOrDefault();
+                _uiComponent = popupUIs.LastOrDefault();
             }
             else
             {
-                _uiComponent = allSpawnedUICaches[InKey];
+                _uiComponent = allSpawnedUICaches[uiKey];
             }
 
             if (!popupUIs.Contains(_uiComponent))

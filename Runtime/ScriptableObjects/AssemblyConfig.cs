@@ -94,7 +94,7 @@ namespace UNIHper
             var _asset = Resources.Load<TextAsset>(InResPath);
             if (_asset == null)
             {
-                Debug.LogWarningFormat("can not load {0}", InResPath);
+                Debug.LogWarningFormat("can not load module: {0}", InResPath);
                 return new List<string>();
             }
             return JsonConvert.DeserializeObject<List<string>>(_asset.text);
@@ -111,19 +111,20 @@ namespace UNIHper
 
         public void OnDestroy() { }
 
-        public void LoadNewAssembly(string InAssemblyName)
+        public void LoadNewAssembly(string assemblyName)
         {
             var _allTypes = allTypes;
-            var _assembly = Assembly.Load(new AssemblyName(InAssemblyName));
+            var _assembly = Assembly.Load(assemblyName);
+            //var _assembly = Assembly.Load(new AssemblyName(assemblyName));
             if (_assembly == null)
             {
-                UnityEngine.Debug.LogWarningFormat("can not load {0}", InAssemblyName);
+                UnityEngine.Debug.LogWarningFormat("can not load {0}", assemblyName);
                 return;
             }
 
-            if (!Assemblies.Contains(InAssemblyName))
+            if (!Assemblies.Contains(assemblyName))
             {
-                Assemblies.Add(InAssemblyName);
+                Assemblies.Add(assemblyName);
             }
 
             filterBaseTypes
@@ -137,7 +138,7 @@ namespace UNIHper
                         if (UNIHperSettings.ShowDebugLog)
                         {
                             UnityEngine.Debug.LogFormat(
-                                $"Add {InAssemblyName} -> Type:{_type.FullName} ",
+                                $"Add {assemblyName} -> Type:{_type.FullName} ",
                                 _type.Name,
                                 _type.FullName
                             );

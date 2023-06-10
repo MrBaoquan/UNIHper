@@ -134,7 +134,7 @@ namespace UNIHper.Editor
                 if (!File.Exists(UNIPaths.ProjectPath(_projectStartupPrefabPath)))
                 {
                     string _UNIHperPrefabPath = UNIPaths.PackagePathRelativeToProject(
-                        "Resources/Prefabs/UNIHper.prefab"
+                        "Resources/__Prefabs/UNIHper.prefab"
                     );
                     var _tempUNIHper = GameObject.Instantiate<GameObject>(
                         AssetDatabase.LoadAssetAtPath(_UNIHperPrefabPath, typeof(GameObject))
@@ -237,10 +237,11 @@ namespace UNIHper.Editor
             );
             if (!File.Exists(_dstAssemblyPath))
             {
-                File.Copy(
-                    UNIPaths.PackagePath("Editor/Templates/GameMainAssembly.txt"),
-                    _dstAssemblyPath
-                );
+                // File.Copy(
+                //     UNIPaths.PackagePath("Editor/Templates/GameMainAssembly.txt"),
+                //     _dstAssemblyPath
+                // );
+                CodeTemplateGenerator.CreateGameMainAssemblyIfNotExists();
             }
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
