@@ -134,7 +134,7 @@ namespace UNIHper.Editor
                 if (!File.Exists(UNIPaths.ProjectPath(_projectStartupPrefabPath)))
                 {
                     string _UNIHperPrefabPath = UNIPaths.PackagePathRelativeToProject(
-                        "Resources/__Prefabs/UNIHper.prefab"
+                        "Assets/Resources/__Prefabs/UNIHper.prefab"
                     );
                     var _tempUNIHper = GameObject.Instantiate<GameObject>(
                         AssetDatabase.LoadAssetAtPath(_UNIHperPrefabPath, typeof(GameObject))
@@ -165,7 +165,7 @@ namespace UNIHper.Editor
                 Directory.CreateDirectory(_projectConfigDir);
             }
 
-            var _packageConfigDir = UNIPaths.PackagePath("Resources/Configs");
+            var _packageConfigDir = UNIPaths.PackagePath("Assets/Resources/__Configs");
             string _dstResPath = Path.Combine(_projectConfigDir, "resources.json");
             if (!File.Exists(_dstResPath))
             {
@@ -188,7 +188,7 @@ namespace UNIHper.Editor
             if (!File.Exists(_dstAssembliesConfigPath))
             {
                 File.Copy(
-                    Path.Combine(UNIPaths.PackagePath(@"Editor\Templates\AssembliesTemplate.txt")),
+                    Path.Combine(UNIPaths.PackagePath("Editor/Templates/AssembliesTemplate.txt")),
                     _dstAssembliesConfigPath
                 );
             }
@@ -206,7 +206,7 @@ namespace UNIHper.Editor
                     var _configAsset = ScriptableObject.CreateInstance<UNIHperSettings>();
                     _configAsset.defaultClickSound = AssetDatabase.LoadAssetAtPath<AudioClip>(
                         UNIPaths.PackagePathRelativeToProject(
-                            "Resources/Persistence/AudioClips/click_effect_00.wav"
+                            "Assets/Resources/__AudioClips/click_effect_00.wav"
                         )
                     );
                     AssetDatabase.CreateAsset(_configAsset, _configPath);
@@ -237,10 +237,6 @@ namespace UNIHper.Editor
             );
             if (!File.Exists(_dstAssemblyPath))
             {
-                // File.Copy(
-                //     UNIPaths.PackagePath("Editor/Templates/GameMainAssembly.txt"),
-                //     _dstAssemblyPath
-                // );
                 CodeTemplateGenerator.CreateGameMainAssemblyIfNotExists();
             }
             AssetDatabase.SaveAssets();

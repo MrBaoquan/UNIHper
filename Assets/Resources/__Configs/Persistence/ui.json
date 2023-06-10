@@ -1,0 +1,10 @@
+{
+    "DialogUI": { "asset": "DialogUI", "type": "Popup", "script": "DialogUI" },
+    "LicenseUI": {
+        "asset": "LicenseUI",
+        "type": "Popup",
+        "script": "LicenseUI"
+    },
+    "FileDialog": { "type": "Popup" },
+    "UNIDebuggerPanel": { "asset": "UNIDebuggerPanel", "type": "Popup" }
+}

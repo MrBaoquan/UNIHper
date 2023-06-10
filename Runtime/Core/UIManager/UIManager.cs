@@ -438,7 +438,7 @@ namespace UNIHper
 
             mergeUIConfig(customUIConfigData, additionalConfigData);
 
-            var _persistUIAsset = Resources.Load<TextAsset>("Configs/Persistence/ui");
+            var _persistUIAsset = Resources.Load<TextAsset>("__Configs/Persistence/ui");
             persistConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<
                 Dictionary<string, UIConfig>
             >(_persistUIAsset.text);

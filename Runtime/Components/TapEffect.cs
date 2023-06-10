@@ -118,7 +118,7 @@ namespace UNIHper
         {
 #if UNITY_EDITOR
             effectClip = AssetDatabase.LoadAssetAtPath<AnimationClip>(
-                "Packages/com.parful.unihper/Resources/__Animations/TapEffect.anim"
+                "Packages/com.parful.unihper/Assets/Resources/__Animations/TapEffect.anim"
             );
 #endif
         }
