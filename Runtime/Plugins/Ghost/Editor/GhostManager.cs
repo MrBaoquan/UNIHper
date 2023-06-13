@@ -21,17 +21,29 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UNIHper.Ghost.Util;
 
+using System.Security.Cryptography;
+using PackageInfo = UnityEditor.PackageManager.PackageInfo;
+
 namespace UNIHper.Ghost.Editor
 {
     public static class GhostManager
     {
+        private static List<string> builtNameSpaces = new List<string>
+        {
+            "UnityEngine",
+            "UnityEditor",
+            "TMPro",
+        };
+
         public static IEnumerable<Component> NonBuiltinComponents(this GameObject self)
         {
             return self.GetComponents<Component>()
                 .Where(
                     _component =>
                         _component
-                        && !_component.GetType().Assembly.FullName.StartsWith("UnityEngine")
+                        && !builtNameSpaces.Exists(
+                            _ => _component.GetType().Namespace.StartsWith(_)
+                        )
                 )
                 .Where(_component => !GhostType.IsAssignableFrom(_component.GetType()));
         }
@@ -279,12 +291,12 @@ namespace UNIHper.Ghost.Editor
                     ghostType = null;
 
                     progressBarTitle = "Generate Ghost Entities";
-                    GhostData.ClearGhostMetaData();
+                    // GhostData.ClearGhostMetaData();
                     ShowLoading("backup older entities", 0.1f);
                     backupEntityFolder();
 
                     ShowLoading("delete the entity folder", 0.3f);
-                    deleteEntityFolder();
+                    // deleteEntityFolder();
 
                     ShowLoading("generate asset entities", 0.4f);
                     GenerateAssetsEntities();
@@ -368,13 +380,38 @@ namespace UNIHper.Ghost.Editor
             safeTransaction(() =>
             {
                 // 1. Generate for all prefab game objects
-                AllPrefabComponents(
-                    typeof(Transform),
-                    (_component, _path) => addGhostComponent(_component)
-                );
+                // AllPrefabComponents(
+                //     typeof(Transform),
+                //     (_component, _path) => addGhostComponent(_component)
+                // );
+                addGhostToAssets();
                 // 2. generate for all scene game objects
                 AllSceneObjects(typeof(Transform), (_go, _scene) => addGhostComponent(_go));
             });
+        }
+
+        /// <summary>
+        /// Add ghost component to all searched game objects
+        /// </summary>
+        /// <param name="searchInFolders"></param>
+        private static void addGhostToAssets(string[] searchInFolders = null)
+        {
+            AllPrefabComponents(
+                typeof(Transform),
+                (_component, _path) => addGhostComponent(_component),
+                null,
+                searchInFolders
+            );
+        }
+
+        private static void removeGhostFromAssets(string[] searchInFolders = null)
+        {
+            AllPrefabComponents(
+                GhostType,
+                (_component, _path) => removeGhostComponent(_component),
+                null,
+                searchInFolders
+            );
         }
 
         private static void addGhostComponent(GameObject gameObj)
@@ -503,11 +540,16 @@ namespace UNIHper.Ghost.Editor
             }
         }
 
+        static readonly List<string> invalidFolders = new List<string>
+        {
+            "AddressableAssetsData",
+            "GhostEntities",
+            "StreamingAssets"
+        };
+
         private static IEnumerable<string> filterDirectories()
         {
-            var _excludeDirs = GhostData.excludeDirectories
-                .Concat(new[] { "AddressableAssetsData", "GhostEntities", "StreamingAssets" })
-                .ToList();
+            var _excludeDirs = GhostData.excludeDirectories.Concat(invalidFolders).ToList();
             return new DirectoryInfo(Application.dataPath)
                 .GetDirectories()
                 .Where(_dir => !_excludeDirs.Contains(_dir.Name))
@@ -567,7 +609,7 @@ namespace UNIHper.Ghost.Editor
         /// <summary>
         /// 保存资源中幽灵的实体
         /// </summary>
-        private static void GenerateAssetsEntities()
+        private static void GenerateAssetsEntities(string[] searchInFolders = null)
         {
             tempAllEntityPaths.Clear();
 
@@ -582,23 +624,134 @@ namespace UNIHper.Ghost.Editor
                         )
                         .ToForwardSlash();
                     generateSingleEntity(_ghostComponent, _entityPath);
-                }
+                },
+                null,
+                searchInFolders
             );
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
         }
 
+        [MenuItem("Assets/Make Ghosts", false, 61)]
+        private static void GenerateFoldersEntities()
+        {
+            var _curDir = EditorUtil.GetSelectedDirectory();
+            var _filterDirs = new string[] { _curDir };
+            safeTransaction(() =>
+            {
+                addGhostToAssets(_filterDirs);
+                GenerateAssetsEntities(_filterDirs);
+            });
+        }
+
+        [MenuItem("Assets/Make Ghosts", true)]
+        private static bool GenerateFoldersEntitiesValidate()
+        {
+            return isValidGhostFolder();
+        }
+
+        private static bool isValidGhostFolder()
+        {
+            var _selectedFolders = EditorUtil.GetSelectedDirectories();
+            var _validFolders = _selectedFolders
+                .Where(
+                    _ =>
+                        !invalidFolders.Exists(
+                            _invalidFolder => _.StartsWith("Assets/" + _invalidFolder)
+                        )
+                )
+                .ToList();
+            if (_validFolders.Count > 0)
+                return true;
+
+            return false;
+        }
+
+        [MenuItem("Assets/Restore Entities", false, 62)]
+        private static void restoreFoldersEntities()
+        {
+            var _curDir = EditorUtil.GetSelectedDirectory();
+            var _filterDirs = new string[] { _curDir };
+            safeTransaction(() =>
+            {
+                RestoreAssetsEntities(_filterDirs);
+                removeGhostFromAssets(_filterDirs);
+            });
+        }
+
+        [MenuItem("Assets/Restore Entities", true)]
+        private static bool restoreFoldersEntitiesValidate()
+        {
+            return isValidGhostFolder();
+        }
+
+        [MenuItem("Assets/Export Package (Ghost Mode) %e", false, 63)]
+        private static void exportPackageWithGhosts()
+        {
+            var _selectPaths = Selection
+                .GetFiltered<UnityEngine.Object>(SelectionMode.Assets)
+                .Select(_ => AssetDatabase.GetAssetPath(_))
+                .Where(_ => _.StartsWith("Assets"))
+                .ToList();
+            if (_selectPaths.Count == 0)
+            {
+                Debug.LogWarning("Please select a folder or file to export");
+                return;
+            }
+
+            string[] _folderNames = Application.dataPath.Split('/');
+            var _projectName = _folderNames[_folderNames.Length - 2];
+
+            var _savePath = EditorUtility.SaveFilePanel(
+                "Export Package (Ghost Mode))",
+                Application.dataPath.Replace("Assets", ""),
+                $"{_projectName}_Art_{DateTime.Now:MMddHHmm}.unitypackage",
+                "unitypackage"
+            );
+
+            if (string.IsNullOrEmpty(_savePath))
+                return;
+
+            EditorApplication.ExecuteMenuItem("Assets/Make Ghosts");
+
+            var _uniArtDir = AssetDatabase.LoadAssetAtPath<DefaultAsset>(
+                @"Packages\com.parful.uniart"
+            );
+            _selectPaths.Add(AssetDatabase.GetAssetPath(_uniArtDir));
+
+            var _guid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(_uniArtDir));
+
+            _selectPaths.Add(AssetDatabase.GetAssetPath(_uniArtDir));
+            AssetDatabase.ExportPackage(
+                _selectPaths.ToArray(),
+                _savePath,
+                ExportPackageOptions.Default
+                    | ExportPackageOptions.Interactive
+                    | ExportPackageOptions.Recurse
+                    | ExportPackageOptions.IncludeDependencies
+            );
+        }
+
+        [MenuItem("Assets/Export Package (Ghost Mode) %e", true)]
+        private static bool exportPackageWithGhostsValidate()
+        {
+            return isValidGhostFolder();
+        }
+
         private static void AllPrefabComponents<T>(
             T cType,
             Action<GameObject, string> handler,
-            Func<(string _path, GameObject prefab), bool> condition = null
+            Func<(string _path, GameObject prefab), bool> condition = null,
+            string[] searchInFolders = null
         )
             where T : System.Type
         {
+            if (searchInFolders == null)
+                searchInFolders = filterDirectories().ToArray();
             var _condition = condition ?? (_ => true);
             AssetDatabase
-                .FindAssets("t:Prefab", filterDirectories().ToArray())
+                .FindAssets("t:Prefab", searchInFolders)
                 .Select(_guid => AssetDatabase.GUIDToAssetPath(_guid))
                 .Select(_path => (_path, AssetDatabase.LoadAssetAtPath<GameObject>(_path)))
                 .Where(_condition)
@@ -844,7 +997,7 @@ namespace UNIHper.Ghost.Editor
         /// <summary>
         /// 恢复资源目录中幽灵的实体
         /// </summary>
-        private static void RestoreAssetsEntities()
+        private static void RestoreAssetsEntities(string[] searchInFolders = null)
         {
             AllPrefabComponents(
                 GhostType,
@@ -859,7 +1012,9 @@ namespace UNIHper.Ghost.Editor
 
                     AssetDatabase.Refresh();
                     restoreSingleEntity(_component, _entityPath);
-                }
+                },
+                null,
+                searchInFolders
             );
         }
 

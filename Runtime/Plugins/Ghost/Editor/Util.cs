@@ -2,9 +2,51 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEditor;
 
 namespace UNIHper.Ghost.Util
 {
+    public static class EditorUtil
+    {
+        public static string GetCurrentAssetDirectory()
+        {
+            foreach (var obj in Selection.GetFiltered<UnityEngine.Object>(SelectionMode.Assets))
+            {
+                var path = AssetDatabase.GetAssetPath(obj);
+                if (string.IsNullOrEmpty(path))
+                    continue;
+
+                if (System.IO.Directory.Exists(path))
+                    return path;
+                else if (System.IO.File.Exists(path))
+                    return System.IO.Path.GetDirectoryName(path);
+            }
+            return "Assets";
+        }
+
+        public static string GetSelectedDirectory()
+        {
+            foreach (var obj in Selection.GetFiltered<UnityEngine.Object>(SelectionMode.Assets))
+            {
+                var path = AssetDatabase.GetAssetPath(obj);
+                if (string.IsNullOrEmpty(path))
+                    continue;
+
+                if (System.IO.Directory.Exists(path))
+                    return path;
+            }
+            return string.Empty;
+        }
+
+        public static List<string> GetSelectedDirectories()
+        {
+            return Selection
+                .GetFiltered<UnityEngine.Object>(SelectionMode.Assets)
+                .Select(obj => AssetDatabase.GetAssetPath(obj))
+                .ToList();
+        }
+    }
+
     public static class GameObjectExtensions
     {
         public static bool Requires(Type obj, Type requirement)

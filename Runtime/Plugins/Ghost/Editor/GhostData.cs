@@ -48,6 +48,11 @@ namespace UNIHper.Ghost
             ghostMetaData.ForEach(_meta => _meta.HasEntity = false);
         }
 
+        public void MarkAsEntity()
+        {
+            ghostMetaData.ForEach(_meta => _meta.HasEntity = true);
+        }
+
         public GhostMeta GetGhostMeta(string assetID)
         {
             var _ghostMeta = ghostMetaData.FirstOrDefault(

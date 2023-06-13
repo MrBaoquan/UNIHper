@@ -222,6 +222,7 @@ namespace UNIHper.Editor
                 UNIPaths.ProjectAssetPath("Develop/Scripts/Configs"),
                 UNIPaths.ProjectAssetPath("Develop/Scripts/Game"),
                 UNIPaths.ProjectAssetPath("ArtAssets"),
+                UNIPaths.ProjectAssetPath("StreamingAssets"),
             }.ForEach(_path =>
             {
                 if (!Directory.Exists(_path))
