@@ -19,10 +19,18 @@ namespace UNIHper
             {
                 filePath = Path.Combine(Application.streamingAssetsPath, filePath);
             }
-            return Observable.FromCoroutine<Texture2D>(
-                (_observer, _cancellationToken) =>
-                    LoadTexture2D(filePath, _observer, _cancellationToken)
-            );
+            return Observable
+                .FromCoroutine<Texture2D>(
+                    (_observer, _cancellationToken) =>
+                        LoadTexture2D(filePath, _observer, _cancellationToken)
+                )
+                .OnErrorRetry(
+                    (Exception _ex) =>
+                    {
+                        Debug.LogError($"LoadTexture2D Error:{_ex.Message}, filePath:{filePath}");
+                    },
+                    3
+                );
         }
 
         public static IObservable<AudioClip> LoadAudioClip(

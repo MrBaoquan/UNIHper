@@ -105,11 +105,23 @@ namespace UNIHper
             return current;
         }
 
+        public int Next(int index)
+        {
+            Set(index);
+            return Next();
+        }
+
         public int Prev()
         {
             current = PrevValue();
             onIndexChanged.Invoke(current);
             return current;
+        }
+
+        public int Prev(int index)
+        {
+            Set(index);
+            return Prev();
         }
 
         /// <summary>
