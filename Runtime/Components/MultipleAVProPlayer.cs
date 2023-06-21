@@ -38,7 +38,21 @@ namespace UNIHper
         private Indexer videoIndex = new Indexer(0);
         private List<string> videoPaths = new List<string>();
 
-        public async Task PrepareVideos(
+        public IObservable<IList<AVProPlayer>> PrepareVideos(
+            string videoDir,
+            string searchPattern = "*.mp4",
+            SearchOption searchOption = SearchOption.TopDirectoryOnly,
+            Action<AVProPlayer> settingCallback = null
+        )
+        {
+            var _patterns = searchPattern.Split('|').ToList();
+            var _videoPaths = Directory
+                .GetFiles(videoDir, "*.*", searchOption)
+                .Where(_path => _patterns.Exists(_pattern => _path.EndsWith(_pattern)));
+            return PrepareVideos(_videoPaths, settingCallback);
+        }
+
+        public IObservable<IList<AVProPlayer>> PrepareVideos(
             IEnumerable<string> VideoPaths,
             Action<AVProPlayer> settingCallback = null
         )
@@ -61,23 +75,36 @@ namespace UNIHper
             var _mediaPlayerPool = PoolManager.Pools.Create(gameObject.name + "_pool");
             _mediaPlayerPool.CreatePrefabPool(_playerPrefabPool);
 
-            await Observable.Zip(
-                VideoPaths.Select(_path =>
-                {
-                    var _mediaPlayer = _mediaPlayerPool.Spawn(_defaultPlayer.transform, transform);
-                    _mediaPlayer.SetAsLastSibling();
-                    var _avproPlayer = _mediaPlayer.GetComponent<AVProPlayer>();
-                    var _mediaPathType = MediaPathType.RelativeToStreamingAssetsFolder;
-                    if (Path.IsPathRooted(_path))
+            DisplayUGUI.color = Color.clear;
+
+            return Observable
+                .Zip(
+                    VideoPaths.Select(_path =>
                     {
-                        _mediaPathType = MediaPathType.AbsolutePathOrURL;
-                    }
-                    _avproPlayer.MediaPlayer.OpenMedia(_mediaPathType, _path, false);
-                    return _avproPlayer.OnMetaDataReadyAsObservable().First();
-                })
-            );
-            GameObject.DestroyImmediate(_defaultPlayer);
-            onPlayerChanged.Invoke(currentPlayer);
+                        var _mediaPlayer = _mediaPlayerPool.Spawn(
+                            _defaultPlayer.transform,
+                            transform
+                        );
+                        _mediaPlayer.SetAsLastSibling();
+                        var _avproPlayer = _mediaPlayer.GetComponent<AVProPlayer>();
+                        var _mediaPathType = MediaPathType.RelativeToStreamingAssetsFolder;
+                        if (Path.IsPathRooted(_path))
+                        {
+                            _mediaPathType = MediaPathType.AbsolutePathOrURL;
+                        }
+                        _avproPlayer.MediaPlayer.OpenMedia(_mediaPathType, _path, false);
+                        return _avproPlayer
+                            .OnMetaDataReadyAsObservable()
+                            .First()
+                            .Select(_ => _avproPlayer);
+                    })
+                )
+                .First()
+                .DoOnCompleted(() =>
+                {
+                    GameObject.DestroyImmediate(_defaultPlayer);
+                    onPlayerChanged.Invoke(currentPlayer);
+                });
         }
 
         public void Pause()
@@ -160,14 +187,18 @@ namespace UNIHper
                 Debug.LogWarning("Video path not found: " + Path);
                 return;
             }
-            stopVideo();
 
-            videoIndex.Set(_idx);
-            onPlayerChanged.Invoke(currentPlayer);
-
-            currentPlayer.Play(Path, OnCompleted, Loop, StartTime, EndTime);
-            DisplayUGUI.CurrentMediaPlayer = currentPlayer.GetComponent<MediaPlayer>();
-            playFadeEffect();
+            fadePlay(
+                FadePlay,
+                () =>
+                {
+                    stopVideo();
+                    videoIndex.Set(_idx);
+                    onPlayerChanged.Invoke(currentPlayer);
+                    DisplayUGUI.CurrentMediaPlayer = currentPlayer.GetComponent<MediaPlayer>();
+                    currentPlayer.Play(Path, OnCompleted, Loop, StartTime, EndTime);
+                }
+            );
         }
 
         public void TogglePlay()
@@ -278,22 +309,32 @@ namespace UNIHper
             DisplayUGUI.CurrentMediaPlayer = currentPlayer.GetComponent<MediaPlayer>();
         }
 
-        private void playVideo(bool FadeEffect = true)
+        private void playVideo(bool bFade = true)
         {
             var _mediaPlayer = currentPlayer;
-            DisplayUGUI.CurrentMediaPlayer = _mediaPlayer.GetComponent<MediaPlayer>();
-            _mediaPlayer.Play();
-            if (FadeEffect)
-                playFadeEffect();
+            fadePlay(
+                bFade,
+                () =>
+                {
+                    DisplayUGUI.CurrentMediaPlayer = _mediaPlayer.GetComponent<MediaPlayer>();
+                    _mediaPlayer.Play();
+                }
+            );
         }
 
-        private void playFadeEffect()
+        private void fadePlay(bool bFade, Action onCleared = null)
         {
-            if (!FadePlay)
+            if (!bFade)
+            {
+                onCleared?.Invoke();
                 return;
+            }
+
             DOTween
                 .Sequence()
-                .Append(DisplayUGUI.DOColor(Color.clear, 0.15f))
+                .Append(
+                    DisplayUGUI.DOColor(Color.clear, 0.15f).OnComplete(() => onCleared?.Invoke())
+                )
                 .Append(DisplayUGUI.DOColor(Color.white, 0.45f))
                 .PlayForward();
         }
@@ -303,6 +344,7 @@ namespace UNIHper
             if (currentPlayer == null)
                 return;
             currentPlayer.Rewind(true);
+            DisplayUGUI.color = Color.clear;
         }
 
         // Start is called before the first frame update

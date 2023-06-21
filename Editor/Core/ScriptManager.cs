@@ -60,7 +60,7 @@ namespace UNIHper.Editor
                 }
 
                 //JsonUtility.FromJson (_uiAsset.text);
-                Debug.Log(pathName);
+                // Debug.Log(pathName);
             }
         }
 
