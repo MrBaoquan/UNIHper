@@ -101,6 +101,11 @@ namespace UNIHper
             get { return mediaPlayer.Info.GetMaxFrameNumber(); }
         }
 
+        public float PlaybackRate
+        {
+            get { return MediaPlayer.Control.GetPlaybackRate(); }
+        }
+
         /// <summary>
         /// Current video time in seconds
         /// </summary>

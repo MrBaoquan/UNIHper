@@ -57,6 +57,21 @@ namespace UNIHper
             Action<AVProPlayer> settingCallback = null
         )
         {
+            transform
+                .Children()
+                .ToList()
+                .ForEach(_child =>
+                {
+                    var _avProPlayer = _child.Get<AVProPlayer>();
+                    _avProPlayer.ClearPlayHandlers();
+                    _avProPlayer.MediaPlayer.CloseMedia();
+                });
+
+            if (VideoPaths.Count() <= 0)
+            {
+                return Observable.Empty<IList<AVProPlayer>>();
+            }
+
             videoIndex.SetMax(VideoPaths.Count() - 1);
             this.videoPaths = VideoPaths.ToList();
 
@@ -72,7 +87,15 @@ namespace UNIHper
             _playerPrefabPool.cullDespawned = true;
             _playerPrefabPool.preloadAmount = 3;
 
-            var _mediaPlayerPool = PoolManager.Pools.Create(gameObject.name + "_pool");
+            if (PoolManager.Pools.ContainsKey(gameObject.name + "_pool"))
+            {
+                PoolManager.Pools.Destroy(gameObject.name + "_pool");
+            }
+
+            PoolManager.Pools.Create(gameObject.name + "_pool");
+            var _mediaPlayerPool = PoolManager.Pools[gameObject.name + "_pool"];
+            _mediaPlayerPool.DespawnAll();
+
             _mediaPlayerPool.CreatePrefabPool(_playerPrefabPool);
 
             DisplayUGUI.color = Color.clear;
@@ -207,7 +230,7 @@ namespace UNIHper
                 return;
             if (currentPlayer.IsPaused)
             {
-                playVideo();
+                playVideo(false);
             }
             else
             {

@@ -40,10 +40,14 @@ namespace UNIHper
         // 序列化子目录
         public string SubDir = string.Empty;
 
-        public SerializedAt(AppPath RootDir, string InSubDir = "Configs")
+        // 序列化优先级
+        public int Priority = 0;
+
+        public SerializedAt(AppPath RootDir, string SubDir = "Configs", int Priority = 0)
         {
             this.RootDir = RootDir;
-            SubDir = InSubDir;
+            this.SubDir = SubDir;
+            this.Priority = Priority;
         }
     }
 
@@ -59,7 +63,7 @@ namespace UNIHper
         }
     }
 
-    [SerializedAt(AppPath.PersistentDir), SerializeWith(ConfigDriver.XML)]
+    [SerializedAt(AppPath.PersistentDir, Priority = -1), SerializeWith(ConfigDriver.XML)]
     public class UConfig
     {
         [XmlIgnore]

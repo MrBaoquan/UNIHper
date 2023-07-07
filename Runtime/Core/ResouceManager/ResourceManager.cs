@@ -332,9 +332,9 @@ namespace UNIHper
             return addressableLabelAssets[_labelKey].OfType<T>().ToList();
         }
 
-        public async Task<IEnumerable<AudioClip>> AppendAudioClips(IEnumerable<string> AudioPathes)
+        public async Task<IEnumerable<AudioClip>> AppendAudioClips(IEnumerable<string> AudioPaths)
         {
-            var _validPathes = AudioPathes.Where(_path => File.Exists(_path));
+            var _validPathes = AudioPaths.Where(_path => File.Exists(_path));
             if (_validPathes.Count() <= 0)
                 return null;
 
