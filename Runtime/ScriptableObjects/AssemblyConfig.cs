@@ -10,10 +10,11 @@ using UnityEngine;
 namespace UNIHper
 {
     [System.Serializable]
-    public class UType
+    public class UNIType
     {
-        public string Name;
+        public string ID; // example: UNIHper.IdleUI
         public string FullName;
+        public string Name => ID.Split(".")[1];
     }
 
     public class AssemblyConfig : ScriptableObject
@@ -32,9 +33,9 @@ namespace UNIHper
             Self().refresh();
         }
 
-        public static Type GetUType(string InTypeName)
+        public static Type GetUNIType(string InTypeName)
         {
-            return Self().getUType(InTypeName);
+            return Self().getUNIType(InTypeName);
         }
 
         public static List<Type> GetSubClasses(Type InBaseType)
@@ -49,33 +50,31 @@ namespace UNIHper
             typeof(SceneScriptBase).AssemblyQualifiedName,
             typeof(UConfig).AssemblyQualifiedName
         };
-        public List<UType> CachedTypes;
-        private Dictionary<string, string> allTypes
-        {
-            get
-            {
-                return CachedTypes
-                    .GroupBy(_type => _type.Name)
-                    .Select(_group => _group.First())
-                    .ToDictionary(_1 => _1.Name, _2 => _2.FullName);
-            }
-        }
+        public List<UNIType> CachedTypes;
 
-        private Dictionary<string, List<Type>> allTypeMaps = new Dictionary<string, List<Type>>();
+        private Dictionary<string, List<Type>> allTypesMap = new Dictionary<string, List<Type>>();
 
-        private Type getUType(string InTypeName)
+        private Dictionary<string, Type> typeNamesMap { get; set; }
+
+        private Dictionary<string, Type> typeNamesWithAssemblyMap { get; set; }
+
+        private Type getUNIType(string typeName)
         {
-            if (!allTypes.ContainsKey(InTypeName))
+            if (typeName.Contains("."))
             {
+                if (typeNamesWithAssemblyMap.ContainsKey(typeName))
+                    return typeNamesWithAssemblyMap[typeName];
                 return null;
             }
-            return Type.GetType(allTypes[InTypeName]);
+            if (typeNamesMap.ContainsKey(typeName))
+                return typeNamesMap[typeName];
+            return null;
         }
 
         public void refresh()
         {
             Assemblies.Clear();
-            allTypeMaps.Clear();
+            allTypesMap.Clear();
             CachedTypes.Clear();
             var _internalAssemblies = getAssemblies("__Configs/assemblies");
             var _customAssemblies = getAssemblies(UNIHperSettings.AssemblyConfigPath);
@@ -87,6 +86,16 @@ namespace UNIHper
                 {
                     LoadNewAssembly(_assemblyName);
                 });
+
+            typeNamesMap = allTypesMap
+                .SelectMany(_kv => _kv.Value)
+                .GroupBy(_type => _type.Name)
+                .Select(_group => _group.First())
+                .ToDictionary(_type => _type.Name, _type => _type);
+
+            typeNamesWithAssemblyMap = allTypesMap
+                .SelectMany(_kv => _kv.Value)
+                .ToDictionary(_type => GetTypeUniqueID(_type), _type => _type);
         }
 
         private List<string> getAssemblies(string InResPath)
@@ -102,18 +111,23 @@ namespace UNIHper
 
         private List<Type> getSubClasses(Type InBaseType)
         {
-            if (!allTypeMaps.ContainsKey(InBaseType.AssemblyQualifiedName))
+            if (!allTypesMap.ContainsKey(InBaseType.AssemblyQualifiedName))
                 return new List<Type>();
-            return allTypeMaps[InBaseType.AssemblyQualifiedName];
+            return allTypesMap[InBaseType.AssemblyQualifiedName];
         }
 
-        public void Awake() { }
+        public static string GetTypeUniqueID(Type InType)
+        {
+            return $"{InType.Assembly.GetName().Name}.{InType.Name}";
+        }
 
-        public void OnDestroy() { }
-
+        /// <summary>
+        /// 加载新的程序集
+        /// </summary>
+        /// <param name="assemblyName"></param>
         public void LoadNewAssembly(string assemblyName)
         {
-            var _allTypes = allTypes;
+            // var _allTypes = allTypes;
             var _assembly = Assembly.Load(assemblyName);
             //var _assembly = Assembly.Load(new AssemblyName(assemblyName));
             if (_assembly == null)
@@ -133,32 +147,11 @@ namespace UNIHper
                 .ForEach(_filterType =>
                 {
                     var _filterTypes = _assembly.SubClasses(_filterType).ToList();
-                    _filterTypes.ForEach(_type =>
+                    if (!allTypesMap.ContainsKey(_filterType.AssemblyQualifiedName))
                     {
-                        if (UNIHperSettings.ShowDebugLog)
-                        {
-                            UnityEngine.Debug.LogFormat(
-                                $"Add {assemblyName} -> Type:{_type.FullName} ",
-                                _type.Name,
-                                _type.FullName
-                            );
-                        }
-                        if (!_allTypes.ContainsKey(_type.Name))
-                        {
-                            CachedTypes.Add(
-                                new UType
-                                {
-                                    Name = _type.Name,
-                                    FullName = _type.AssemblyQualifiedName
-                                }
-                            );
-                        }
-                    });
-                    if (!allTypeMaps.ContainsKey(_filterType.AssemblyQualifiedName))
-                    {
-                        allTypeMaps.Add(_filterType.AssemblyQualifiedName, new List<Type>());
+                        allTypesMap.Add(_filterType.AssemblyQualifiedName, new List<Type>());
                     }
-                    allTypeMaps[_filterType.AssemblyQualifiedName].AddRange(_filterTypes);
+                    allTypesMap[_filterType.AssemblyQualifiedName].AddRange(_filterTypes);
                 });
         }
     }
