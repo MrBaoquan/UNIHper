@@ -4886,8 +4886,7 @@ MonoBehaviour:
   ItemPrefab: {fileID: 22400004, guid: 408ed745743f47f46ac11b71f96cf1a4, type: 3}
   RowPadding: 2
   RowStyleSheet: {fileID: 11400000, guid: cdfb48dd49c2d7a4d9f8805cd96e0241, type: 2}
-  SelectedRowStyleSheet: {fileID: 11400000, guid: d30366e803724014382b48500f16271c,
-    type: 2}
+  SelectedRowStyleSheet: {fileID: 11400000, guid: d30366e803724014382b48500f16271c, type: 2}
   Spacing: 0
   StickToBottom: 1
 --- !u!114 &11413032
