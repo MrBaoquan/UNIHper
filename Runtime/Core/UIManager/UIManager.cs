@@ -74,6 +74,13 @@ namespace UNIHper
 
         internal void CleanUp()
         {
+            HideAll();
+            allSpawnedUICaches.Values
+                .ToList()
+                .ForEach(_ui =>
+                {
+                    GameObject.Destroy(_ui.gameObject);
+                });
             this.allSpawnedPersistentUICaches.Clear();
             this.allSpawnedUICaches.Clear();
             this.normalUIs.Clear();
@@ -94,7 +101,6 @@ namespace UNIHper
                     var _ui = allSpawnedUICaches[_uiKey];
                     UReflection.CallPrivateMethod(_ui, "HandleHide");
                     GameObject.Destroy(_ui.gameObject);
-                    Debug.Log("Destroy UI " + _uiKey);
                     allSpawnedUICaches.Remove(_uiKey);
                     if (popupUIs.Contains(_ui))
                         popupUIs.Remove(_ui);
@@ -106,6 +112,7 @@ namespace UNIHper
             Dictionary<string, UIConfig> _uis = null;
             if (!customUIConfigData.TryGetValue(sceneName, out _uis))
             {
+                //Debug.LogWarningFormat("Find nothing ui in scene {0}", sceneName);
                 return;
             }
             SpawnUIS(_uis);
