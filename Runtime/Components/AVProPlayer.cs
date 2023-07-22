@@ -271,11 +271,19 @@ namespace UNIHper
 
         public void Play()
         {
+            if (!Ready2Play)
+            {
+                return;
+            }
             MediaPlayer.Control.Play();
         }
 
         public void Pause()
         {
+            if (!Ready2Play)
+            {
+                return;
+            }
             MediaPlayer.Control.Pause();
         }
 
