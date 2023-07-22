@@ -141,6 +141,12 @@ namespace UNIHper
                 Debug.LogWarningFormat("Show ui {0} failed. UI {0} not exits.", uiKey);
                 return null;
             }
+
+            if (_uiComponent.isShowing)
+            {
+                return _uiComponent as T;
+            }
+
             Show(uiKey, _uiComponent);
             callback?.Invoke(_uiComponent as T);
             return _uiComponent as T;
@@ -190,11 +196,18 @@ namespace UNIHper
                 uiKey = typeof(T).Name;
             }
             UIBase _uiComponent;
+
             if (!allSpawnedUICaches.TryGetValue(uiKey, out _uiComponent))
             {
                 Debug.LogWarningFormat("Hide ui {0} failed. UI {0} not exits.", uiKey);
                 return null;
             }
+
+            if (!_uiComponent.isShowing)
+            {
+                return _uiComponent as T;
+            }
+
             UIType _uiType = _uiComponent.Type;
             switch (_uiType)
             {
