@@ -37,14 +37,12 @@ namespace UNIHper
         }
 
         public void LoadSceneAsync(
-            string InSceneName,
-            System.Action<float> InProgress,
-            System.Action InCompleted
+            string sceneName,
+            System.Action<float> progress = null,
+            System.Action completed = null
         )
         {
-            UNIBehaviour.Instance.StartCoroutine(
-                IE_LoadScene(InSceneName, InProgress, InCompleted)
-            );
+            UNIBehaviour.Instance.StartCoroutine(IE_LoadScene(sceneName, progress, completed));
         }
 
         internal IEnumerator IE_LoadScene(
@@ -70,7 +68,7 @@ namespace UNIHper
             _async.allowSceneActivation = false;
             while (!_async.isDone)
             {
-                InProgress(_async.progress);
+                InProgress?.Invoke(_async.progress);
                 if (_async.progress >= 0.9f)
                 {
                     if (!_async.allowSceneActivation)
@@ -82,7 +80,7 @@ namespace UNIHper
             }
 
             // 4. 通知加载场景完成事件
-            InCompleted();
+            InCompleted?.Invoke();
 
             // 5. 通知UIManager 进入新场景事件
             UIManager.Instance.OnEnterScene(InSceneName);

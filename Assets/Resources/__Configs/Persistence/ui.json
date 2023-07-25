@@ -1,10 +1,12 @@
 {
-    "DialogUI": { "asset": "DialogUI", "type": "Popup", "script": "DialogUI" },
-    "LicenseUI": {
-        "asset": "LicenseUI",
-        "type": "Popup",
-        "script": "LicenseUI"
+    "UNIHper.DialogUI": {
+        "asset": "DialogUI",
+        "type": "Popup"
     },
-    "FileDialog": { "type": "Popup" },
+    "UNIHper.LicenseUI": {
+        "asset": "LicenseUI",
+        "type": "Popup"
+    },
+    "UNIHper.FileDialog": { "type": "Popup", "asset": "FileDialog" },
     "UNIDebuggerPanel": { "asset": "UNIDebuggerPanel", "type": "Popup" }
 }

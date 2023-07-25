@@ -67,7 +67,7 @@ namespace UNIHper
             }
 
             var _sceneScriptTypeName = sceneName + "Script";
-            var _T = AssemblyConfig.GetUType(_sceneScriptTypeName);
+            var _T = AssemblyConfig.GetUNIType(_sceneScriptTypeName);
             if (_T != null)
             {
                 SceneScriptData _sceneScriptData = new SceneScriptData();

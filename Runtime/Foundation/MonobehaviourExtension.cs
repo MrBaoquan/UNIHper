@@ -201,7 +201,7 @@ namespace UNIHper
             for (int _index = StartIndex; _index <= _endIndex; ++_index)
             {
                 var _go = _self.transform.GetChild(_index).gameObject;
-                if (_go.activeInHierarchy != bActive)
+                if (_go.activeSelf != bActive)
                 {
                     _go.SetActive(bActive);
                 }
@@ -215,7 +215,7 @@ namespace UNIHper
             for (int _index = 0; _index < StartIndex; ++_index)
             {
                 var _go = _self.transform.GetChild(_index).gameObject;
-                if (_go.activeInHierarchy == bActive)
+                if (_go.activeSelf == bActive)
                 {
                     _go.SetActive(!bActive);
                 }

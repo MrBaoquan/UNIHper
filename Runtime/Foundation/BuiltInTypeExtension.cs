@@ -6,6 +6,26 @@ namespace UNIHper
 {
     public static class BuiltInTypeExtension
     {
+        /// <summary>
+        /// note: dont use this method in Update(), it will cause memory increase fast
+        /// </summary>
+        /// <param name="texture"></param>
+        /// <returns></returns>
+        public static Texture2D ToTexture2D(this Texture texture)
+        {
+            RenderTexture _rt = new RenderTexture(texture.width, texture.height, 0);
+            Graphics.Blit(texture, _rt);
+
+            Texture2D _texture2D = new Texture2D(texture.width, texture.height);
+            RenderTexture.active = _rt;
+            _texture2D.ReadPixels(new Rect(0, 0, _rt.width, _rt.height), 0, 0);
+            _texture2D.Apply();
+
+            RenderTexture.active = null;
+            _rt.Release();
+            return _texture2D;
+        }
+
         public static Sprite ToSprite(this Texture2D texture2D)
         {
             return texture2D.ToSprite(

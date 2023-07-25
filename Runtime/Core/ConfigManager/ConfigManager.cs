@@ -34,12 +34,28 @@ namespace UNIHper
             UNIHperLogger.Log("ConfigManager Initializing ...");
             this.loadConfig();
 
-            Type[] _configClasses = AssemblyConfig.GetSubClasses(typeof(UConfig)).ToArray(); // UReflection.SubClasses(typeof(UConfig));
+            var _configClasses = AssemblyConfig.GetSubClasses(typeof(UConfig)).ToList();
+            // 根据优先级进行排序
+            _configClasses.Sort(
+                (a, b) =>
+                {
+                    var _aAttr = Attribute
+                        .GetCustomAttributes(a)
+                        .Where(_attr => _attr is SerializedAt)
+                        .First();
+                    var _bAttr = Attribute
+                        .GetCustomAttributes(b)
+                        .Where(_attr => _attr is SerializedAt)
+                        .First();
+                    var _aPriority = (_aAttr as SerializedAt).Priority;
+                    var _bPriority = (_bAttr as SerializedAt).Priority;
+                    return _aPriority - _bPriority;
+                }
+            );
 
             foreach (var _configClass in _configClasses)
             {
                 UConfig _configInstance = Activator.CreateInstance(_configClass) as UConfig;
-
                 // 配置文件默认保存在 %userprofile%\AppData\LocalLow\<companyname>\<productname>
 
                 var _attributes = Attribute.GetCustomAttributes(_configClass);
@@ -48,6 +64,7 @@ namespace UNIHper
 
                 string _configDir = Path.Combine(Application.persistentDataPath, configDir);
 
+                // 计算配置文件保存目录
                 if (_serializeAtAttr != null)
                 {
                     var _serializedAttr = (_serializeAtAttr as SerializedAt);
@@ -67,6 +84,7 @@ namespace UNIHper
                     }
                 }
 
+                // 配置文件驱动方式
                 ConfigDriver _driverMode = ConfigDriver.XML;
                 if (_serializeWithAttr is not null)
                 {
@@ -117,6 +135,37 @@ namespace UNIHper
             this.configs.Clear();
         }
 
+        public T Reload<T>()
+            where T : UConfig
+        {
+            var _configKey = typeof(T).Name;
+            if (!this.configs.ContainsKey(_configKey))
+            {
+                return null;
+            }
+
+            var _configInstance = this.configs[_configKey];
+            UReflection.CallPrivateMethod(_configInstance, "OnUnloaded");
+
+            var _path = UReflection.GetPrivateField<string>(_configInstance, "__path");
+            var _driver = UReflection.GetPrivateField<int>(_configInstance, "__driver");
+            if (!File.Exists(_path))
+            {
+                this.serializeConfig(_configInstance, _path, (ConfigDriver)_driver);
+            }
+            else
+            {
+                _configInstance = this.deserializeConfig(typeof(T), _path);
+            }
+
+            UReflection.SetPrivateField(_configInstance, "__path", _path);
+            UReflection.SetPrivateField(_configInstance, "__driver", _driver);
+            UReflection.CallPrivateMethod(_configInstance, "OnLoaded");
+
+            this.configs[_configKey] = _configInstance;
+            return _configInstance as T;
+        }
+
         private void loadConfig() { }
 
         public void SerializeAll()
@@ -135,6 +184,14 @@ namespace UNIHper
             ConfigDriver driver = ConfigDriver.XML
         )
         {
+            if (string.IsNullOrEmpty(path))
+            {
+                Debug.LogWarning(
+                    $"serialize {target.GetType().Name} failed, path is null or empty."
+                );
+                return;
+            }
+
             UReflection.CallPrivateMethod(target, "OnSerializing");
             if (driver == ConfigDriver.YAML)
             {

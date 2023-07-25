@@ -58,7 +58,7 @@ namespace UNIHper
                             pushMessage(
                                 new NetStringMessage
                                 {
-                                    Content = Encoding.UTF8.GetString(_buffer),
+                                    Content = Encoding.UTF8.GetString(_buffer.Slice(0, _received)),
                                     RawData = _buffer.Slice(0, _received)
                                 }
                             );

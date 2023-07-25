@@ -40,7 +40,10 @@ namespace UNIHper
         private Dictionary<string, UIRootLayout> m_uiRootLayoutDic =
             new Dictionary<string, UIRootLayout>();
 
+        // 自定义的UI配置
         private Dictionary<string, Dictionary<string, UIConfig>> customUIConfigData = null;
+
+        // 持久化的UI配置
         private Dictionary<string, UIConfig> persistConfigData = null;
 
         // 额外附加的配置
@@ -71,6 +74,13 @@ namespace UNIHper
 
         internal void CleanUp()
         {
+            HideAll();
+            allSpawnedUICaches.Values
+                .ToList()
+                .ForEach(_ui =>
+                {
+                    GameObject.Destroy(_ui.gameObject);
+                });
             this.allSpawnedPersistentUICaches.Clear();
             this.allSpawnedUICaches.Clear();
             this.normalUIs.Clear();
@@ -102,66 +112,59 @@ namespace UNIHper
             Dictionary<string, UIConfig> _uis = null;
             if (!customUIConfigData.TryGetValue(sceneName, out _uis))
             {
-                Debug.LogWarningFormat("Find nothing ui in scene {0}", sceneName);
+                //Debug.LogWarningFormat("Find nothing ui in scene {0}", sceneName);
                 return;
             }
             SpawnUIS(_uis);
         }
 
-        public void Show(string uiKey, Action<UIBase> callback = null)
+        public UIBase Show(string uiKey, Action<UIBase> callback = null)
         {
             UIBase _uiComponent = null;
             if (!allSpawnedUICaches.TryGetValue(uiKey, out _uiComponent))
             {
                 Debug.LogWarningFormat("Show ui {0} failed. UI {0} not exits.", uiKey);
-                return;
+                return null;
             }
             Show(uiKey, _uiComponent);
             callback?.Invoke(_uiComponent);
+            return _uiComponent;
         }
 
         public T Show<T>(Action<T> callback = null)
             where T : UIBase
         {
-            string _uiKey = typeof(T).Name;
+            var _uiKey = AssemblyConfig.GetTypeUniqueID(typeof(T));
             return Show<T>(_uiKey, callback);
         }
 
-        public T Show<T>(string uiKey, Action<T> callback = null)
+        private T Show<T>(string uiKey, Action<T> callback = null)
             where T : UIBase
         {
             UIBase _uiComponent = null;
+
             if (!allSpawnedUICaches.TryGetValue(uiKey, out _uiComponent))
             {
                 Debug.LogWarningFormat("Show ui {0} failed. UI {0} not exits.", uiKey);
                 return null;
             }
+
+            if (_uiComponent.isShowing)
+            {
+                return _uiComponent as T;
+            }
+
             Show(uiKey, _uiComponent);
             callback?.Invoke(_uiComponent as T);
-            return _uiComponent as T;
-        }
-
-        public T Get<T>(string uiKey)
-            where T : UIBase
-        {
-            if (uiKey == "")
-            {
-                uiKey = typeof(T).Name;
-            }
-            UIBase _uiComponent = null;
-            if (!allSpawnedUICaches.TryGetValue(uiKey, out _uiComponent))
-            {
-                return null;
-            }
             return _uiComponent as T;
         }
 
         public T Get<T>(Action<T> callback = null)
             where T : UIBase
         {
-            string InKey = typeof(T).Name;
+            string uiKey = AssemblyConfig.GetTypeUniqueID(typeof(T));
             UIBase _uiComponent = null;
-            if (!allSpawnedUICaches.TryGetValue(InKey, out _uiComponent))
+            if (!allSpawnedUICaches.TryGetValue(uiKey, out _uiComponent))
             {
                 return null;
             }
@@ -170,14 +173,29 @@ namespace UNIHper
             return _uiComponent as T;
         }
 
+        public UIBase Get(string uiKey)
+        {
+            UIBase _uiComponent = null;
+            if (!allSpawnedUICaches.TryGetValue(uiKey, out _uiComponent))
+            {
+                return null;
+            }
+            return _uiComponent;
+        }
+
         public T Hide<T>(Action<T> uiKey = null)
             where T : UIBase
         {
-            string _key = typeof(T).Name;
+            var _key = AssemblyConfig.GetTypeUniqueID(typeof(T));
             return Hide<T>(_key, uiKey);
         }
 
-        public T Hide<T>(string uiKey, Action<T> callback = null)
+        public UIBase Hide(string uiKey, Action<UIBase> callback = null)
+        {
+            return Hide<UIBase>(uiKey, callback);
+        }
+
+        private T Hide<T>(string uiKey, Action<T> callback = null)
             where T : UIBase
         {
             if (uiKey == "")
@@ -185,11 +203,18 @@ namespace UNIHper
                 uiKey = typeof(T).Name;
             }
             UIBase _uiComponent;
+
             if (!allSpawnedUICaches.TryGetValue(uiKey, out _uiComponent))
             {
                 Debug.LogWarningFormat("Hide ui {0} failed. UI {0} not exits.", uiKey);
                 return null;
             }
+
+            if (!_uiComponent.isShowing)
+            {
+                return _uiComponent as T;
+            }
+
             UIType _uiType = _uiComponent.Type;
             switch (_uiType)
             {
@@ -438,10 +463,42 @@ namespace UNIHper
 
             mergeUIConfig(customUIConfigData, additionalConfigData);
 
+            customUIConfigData = customUIConfigData
+                .Select(_ =>
+                {
+                    return new KeyValuePair<string, Dictionary<string, UIConfig>>(
+                        _.Key,
+                        fillUIKeys(_.Value)
+                    );
+                })
+                .ToDictionary(_ => _.Key, _ => _.Value);
+
             var _persistUIAsset = Resources.Load<TextAsset>("__Configs/Persistence/ui");
             persistConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<
                 Dictionary<string, UIConfig>
             >(_persistUIAsset.text);
+            persistConfigData = fillUIKeys(persistConfigData);
+        }
+
+        /// <summary>
+        /// 自动补全UIKey的程序集名
+        /// </summary>
+        /// <param name="uiConfigs"></param>
+        /// <returns></returns>
+        private Dictionary<string, UIConfig> fillUIKeys(Dictionary<string, UIConfig> uiConfigs)
+        {
+            return uiConfigs
+                .Select(_kv =>
+                {
+                    var _uiType = AssemblyConfig.GetUNIType(_kv.Key);
+                    if (_uiType != null)
+                    {
+                        var _uiKey = AssemblyConfig.GetTypeUniqueID(_uiType);
+                        return new KeyValuePair<string, UIConfig>(_uiKey, _kv.Value);
+                    }
+                    return _kv;
+                })
+                .ToDictionary(_ => _.Key, _ => _.Value);
         }
 
         private void spawnPersistUIs()
@@ -467,10 +524,11 @@ namespace UNIHper
         private void SpawnUI(string uiKey, UIConfig uiConfig)
         {
             //string _scriptName = InUIConfig.GetScript(InUIKey) + ", MainGame, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null";
-            Type _T = AssemblyConfig.GetUType(uiKey);
+            Type _T = AssemblyConfig.GetUNIType(uiKey);
+
             if (_T == null)
             {
-                Debug.LogWarningFormat("no class name match: {0}, spawn ui {0} failed", uiKey);
+                Debug.LogWarning("UI Script not found: " + uiKey);
                 return;
             }
 
@@ -493,6 +551,7 @@ namespace UNIHper
             {
                 _uiComponent = _newUI.AddComponent(_T) as UIBase;
             }
+
             UReflection.SetPrivateField<string>(_uiComponent, "__CanvasKey", uiConfig.canvas);
             UReflection.SetPrivateField<string>(_uiComponent, "__UIKey", uiKey);
             UReflection.SetPrivateField<UIType>(_uiComponent, "__Type", uiConfig.Type);
@@ -668,9 +727,9 @@ namespace UNIHper
             popupUIs.Remove(_uiComponent);
         }
 
-        private bool isPersistUI(string InUIKey)
+        private bool isPersistUI(string uiKey)
         {
-            if (persistConfigData.ContainsKey(InUIKey))
+            if (persistConfigData.ContainsKey(uiKey))
             {
                 return true;
             }
@@ -678,7 +737,7 @@ namespace UNIHper
             Dictionary<string, UIConfig> _cusPersistUIs = null;
             if (customUIConfigData.TryGetValue("Persistence", out _cusPersistUIs))
             {
-                if (_cusPersistUIs.ContainsKey(InUIKey))
+                if (_cusPersistUIs.ContainsKey(uiKey))
                 {
                     return true;
                 }

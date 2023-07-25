@@ -114,11 +114,11 @@ namespace UNIHper
         /// <summary>
         /// 加载{InSceneName}场景资源
         /// </summary>
-        /// <param name="InSceneName"></param>
-        internal async Task LoadSceneResources(string InSceneName)
+        /// <param name="sceneName"></param>
+        internal async Task LoadSceneResources(string sceneName)
         {
-            Debug.Log($"Load scene resources for [{InSceneName}]");
-            await this.LoadAssetByKey(InSceneName);
+            Debug.Log($"Load scene resources for [{sceneName}]");
+            await this.LoadAssetByKey(sceneName);
         }
 
         /// <summary>
@@ -180,7 +180,7 @@ namespace UNIHper
 
             if (_resource == null)
             {
-                UNIHperLogger.LogWarning($"can not find asset with name: {InResName}");
+                UNIHperLogger.LogWarning($"Resource not found: {InResName}");
                 return null;
             }
             return _resource;
@@ -332,9 +332,9 @@ namespace UNIHper
             return addressableLabelAssets[_labelKey].OfType<T>().ToList();
         }
 
-        public async Task<IEnumerable<AudioClip>> AppendAudioClips(IEnumerable<string> AudioPathes)
+        public async Task<IEnumerable<AudioClip>> AppendAudioClips(IEnumerable<string> AudioPaths)
         {
-            var _validPathes = AudioPathes.Where(_path => File.Exists(_path));
+            var _validPathes = AudioPaths.Where(_path => File.Exists(_path));
             if (_validPathes.Count() <= 0)
                 return null;
 
@@ -468,7 +468,7 @@ namespace UNIHper
             where T : UnityEngine.Object
         {
             string _key = string.Format("{0}_{1}", typeof(T).FullName, InName);
-            UNIHperLogger.Log($"try get asset: {_key}");
+            UNIHperLogger.Log($"Try to get resource with key: {_key}");
             if (!InResources.ContainsKey(_key))
                 return default(T);
             return InResources[_key] as T;
@@ -576,25 +576,25 @@ namespace UNIHper
         /// <summary>
         /// 加载资源
         /// </summary>
-        /// <param name="InKey"></param>
-        private async Task LoadAssetByKey(string InKey)
+        /// <param name="resKey"></param>
+        private async Task LoadAssetByKey(string resKey)
         {
-            if (assetBundlesConfigData.ContainsKey(InKey))
+            if (assetBundlesConfigData.ContainsKey(resKey))
             {
-                UNIHperLogger.Log($"load ab assets {InKey}");
-                await loadABAssetsAsync(assetBundlesConfigData[InKey], InKey);
+                UNIHperLogger.Log($"Load ab assets: {resKey}");
+                await loadABAssetsAsync(assetBundlesConfigData[resKey], resKey);
             }
             // Resources资源加载
-            if (resourcesConfigData.ContainsKey(InKey))
+            if (resourcesConfigData.ContainsKey(resKey))
             {
-                UNIHperLogger.Log($"load resources assets {InKey}");
-                await loadResourceAssets(resourcesConfigData[InKey], InKey);
+                UNIHperLogger.Log($"Load resources assets: {resKey}");
+                await loadResourceAssets(resourcesConfigData[resKey], resKey);
             }
 
-            if (addressableConfigData.ContainsKey(InKey))
+            if (addressableConfigData.ContainsKey(resKey))
             {
-                UNIHperLogger.Log($"load addressable assets {InKey}");
-                await loadAddressableAssets(addressableConfigData[InKey], InKey);
+                UNIHperLogger.Log($"Load addressable assets: {resKey}");
+                await loadAddressableAssets(addressableConfigData[resKey], resKey);
             }
 
             await Task.CompletedTask;
