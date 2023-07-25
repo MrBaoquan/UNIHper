@@ -141,7 +141,8 @@ namespace UNIHper
             Action<AVProPlayer> onFinished,
             bool bLoop,
             double startTime = 0,
-            double endTime = 0
+            double endTime = 0,
+            bool seek2StartAfterFinished = true
         )
         {
             disposeHandlers(playHandlers);
@@ -168,8 +169,7 @@ namespace UNIHper
                         return;
 
                     _bFinished = true;
-                    if (onFinished != null)
-                        onFinished(this);
+                    onFinished?.Invoke(this);
                     MediaPlayer.Pause();
 
                     if (!bLoop)
@@ -177,7 +177,10 @@ namespace UNIHper
                         // 不循环 直接释放seek回调
                         disposeHandlers(playHandlers);
                     }
-                    MediaPlayer.Control.Seek(startTime);
+
+                    // 播放结束，是否跳到开始时间
+                    if (seek2StartAfterFinished)
+                        MediaPlayer.Control.Seek(startTime);
                 };
 
                 // 正常播放时间大于指定结束时间
@@ -256,12 +259,17 @@ namespace UNIHper
             disposeHandlers(playHandlers);
         }
 
-        public void Rewind(bool Pause)
+        public void Rewind(bool pause = false, Action<AVProPlayer> onCompleted = null)
         {
             ClearPlayHandlers();
-            if (Pause)
+            if (pause)
                 this.Pause();
-            Seek(this.StartTime);
+            Seek(this.StartTime, onCompleted);
+        }
+
+        public void Rewind(Action<AVProPlayer> onCompleted)
+        {
+            Rewind(false, onCompleted);
         }
 
         public void Play()
@@ -279,19 +287,31 @@ namespace UNIHper
             Rewind(true);
         }
 
-        public void Seek(double InTime)
+        public void Seek(double InTime, Action<AVProPlayer> onCompleted = null)
         {
             if (!Ready2Play)
             {
                 return;
             }
+            OnFinishedSeekingAsObservable()
+                .First()
+                .Subscribe(_ =>
+                {
+                    onCompleted?.Invoke(this);
+                });
             MediaPlayer.Control.Seek(InTime);
         }
 
-        public void SeekToFrame(int Frame)
+        public void SeekToFrame(int Frame, Action<AVProPlayer> onFinished = null)
         {
             if (!Ready2Play)
                 return;
+            OnFinishedSeekingAsObservable()
+                .First()
+                .Subscribe(_ =>
+                {
+                    onFinished?.Invoke(this);
+                });
             mediaPlayer.Control.SeekToFrame(Frame);
         }
 
