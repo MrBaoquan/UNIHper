@@ -259,6 +259,34 @@ namespace UNIHper
             }
         }
 
+        ReactiveProperty<bool> _isPlaying = new ReactiveProperty<bool>(false);
+        ReactiveProperty<bool> _isMute = new ReactiveProperty<bool>(false);
+        ReactiveProperty<float> _volume = new ReactiveProperty<float>(1f);
+
+        public IObservable<AVProPlayer> OnPausedAsObservable()
+        {
+            return _isPlaying.Where(_ => !_isPlaying.Value).Select(_ => this);
+        }
+
+        public IObservable<AVProPlayer> OnMuteChangedAsObservable()
+        {
+            return _isMute.Select(_ => this);
+        }
+
+        public IObservable<AVProPlayer> OnVolumeChangedAsObservable()
+        {
+            return _volume.Select(_ => this);
+        }
+
+        void Update()
+        {
+            if (mediaPlayer == null)
+                return;
+            _isPlaying.Value = mediaPlayer.Control.IsPlaying();
+            _isMute.Value = mediaPlayer.Control.IsMuted();
+            _volume.Value = mediaPlayer.Control.GetVolume();
+        }
+
         public void ClearPlayHandlers()
         {
             disposeHandlers(playHandlers);

@@ -1,0 +1,18 @@
+{
+    "name": "AVProUI.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:92ae84fd2fe38af43912ecaee1abb713"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
