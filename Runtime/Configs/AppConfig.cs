@@ -215,19 +215,18 @@ namespace UNIHper
                 );
             }
 
-            if (PrimaryScreen.KeepTop)
-            {
-                await Observable.Timer(TimeSpan.FromMilliseconds(150));
-                var _ret = WinAPI.SetWindowPos(
-                    WinAPI.CurrentWindow(),
-                    (int)HWndInsertAfter.HWND_TOPMOST,
-                    PrimaryScreen.PosX,
-                    PrimaryScreen.PosY,
-                    PrimaryScreen.Width,
-                    PrimaryScreen.Height,
-                    SetWindowPosFlags.SWP_SHOWWINDOW
-                );
-            }
+            await Observable.Timer(TimeSpan.FromMilliseconds(150));
+            var _ret = WinAPI.SetWindowPos(
+                WinAPI.CurrentWindow(),
+                PrimaryScreen.KeepTop
+                    ? (int)HWndInsertAfter.HWND_TOPMOST
+                    : (int)HWndInsertAfter.HWND_NOTOPMOST,
+                PrimaryScreen.PosX,
+                PrimaryScreen.PosY,
+                PrimaryScreen.Width,
+                PrimaryScreen.Height,
+                SetWindowPosFlags.SWP_SHOWWINDOW
+            );
         }
 
         private void executeWindowSettings()

@@ -128,22 +128,7 @@ public class UNIDebuggerPanel : UIBase
     }
 
     // Update is called once per frame
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.A))
-        {
-            var PrimaryScreen = Managements.Config.Get<AppConfig>().PrimaryScreen;
-            var _ret = WinAPI.SetWindowPos(
-                WinAPI.CurrentWindow(),
-                (int)HWndInsertAfter.HWND_TOPMOST,
-                PrimaryScreen.PosX,
-                PrimaryScreen.PosY,
-                PrimaryScreen.Width,
-                PrimaryScreen.Height,
-                SetWindowPosFlags.SWP_SHOWWINDOW
-            );
-        }
-    }
+    private void Update() { }
 
     // Called when this ui is loaded
     protected override void OnLoaded() { }
