@@ -58,9 +58,21 @@ namespace UNIHper
         {
             if (InData == null)
                 return;
-            if (!connections.ContainsKey(InKey))
+
+            if (string.IsNullOrEmpty(InKey))
+            {
+                connections.Values
+                    .ToList()
+                    .ForEach(_connection =>
+                    {
+                        _connection.Send(InData);
+                    });
                 return;
-            connections[InKey].Send(InData);
+            }
+            else if (connections.ContainsKey(InKey))
+            {
+                connections[InKey].Send(InData);
+            }
         }
 
         public void Send2Client(string InData, string InKey)

@@ -11,20 +11,45 @@ using DG.Tweening;
 using RenderHeads.Media.AVProVideo;
 using RenderHeads.Media.AVProVideo.Demos.UI;
 using DigitalRubyShared;
+using Sirenix.OdinInspector;
 
 namespace AVProUI
 {
     [RequireComponent(typeof(AVProPlayer)), RequireComponent(typeof(AudioOutput))]
     public class AVProPlayerUI : MonoBehaviour
     {
+        [Title("Player Settings")]
         [SerializeField, Tooltip("The FullScreen Rect where the video will be transformed to fit")]
         RectTransform FullScreenRect;
 
-        [SerializeField, Tooltip("Auto hide controls after a few seconds when video is playing")]
+        [
+            SerializeField,
+            Tooltip(
+                "Auto hide controls after a few seconds when video is playing, less than 0 to disable auto hide"
+            ),MaxValue(30),MinValue(-1)
+        ]
         float _autoHideControls = 3f;
 
-        [SerializeField, Tooltip("Forward/Backward time in seconds when tapping on buttons")]
+        bool _autoHide => _autoHideControls > 0;
+
+        [SerializeField, Tooltip("Forward/Backward time in seconds when tapping on buttons"),MinValue(0.1)]
         private float _jumpDeltaTime = 5f;
+
+        [Title("Controls Settings")]
+        [SerializeField, OnValueChanged("OnEnableFullScreenChanged")]
+        private bool _enableFullScreen = true;
+
+        void OnEnableFullScreenChanged()
+        {
+            if (_enableFullScreen)
+            {
+                transform.Find("Controls/BottomRow/EnterFullScreen").SetActive(true);
+            }
+            else
+            {
+                transform.Find("Controls/BottomRow/EnterFullScreen").SetActive(false);
+            }
+        }
 
         private AVProPlayer avPlayer;
         private MediaPlayer _mediaPlayer => avPlayer.MediaPlayer;
@@ -83,6 +108,14 @@ namespace AVProUI
             UpdateVolumeSlider();
             CreateVolumeSliderEvents();
 
+            setupTapGestures();
+
+            setupBasicControlButtons();
+            setupControlsShowOrHide();
+        }
+
+        private void setupTapGestures()
+        {
             TapGestureRecognizer _tapGesture = new TapGestureRecognizer
             {
                 MaximumNumberOfTouchesToTrack = 10
@@ -131,9 +164,6 @@ namespace AVProUI
             _doubleTapGesture.PlatformSpecificView = _videoTouch.gameObject;
             FingersScript.Instance.AddGesture(_tapGesture);
             FingersScript.Instance.AddGesture(_doubleTapGesture);
-
-            setupBasicControlButtons();
-            setupControlsShowOrHide();
         }
 
         private bool checkIfScreenPointInControlsArea(Vector2 screenPos)
@@ -195,8 +225,6 @@ namespace AVProUI
                 .Subscribe(_ =>
                 {
                     EnterFullScreen();
-                    _buttonEnterFullScreen.gameObject.SetActive(false);
-                    _buttonExitFullScreen.gameObject.SetActive(true);
                 });
 
             _buttonExitFullScreen
@@ -204,8 +232,6 @@ namespace AVProUI
                 .Subscribe(_ =>
                 {
                     ExitFullScreen();
-                    _buttonEnterFullScreen.gameObject.SetActive(true);
-                    _buttonExitFullScreen.gameObject.SetActive(false);
                 });
 
             if (FullScreenRect == null)
@@ -241,6 +267,12 @@ namespace AVProUI
 
             _isFullScreen.Subscribe(_fullScreen =>
             {
+                if (!_enableFullScreen)
+                {
+                    _buttonEnterFullScreen.gameObject.SetActive(false);
+                    _buttonExitFullScreen.gameObject.SetActive(false);
+                    return;
+                }
                 if (_fullScreen)
                 {
                     _buttonEnterFullScreen.gameObject.SetActive(false);
@@ -255,19 +287,39 @@ namespace AVProUI
 
             if (isFullScreen())
             {
+                _enableFullScreen = false;
                 _isFullScreen.SetValueAndForceNotify(true);
             }
             else
             {
                 _isFullScreen.SetValueAndForceNotify(false);
             }
-
-            var _videoUIRect = this.Get<RectTransform>();
-            _defaultPosition = _videoUIRect.localPosition;
-            _defaultSize = _videoUIRect.sizeDelta;
+            fetchDefaultWindowsInfo();
         }
 
-        private bool mouseHovering = false;
+        private void fetchDefaultWindowsInfo()
+        {
+            var _videoUIRect = this.Get<RectTransform>();
+
+            _defaultPosition = _videoUIRect.localPosition;
+            var _bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(
+                transform.parent,
+                transform
+            );
+
+            _videoUIRect.anchorMin = Vector2.one * 0.5f;
+            _videoUIRect.anchorMax = Vector2.one * 0.5f;
+            _videoUIRect.pivot = Vector2.one * 0.5f;
+
+            _defaultPosition = RectTransformUtility.PixelAdjustPoint(
+                _bounds.center,
+                transform,
+                null
+            );
+            _defaultSize = RectTransformUtility.PixelAdjustPoint(_bounds.size, transform, null);
+            _videoUIRect.localPosition = _defaultPosition;
+            _videoUIRect.sizeDelta = _defaultSize;
+        }
 
         private void setupControlsShowOrHide()
         {
@@ -276,6 +328,7 @@ namespace AVProUI
                 .OnPointerEnterAsObservable()
                 .Subscribe(_ =>
                 {
+                    if(_.pointerId!=2) return;
                     FadeUpControls();
                 })
                 .AddTo(this);
@@ -285,6 +338,7 @@ namespace AVProUI
                 .OnPointerExitAsObservable()
                 .Subscribe(_ =>
                 {
+                    if(_.pointerId!=2) return;
                     if (avPlayer.IsPaused)
                         return;
                     FadeDownControls();
@@ -382,12 +436,10 @@ namespace AVProUI
             var _isFullScreen = isFullScreen();
             if (_isFullScreen)
             {
-                Debug.Log("ExitFullScreen");
                 ExitFullScreen();
             }
             else
             {
-                Debug.Log("EnterFullScreen");
                 EnterFullScreen();
             }
         }
@@ -420,7 +472,8 @@ namespace AVProUI
         private void ExitFullScreen()
         {
             var _videoUIRect = this.Get<RectTransform>();
-
+            _videoUIRect.anchorMin = Vector2.one * 0.5f;
+            _videoUIRect.anchorMax = Vector2.one * 0.5f;
             _videoUIRect.DOLocalMove(_defaultPosition, 0.5f).SetEase(Ease.OutCubic);
             _videoUIRect
                 .DOSizeDelta(_defaultSize, 0.5f)
@@ -890,6 +943,10 @@ namespace AVProUI
 
         private void FadeDownControls()
         {
+            if (!_autoHide)
+            {
+                return;
+            }
             _controlsGroup.DOFade(0, 0.5f);
         }
 
@@ -901,6 +958,14 @@ namespace AVProUI
         // Update is called once per frame
         void Update()
         {
+            if (Input.GetKeyDown(KeyCode.B))
+            {
+                var _randomTime =
+                    UnityEngine.Random.Range(0f, 1f) * _mediaPlayer.Info.GetDuration();
+                Debug.Log("Seeking to: " + _randomTime + " seconds");
+                _mediaPlayer.Control.Seek(_randomTime);
+            }
+
             UpdateAudioFading();
             UpdateAudioSpectrum();
             if (_mediaPlayer.Info == null)

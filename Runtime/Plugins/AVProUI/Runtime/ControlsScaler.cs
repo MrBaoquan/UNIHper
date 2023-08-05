@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[ExecuteInEditMode]
 public class ControlsScaler : MonoBehaviour
 {
     [SerializeField, Range(0.5f, 4f)]
@@ -28,14 +29,14 @@ public class ControlsScaler : MonoBehaviour
         RefreshScaler();
     }
 
-    private void OnValidate()
-    {
-        RefreshScaler();
-    }
-
     // Start is called before the first frame update
     void Start() { }
 
     // Update is called once per frame
-    void Update() { }
+    void Update()
+    {
+#if UNITY_EDITOR
+        RefreshScaler();
+#endif
+    }
 }
