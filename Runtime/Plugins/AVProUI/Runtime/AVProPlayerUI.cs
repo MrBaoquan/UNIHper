@@ -26,20 +26,26 @@ namespace AVProUI
             SerializeField,
             Tooltip(
                 "Auto hide controls after a few seconds when video is playing, less than 0 to disable auto hide"
-            ),MaxValue(30),MinValue(-1)
+            ),
+            MaxValue(30),
+            MinValue(-1)
         ]
         float _autoHideControls = 3f;
 
-        bool _autoHide => _autoHideControls > 0;
+        bool AutoHide => _autoHideControls > 0;
 
-        [SerializeField, Tooltip("Forward/Backward time in seconds when tapping on buttons"),MinValue(0.1)]
+        [
+            SerializeField,
+            Tooltip("Forward/Backward time in seconds when tapping on buttons"),
+            MinValue(0.1)
+        ]
         private float _jumpDeltaTime = 5f;
 
         [Title("Controls Settings")]
         [SerializeField, OnValueChanged("OnEnableFullScreenChanged")]
         private bool _enableFullScreen = true;
 
-        void OnEnableFullScreenChanged()
+        private void OnEnableFullScreenChanged()
         {
             if (_enableFullScreen)
             {
@@ -328,7 +334,8 @@ namespace AVProUI
                 .OnPointerEnterAsObservable()
                 .Subscribe(_ =>
                 {
-                    if(_.pointerId!=2) return;
+                    if (_.pointerId != 2)
+                        return;
                     FadeUpControls();
                 })
                 .AddTo(this);
@@ -338,7 +345,8 @@ namespace AVProUI
                 .OnPointerExitAsObservable()
                 .Subscribe(_ =>
                 {
-                    if(_.pointerId!=2) return;
+                    if (_.pointerId != 2)
+                        return;
                     if (avPlayer.IsPaused)
                         return;
                     FadeDownControls();
@@ -514,7 +522,9 @@ namespace AVProUI
                 {
                     showAudioSpectrum = true;
 
-                    float maxFreq = (Helper.GetUnityAudioSampleRate() / 2);
+                    float maxFreq = (
+                        RenderHeads.Media.AVProVideo.Helper.GetUnityAudioSampleRate() / 2
+                    );
 
                     // Frequencies over 18Khz generally aren't very interesting to visualise, so clamp the range
                     const float clampFreq = 18000f;
@@ -885,7 +895,7 @@ namespace AVProUI
         {
             if (_mediaPlayer.Info != null)
             {
-                return Helper.GetTimelineRange(
+                return RenderHeads.Media.AVProVideo.Helper.GetTimelineRange(
                     _mediaPlayer.Info.GetDuration(),
                     _mediaPlayer.Control.GetSeekableTimes()
                 );
@@ -943,7 +953,7 @@ namespace AVProUI
 
         private void FadeDownControls()
         {
-            if (!_autoHide)
+            if (!AutoHide)
             {
                 return;
             }
@@ -1021,7 +1031,7 @@ namespace AVProUI
                     time -= timelineRange.startTime;
                     time = System.Math.Max(time, 0.0);
                     time = System.Math.Min(time, timelineRange.Duration);
-                    hoverText.text = Helper.GetTimeString(time, false);
+                    hoverText.text = RenderHeads.Media.AVProVideo.Helper.GetTimeString(time, false);
                 }
 
                 float[] ranges = new float[2];
@@ -1072,11 +1082,14 @@ namespace AVProUI
             // Update time/duration text display
             if (_textTimeDuration)
             {
-                string t1 = Helper.GetTimeString(
+                string t1 = RenderHeads.Media.AVProVideo.Helper.GetTimeString(
                     (_mediaPlayer.Control.GetCurrentTime() - timelineRange.startTime),
                     false
                 );
-                string d1 = Helper.GetTimeString(timelineRange.duration, false);
+                string d1 = RenderHeads.Media.AVProVideo.Helper.GetTimeString(
+                    timelineRange.duration,
+                    false
+                );
                 _textTimeDuration.text = string.Format("{0} / {1}", t1, d1);
             }
 
