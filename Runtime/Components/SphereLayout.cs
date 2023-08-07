@@ -19,16 +19,16 @@ public class SphereLayout : MonoBehaviour
     private BaseAxis baseAxis = BaseAxis.Y;
 
     [SerializeField]
-    private float radius = 1000f;
+    public float radius = 1000f;
 
     [SerializeField]
-    private float angleInterval = 60f;
+    public float angleInterval = 60f;
 
     [SerializeField, HideInInspector]
     private float _defaultAngleInterval = 0;
 
     [SerializeField]
-    private float angleOffset = 0;
+    public float angleOffset = 0;
 
     [Title("Display Settings")]
     [SerializeField]
@@ -44,7 +44,7 @@ public class SphereLayout : MonoBehaviour
     private void OnValidate()
     {
         _defaultAngleInterval = angleInterval;
-        reGenerateLayout();
+        RegenerateLayout();
     }
 
     public int SelectNext()
@@ -85,6 +85,11 @@ public class SphereLayout : MonoBehaviour
         DOInterval(_defaultAngleInterval, 0.35f);
     }
 
+    public float ItemAngle(int ChildIndex)
+    {
+        return angleInterval * ChildIndex + angleOffset;
+    }
+
     public void DOInterval(float endInterval, float duration = 0.35f, Action callback = null)
     {
         DOTween
@@ -105,7 +110,7 @@ public class SphereLayout : MonoBehaviour
             });
     }
 
-    void reGenerateLayout()
+    public void RegenerateLayout()
     {
         Vector3 _startPoint = Vector3.zero;
         switch (baseAxis)
@@ -181,7 +186,7 @@ public class SphereLayout : MonoBehaviour
             )
             .OnUpdate(() =>
             {
-                reGenerateLayout();
+                RegenerateLayout();
             });
     }
 
@@ -205,14 +210,16 @@ public class SphereLayout : MonoBehaviour
 
     private Quaternion startRotation;
 
+    [SerializeField]
+    private bool enableDragRotation = true;
+
     private void Start()
     {
-        Debug.LogWarning("default angle interval: " + angleInterval + "");
         indexer.Loop = false;
         indexer.SetMin((int)displayRange.x);
         indexer.SetMax((int)displayRange.y);
         startRotation = transform.rotation;
-        reGenerateLayout();
+        RegenerateLayout();
         var _moveGesture = new PanGestureRecognizer();
 
         _moveGesture.StateUpdated += (InGesture) =>
@@ -236,7 +243,7 @@ public class SphereLayout : MonoBehaviour
                     _deltaAngle = -_deltaAngle;
                 }
                 addOffsetRotation(_deltaAngle);
-                reGenerateLayout();
+                RegenerateLayout();
             }
             else if (InGesture.State == GestureRecognizerState.Ended)
             {
@@ -257,6 +264,8 @@ public class SphereLayout : MonoBehaviour
                 alignToCurrent();
             }
         };
-        FingersScript.Instance.AddGesture(_moveGesture);
+        if (enableDragRotation)
+            FingersScript.Instance.AddGesture(_moveGesture);
+        FingersScript.Instance.ShowTouches = false;
     }
 }

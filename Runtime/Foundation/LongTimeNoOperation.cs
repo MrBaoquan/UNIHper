@@ -11,9 +11,14 @@ namespace UNIHper
     public class LongTimeNoOperation
     {
         public UnityEvent OnLongTimeNoOperationEvent = new UnityEvent();
+        public UnityEvent OnResetOperationEvent = new UnityEvent();
+
+        public IObservable<Unit> OnResetOperationAsObservable() =>
+            OnResetOperationEvent.AsObservable();
 
         public void ResetOperation()
         {
+            OnResetOperationEvent.Invoke();
             timeoutEvent.Invoke();
         }
 

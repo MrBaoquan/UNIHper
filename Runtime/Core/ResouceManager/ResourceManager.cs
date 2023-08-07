@@ -726,7 +726,14 @@ namespace UNIHper
 
         private string buildResKey(UnityEngine.Object resObj)
         {
-            return string.Format("{0}_{1}", resObj.GetType().FullName, resObj.name);
+            var _resTypeName = resObj.GetType().FullName;
+#if UNITY_EDITOR
+            if (resObj is UnityEditor.Animations.AnimatorController)
+            {
+                _resTypeName = typeof(UnityEngine.RuntimeAnimatorController).FullName;
+            }
+#endif
+            return string.Format("{0}_{1}", _resTypeName, resObj.name);
         }
 
         private string buildLabelAssetKey(string label, Type resType)
