@@ -16,7 +16,7 @@ namespace UNIHper
     [RequireComponent(typeof(DisplayUGUI))]
     public class MultipleAVProPlayer : MonoBehaviour
     {
-        private UnityEvent<AVProPlayer> onPlayerChanged = new UnityEvent<AVProPlayer>();
+        private readonly UnityEvent<AVProPlayer> onPlayerChanged = new();
 
         public IObservable<AVProPlayer> OnPlayerChangedAsObservable()
         {
@@ -35,8 +35,8 @@ namespace UNIHper
 
         public bool Loop { get; set; } = false;
 
-        private Indexer videoIndex = new Indexer(0);
-        private List<string> videoPaths = new List<string>();
+        private readonly Indexer videoIndex = new(0);
+        private List<string> videoPaths = new();
 
         public IObservable<IList<AVProPlayer>> PrepareVideos(
             string videoDir,
@@ -215,7 +215,7 @@ namespace UNIHper
                 FadePlay,
                 () =>
                 {
-                    stopVideo();
+                    StopVideo();
                     videoIndex.Set(_idx);
                     onPlayerChanged.Invoke(currentPlayer);
                     DisplayUGUI.CurrentMediaPlayer = currentPlayer.GetComponent<MediaPlayer>();
@@ -242,12 +242,12 @@ namespace UNIHper
 
         public void Stop()
         {
-            stopVideo();
+            StopVideo();
         }
 
         public void SwitchNext(bool bAutoPlay = true)
         {
-            stopVideo();
+            StopVideo();
             videoIndex.Next();
             onPlayerChanged.Invoke(currentPlayer);
             if (bAutoPlay)
@@ -258,7 +258,7 @@ namespace UNIHper
 
         public void SwitchPrev(bool bAutoPlay = true)
         {
-            stopVideo();
+            StopVideo();
             videoIndex.Prev();
             onPlayerChanged.Invoke(currentPlayer);
             if (bAutoPlay)
@@ -362,18 +362,12 @@ namespace UNIHper
                 .PlayForward();
         }
 
-        private void stopVideo()
+        private void StopVideo()
         {
             if (currentPlayer == null)
                 return;
             currentPlayer.Rewind(true);
             DisplayUGUI.color = Color.clear;
         }
-
-        // Start is called before the first frame update
-        void Start() { }
-
-        // Update is called once per frame
-        void Update() { }
     }
 }

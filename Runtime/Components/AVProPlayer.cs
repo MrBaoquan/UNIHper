@@ -13,25 +13,25 @@ namespace UNIHper
     public class AVProPlayer : MonoBehaviour
     {
         #region 事件列表
-        private UnityEvent<MediaPlayer> OnMetaDataReady = new UnityEvent<MediaPlayer>(); // Triggered when meta data(width, duration etc) is available
-        private UnityEvent<MediaPlayer> OnReadyToPlay = new UnityEvent<MediaPlayer>(); // Triggered when the video is loaded and ready to play
-        private UnityEvent<MediaPlayer> OnStarted = new UnityEvent<MediaPlayer>(); // Triggered when the playback starts
-        private UnityEvent<MediaPlayer> OnFirstFrameReady = new UnityEvent<MediaPlayer>(); // Triggered when the first frame has been rendered
-        private UnityEvent<MediaPlayer> OnFinishedPlaying = new UnityEvent<MediaPlayer>(); // Triggered when a non-looping video has finished playing
-        private UnityEvent<MediaPlayer> OnClosing = new UnityEvent<MediaPlayer>(); // Triggered when the media is closed
-        private UnityEvent<MediaPlayer> OnError = new UnityEvent<MediaPlayer>(); // Triggered when an error occurs
-        private UnityEvent<MediaPlayer> OnSubtitleChange = new UnityEvent<MediaPlayer>(); // Triggered when the subtitles change
-        private UnityEvent<MediaPlayer> OnStalled = new UnityEvent<MediaPlayer>(); // Triggered when media is stalled (eg. when lost connection to media stream) - Currently only supported on Windows platforms
-        private UnityEvent<MediaPlayer> OnUnstalled = new UnityEvent<MediaPlayer>(); // Triggered when media is resumed form a stalled state (eg. when lost connection is re-established)
-        private UnityEvent<MediaPlayer> OnResolutionChanged = new UnityEvent<MediaPlayer>(); // Triggered when the resolution of the video has changed (including the load) Useful for adaptive streams
-        private UnityEvent<MediaPlayer> OnStartedSeeking = new UnityEvent<MediaPlayer>(); // Triggered when seeking begins
-        private UnityEvent<MediaPlayer> OnFinishedSeeking = new UnityEvent<MediaPlayer>(); // Triggered when seeking has finished
-        private UnityEvent<MediaPlayer> OnStartedBuffering = new UnityEvent<MediaPlayer>(); // Triggered when buffering begins
-        private UnityEvent<MediaPlayer> OnFinishedBuffering = new UnityEvent<MediaPlayer>(); // Triggered when buffering has finished
-        private UnityEvent<MediaPlayer> OnPropertiesChanged = new UnityEvent<MediaPlayer>(); // Triggered when any properties (eg stereo packing are changed) - this has to be triggered manually
-        private UnityEvent<MediaPlayer> OnPlaylistItemChanged = new UnityEvent<MediaPlayer>(); // Triggered when the new item is played in the playlist
-        private UnityEvent<MediaPlayer> OnPlaylistFinished = new UnityEvent<MediaPlayer>(); // Triggered when the playlist reaches the end
-        private UnityEvent<MediaPlayer> OnTextTracksChanged = new UnityEvent<MediaPlayer>(); // Triggered when the text tracks are added or removed
+        private readonly UnityEvent<MediaPlayer> OnMetaDataReady = new(); // Triggered when meta data(width, duration etc) is available
+        private readonly UnityEvent<MediaPlayer> OnReadyToPlay = new(); // Triggered when the video is loaded and ready to play
+        private readonly UnityEvent<MediaPlayer> OnStarted = new(); // Triggered when the playback starts
+        private readonly UnityEvent<MediaPlayer> OnFirstFrameReady = new(); // Triggered when the first frame has been rendered
+        private readonly UnityEvent<MediaPlayer> OnFinishedPlaying = new(); // Triggered when a non-looping video has finished playing
+        private readonly UnityEvent<MediaPlayer> OnClosing = new(); // Triggered when the media is closed
+        private readonly UnityEvent<MediaPlayer> OnError = new(); // Triggered when an error occurs
+        private readonly UnityEvent<MediaPlayer> OnSubtitleChange = new(); // Triggered when the subtitles change
+        private readonly UnityEvent<MediaPlayer> OnStalled = new(); // Triggered when media is stalled (eg. when lost connection to media stream) - Currently only supported on Windows platforms
+        private readonly UnityEvent<MediaPlayer> OnUnstalled = new(); // Triggered when media is resumed form a stalled state (eg. when lost connection is re-established)
+        private readonly UnityEvent<MediaPlayer> OnResolutionChanged = new(); // Triggered when the resolution of the video has changed (including the load) Useful for adaptive streams
+        private readonly UnityEvent<MediaPlayer> OnStartedSeeking = new(); // Triggered when seeking begins
+        private readonly UnityEvent<MediaPlayer> OnFinishedSeeking = new(); // Triggered when seeking has finished
+        private readonly UnityEvent<MediaPlayer> OnStartedBuffering = new(); // Triggered when buffering begins
+        private readonly UnityEvent<MediaPlayer> OnFinishedBuffering = new(); // Triggered when buffering has finished
+        private readonly UnityEvent<MediaPlayer> OnPropertiesChanged = new(); // Triggered when any properties (eg stereo packing are changed) - this has to be triggered manually
+        private readonly UnityEvent<MediaPlayer> OnPlaylistItemChanged = new(); // Triggered when the new item is played in the playlist
+        private readonly UnityEvent<MediaPlayer> OnPlaylistFinished = new(); // Triggered when the playlist reaches the end
+        private readonly UnityEvent<MediaPlayer> OnTextTracksChanged = new(); // Triggered when the text tracks are added or removed
         #endregion
 
         void Reset()
@@ -48,7 +48,8 @@ namespace UNIHper
                 if (mediaPlayer == null)
                 {
                     mediaPlayer = this.GetComponent<MediaPlayer>();
-                    registerAllEvents();
+                    if (Application.isPlaying)
+                        registerAllEvents();
                 }
                 return mediaPlayer;
             }
@@ -212,7 +213,7 @@ namespace UNIHper
                 );
             };
 
-            Action _registerFinishedSeekingEvent = () =>
+            void _registerFinishedSeekingEvent()
             {
                 playHandlers.Add(
                     OnFinishedSeekingAsObservable()
@@ -221,9 +222,9 @@ namespace UNIHper
                             _playVideo();
                         })
                 );
-            };
+            }
 
-            Action _startSeek = () =>
+            void _startSeek()
             {
                 _registerFinishedSeekingEvent();
                 var _currentTime = MediaPlayer.Control.GetCurrentTime();
@@ -235,7 +236,7 @@ namespace UNIHper
                 {
                     _playVideo();
                 }
-            };
+            }
             MediaPlayer.Loop = bLoop;
             if (MediaPlayer.MediaPath.Path != videoPath || MediaPlayer.Control == null)
             {
@@ -259,9 +260,9 @@ namespace UNIHper
             }
         }
 
-        ReactiveProperty<bool> _isPlaying = new ReactiveProperty<bool>(false);
-        ReactiveProperty<bool> _isMute = new ReactiveProperty<bool>(false);
-        ReactiveProperty<float> _volume = new ReactiveProperty<float>(1f);
+        readonly ReactiveProperty<bool> _isPlaying = new(false);
+        readonly ReactiveProperty<bool> _isMute = new(false);
+        readonly ReactiveProperty<float> _volume = new(1f);
 
         public IObservable<AVProPlayer> OnPausedAsObservable()
         {
