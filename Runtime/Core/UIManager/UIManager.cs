@@ -535,16 +535,16 @@ namespace UNIHper
             GameObject _uiPrefab = ResourceManager.Instance.Get<GameObject>(
                 uiConfig.GetAssetName(uiKey)
             );
-            if (_uiPrefab is null)
+            if (_uiPrefab == null)
             {
                 return;
             }
-            _uiPrefab.SetActive(false);
 
             GameObject _newUI = GameObject.Instantiate(
                 _uiPrefab,
                 getUIRootLayout(uiConfig.canvas).NormalUIRoot
             );
+            _newUI.SetActive(false);
 
             UIBase _uiComponent = _newUI.GetComponent(_T) as UIBase;
             if (!_uiComponent)
