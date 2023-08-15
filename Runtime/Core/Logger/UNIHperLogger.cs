@@ -11,6 +11,8 @@ namespace UNIHper
 
         public static void LogWarning(string message)
         {
+            if (!UNIHperSettings.ShowDebugLog)
+                return;
             UnityEngine.Debug.LogWarning(message);
         }
 

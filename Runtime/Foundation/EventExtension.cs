@@ -86,5 +86,28 @@ namespace UNIHper
                 .AddTo(image);
             return image;
         }
+
+        public static Button WithAnimation(
+            this Button button,
+            string stateName,
+            Animator animator = null
+        )
+        {
+            button
+                .OnClickAsObservable()
+                .Subscribe(_ =>
+                {
+                    if (animator == null)
+                        animator = button.GetComponent<Animator>();
+                    if (animator == null)
+                    {
+                        Debug.LogWarning($"Animator not found on {button.name}");
+                        return;
+                    }
+                    animator.Play(stateName);
+                })
+                .AddTo(button);
+            return button;
+        }
     }
 }

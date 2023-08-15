@@ -54,13 +54,13 @@ namespace UNIHper
         /// <summary>
         /// Addressable 按标签分组的资源实例
         /// </summary>
-        /// <returns></returns>
-        private Dictionary<string, List<UnityEngine.Object>> addressableLabelAssets =
-            new Dictionary<string, List<UnityEngine.Object>>();
+        private readonly Dictionary<
+            string,
+            Dictionary<string, UnityEngine.Object>
+        > addressableLabelAssets = new();
 
         // 所有AB包实例
-        private Dictionary<string, Dictionary<string, AssetBundle>> bundles =
-            new Dictionary<string, Dictionary<string, AssetBundle>>();
+        private readonly Dictionary<string, Dictionary<string, AssetBundle>> bundles = new();
 
         internal async Task Initialize()
         {
@@ -180,7 +180,7 @@ namespace UNIHper
 
             if (_resource == null)
             {
-                UNIHperLogger.LogWarning($"Resource not found: {InResName}");
+                Debug.LogWarning($"Resource not found: {InResName}");
                 return null;
             }
             return _resource;
@@ -302,13 +302,16 @@ namespace UNIHper
         )
             where T : UnityEngine.Object
         {
-            var _labelKey = buildLabelAssetKey(labelName, typeof(T));
+            var _labelKey = labelName;
             if (addressableLabelAssets.ContainsKey(_labelKey))
-                return addressableLabelAssets[_labelKey];
+                return addressableLabelAssets[_labelKey].Values;
 
             var _assets = await loadAddressableAssetsAsync<T>(labelName);
             appendResources(_assets, labelName);
-            addressableLabelAssets.Add(_labelKey, _assets.Cast<UnityEngine.Object>().ToList());
+            addressableLabelAssets.Add(
+                _labelKey,
+                _assets.Cast<UnityEngine.Object>().ToDictionary(_ => buildResKey(_), _ => _)
+            );
 
             return _assets;
         }
@@ -322,14 +325,35 @@ namespace UNIHper
         public List<T> GetLabelAssets<T>(string labelName)
             where T : UnityEngine.Object
         {
-            var _labelKey = buildLabelAssetKey(labelName, typeof(T));
+            var _labelKey = labelName;
             if (!addressableLabelAssets.ContainsKey(_labelKey))
             {
                 UNIHperLogger.LogWarning($"can not find label assets with key: {labelName}");
                 return null;
             }
 
-            return addressableLabelAssets[_labelKey].OfType<T>().ToList();
+            return addressableLabelAssets[_labelKey].Values.OfType<T>().ToList();
+        }
+
+        public T GetLabelAsset<T>(string labelName, string resName)
+            where T : UnityEngine.Object
+        {
+            var _labelKey = labelName;
+            if (!addressableLabelAssets.ContainsKey(_labelKey))
+            {
+                Debug.LogWarning($"label not found: {_labelKey}");
+                return null;
+            }
+            var _labelAssets = addressableLabelAssets[labelName];
+            string _key = string.Format("{0}_{1}", typeof(T).FullName, resName);
+
+            if (_labelAssets.ContainsKey(_key) == false)
+            {
+                Debug.LogWarning($"resource not found: {_key}");
+                return null;
+            }
+
+            return _labelAssets[_key] as T;
         }
 
         public async Task<IEnumerable<AudioClip>> AppendAudioClips(IEnumerable<string> AudioPaths)
@@ -630,9 +654,10 @@ namespace UNIHper
                 await Task.CompletedTask;
                 return;
             }
+            Debug.Log($"loading addressable assets for [{InResID}]");
             foreach (var _resItem in InItems)
             {
-                UNIHperLogger.Log($"load addressable assets, label:{_resItem.label}");
+                UNIHperLogger.Log($"loading addressable assets with label [{_resItem.label}]");
                 try
                 {
                     var _T = Type.GetType("UnityEngine." + _resItem.type + ",UnityEngine");
@@ -646,19 +671,24 @@ namespace UNIHper
                             .Invoke(this, new object[] { _resItem.label })
                         as IObservable<List<UnityEngine.Object>>
                     );
-                    addressableLabelAssets.Add(buildLabelAssetKey(_resItem.label, _T), _assets);
+                    addressableLabelAssets.Add(
+                        _resItem.label,
+                        _assets.ToDictionary(_ => buildResKey(_), _ => _)
+                    );
                     appendResources(_assets.ToArray(), InResID);
+                    UNIHperLogger.Log($"load with label [{_resItem.label}] completed");
                 }
                 catch (Exception /*_ex*/
                 )
                 {
-                    UNIHperLogger.LogWarning(
+                    Debug.LogWarning(
                         $"try load addressable assets with label [{_resItem.label}] failed"
                     );
                     continue;
                 }
             }
 
+            Debug.Log($"load addressable assets for [{InResID}] completed");
             await Task.CompletedTask;
         }
 
@@ -736,10 +766,10 @@ namespace UNIHper
             return string.Format("{0}_{1}", _resTypeName, resObj.name);
         }
 
-        private string buildLabelAssetKey(string label, Type resType)
-        {
-            return string.Format("{0}_{1}", label, resType.FullName);
-        }
+        // private string buildLabelAssetKey(string label, Type resType)
+        // {
+        //     return string.Format("{0}_{1}", label, resType.FullName);
+        // }
 
         private string getCurrentSceneName()
         {
