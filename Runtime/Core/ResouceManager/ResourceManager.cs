@@ -302,7 +302,7 @@ namespace UNIHper
         )
             where T : UnityEngine.Object
         {
-            var _labelKey = labelName;
+            var _labelKey = buildAALabelKey(labelName, typeof(T));
             if (addressableLabelAssets.ContainsKey(_labelKey))
                 return addressableLabelAssets[_labelKey].Values;
 
@@ -325,7 +325,7 @@ namespace UNIHper
         public List<T> GetLabelAssets<T>(string labelName)
             where T : UnityEngine.Object
         {
-            var _labelKey = labelName;
+            var _labelKey = buildAALabelKey(labelName, typeof(T));
             if (!addressableLabelAssets.ContainsKey(_labelKey))
             {
                 UNIHperLogger.LogWarning($"can not find label assets with key: {labelName}");
@@ -338,13 +338,13 @@ namespace UNIHper
         public T GetLabelAsset<T>(string labelName, string resName)
             where T : UnityEngine.Object
         {
-            var _labelKey = labelName;
+            var _labelKey = buildAALabelKey(labelName, typeof(T));
             if (!addressableLabelAssets.ContainsKey(_labelKey))
             {
                 Debug.LogWarning($"label not found: {_labelKey}");
                 return null;
             }
-            var _labelAssets = addressableLabelAssets[labelName];
+            var _labelAssets = addressableLabelAssets[_labelKey];
             string _key = string.Format("{0}_{1}", typeof(T).FullName, resName);
 
             if (_labelAssets.ContainsKey(_key) == false)
@@ -654,13 +654,16 @@ namespace UNIHper
                 await Task.CompletedTask;
                 return;
             }
+
             Debug.Log($"loading addressable assets for [{InResID}]");
             foreach (var _resItem in InItems)
             {
-                UNIHperLogger.Log($"loading addressable assets with label [{_resItem.label}]");
                 try
                 {
                     var _T = Type.GetType("UnityEngine." + _resItem.type + ",UnityEngine");
+
+                    var _labelKey = buildAALabelKey(_resItem.label, _T);
+                    UNIHperLogger.Log($"loading addressable assets with label: {_labelKey}");
                     var _assets = await (
                         GetType()
                             .GetMethod(
@@ -671,18 +674,31 @@ namespace UNIHper
                             .Invoke(this, new object[] { _resItem.label })
                         as IObservable<List<UnityEngine.Object>>
                     );
-                    addressableLabelAssets.Add(
-                        _resItem.label,
-                        _assets.ToDictionary(_ => buildResKey(_), _ => _)
-                    );
+                    if (!addressableLabelAssets.ContainsKey(_labelKey))
+                    {
+                        Dictionary<string, UnityEngine.Object> _assetsDict = new();
+                        _assets.ForEach(_asset =>
+                        {
+                            string _key = buildResKey(_asset);
+                            if (!_assetsDict.ContainsKey(_key))
+                            {
+                                _assetsDict.Add(_key, _asset);
+                            }
+                        });
+
+                        addressableLabelAssets.Add(
+                            buildAALabelKey(_resItem.label, _T),
+                            _assetsDict
+                        );
+                    }
+
                     appendResources(_assets.ToArray(), InResID);
                     UNIHperLogger.Log($"load with label [{_resItem.label}] completed");
                 }
-                catch (Exception /*_ex*/
-                )
+                catch (Exception _ex)
                 {
                     Debug.LogWarning(
-                        $"try load addressable assets with label [{_resItem.label}] failed"
+                        $"try load addressable assets with label [{_resItem.label}] failed, {_ex.Message}"
                     );
                     continue;
                 }
@@ -766,10 +782,10 @@ namespace UNIHper
             return string.Format("{0}_{1}", _resTypeName, resObj.name);
         }
 
-        // private string buildLabelAssetKey(string label, Type resType)
-        // {
-        //     return string.Format("{0}_{1}", label, resType.FullName);
-        // }
+        private string buildAALabelKey(string label, Type resType)
+        {
+            return string.Format("{0}_{1}", resType.FullName, label);
+        }
 
         private string getCurrentSceneName()
         {
