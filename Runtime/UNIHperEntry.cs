@@ -143,7 +143,13 @@ namespace UNIHper
                 Managements.UI.Get<UNIDebuggerPanel>().Toggle();
             }
 
-            if (Keyboard.current.f10Key.wasPressedThisFrame)
+            if (Keyboard.current.altKey.isPressed && Keyboard.current.f10Key.wasPressedThisFrame)
+            {
+                SRDebug.Instance.DockConsole.IsVisible = !SRDebug.Instance.DockConsole.IsVisible;
+                if (SRDebug.Instance.DockConsole.IsVisible)
+                    SRDebug.Instance.HideDebugPanel();
+            }
+            else if (Keyboard.current.f10Key.wasPressedThisFrame)
             {
                 if (SRDebug.Instance.IsDebugPanelVisible)
                     SRDebug.Instance.HideDebugPanel();
@@ -161,7 +167,16 @@ namespace UNIHper
                 Managements.UI.Get<UNIDebuggerPanel>().Toggle();
             }
 
-            if (Input.GetKeyDown(KeyCode.F10))
+            if (
+                (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt))
+                && Input.GetKeyDown(KeyCode.F10)
+            )
+            {
+                SRDebug.Instance.DockConsole.IsVisible = !SRDebug.Instance.DockConsole.IsVisible;
+                if (SRDebug.Instance.DockConsole.IsVisible)
+                    SRDebug.Instance.HideDebugPanel();
+            }
+            else if (Input.GetKeyDown(KeyCode.F10))
             {
                 if (SRDebug.Instance.IsDebugPanelVisible)
                     SRDebug.Instance.HideDebugPanel();

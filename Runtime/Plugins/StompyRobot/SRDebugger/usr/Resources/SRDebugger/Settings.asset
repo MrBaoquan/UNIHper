@@ -62,7 +62,7 @@ MonoBehaviour:
   _optionsAlignment: 3
   _consoleAlignment: 0
   _triggerPosition: 0
-  _maximumConsoleEntries: 1500
+  _maximumConsoleEntries: 3500
   _enableEventSystemCreation: 0
   _automaticShowCursor: 1
   _uiScale: 1.3
