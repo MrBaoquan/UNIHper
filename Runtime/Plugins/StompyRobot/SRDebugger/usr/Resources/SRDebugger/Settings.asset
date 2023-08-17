@@ -46,7 +46,7 @@ MonoBehaviour:
   _keyboardModifierShift: 1
   _keyboardEscapeClose: 1
   _enableBackgroundTransparency: 1
-  _collapseDuplicateLogEntries: 1
+  _collapseDuplicateLogEntries: 0
   _richTextInConsole: 1
   _requireEntryCode: 0
   _requireEntryCodeEveryTime: 0

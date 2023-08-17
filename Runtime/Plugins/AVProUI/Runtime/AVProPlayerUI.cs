@@ -12,6 +12,7 @@ using RenderHeads.Media.AVProVideo;
 using RenderHeads.Media.AVProVideo.Demos.UI;
 using DigitalRubyShared;
 using Sirenix.OdinInspector;
+using UnityEngine.InputSystem;
 
 namespace AVProUI
 {
@@ -130,6 +131,7 @@ namespace AVProUI
             {
                 if (gesture.State == GestureRecognizerState.Ended)
                 {
+                    Debug.LogWarning("tap gesture");
                     var _touchPoint = new Vector2(gesture.FocusX, gesture.FocusY);
 
                     if (checkIfScreenPointInControlsArea(_touchPoint))
@@ -881,8 +883,13 @@ namespace AVProUI
                     if (_mediaPlayer.Control.IsPaused())
                         return;
 
+#if ENABLE_INPUT_SYSTEM
+                    if (checkIfScreenPointInControlsArea(Mouse.current.position.ReadValue()))
+                        return;
+#else
                     if (checkIfScreenPointInControlsArea(Input.mousePosition))
                         return;
+#endif
 
                     if (_controlsGroup.alpha >= 0.5f && _controlsGroup.gameObject.activeSelf)
                     {
@@ -968,14 +975,6 @@ namespace AVProUI
         // Update is called once per frame
         void Update()
         {
-            if (Input.GetKeyDown(KeyCode.B))
-            {
-                var _randomTime =
-                    UnityEngine.Random.Range(0f, 1f) * _mediaPlayer.Info.GetDuration();
-                Debug.Log("Seeking to: " + _randomTime + " seconds");
-                _mediaPlayer.Control.Seek(_randomTime);
-            }
-
             UpdateAudioFading();
             UpdateAudioSpectrum();
             if (_mediaPlayer.Info == null)
@@ -1001,7 +1000,11 @@ namespace AVProUI
                 Vector2 canvasPos;
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(
                     _canvasTransform,
+#if ENABLE_INPUT_SYSTEM
+                    Mouse.current.position.ReadValue(),
+#else
                     Input.mousePosition,
+#endif
                     null,
                     out canvasPos
                 );
