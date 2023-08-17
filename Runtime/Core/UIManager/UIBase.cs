@@ -66,7 +66,7 @@ namespace UNIHper
         }
 
         // Called when the ui is loaded
-        protected void OnLoad()
+        internal void OnLoad()
         {
             if (uiAnimComponent != null)
                 UReflection.CallPrivateMethod(uiAnimComponent, "OnUIAttached");
@@ -74,7 +74,7 @@ namespace UNIHper
         }
 
         // Called when the ui is being requested to show
-        protected void HandleShow()
+        internal void HandleShow()
         {
             if (!this.gameObject.activeInHierarchy)
             {
@@ -93,7 +93,7 @@ namespace UNIHper
         }
 
         // Called when the ui is being requested to hide
-        protected void HandleHide()
+        internal void HandleHide()
         {
             if (!isShowing)
                 return;

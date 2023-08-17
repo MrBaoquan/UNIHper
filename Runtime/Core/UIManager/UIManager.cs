@@ -99,7 +99,8 @@ namespace UNIHper
                 if (allSpawnedUICaches.ContainsKey(_uiKey))
                 {
                     var _ui = allSpawnedUICaches[_uiKey];
-                    UReflection.CallPrivateMethod(_ui, "HandleHide");
+                    //UReflection.CallPrivateMethod(_ui, "HandleHide");
+                    _ui.HandleHide();
                     GameObject.Destroy(_ui.gameObject);
                     allSpawnedUICaches.Remove(_uiKey);
                     if (popupUIs.Contains(_ui))
@@ -552,13 +553,14 @@ namespace UNIHper
                 _uiComponent = _newUI.AddComponent(_T) as UIBase;
             }
 
+            _newUI.transform.SetParent(getParentUIAttachTo(_uiComponent.Type, uiConfig.canvas));
+
             UReflection.SetPrivateField<string>(_uiComponent, "__CanvasKey", uiConfig.canvas);
             UReflection.SetPrivateField<string>(_uiComponent, "__UIKey", uiKey);
             UReflection.SetPrivateField<UIType>(_uiComponent, "__Type", uiConfig.Type);
-            UReflection.CallPrivateMethod(_uiComponent, "OnLoad");
 
-            _newUI.transform.SetParent(getParentUIAttachTo(_uiComponent.Type, uiConfig.canvas));
             allSpawnedUICaches.Add(uiKey, _uiComponent);
+            _uiComponent.OnLoad();
         }
 
         private Transform getParentUIAttachTo(UIType InUIType, string InCanvasKey)
@@ -619,9 +621,8 @@ namespace UNIHper
             UIBase _uiComponent = allSpawnedUICaches[InKey];
             if (normalUIs.ContainsKey(InKey))
                 return;
-
-            UReflection.CallPrivateMethod(_uiComponent, "HandleShow");
             normalUIs.Add(InKey, _uiComponent);
+            _uiComponent.HandleShow();
         }
 
         private void hideNormalUI(string InKey)
@@ -632,8 +633,8 @@ namespace UNIHper
                 return;
             }
 
-            UReflection.CallPrivateMethod(_uiComponent, "HandleHide");
             normalUIs.Remove(InKey);
+            _uiComponent.HandleHide();
         }
 
         private void showStandaloneUI(string InKey)
@@ -647,10 +648,12 @@ namespace UNIHper
                     .ToList()
             )
             {
-                UReflection.CallPrivateMethod(_uiItem, "HandleHide");
+                //UReflection.CallPrivateMethod(_uiItem, "HandleHide");
+                _uiItem.HandleHide();
             }
 
-            UReflection.CallPrivateMethod(_uiComponent, "HandleShow");
+            //UReflection.CallPrivateMethod(_uiComponent, "HandleShow");
+            _uiComponent.HandleShow();
 
             if (!standaloneUIs.Keys.Contains(InKey))
             {
@@ -666,7 +669,8 @@ namespace UNIHper
                 return;
             }
 
-            UReflection.CallPrivateMethod(_uiComponent, "HandleHide");
+            //UReflection.CallPrivateMethod(_uiComponent, "HandleHide");
+            _uiComponent.HandleHide();
 
             standaloneUIs.Remove(InKey);
             var _last = standaloneUIs.Values
@@ -674,7 +678,8 @@ namespace UNIHper
                 .LastOrDefault();
             if (_last != default(UIBase))
             {
-                UReflection.CallPrivateMethod(_last, "HandleShow");
+                //UReflection.CallPrivateMethod(_last, "HandleShow");
+                _last.HandleShow();
             }
         }
 
@@ -698,8 +703,9 @@ namespace UNIHper
                 }
             }
 
-            UReflection.CallPrivateMethod(_uiComponent, "HandleShow");
+            //UReflection.CallPrivateMethod(_uiComponent, "HandleShow");
             _uiComponent.transform.SetAsLastSibling();
+            _uiComponent.HandleShow();
         }
 
         private void hidePopupUI(string uiKey = "")
@@ -723,7 +729,8 @@ namespace UNIHper
                 return;
             }
 
-            UReflection.CallPrivateMethod(_uiComponent, "HandleHide");
+            //UReflection.CallPrivateMethod(_uiComponent, "HandleHide");
+            _uiComponent.HandleHide();
             popupUIs.Remove(_uiComponent);
         }
 

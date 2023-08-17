@@ -156,7 +156,7 @@ namespace UNIHper
             return current;
         }
 
-        private int PrevValue()
+        public int PrevValue()
         {
             if (Loop)
                 return (int)Mathf.Repeat(current - 1, Max - Min + 1) + Min;
@@ -164,7 +164,11 @@ namespace UNIHper
                 return (int)Mathf.Clamp(current - 1, Min, Max);
         }
 
-        private int NextValue()
+        /// <summary>
+        /// 获取下一个索引值,不改变当前索引值
+        /// </summary>
+        /// <returns></returns>
+        public int NextValue()
         {
             if (Loop)
                 return (int)Mathf.Repeat(current + 1, Max - Min + 1) + Min;
