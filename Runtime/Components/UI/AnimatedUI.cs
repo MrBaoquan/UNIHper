@@ -306,16 +306,17 @@ namespace UNIHper.UI
 
             if (_typeNumber < 110)
             {
+                var _position = getPosition(_type, InDir);
                 if (InDir == 1)
                 {
-                    _rectTransform.anchoredPosition = getPosition(_type);
+                    _rectTransform.anchoredPosition = _position;
                     _rectTransform.localScale = m_originLocalScale;
                     return _rectTransform.DOAnchorPos(m_originAnchoredPosition, _duration);
                 }
                 else
                 {
                     //_rectTransform.anchoredPosition = m_originAnchoredPosition;
-                    return _rectTransform.DOAnchorPos(getPosition(_type), _duration);
+                    return _rectTransform.DOAnchorPos(_position, _duration);
                 }
             }
             else if (_typeNumber < 120)
@@ -335,19 +336,31 @@ namespace UNIHper.UI
             return null;
         }
 
-        Vector2 getPosition(UIAnimationType type)
+        Vector2 getPosition(UIAnimationType type, int dir)
         {
             var _rectTransform = this.Get<RectTransform>();
             switch (type)
             {
                 case UIAnimationType.Fly_Up:
-                    return new Vector2(m_originAnchoredPosition.x, _rectTransform.rect.height);
+                    return new Vector2(
+                        m_originAnchoredPosition.x,
+                        _rectTransform.rect.height * (dir == 1 ? -1 : 1)
+                    );
                 case UIAnimationType.Fly_Right:
-                    return new Vector2(_rectTransform.rect.width, m_originAnchoredPosition.y);
+                    return new Vector2(
+                        _rectTransform.rect.width * (dir == 1 ? -1 : 1),
+                        m_originAnchoredPosition.y
+                    );
                 case UIAnimationType.Fly_Down:
-                    return new Vector2(m_originAnchoredPosition.x, -_rectTransform.rect.height);
+                    return new Vector2(
+                        m_originAnchoredPosition.x,
+                        _rectTransform.rect.height * (dir == 1 ? 1 : -1)
+                    );
                 case UIAnimationType.Fly_Left:
-                    return new Vector2(-_rectTransform.rect.width, m_originAnchoredPosition.y);
+                    return new Vector2(
+                        _rectTransform.rect.width * (dir == 1 ? 1 : -1),
+                        m_originAnchoredPosition.y
+                    );
                 case UIAnimationType.Zoom:
                     return new Vector2(0, 0);
                 default:

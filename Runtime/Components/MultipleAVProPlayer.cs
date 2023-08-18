@@ -245,21 +245,17 @@ namespace UNIHper
 
         private float swapRenderChain()
         {
-            if (swapTextureIndex == 0)
-            {
-                swapTextureIndex = 1;
-            }
-            else
-            {
-                swapTextureIndex = 0;
-            }
-
-            return swapTextureIndex;
+            activeSwapChainBufferIndex = nextSwapChainBufferIndex;
+            return activeSwapChainBufferIndex;
         }
+
+        private bool isSwapChainBufferReady = false;
+        private int activeSwapChainBufferIndex = 0;
+        private int nextSwapChainBufferIndex => activeSwapChainBufferIndex == 0 ? 1 : 0;
 
         private void setSwapChainBuffer(Texture texture)
         {
-            if (swapTextureIndex == 0)
+            if (activeSwapChainBufferIndex == 0)
             {
                 RawImage_Render.material.SetTexture("_BTexture", texture);
             }
@@ -267,9 +263,8 @@ namespace UNIHper
             {
                 RawImage_Render.material.SetTexture("_ATexture", texture);
             }
+            isSwapChainBufferReady = true;
         }
-
-        private int swapTextureIndex = 0; // 0 or 1
 
         /// <summary>
         /// Called when all videos are prepared
@@ -279,14 +274,16 @@ namespace UNIHper
             setupRenderMaterial();
             videoIndex
                 .OnIndexChangedAsObservable()
-                .Subscribe(_index =>
+                .Subscribe(async _index =>
                 {
                     if (renderTarget == RenderTarget.RawImage)
                     {
-                        RawImage_Render.texture = getMediaTexture(_index);
+                        isSwapChainBufferReady = false;
+                        var _texture = await getMediaTexture(_index);
+                        RawImage_Render.texture = _texture;
                         if (fadeType == FadeType.Color)
                         {
-                            setSwapChainBuffer(getMediaTexture(_index));
+                            setSwapChainBuffer(_texture);
                         }
                     }
                     else if (renderTarget == RenderTarget.DisplayUGUI)
@@ -299,15 +296,16 @@ namespace UNIHper
                 .AddTo(this);
 
             // 等待当前视频帧准备完成
-            Observable
-                .EveryUpdate()
-                .Where(_ => currentPlayer.Get<DisplayUGUI>().HasValidTexture())
-                .First()
-                .Subscribe(_ =>
-                {
-                    fadePlay(videoIndex.Current, () => { });
-                })
-                .AddTo(this);
+            // Observable
+            //     .EveryUpdate()
+            //     .Where(_ => currentPlayer.Get<DisplayUGUI>().HasValidTexture())
+            //     .First()
+            //     .Subscribe(_ =>
+            //     {
+
+            //     })
+            //     .AddTo(this);
+            fadePlay(videoIndex.Current, () => { });
         }
 
         private void setupRenderMaterial()
@@ -333,7 +331,7 @@ namespace UNIHper
                 }
 
                 RawImage_Render.material = _displayMat;
-                swapTextureIndex = 1;
+                activeSwapChainBufferIndex = 1;
             }
         }
 
@@ -603,9 +601,15 @@ namespace UNIHper
             }
         }
 
-        private Texture getMediaTexture(int mediaIndex)
+        private IObservable<Texture> getMediaTexture(int mediaIndex)
         {
-            return transform.GetChild(mediaIndex).GetComponent<DisplayUGUI>().mainTexture;
+            var _displayUGUI = transform.GetChild(mediaIndex).GetComponent<DisplayUGUI>();
+            return Observable
+                .EveryUpdate()
+                .Where(_ => _displayUGUI.HasValidTexture())
+                .First()
+                .Timeout(TimeSpan.FromSeconds(3))
+                .Select(_ => _displayUGUI.mainTexture);
         }
 
         private void fadePlay(int newMediaIndex, Action onCleared = null)
@@ -626,11 +630,15 @@ namespace UNIHper
             }
         }
 
-        void fadePlayByColor(int newMediaIndex, Action onCleared = null)
+        async void fadePlayByColor(int newMediaIndex, Action onCleared = null)
         {
             var _renderMat = RawImage_Render.material;
             var _oldPlayer = currentPlayer;
             videoIndex.Set(newMediaIndex); // 此处更新缓冲区
+
+            // wait unitl isSwapChainBufferReady
+            await Observable.EveryUpdate().Where(_ => isSwapChainBufferReady).First();
+
             var _targetWeight = swapRenderChain();
             var _newPlayer = currentPlayer;
 
