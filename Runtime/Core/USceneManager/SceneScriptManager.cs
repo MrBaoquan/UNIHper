@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using DNHper;
 using UniRx;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
 namespace UNIHper
