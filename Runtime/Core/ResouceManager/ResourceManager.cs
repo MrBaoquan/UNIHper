@@ -752,7 +752,7 @@ namespace UNIHper
                 resources[InResID].Add(_key, _resource);
             };
 
-            foreach (var _resource in InResources)
+            foreach (var _resource in InResources.Where(_ => _ != null))
             {
                 // TODO: 子资源的加载处理
                 _appendResource(_resource);

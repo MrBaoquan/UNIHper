@@ -24,12 +24,12 @@ namespace UNIHper
                     (_observer, _cancellationToken) =>
                         LoadTexture2D(filePath, _observer, _cancellationToken)
                 )
-                .OnErrorRetry(
-                    (Exception _ex) =>
+                .Catch<Texture2D, Exception>(
+                    (_ex) =>
                     {
                         Debug.LogError($"LoadTexture2D Error:{_ex.Message}, filePath:{filePath}");
-                    },
-                    3
+                        return Observable.Return<Texture2D>(null);
+                    }
                 );
         }
 
@@ -43,10 +43,18 @@ namespace UNIHper
             {
                 filePath = Path.Combine(Application.streamingAssetsPath, filePath);
             }
-            return Observable.FromCoroutine<AudioClip>(
-                (_observer, _cancellationToken) =>
-                    LoadAudioClip(filePath, _observer, _cancellationToken, InAudioType)
-            );
+            return Observable
+                .FromCoroutine<AudioClip>(
+                    (_observer, _cancellationToken) =>
+                        LoadAudioClip(filePath, _observer, _cancellationToken, InAudioType)
+                )
+                .Catch<AudioClip, Exception>(
+                    (_ex) =>
+                    {
+                        Debug.LogError($"LoadAudioClip Error:{_ex.Message}, filePath:{filePath}");
+                        return Observable.Return<AudioClip>(null);
+                    }
+                );
         }
 
         // 加载外部音频文件
@@ -88,10 +96,17 @@ namespace UNIHper
                 }
                 else
                 {
-                    var _audioClip = DownloadHandlerAudioClip.GetContent(_www);
-                    _audioClip.name = System.IO.Path.GetFileNameWithoutExtension(InPath);
-                    observer.OnNext(_audioClip);
-                    observer.OnCompleted();
+                    try
+                    {
+                        var _audioClip = DownloadHandlerAudioClip.GetContent(_www);
+                        _audioClip.name = System.IO.Path.GetFileNameWithoutExtension(InPath);
+                        observer.OnNext(_audioClip);
+                        observer.OnCompleted();
+                    }
+                    catch (System.Exception e)
+                    {
+                        observer.OnError(e);
+                    }
                 }
             }
         }

@@ -480,7 +480,7 @@ namespace UNIHper
             currentPlayer.SeekToFrame(Frame);
         }
 
-        public void Switch(string videoName, bool bAutoPlay = true)
+        public void Switch(string videoName, bool bRewind = false, bool bAutoPlay = false)
         {
             var _idx = FindVideoIndex(videoName);
             if (_idx == -1)
@@ -489,10 +489,10 @@ namespace UNIHper
                 return;
             }
 
-            Switch(_idx, bAutoPlay);
+            Switch(_idx, bRewind, bAutoPlay);
         }
 
-        public void Switch(int mediaIndex, bool bAutoPlay = true)
+        public void Switch(int mediaIndex, bool bRewind = false, bool bAutoPlay = false)
         {
             if (mediaIndex < 0 || mediaIndex >= videoPaths.Count)
             {
@@ -504,7 +504,17 @@ namespace UNIHper
                 mediaIndex,
                 () =>
                 {
-                    if (bAutoPlay)
+                    if (bRewind)
+                    {
+                        currentPlayer.Rewind(_ =>
+                        {
+                            if (bAutoPlay)
+                            {
+                                _.Play();
+                            }
+                        });
+                    }
+                    else if (bAutoPlay)
                     {
                         currentPlayer.Play();
                     }
@@ -512,32 +522,14 @@ namespace UNIHper
             );
         }
 
-        public void SwitchNext(bool bAutoPlay = true)
+        public void SwitchNext(bool bRewind = false, bool bAutoPlay = false)
         {
-            fadePlay(
-                videoIndex.NextValue(),
-                () =>
-                {
-                    if (bAutoPlay)
-                    {
-                        currentPlayer.Play();
-                    }
-                }
-            );
+            Switch(videoIndex.NextValue(), bRewind, bAutoPlay);
         }
 
-        public void SwitchPrev(bool bAutoPlay = true)
+        public void SwitchPrev(bool bRewind = false, bool bAutoPlay = false)
         {
-            fadePlay(
-                videoIndex.PrevValue(),
-                () =>
-                {
-                    if (bAutoPlay)
-                    {
-                        currentPlayer.Play();
-                    }
-                }
-            );
+            Switch(videoIndex.PrevValue(), bRewind, bAutoPlay);
         }
 
         public void SetPlaybackRate(float rate)
