@@ -28,6 +28,11 @@ public class HelpUI : UIBase
         this.helpText.fontSize = textSize;
     }
 
+    public void SetBackgroundColor(Color color)
+    {
+        this.Get<Image>().color = color;
+    }
+
     // Start is called before the first frame update
     private void Start() { }
 

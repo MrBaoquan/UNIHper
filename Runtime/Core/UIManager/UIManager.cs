@@ -553,12 +553,10 @@ namespace UNIHper
                 _uiComponent = _newUI.AddComponent(_T) as UIBase;
             }
 
-            _newUI.transform.SetParent(getParentUIAttachTo(_uiComponent.Type, uiConfig.canvas));
-
             UReflection.SetPrivateField<string>(_uiComponent, "__CanvasKey", uiConfig.canvas);
             UReflection.SetPrivateField<string>(_uiComponent, "__UIKey", uiKey);
             UReflection.SetPrivateField<UIType>(_uiComponent, "__Type", uiConfig.Type);
-
+            _newUI.transform.SetParent(getParentUIAttachTo(_uiComponent.Type, uiConfig.canvas));
             allSpawnedUICaches.Add(uiKey, _uiComponent);
             _uiComponent.OnLoad();
         }

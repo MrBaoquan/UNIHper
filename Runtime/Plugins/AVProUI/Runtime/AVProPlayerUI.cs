@@ -59,7 +59,7 @@ namespace AVProUI
         }
 
         private AVProPlayer avPlayer;
-        private MediaPlayer _mediaPlayer => avPlayer.MediaPlayer;
+        private MediaPlayer _mediaPlayer => avPlayer?.MediaPlayer;
 
         private Button _buttonPlayPause;
         private Button _buttonTimeBack;
@@ -97,6 +97,12 @@ namespace AVProUI
         EventTrigger _videoTouch = null;
         CanvasGroup _controlsGroup = null;
 
+        public void SetAVProPlayer(AVProPlayer aVProPlayer)
+        {
+            this.avPlayer = aVProPlayer;
+            registerVideoControlDisposables();
+        }
+
         private Material DuplicateMaterialOnImage(Graphic image)
         {
             // Assign a copy of the material so we aren't modifying the material asset file
@@ -109,6 +115,7 @@ namespace AVProUI
         // Start is called before the first frame update
         void Start()
         {
+            Debug.Log("AVProPlayerUI Start");
             setupPropertyReferences();
             CreateTimelineDragEvents();
 
@@ -119,6 +126,10 @@ namespace AVProUI
 
             setupBasicControlButtons();
             setupControlsShowOrHide();
+            Debug.Log("AVProPlayerUI Start End");
+
+            if (avPlayer == null)
+                SetAVProPlayer(GetComponent<AVProPlayer>());
         }
 
         private void setupTapGestures()
@@ -193,8 +204,6 @@ namespace AVProUI
 
         private void setupPropertyReferences()
         {
-            avPlayer = this.Get<AVProPlayer>();
-
             _controlsScaler = this.Get<ControlsScaler>("Controls");
 
             _buttonPlayPause = this.Get<Button>("Controls/BottomRow/ButtonPlayPause");
@@ -314,6 +323,7 @@ namespace AVProUI
                 transform.parent,
                 transform
             );
+            Debug.LogWarning($"center: {_bounds.center}, size: {_bounds.size}");
 
             _videoUIRect.anchorMin = Vector2.one * 0.5f;
             _videoUIRect.anchorMax = Vector2.one * 0.5f;
@@ -325,8 +335,46 @@ namespace AVProUI
                 null
             );
             _defaultSize = RectTransformUtility.PixelAdjustPoint(_bounds.size, transform, null);
+
             _videoUIRect.localPosition = _defaultPosition;
             _videoUIRect.sizeDelta = _defaultSize;
+        }
+
+        private readonly List<IDisposable> _videoControlDisposables = new();
+
+        private void registerVideoControlDisposables()
+        {
+            _videoControlDisposables?.ForEach(_ => _.Dispose());
+            _videoControlDisposables?.Clear();
+
+            if (avPlayer == null)
+                return;
+
+            // 暂停时显示控制条
+            _videoControlDisposables.Add(
+                avPlayer
+                    .OnPausedAsObservable()
+                    .Subscribe(_ =>
+                    {
+                        clearHideControls();
+                        FadeUpControls();
+                    })
+            );
+
+            // 自动隐藏控制条
+            _videoControlDisposables.Add(
+                Observable
+                    .Merge(
+                        avPlayer.OnStartedAsObservable().Select(_ => avPlayer),
+                        avPlayer.OnFinishedSeekingAsObservable().Select(_ => avPlayer),
+                        avPlayer.OnVolumeChangedAsObservable(),
+                        avPlayer.OnMuteChangedAsObservable()
+                    )
+                    .Subscribe(_ =>
+                    {
+                        autoHideControls(_autoHideControls);
+                    })
+            );
         }
 
         private void setupControlsShowOrHide()
@@ -349,31 +397,9 @@ namespace AVProUI
                 {
                     if (_.pointerId != 2)
                         return;
-                    if (avPlayer.IsPaused)
+                    if (_mediaPlayer.Control.IsPaused())
                         return;
                     FadeDownControls();
-                });
-
-            // 暂停时显示控制条
-            avPlayer
-                .OnPausedAsObservable()
-                .Subscribe(_ =>
-                {
-                    clearHideControls();
-                    FadeUpControls();
-                });
-
-            // 自动隐藏控制条
-            Observable
-                .Merge(
-                    avPlayer.OnStartedAsObservable().Select(_ => avPlayer),
-                    avPlayer.OnFinishedSeekingAsObservable().Select(_ => avPlayer),
-                    avPlayer.OnVolumeChangedAsObservable(),
-                    avPlayer.OnMuteChangedAsObservable()
-                )
-                .Subscribe(_ =>
-                {
-                    autoHideControls(_autoHideControls);
                 });
         }
 
@@ -599,10 +625,12 @@ namespace AVProUI
 
         public void TogglePlayPause()
         {
+            Debug.Log("TogglePlayPause");
             if (_mediaPlayer && _mediaPlayer.Control != null)
             {
                 if (_useAudioFading && _mediaPlayer.Info.HasAudio())
                 {
+                    Debug.Log("TogglePlayPause 1: " + _mediaPlayer.Control.IsPlaying());
                     if (_mediaPlayer.Control.IsPlaying())
                     {
                         if (_overlayManager)
@@ -620,6 +648,7 @@ namespace AVProUI
                 }
                 else
                 {
+                    Debug.Log("TogglePlayPause 2: " + _mediaPlayer.Control.IsPlaying());
                     if (_mediaPlayer.Control.IsPlaying())
                     {
                         Pause();
@@ -629,6 +658,10 @@ namespace AVProUI
                         Play();
                     }
                 }
+            }
+            else
+            {
+                Debug.LogError("No MediaPlayer found");
             }
         }
 
@@ -927,6 +960,9 @@ namespace AVProUI
 
         void UpdateAudioFading()
         {
+            if (_mediaPlayer == null)
+                return;
+
             // Increment fade timer
             if (_audioFadeTime < AudioFadeDuration)
             {
@@ -977,8 +1013,9 @@ namespace AVProUI
         {
             UpdateAudioFading();
             UpdateAudioSpectrum();
-            if (_mediaPlayer.Info == null)
+            if (_mediaPlayer == null || _mediaPlayer.Info == null)
                 return;
+
             TimeRange timelineRange = GetTimelineRange();
 
             // Updated stalled display
@@ -1005,7 +1042,7 @@ namespace AVProUI
 #else
                     Input.mousePosition,
 #endif
-                    null,
+                    Camera.main, // 如果canvas rendermode为非overlay模式，需要指定Camera
                     out canvasPos
                 );
 
@@ -1015,16 +1052,19 @@ namespace AVProUI
                 Bounds bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(
                     _sliderTime.GetComponent<RectTransform>()
                 );
-                var _timeLinePos = new Vector2(mousePos.x, timelineTip.position.y);
+
+                var _timeLinePos = new Vector3(mousePos.x, timelineTip.position.y, 0);
                 var _minPos = _sliderTime.Get<RectTransform>().TransformPoint(bounds.min);
                 var _maxPos = _sliderTime.Get<RectTransform>().TransformPoint(bounds.max);
                 _timeLinePos.x = Mathf.Clamp(_timeLinePos.x, _minPos.x, _maxPos.x);
+
                 timelineTip.position = _timeLinePos;
 
                 float x = Mathf.Clamp01(
                     (canvasPos.x - bounds.min.x * _controlsScaler.scale)
                         / (bounds.size.x * _controlsScaler.scale)
                 );
+
                 double time = (double)x * timelineRange.Duration;
 
                 // Update time text
@@ -1059,7 +1099,7 @@ namespace AVProUI
             {
                 double t = 0.0;
 
-                t = avPlayer.CurrentTime / avPlayer.Duration;
+                t = _mediaPlayer.Control.GetCurrentTime() / _mediaPlayer.Info.GetDuration();
                 _sliderTime.value = Mathf.Clamp01((float)t);
             }
 
