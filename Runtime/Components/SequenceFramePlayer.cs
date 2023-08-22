@@ -92,6 +92,8 @@ namespace UNIHper
                 })
                 .Subscribe(_ =>
                 {
+                    if (sequenceTextures.Count <= 0)
+                        return;
                     _render.texture = sequenceTextures[sequenceIndexer.Next()];
                     if (bMatchTextureSize)
                     {
