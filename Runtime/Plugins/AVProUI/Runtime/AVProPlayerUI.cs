@@ -46,6 +46,19 @@ namespace AVProUI
         [SerializeField, OnValueChanged("OnEnableFullScreenChanged")]
         private bool _enableFullScreen = true;
 
+        private Canvas _renderCanvas = null;
+        private Canvas renderCanvas
+        {
+            get
+            {
+                if (_renderCanvas == null)
+                {
+                    _renderCanvas = GetComponentInParent<Canvas>();
+                }
+                return _renderCanvas;
+            }
+        }
+
         private void OnEnableFullScreenChanged()
         {
             if (_enableFullScreen)
@@ -115,7 +128,6 @@ namespace AVProUI
         // Start is called before the first frame update
         void Start()
         {
-            Debug.Log("AVProPlayerUI Start");
             setupPropertyReferences();
             CreateTimelineDragEvents();
 
@@ -126,7 +138,6 @@ namespace AVProUI
 
             setupBasicControlButtons();
             setupControlsShowOrHide();
-            Debug.Log("AVProPlayerUI Start End");
 
             if (avPlayer == null)
                 SetAVProPlayer(GetComponent<AVProPlayer>());
@@ -187,6 +198,8 @@ namespace AVProUI
 
         private bool checkIfScreenPointInControlsArea(Vector2 screenPos)
         {
+            if (_controlsGroup == null)
+                return false;
             RectTransform rect = _controlsGroup.GetComponent<RectTransform>();
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 rect,
@@ -323,7 +336,6 @@ namespace AVProUI
                 transform.parent,
                 transform
             );
-            Debug.LogWarning($"center: {_bounds.center}, size: {_bounds.size}");
 
             _videoUIRect.anchorMin = Vector2.one * 0.5f;
             _videoUIRect.anchorMax = Vector2.one * 0.5f;
@@ -335,7 +347,6 @@ namespace AVProUI
                 null
             );
             _defaultSize = RectTransformUtility.PixelAdjustPoint(_bounds.size, transform, null);
-
             _videoUIRect.localPosition = _defaultPosition;
             _videoUIRect.sizeDelta = _defaultSize;
         }
@@ -370,6 +381,7 @@ namespace AVProUI
                         avPlayer.OnVolumeChangedAsObservable(),
                         avPlayer.OnMuteChangedAsObservable()
                     )
+                    .Where(_ => gameObject.activeInHierarchy)
                     .Subscribe(_ =>
                     {
                         autoHideControls(_autoHideControls);
@@ -397,7 +409,7 @@ namespace AVProUI
                 {
                     if (_.pointerId != 2)
                         return;
-                    if (_mediaPlayer.Control.IsPaused())
+                    if (avPlayer.IsPaused)
                         return;
                     FadeDownControls();
                 });
@@ -625,12 +637,10 @@ namespace AVProUI
 
         public void TogglePlayPause()
         {
-            Debug.Log("TogglePlayPause");
             if (_mediaPlayer && _mediaPlayer.Control != null)
             {
                 if (_useAudioFading && _mediaPlayer.Info.HasAudio())
                 {
-                    Debug.Log("TogglePlayPause 1: " + _mediaPlayer.Control.IsPlaying());
                     if (_mediaPlayer.Control.IsPlaying())
                     {
                         if (_overlayManager)
@@ -648,7 +658,6 @@ namespace AVProUI
                 }
                 else
                 {
-                    Debug.Log("TogglePlayPause 2: " + _mediaPlayer.Control.IsPlaying());
                     if (_mediaPlayer.Control.IsPlaying())
                     {
                         Pause();
@@ -658,10 +667,6 @@ namespace AVProUI
                         Play();
                     }
                 }
-            }
-            else
-            {
-                Debug.LogError("No MediaPlayer found");
             }
         }
 
@@ -962,7 +967,6 @@ namespace AVProUI
         {
             if (_mediaPlayer == null)
                 return;
-
             // Increment fade timer
             if (_audioFadeTime < AudioFadeDuration)
             {
@@ -1008,6 +1012,11 @@ namespace AVProUI
             _controlsGroup.DOFade(1, 0.5f);
         }
 
+        private Camera renderCamera =>
+            renderCanvas.renderMode == RenderMode.ScreenSpaceOverlay
+                ? null
+                : renderCanvas.worldCamera;
+
         // Update is called once per frame
         void Update()
         {
@@ -1015,7 +1024,6 @@ namespace AVProUI
             UpdateAudioSpectrum();
             if (_mediaPlayer == null || _mediaPlayer.Info == null)
                 return;
-
             TimeRange timelineRange = GetTimelineRange();
 
             // Updated stalled display
@@ -1042,7 +1050,7 @@ namespace AVProUI
 #else
                     Input.mousePosition,
 #endif
-                    Camera.main, // 如果canvas rendermode为非overlay模式，需要指定Camera
+                    renderCamera,
                     out canvasPos
                 );
 
@@ -1052,19 +1060,16 @@ namespace AVProUI
                 Bounds bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(
                     _sliderTime.GetComponent<RectTransform>()
                 );
-
-                var _timeLinePos = new Vector3(mousePos.x, timelineTip.position.y, 0);
+                var _timeLinePos = new Vector2(mousePos.x, timelineTip.position.y);
                 var _minPos = _sliderTime.Get<RectTransform>().TransformPoint(bounds.min);
                 var _maxPos = _sliderTime.Get<RectTransform>().TransformPoint(bounds.max);
                 _timeLinePos.x = Mathf.Clamp(_timeLinePos.x, _minPos.x, _maxPos.x);
-
                 timelineTip.position = _timeLinePos;
 
                 float x = Mathf.Clamp01(
                     (canvasPos.x - bounds.min.x * _controlsScaler.scale)
                         / (bounds.size.x * _controlsScaler.scale)
                 );
-
                 double time = (double)x * timelineRange.Duration;
 
                 // Update time text
@@ -1099,7 +1104,7 @@ namespace AVProUI
             {
                 double t = 0.0;
 
-                t = _mediaPlayer.Control.GetCurrentTime() / _mediaPlayer.Info.GetDuration();
+                t = avPlayer.CurrentTime / avPlayer.Duration;
                 _sliderTime.value = Mathf.Clamp01((float)t);
             }
 

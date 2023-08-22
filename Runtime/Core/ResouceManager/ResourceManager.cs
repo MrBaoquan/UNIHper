@@ -420,6 +420,11 @@ namespace UNIHper
             return _textures;
         }
 
+        public IObservable<IList<Texture2D>> LoadTexture2Ds(IEnumerable<string> TexturePathes)
+        {
+            return Observable.Zip(TexturePathes.Select(_path => this.LoadTexture2D(_path))).First();
+        }
+
         /// <summary>
         /// 加载指定目录下的图片
         /// </summary>
@@ -441,6 +446,28 @@ namespace UNIHper
                     .GetFiles(textureDir, "*.*", searchOption)
                     .Where(_path => _searchPatterns.Contains(Path.GetExtension(_path).ToLower()))
             );
+        }
+
+        public IObservable<IList<Texture2D>> LoadTexture2Ds(
+            string textureDir,
+            string searchPattern = "*.png|*.jpg|*.jpeg",
+            SearchOption searchOption = SearchOption.TopDirectoryOnly
+        )
+        {
+            var _searchPatterns = searchPattern
+                .Split('|')
+                .Select(_pattern => _pattern.Replace("*", ""));
+
+            return Observable
+                .Zip(
+                    Directory
+                        .GetFiles(textureDir, "*.*", searchOption)
+                        .Where(
+                            _path => _searchPatterns.Contains(Path.GetExtension(_path).ToLower())
+                        )
+                        .Select(_path => this.LoadTexture2D(_path))
+                )
+                .First();
         }
 
         public async Task<Texture2D> AppendTexture2D(string InPath)
