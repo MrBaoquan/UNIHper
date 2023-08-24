@@ -54,11 +54,19 @@ namespace UNIHper.UI
 
         [SerializeField]
         [ShowInInspector, PropertyRange(0, 1), ShowIf("driver", UIAnimionDriver.Tweener)]
+        private float enterDelay = 0.0f;
+
+        [SerializeField]
+        [ShowInInspector, PropertyRange(0, 1), ShowIf("driver", UIAnimionDriver.Tweener)]
         private float enterDuration = 0.40f;
 
         [SerializeField]
         [ShowInInspector, ShowIf("driver", UIAnimionDriver.Tweener)]
         private UIAnimationType exitAnimType = UIAnimationType.Fly_Right;
+
+        [SerializeField]
+        [ShowInInspector, PropertyRange(0, 1), ShowIf("driver", UIAnimionDriver.Tweener)]
+        private float exitDelay = 0.0f;
 
         [SerializeField]
         [ShowInInspector, PropertyRange(0, 1), ShowIf("driver", UIAnimionDriver.Tweener)]
@@ -235,6 +243,7 @@ namespace UNIHper.UI
                     {
                         newFadeTween(enterAnimType, 1, enterDuration)
                             .SetEase(Ease.Linear)
+                            .SetDelay(enterDelay)
                             .OnComplete(() =>
                             {
                                 _observer.OnNext(Unit.Default);
@@ -277,6 +286,7 @@ namespace UNIHper.UI
                     {
                         newFadeTween(exitAnimType, 2, exitDuration)
                             .SetEase(Ease.Linear)
+                            .SetDelay(exitDelay)
                             .OnComplete(() =>
                             {
                                 _observer.OnNext(Unit.Default);

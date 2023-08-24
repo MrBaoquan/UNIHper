@@ -59,7 +59,7 @@ namespace UNIHper
                 return;
             }
             maxIndex = Max;
-            if (current > maxIndex)
+            if (Current > maxIndex)
                 Set(maxIndex);
         }
 
@@ -75,33 +75,55 @@ namespace UNIHper
                 return;
             }
             minIndex = Min;
-            if (current < minIndex)
+            if (Current < minIndex)
                 Set(minIndex);
         }
 
         /// <summary>
         /// 设置当前索引值
         /// </summary>
-        /// <param name="Current"></param>
+        /// <param name="newIndex"></param>
         /// <returns></returns>
-        public int Set(int Current)
+        public int Set(int newIndex)
         {
-            if (Current < minIndex || Current > maxIndex)
+            var _newIndex = limitIndex(newIndex);
+            if (current != _newIndex)
             {
-                if (Loop)
-                    Current = (int)Mathf.Repeat(Current, maxIndex - minIndex + 1) + Min;
-                else
-                    Current = Mathf.Clamp(Current, minIndex, maxIndex);
+                current = _newIndex;
+                onIndexChanged.Invoke(current);
             }
-            current = Current;
-            onIndexChanged.Invoke(current);
+            return current;
+        }
+
+        public int SetWithoutNotify(int newIndex)
+        {
+            var _newIndex = limitIndex(newIndex);
+            if (current != _newIndex)
+            {
+                current = _newIndex;
+            }
+            return current;
+        }
+
+        public int SetAndForceNotify(int newIndex)
+        {
+            var _newIndex = limitIndex(newIndex);
+            if (current != _newIndex)
+            {
+                current = _newIndex;
+                onIndexChanged.Invoke(current);
+            }
+            else
+            {
+                onIndexChanged.Invoke(current);
+            }
+
             return current;
         }
 
         public int Next()
         {
-            current = NextValue();
-            onIndexChanged.Invoke(current);
+            Set(NextValue());
             return current;
         }
 
@@ -113,8 +135,7 @@ namespace UNIHper
 
         public int Prev()
         {
-            current = PrevValue();
-            onIndexChanged.Invoke(current);
+            Set(PrevValue());
             return current;
         }
 
@@ -130,8 +151,7 @@ namespace UNIHper
         /// <returns></returns>
         public int SetToMin()
         {
-            current = Min;
-            onIndexChanged.Invoke(current);
+            Set(Min);
             return current;
         }
 
@@ -141,8 +161,7 @@ namespace UNIHper
         /// <returns></returns>
         public int SetToMax()
         {
-            current = Max;
-            onIndexChanged.Invoke(current);
+            Set(Max);
             return current;
         }
 
@@ -152,16 +171,16 @@ namespace UNIHper
         /// <returns></returns>
         public int Notify()
         {
-            onIndexChanged.Invoke(current);
+            SetAndForceNotify(current);
             return current;
         }
 
         public int PrevValue()
         {
             if (Loop)
-                return (int)Mathf.Repeat(current - 1, Max - Min + 1) + Min;
+                return (int)Mathf.Repeat(this.Current - 1, Max - Min + 1) + Min;
             else
-                return (int)Mathf.Clamp(current - 1, Min, Max);
+                return (int)Mathf.Clamp(this.Current - 1, Min, Max);
         }
 
         /// <summary>
@@ -171,9 +190,9 @@ namespace UNIHper
         public int NextValue()
         {
             if (Loop)
-                return (int)Mathf.Repeat(current + 1, Max - Min + 1) + Min;
+                return (int)Mathf.Repeat(this.Current + 1, Max - Min + 1) + Min;
             else
-                return (int)Mathf.Clamp(current + 1, Min, Max);
+                return (int)Mathf.Clamp(this.Current + 1, Min, Max);
         }
 
         /// <summary>
@@ -182,14 +201,26 @@ namespace UNIHper
         /// <returns>越界则返回True  否则返回False</returns>
         public bool CheckNextOverflow()
         {
-            var _next = current + 1;
+            var _next = this.Current + 1;
             return _next > maxIndex;
         }
 
         public bool CheckPrevOverflow()
         {
-            var _next = current - 1;
+            var _next = this.Current - 1;
             return _next < minIndex;
+        }
+
+        private int limitIndex(int newIndex)
+        {
+            if (newIndex < minIndex || newIndex > maxIndex)
+            {
+                if (Loop)
+                    newIndex = (int)Mathf.Repeat(newIndex, maxIndex - minIndex + 1) + Min;
+                else
+                    newIndex = Mathf.Clamp(newIndex, minIndex, maxIndex);
+            }
+            return newIndex;
         }
     }
 }

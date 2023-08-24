@@ -12,6 +12,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
 using Sirenix.OdinInspector;
+using System.ComponentModel;
 
 namespace UNIHper
 {
@@ -71,26 +72,40 @@ namespace UNIHper
 
         [Title("Player Settings")]
         [SerializeField, ValueDropdown("getFadeTypes")]
-        FadeType fadeType = FadeType.Alpha;
+        DisplayFadeType fadeType = DisplayFadeType.Alpha;
 
-        private ValueDropdownList<FadeType> getFadeTypes()
+        public DisplayFadeType FadeType
         {
-            var _fadeTypes = new ValueDropdownList<FadeType>() { FadeType.None, FadeType.Alpha };
+            get => fadeType;
+            set
+            {
+                fadeType = value;
+                Debug.LogWarning(fadeType);
+            }
+        }
+
+        private ValueDropdownList<DisplayFadeType> getFadeTypes()
+        {
+            var _fadeTypes = new ValueDropdownList<DisplayFadeType>()
+            {
+                DisplayFadeType.None,
+                DisplayFadeType.Alpha
+            };
             if (renderTarget == RenderTarget.RawImage)
             {
-                _fadeTypes.Add(FadeType.Color);
+                _fadeTypes.Add(DisplayFadeType.Color);
             }
             return _fadeTypes;
         }
 
-        [SerializeField, ShowIf("fadeType", FadeType.Alpha)]
-        public float FadeIn = 0.75f;
+        [SerializeField, ShowIf("fadeType", DisplayFadeType.Alpha), LabelText("Fade In Duration")]
+        public float FadeAlphaIn = 0.60f;
 
-        [SerializeField, ShowIf("fadeType", FadeType.Alpha)]
-        public float FadeOut = 0.45f;
+        [SerializeField, ShowIf("fadeType", DisplayFadeType.Alpha), LabelText("Fade Out Duration")]
+        public float FadeAlphaOut = 0.40f;
 
-        [SerializeField, ShowIf("fadeType", FadeType.Color)]
-        private float FadeDuration = 1.0f;
+        [SerializeField, ShowIf("fadeType", DisplayFadeType.Color), LabelText("Fade Duration")]
+        public float FadeColorDuration = 1.0f;
 
         private readonly UnityEvent<AVProPlayer> onPlayerChanged = new();
 
@@ -169,6 +184,7 @@ namespace UNIHper
             }
 
             videoIndex.SetMax(VideoPaths.Count() - 1);
+            videoIndex.SetToMax();
             this.videoPaths = VideoPaths.ToList();
 
             var _defaultPlayer = new GameObject("mediaPlayer_default");
@@ -266,22 +282,27 @@ namespace UNIHper
             isSwapChainBufferReady = true;
         }
 
+        // 准备就绪的媒体贴图
+        private int readyMediaTextureID = -1;
+
         /// <summary>
         /// Called when all videos are prepared
         /// </summary>
         private void onReady()
         {
+            Debug.LogWarning("fadeType:" + fadeType);
             setupRenderMaterial();
             videoIndex
                 .OnIndexChangedAsObservable()
-                .Subscribe(async _index =>
+                .Subscribe(async _newVideoIndex =>
                 {
                     if (renderTarget == RenderTarget.RawImage)
                     {
                         isSwapChainBufferReady = false;
-                        var _texture = await getMediaTexture(_index);
+                        var _texture = await getMediaTexture(_newVideoIndex);
+                        readyMediaTextureID = _newVideoIndex;
                         RawImage_Render.texture = _texture;
-                        if (fadeType == FadeType.Color)
+                        if (fadeType == DisplayFadeType.Color)
                         {
                             setSwapChainBuffer(_texture);
                         }
@@ -293,19 +314,9 @@ namespace UNIHper
                     }
                     onPlayerChanged.Invoke(currentPlayer);
                 })
-                .AddTo(this);
+                .AddTo(currentPlayer);
 
-            // 等待当前视频帧准备完成
-            // Observable
-            //     .EveryUpdate()
-            //     .Where(_ => currentPlayer.Get<DisplayUGUI>().HasValidTexture())
-            //     .First()
-            //     .Subscribe(_ =>
-            //     {
-
-            //     })
-            //     .AddTo(this);
-            fadePlay(videoIndex.Current, () => { });
+            fadePlay(videoIndex.SetToMin(), () => { });
         }
 
         private void setupRenderMaterial()
@@ -316,16 +327,16 @@ namespace UNIHper
                 _displayMat.SetFloat("_FlipY", 1);
                 _displayMat.SetTextureScale("_MainTex", new Vector2(1, -1));
                 _displayMat.SetTextureOffset("_MainTex", Vector2.up);
-                if (fadeType == FadeType.None)
+                if (fadeType == DisplayFadeType.None)
                 {
                     _displayMat.SetInteger("_Enable", 0);
                 }
-                else if (fadeType == FadeType.Color)
+                else if (fadeType == DisplayFadeType.Color)
                 {
                     _displayMat.SetInteger("_Enable", 1);
                     _displayMat.SetFloat("_Weight", 1);
                 }
-                else if (fadeType == FadeType.Alpha)
+                else if (fadeType == DisplayFadeType.Alpha)
                 {
                     _displayMat.SetInteger("_Enable", 0);
                 }
@@ -458,7 +469,7 @@ namespace UNIHper
             }
         }
 
-        enum FadeType
+        public enum DisplayFadeType
         {
             Alpha,
             Color,
@@ -468,6 +479,11 @@ namespace UNIHper
         public void Stop()
         {
             StopVideo();
+        }
+
+        public void Rewind(bool pause = true)
+        {
+            currentPlayer.Rewind(pause);
         }
 
         public void Seek(double NewTime)
@@ -601,82 +617,141 @@ namespace UNIHper
                 .Where(_ => _displayUGUI.HasValidTexture())
                 .First()
                 .Timeout(TimeSpan.FromSeconds(3))
-                .Select(_ => _displayUGUI.mainTexture);
+                .Select(_ => _displayUGUI.mainTexture)
+                .Catch<Texture, Exception>(_ex =>
+                {
+                    Debug.LogError(
+                        $"getMediaTexture TimeoutException: {_ex.Message}, mediaIndex:{mediaIndex}"
+                    );
+                    return Observable.Return<Texture>(null);
+                });
         }
+
+        private bool fadeCompleted = false;
+
+        // private int fadeTargetIndex = -1;
+
+        private List<AVProPlayer> cachedReadyToStopPlayers = new();
 
         private void fadePlay(int newMediaIndex, Action onCleared = null)
         {
-            if (fadeType == FadeType.None)
+            if (
+                fadeCompleted == false /*&& fadeTargetIndex != -1*/
+            )
+            {
+                Debug.LogWarning("fadePlay is called before last fade completed.");
+                cachedReadyToStopPlayers.ForEach(_ => _.Stop());
+            }
+            // fadeTargetIndex = newMediaIndex;
+            fadeCompleted = false;
+            void _onFadeCompleted()
+            {
+                fadeCompleted = true;
+                // fadeTargetIndex = -1;
+                onCleared?.Invoke();
+            }
+
+            if (fadeType == DisplayFadeType.None)
             {
                 videoIndex.Set(newMediaIndex);
-                onCleared?.Invoke();
+                _onFadeCompleted();
                 return;
             }
-            else if (fadeType == FadeType.Alpha)
+            else if (fadeType == DisplayFadeType.Alpha)
             {
-                fadePlayByAlpha(newMediaIndex, onCleared);
+                fadePlayByAlpha(newMediaIndex, _onFadeCompleted);
             }
-            else if (fadeType == FadeType.Color)
+            else if (fadeType == DisplayFadeType.Color)
             {
-                fadePlayByColor(newMediaIndex, onCleared);
+                fadePlayByColor(newMediaIndex, _onFadeCompleted);
             }
         }
 
-        async void fadePlayByColor(int newMediaIndex, Action onCleared = null)
+        Sequence fadeColorTweener = null;
+        IDisposable fadeColorDisposeable = null;
+
+        void fadePlayByColor(int newMediaIndex, Action onCleared = null)
         {
+            fadeColorTweener?.Kill();
+            fadeAlphaTweener = null;
+
+            fadeColorDisposeable?.Dispose();
+            fadeColorDisposeable = null;
+
             var _renderMat = RawImage_Render.material;
             var _oldPlayer = currentPlayer;
-            videoIndex.Set(newMediaIndex); // 此处更新缓冲区
+            cachedReadyToStopPlayers.Add(_oldPlayer);
 
-            // wait unitl isSwapChainBufferReady
-            await Observable.EveryUpdate().Where(_ => isSwapChainBufferReady).First();
+            videoIndex.SetAndForceNotify(newMediaIndex); // 此处更新缓冲区
+            fadeColorDisposeable = Observable
+                .EveryUpdate()
+                .Where(_ => isSwapChainBufferReady && readyMediaTextureID == newMediaIndex)
+                .First()
+                .Subscribe(_ =>
+                {
+                    fadeColorDisposeable = null;
 
-            var _targetWeight = swapRenderChain();
-            var _newPlayer = currentPlayer;
+                    var _targetWeight = swapRenderChain();
+                    var _newPlayer = currentPlayer;
 
-            DOTween
-                .Sequence()
-                .Append(
-                    _renderMat
-                        .DOFloat(0.5f, "_Weight", FadeDuration * 0.5f)
-                        .SetEase(Ease.Linear)
-                        .OnComplete(() =>
-                        {
-                            if (_oldPlayer != currentPlayer)
-                                _oldPlayer.Pause();
-                            onCleared?.Invoke();
-                        })
-                )
-                .Append(
-                    _renderMat
-                        .DOFloat(_targetWeight, "_Weight", FadeDuration * 0.5f)
-                        .SetEase(Ease.Linear)
-                        .OnComplete(() =>
-                        {
-                            // 暂停当前播放器   播放新的视频
-                            if (_oldPlayer != currentPlayer)
-                                _oldPlayer.Stop();
-                        })
-                )
-                .PlayForward();
+                    fadeColorTweener = DOTween
+                        .Sequence()
+                        .Append(
+                            _renderMat
+                                .DOFloat(0.5f, "_Weight", FadeColorDuration * 0.5f)
+                                .SetEase(Ease.Linear)
+                                .OnComplete(() =>
+                                {
+                                    cachedReadyToStopPlayers.RemoveAll(_ => _ == _oldPlayer);
+                                    if (_oldPlayer != currentPlayer)
+                                        _oldPlayer.Pause();
+                                    onCleared?.Invoke();
+                                })
+                        )
+                        .Append(
+                            _renderMat
+                                .DOFloat(_targetWeight, "_Weight", FadeColorDuration * 0.5f)
+                                .SetEase(Ease.Linear)
+                                .OnComplete(() =>
+                                {
+                                    // 暂停当前播放器   播放新的视频
+                                    if (_oldPlayer != currentPlayer)
+                                        _oldPlayer.Stop();
+                                })
+                        );
+                    fadeColorTweener.PlayForward();
+                });
         }
+
+        Sequence fadeAlphaTweener = null;
 
         private void fadePlayByAlpha(int newMediaIndex, Action onCleared = null)
         {
+            if (fadeAlphaTweener != null)
+                fadeAlphaTweener.Kill();
+
             var _oldPlayer = currentPlayer;
-            DOTween
+            cachedReadyToStopPlayers.Add(_oldPlayer);
+
+            fadeAlphaTweener = DOTween
                 .Sequence()
                 .Append(
                     this.Get<Graphic>()
-                        .DOFade(0, FadeOut)
+                        .DOFade(0, FadeAlphaOut)
                         .OnComplete(() =>
                         {
-                            _oldPlayer.Stop();
-                            videoIndex.Set(newMediaIndex);
+                            cachedReadyToStopPlayers.RemoveAll(_ => _ == _oldPlayer);
+                            _oldPlayer.Rewind(true);
+                            videoIndex.SetAndForceNotify(newMediaIndex);
                             onCleared?.Invoke();
                         })
                 )
-                .Append(this.Get<Graphic>().DOFade(1, FadeIn))
+                .Append(this.Get<Graphic>().DOFade(1, FadeAlphaIn));
+            fadeAlphaTweener
+                .OnComplete(() =>
+                {
+                    fadeAlphaTweener = null;
+                })
                 .PlayForward();
         }
 
@@ -684,7 +759,7 @@ namespace UNIHper
         {
             if (currentPlayer == null)
                 return;
-            currentPlayer.Rewind(true);
+            currentPlayer.Stop();
         }
     }
 }

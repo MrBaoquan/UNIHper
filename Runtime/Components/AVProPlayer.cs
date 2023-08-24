@@ -326,7 +326,8 @@ namespace UNIHper
 
         public void Stop()
         {
-            Rewind(true);
+            //Rewind(true);
+            MediaPlayer.Control.Stop();
         }
 
         public void Seek(double InTime, Action<AVProPlayer> onCompleted = null)

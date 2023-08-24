@@ -7,6 +7,7 @@ using UniRx;
 using UnityEngine;
 using UnityEngine.Events;
 using UNIHper.UI;
+using System.Threading;
 
 namespace UNIHper
 {
@@ -32,7 +33,19 @@ namespace UNIHper
             return onHiddenEvent.AsObservable();
         }
 
-        public bool isShowing { get; private set; } = false;
+        private enum UIStatus
+        {
+            None,
+            Loading,
+            Loaded,
+            Showing,
+            Shown,
+            Hiding,
+            Hidden
+        }
+
+        private UIStatus _status = UIStatus.None;
+        public bool isShowing => _status == UIStatus.Showing || _status == UIStatus.Shown;
 
         public void Toggle()
         {
@@ -46,20 +59,6 @@ namespace UNIHper
             }
         }
 
-        private Func<Task> m_showTask = () => Task.CompletedTask;
-
-        public void SetShowTask(Func<Task> InTask)
-        {
-            m_showTask = InTask;
-        }
-
-        private Func<Task> m_hideTask = () => Task.CompletedTask;
-
-        public void SetHideTask(Func<Task> InTask)
-        {
-            m_hideTask = InTask;
-        }
-
         private UIAnimationBase uiAnimComponent
         {
             get => GetComponent<UIAnimationBase>();
@@ -70,24 +69,60 @@ namespace UNIHper
         {
             if (uiAnimComponent != null)
                 UReflection.CallPrivateMethod(uiAnimComponent, "OnUIAttached");
+            _status = UIStatus.Loaded;
             OnLoaded();
         }
 
         // Called when the ui is being requested to show
         internal void HandleShow()
         {
+
             if (!this.gameObject.activeInHierarchy)
             {
                 this.gameObject.SetActive(true);
             }
-            isShowing = true;
+
             handleShowEvents();
+        }
+
+        CancellationTokenSource showCancellationTokenSource = null;
+        CancellationTokenSource hideCancellationTokenSource = null;
+
+        private void clearShowOrHideCancellationTokenSource()
+        {
+            if (showCancellationTokenSource != null)
+            {
+                showCancellationTokenSource.Cancel();
+                showCancellationTokenSource.Dispose();
+                showCancellationTokenSource = null;
+            }
+            if (hideCancellationTokenSource != null)
+            {
+                hideCancellationTokenSource.Cancel();
+                hideCancellationTokenSource.Dispose();
+                hideCancellationTokenSource = null;
+            }
         }
 
         protected async void handleShowEvents()
         {
+            clearShowOrHideCancellationTokenSource();
+
+            _status = UIStatus.Showing;
             this.OnShowing();
-            await handleShowAction();
+            try
+            {
+                showCancellationTokenSource = new CancellationTokenSource();
+                await handleShowAction(showCancellationTokenSource.Token);
+                showCancellationTokenSource.Dispose();
+                showCancellationTokenSource = null;
+            }
+            catch (System.Exception)
+            {
+                return;
+            }
+
+            _status = UIStatus.Shown;
             this.OnShown();
             onShownEvent.Invoke();
         }
@@ -95,23 +130,35 @@ namespace UNIHper
         // Called when the ui is being requested to hide
         internal void HandleHide()
         {
-            if (!isShowing)
-                return;
-            isShowing = false;
             this.handleHideEvents();
         }
 
         protected async void handleHideEvents()
         {
+            clearShowOrHideCancellationTokenSource();
+
+            _status = UIStatus.Hiding;
             this.OnHiding();
-            await handleHideAction();
+            try
+            {
+                hideCancellationTokenSource = new CancellationTokenSource();
+                await handleHideAction(hideCancellationTokenSource.Token);
+                hideCancellationTokenSource.Dispose();
+                hideCancellationTokenSource = null;
+            }
+            catch (System.Exception)
+            {
+                return;
+            }
+
+            _status = UIStatus.Hidden;
+
+            this.gameObject.SetActive(false);
             this.OnHidden();
             onHiddenEvent.Invoke();
-            if (!isShowing && this.gameObject)
-                this.gameObject.SetActive(false);
         }
 
-        protected async virtual Task handleShowAction()
+        protected async virtual Task handleShowAction(CancellationToken cancellationToken)
         {
             if (uiAnimComponent != null)
             {
@@ -123,7 +170,7 @@ namespace UNIHper
             }
         }
 
-        protected async virtual Task handleHideAction()
+        protected async virtual Task handleHideAction(CancellationToken cancellationToken)
         {
             if (uiAnimComponent != null)
             {
