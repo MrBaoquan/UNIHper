@@ -293,7 +293,7 @@ namespace UNIHper.UI
                             _isExpired = true;
                         });
                     })
-                    .ToTask();
+                    .ToTask(cancellationToken);
             }
             else if (driver == UIAnimionDriver.Tweener)
             {

@@ -75,7 +75,6 @@ namespace UNIHper
         // Called when the ui is being requested to show
         internal void HandleShow()
         {
-            //Debug.LogWarning($"HandleShow: {this.name}");
             if (!this.gameObject.activeInHierarchy)
             {
                 this.gameObject.SetActive(true);
@@ -111,7 +110,6 @@ namespace UNIHper
             }
             catch (System.Exception)
             {
-                //Debug.LogError($"show {this.name} is canceled");
                 return;
             }
 
@@ -123,7 +121,6 @@ namespace UNIHper
         // Called when the ui is being requested to hide
         internal void HandleHide()
         {
-            //Debug.LogWarning($"HandleHide: {this.name}");
             this.handleHideEvents();
         }
 
@@ -142,13 +139,11 @@ namespace UNIHper
             }
             catch (System.Exception)
             {
-                Debug.LogError($"hide {this.name} is canceled");
                 return;
             }
 
             _status = UIStatus.Hidden;
 
-            Debug.LogWarning($"{this.name} is hidden");
             this.gameObject.SetActive(false);
             this.OnHidden();
             onHiddenEvent.Invoke();
