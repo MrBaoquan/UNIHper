@@ -117,14 +117,14 @@ namespace UNIHper.UI
 #endif
         }
 
-        public override Task BuildShowTask()
+        public override Task BuildShowTask(CancellationToken cancellationToken)
         {
-            return getShowTask();
+            return getShowTask(cancellationToken);
         }
 
-        public override Task BuildHideTask()
+        public override Task BuildHideTask(CancellationToken cancellationToken)
         {
-            return getHideTask();
+            return getHideTask(cancellationToken);
         }
 
         private UAnimatorOverrideController animatorOverrideController
@@ -160,7 +160,7 @@ namespace UNIHper.UI
 #endif
         }
 
-        protected override void OnUIAttached()
+        internal override void OnUIAttached()
         {
             recordOriginTransform();
             if (driver == UIAnimionDriver.Animator)
@@ -213,8 +213,10 @@ namespace UNIHper.UI
             recordOriginTransform();
         }
 
-        private Task getShowTask()
+        private Task getShowTask(CancellationToken cancellationToken)
         {
+            bool _isExpired = false;
+
             if (driver == UIAnimionDriver.Animator)
             {
                 if (UIShow is null)
@@ -228,20 +230,25 @@ namespace UNIHper.UI
                                 "UIShow",
                                 _animator =>
                                 {
+                                    if (_isExpired)
+                                        return;
                                     _observer.OnNext(Unit.Default);
                                     _observer.OnCompleted();
                                 }
                             );
-                        return new CancellationTokenSource();
+                        return Disposable.Create(() =>
+                        {
+                            _isExpired = true;
+                        });
                     })
-                    .ToTask();
+                    .ToTask(cancellationToken);
             }
             else if (driver == UIAnimionDriver.Tweener)
             {
                 return Observable
                     .Create<Unit>(_observer =>
                     {
-                        newFadeTween(enterAnimType, 1, enterDuration)
+                        var _tweener = newFadeTween(enterAnimType, 1, enterDuration)
                             .SetEase(Ease.Linear)
                             .SetDelay(enterDelay)
                             .OnComplete(() =>
@@ -249,15 +256,19 @@ namespace UNIHper.UI
                                 _observer.OnNext(Unit.Default);
                                 _observer.OnCompleted();
                             });
-                        return new CancellationTokenSource();
+                        return Disposable.Create(() =>
+                        {
+                            _tweener.Kill();
+                        });
                     })
-                    .ToTask();
+                    .ToTask(cancellationToken);
             }
             return Task.CompletedTask;
         }
 
-        private Task getHideTask()
+        private Task getHideTask(CancellationToken cancellationToken)
         {
+            bool _isExpired = false;
             if (driver == UIAnimionDriver.Animator)
             {
                 if (UIHide is null)
@@ -270,12 +281,17 @@ namespace UNIHper.UI
                                 "UIHide",
                                 _animator =>
                                 {
+                                    if (_isExpired)
+                                        return;
                                     _animator.Rebind();
                                     _observer.OnNext(Unit.Default);
                                     _observer.OnCompleted();
                                 }
                             );
-                        return new CancellationTokenSource();
+                        return Disposable.Create(() =>
+                        {
+                            _isExpired = true;
+                        });
                     })
                     .ToTask();
             }
@@ -284,7 +300,7 @@ namespace UNIHper.UI
                 return Observable
                     .Create<Unit>(_observer =>
                     {
-                        newFadeTween(exitAnimType, 2, exitDuration)
+                        var _tweener = newFadeTween(exitAnimType, 2, exitDuration)
                             .SetEase(Ease.Linear)
                             .SetDelay(exitDelay)
                             .OnComplete(() =>
@@ -292,9 +308,12 @@ namespace UNIHper.UI
                                 _observer.OnNext(Unit.Default);
                                 _observer.OnCompleted();
                             });
-                        return new CancellationTokenSource();
+                        return Disposable.Create(() =>
+                        {
+                            _tweener.Kill();
+                        });
                     })
-                    .ToTask();
+                    .ToTask(cancellationToken);
             }
             return Task.CompletedTask;
         }

@@ -207,6 +207,8 @@ namespace RenderHeads.Media.AVProVideo
 		int							GetAudioChannelCount();
 		AudioChannelMaskFlags		GetAudioChannelMask();
 
+		void AudioConfigurationChanged(bool deviceChanged);
+
 		// Audio 360
 
 		void	SetAudioChannelMode(Audio360ChannelMode channelMode);

@@ -16,7 +16,7 @@ namespace RenderHeads.Media.AVProVideo
 #if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
 //			Debug.Log("OnApplicationFocus: focusStatus: " + focusStatus);
 
-			if (focusStatus)
+			if (focusStatus && (isActiveAndEnabled && enabled))
 			{
 				if (Control != null && _wasPlayingOnPause)
 				{

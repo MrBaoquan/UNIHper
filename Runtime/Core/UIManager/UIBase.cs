@@ -67,8 +67,7 @@ namespace UNIHper
         // Called when the ui is loaded
         internal void OnLoad()
         {
-            if (uiAnimComponent != null)
-                UReflection.CallPrivateMethod(uiAnimComponent, "OnUIAttached");
+            uiAnimComponent?.OnUIAttached();
             _status = UIStatus.Loaded;
             OnLoaded();
         }
@@ -76,7 +75,7 @@ namespace UNIHper
         // Called when the ui is being requested to show
         internal void HandleShow()
         {
-
+            //Debug.LogWarning($"HandleShow: {this.name}");
             if (!this.gameObject.activeInHierarchy)
             {
                 this.gameObject.SetActive(true);
@@ -85,22 +84,15 @@ namespace UNIHper
             handleShowEvents();
         }
 
-        CancellationTokenSource showCancellationTokenSource = null;
-        CancellationTokenSource hideCancellationTokenSource = null;
+        CancellationTokenSource showOrHideCancellationTokenSource = null;
 
         private void clearShowOrHideCancellationTokenSource()
         {
-            if (showCancellationTokenSource != null)
+            if (showOrHideCancellationTokenSource != null)
             {
-                showCancellationTokenSource.Cancel();
-                showCancellationTokenSource.Dispose();
-                showCancellationTokenSource = null;
-            }
-            if (hideCancellationTokenSource != null)
-            {
-                hideCancellationTokenSource.Cancel();
-                hideCancellationTokenSource.Dispose();
-                hideCancellationTokenSource = null;
+                showOrHideCancellationTokenSource.Cancel();
+                showOrHideCancellationTokenSource.Dispose();
+                showOrHideCancellationTokenSource = null;
             }
         }
 
@@ -112,13 +104,14 @@ namespace UNIHper
             this.OnShowing();
             try
             {
-                showCancellationTokenSource = new CancellationTokenSource();
-                await handleShowAction(showCancellationTokenSource.Token);
-                showCancellationTokenSource.Dispose();
-                showCancellationTokenSource = null;
+                showOrHideCancellationTokenSource = new CancellationTokenSource();
+                await handleShowAction(showOrHideCancellationTokenSource.Token);
+                showOrHideCancellationTokenSource.Dispose();
+                showOrHideCancellationTokenSource = null;
             }
             catch (System.Exception)
             {
+                //Debug.LogError($"show {this.name} is canceled");
                 return;
             }
 
@@ -130,6 +123,7 @@ namespace UNIHper
         // Called when the ui is being requested to hide
         internal void HandleHide()
         {
+            //Debug.LogWarning($"HandleHide: {this.name}");
             this.handleHideEvents();
         }
 
@@ -141,18 +135,20 @@ namespace UNIHper
             this.OnHiding();
             try
             {
-                hideCancellationTokenSource = new CancellationTokenSource();
-                await handleHideAction(hideCancellationTokenSource.Token);
-                hideCancellationTokenSource.Dispose();
-                hideCancellationTokenSource = null;
+                showOrHideCancellationTokenSource = new CancellationTokenSource();
+                await handleHideAction(showOrHideCancellationTokenSource.Token);
+                showOrHideCancellationTokenSource.Dispose();
+                showOrHideCancellationTokenSource = null;
             }
             catch (System.Exception)
             {
+                Debug.LogError($"hide {this.name} is canceled");
                 return;
             }
 
             _status = UIStatus.Hidden;
 
+            Debug.LogWarning($"{this.name} is hidden");
             this.gameObject.SetActive(false);
             this.OnHidden();
             onHiddenEvent.Invoke();
@@ -162,7 +158,7 @@ namespace UNIHper
         {
             if (uiAnimComponent != null)
             {
-                await uiAnimComponent.BuildShowTask();
+                await uiAnimComponent.BuildShowTask(cancellationToken);
             }
             else
             {
@@ -174,7 +170,7 @@ namespace UNIHper
         {
             if (uiAnimComponent != null)
             {
-                await uiAnimComponent.BuildHideTask();
+                await uiAnimComponent.BuildHideTask(cancellationToken);
             }
             else
             {

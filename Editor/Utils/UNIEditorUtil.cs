@@ -34,4 +34,17 @@ public static class UNIEditorUtil
         }
         return string.Empty;
     }
+
+    public static GameObject InstantiatePrefab(string prefabPath, string prefabName = "")
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+        if (prefab == null)
+        {
+            Debug.LogError("Prefab not found at " + prefabPath);
+            return null;
+        }
+        var _newPrefab = GameObject.Instantiate(prefab, Selection.activeGameObject.transform);
+        _newPrefab.name = string.IsNullOrEmpty(prefabName) ? prefab.name : prefabName;
+        return _newPrefab;
+    }
 }

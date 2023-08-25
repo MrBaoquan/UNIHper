@@ -12,7 +12,7 @@ namespace AVProUI.Editor
         const string avproPrefabPath =
             "Packages/com.parful.unihper/Runtime/Plugins/AVProUI/Assets/Prefabs/AVPro Player UI.prefab";
 
-        [MenuItem("GameObject/UI/AVPro Player UI", false, 10)]
+        [MenuItem("GameObject/UI/AVPro Player UI", false, 21)]
         static void InstallAVProUI()
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(avproPrefabPath);

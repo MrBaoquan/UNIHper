@@ -102,8 +102,14 @@ namespace RenderHeads.Media.AVProVideo
 
 							if (_frameSelectionMode == BufferedFrameSelectionMode.ElapsedTimeVsynced && QualitySettings.vSyncCount > 0)
 							{
+#if UNITY_2022_2_OR_NEWER
+								double refreshRate = Screen.currentResolution.refreshRateRatio.value;
+#else
+								double refreshRate = (double)( Screen.currentResolution.refreshRate );
+#endif
+
 								// Since we're running with vsync enabled, the MINIMUM elapsed time will be 1 monitor refresh (multiplied by QualitySettings.vSyncCount)
-								double monitorDuration = (QualitySettings.vSyncCount * SecondsToHNS) / (double)Screen.currentResolution.refreshRate;
+								double monitorDuration = (QualitySettings.vSyncCount * SecondsToHNS) / refreshRate;
 
 								int wholeFrames = (int)System.Math.Floor(_timeAccumulation / monitorDuration);
 								wholeFrames = System.Math.Max(1, wholeFrames);

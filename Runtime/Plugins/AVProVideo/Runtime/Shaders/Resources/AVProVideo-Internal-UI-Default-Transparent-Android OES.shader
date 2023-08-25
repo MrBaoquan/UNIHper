@@ -65,6 +65,7 @@ Shader "AVProVideo/Internal/UI/Transparent Packed (stereo) - AndroidOES"
 			#pragma multi_compile __ STEREO_DEBUG
 			#pragma multi_compile __ USE_YPCBCR
 			#pragma multi_compile __ USING_DEFAULT_TEXTURE
+			#pragma multi_compile __ USING_URP
 
 			#extension GL_OES_EGL_image_external : require
 			#extension GL_OES_EGL_image_external_essl3 : enable

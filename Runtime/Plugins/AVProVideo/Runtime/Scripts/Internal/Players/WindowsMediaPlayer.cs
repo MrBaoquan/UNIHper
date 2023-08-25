@@ -959,25 +959,28 @@ namespace RenderHeads.Media.AVProVideo
 				//   - Originally used 'ETC_RGB4' on the assumption an invalid format would bypass SRV creation but that
 				//     only worked in editor, so replaced with 'RGB24' which appears to work in builds too
 				//     - https://github.com/RenderHeads/UnityPlugin-AVProVideo/issues/1286
-				// RJT TODO: Once AVPC is fully integrated and texture formats addressed, move to an (ideally shared!) enum rather than DXGI indices!
+				// RJT TODO: Once AVPC is fully integrated and texture formats addressed, move to an (ideally shared!) enum rather than DXGI indices! (WIP)
 				// - Also expand to full range of supported formats at that point too
 				TextureFormat textureFormat = TextureFormat.BGRA32;
 				int dxgiTextureFormat = Native.GetTextureFormat(_instance);
 				switch (dxgiTextureFormat)
 				{
 					default:
+//					case -1:	// 'DXGI_FORMAT_B8G8R8A8_UNORM' (Default)
+					case -1:	// 'R8G8B8A8_UNORM' (Default)
 						break;
-					case -1:	// 'DXGI_FORMAT_B8G8R8A8_UNORM' (Default)
-						break;
-					case 24:	// 'DXGI_FORMAT_R10G10B10A2_UNORM'
+//					case 24:	// 'DXGI_FORMAT_R10G10B10A2_UNORM'
+					case 10:	// 'R10G10B10A2_UNORM'
 						textureFormat = TextureFormat.RGB24;//ETC_RGB4;
 						break;
-					case 71:	// 'DXGI_FORMAT_BC1_UNORM'
-					case 72:	// 'DXGI_FORMAT_BC1_UNORM_SRGB'
+//					case 71:	// 'DXGI_FORMAT_BC1_UNORM'
+//					case 72:	// 'DXGI_FORMAT_BC1_UNORM_SRGB'
+					case 5:		// 'DXT1'
 						textureFormat = TextureFormat.DXT1;
 						break;
-					case 77:	// 'DXGI_FORMAT_BC3_UNORM'
-					case 78:	// 'DXGI_FORMAT_BC3_UNORM_SRGB'
+//					case 77:	// 'DXGI_FORMAT_BC3_UNORM'
+//					case 78:	// 'DXGI_FORMAT_BC3_UNORM_SRGB'
+					case 6:		// 'DXT5'
 						textureFormat = TextureFormat.DXT5;
 						break;
 				}

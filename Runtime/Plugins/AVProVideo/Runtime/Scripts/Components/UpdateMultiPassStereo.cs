@@ -164,6 +164,12 @@ namespace RenderHeads.Media.AVProVideo
 
 			if (_foundCamera != null)
 			{
+				#if ANDROID_URP
+					Shader.EnableKeyword("USING_URP");
+				#else
+					Shader.DisableKeyword("USING_URP");
+				#endif
+
 				Shader.SetGlobalVector(PropWorldCameraPosition.Id, _foundCamera.transform.position);
 				Shader.SetGlobalVector(PropWorldCameraRight.Id, _foundCamera.transform.right);
 			}

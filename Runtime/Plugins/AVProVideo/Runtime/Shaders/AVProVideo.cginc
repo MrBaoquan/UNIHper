@@ -69,13 +69,16 @@ INLINE bool IsStereoEyeLeft()
 	// OVR_multiview extension
 	return (UNITY_VIEWID == 0);
 #else
-	// NOTE: Bug #1165: _WorldSpaceCameraPos is not correct in multipass VR (when skybox is used) but UNITY_MATRIX_I_V seems to be
-	#if defined(UNITY_MATRIX_I_V)
+	#if defined(SHADERLAB_GLSL) && defined(USING_URP)
+		// NOTE: Bug #1416: URP + OES
+		FLOAT3 renderCameraPos = FLOAT3( gl_ModelViewMatrixInverseTranspose[0][3], gl_ModelViewMatrixInverseTranspose[1][3], gl_ModelViewMatrixInverseTranspose[2][3] );
+	#elif defined(UNITY_MATRIX_I_V)
+		// NOTE: Bug #1165: _WorldSpaceCameraPos is not correct in multipass VR (when skybox is used) but UNITY_MATRIX_I_V seems to be
 		FLOAT3 renderCameraPos = UNITY_MATRIX_I_V._m03_m13_m23;
 	#else
 		FLOAT3 renderCameraPos = _WorldSpaceCameraPos.xyz;
 	#endif
-
+	
 	float fL = distance(_WorldCameraPosition - _WorldCameraRight, renderCameraPos);
 	float fR = distance(_WorldCameraPosition + _WorldCameraRight, renderCameraPos);
 	return (fL < fR);

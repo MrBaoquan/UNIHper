@@ -635,6 +635,16 @@ namespace RenderHeads.Media.AVProVideo
 			return AudioChannelMaskFlags.Unspecified;
 		}
 
+		public override void AudioConfigurationChanged(bool deviceChanged)
+		{
+			if (_playerSettings.audioOutputMode == Native.AVPPlayerAudioOutputMode.SystemDirect)
+				return;
+			_playerSettings.sampleRate = AudioSettings.outputSampleRate;
+			int numBuffers;
+			AudioSettings.GetDSPBufferSize(out _playerSettings.bufferLength, out numBuffers);
+			Native.AVPPlayerSetPlayerSettings(_player, _playerSettings);
+		}
+
 		public override int GrabAudio(float[] buffer, int sampleCount, int channelCount)
 		{
 			return Native.AVPPlayerGetAudio(_player, buffer, buffer.Length);

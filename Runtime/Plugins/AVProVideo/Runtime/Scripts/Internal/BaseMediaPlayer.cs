@@ -198,6 +198,9 @@ namespace RenderHeads.Media.AVProVideo
 		/// <inheritdoc/>
 		public virtual int	 					GetAudioBufferedSampleCount() { return 0; }
 
+		/// <inheritdoc/>
+		public virtual void AudioConfigurationChanged(bool deviceChanged) { }
+
 		// 360 Audio
 		/// <inheritdoc/>
 		public virtual void			SetAudioHeadRotation(Quaternion q) { }

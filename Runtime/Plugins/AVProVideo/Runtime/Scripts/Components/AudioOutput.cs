@@ -55,7 +55,15 @@ namespace RenderHeads.Media.AVProVideo
 
 		void Start()
 		{
+			AudioSettings.OnAudioConfigurationChanged += OnAudioConfigurationChanged;
 			ChangeMediaPlayer(_mediaPlayer);
+		}
+
+		void OnAudioConfigurationChanged(bool deviceChanged)
+		{
+			if (_mediaPlayer.Control == null)
+				return;
+			_mediaPlayer.Control.AudioConfigurationChanged(deviceChanged);
 		}
 
 		void OnDestroy()

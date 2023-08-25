@@ -61,7 +61,7 @@ namespace UNIHper
         /// <value></value>
         public bool Ready2Play
         {
-            get { return MediaPlayer.Control != null; }
+            get { return MediaPlayer.Control != null && MediaPlayer.Control.HasMetaData(); }
         }
 
         public bool IsPlaying
@@ -132,7 +132,9 @@ namespace UNIHper
         }
 
         IDisposable _readyHandler = null;
-        private List<IDisposable> playHandlers = new List<IDisposable>();
+
+        //private List<IDisposable> playHandlers = new List<IDisposable>();
+        CompositeDisposable _playDisposables = new CompositeDisposable();
 
         /// <summary>
         /// 播放指定地址的视频  可为网络地址 或者本地地址
@@ -151,7 +153,7 @@ namespace UNIHper
             bool seek2StartAfterFinished = true
         )
         {
-            disposeHandlers(playHandlers);
+            ClearPlayHandlers();
             if (_readyHandler != null)
             {
                 _readyHandler.Dispose();
@@ -181,47 +183,44 @@ namespace UNIHper
                     if (!bLoop)
                     {
                         // 不循环 直接释放seek回调
-                        disposeHandlers(playHandlers);
+                        _playDisposables.Clear();
                     }
 
                     // 播放结束，是否跳到开始时间
-                    if (seek2StartAfterFinished)
+                    if (seek2StartAfterFinished || bLoop)
                         MediaPlayer.Control.Seek(startTime);
                 };
 
                 // 正常播放时间大于指定结束时间
-                playHandlers.Add(
-                    Observable
-                        .EveryUpdate()
-                        .Where(_1 => MediaPlayer.Control.GetCurrentTime() >= endTime)
-                        .First()
-                        .Subscribe(_1 =>
-                        {
-                            _onFinished();
-                            //Debug.LogFormat ("UVA: reach end point c1: {0}", MediaPlayer.Control.GetCurrentTime ());
-                        })
-                );
+                Observable
+                    .EveryUpdate()
+                    .Where(_1 => MediaPlayer.Control.GetCurrentTime() >= endTime)
+                    .First()
+                    .Subscribe(_1 =>
+                    {
+                        _onFinished();
+                    })
+                    .AddTo(_playDisposables);
 
                 // 视频到达结尾
-                playHandlers.Add(
-                    OnFinishedPlayingAsObservable()
-                        .Subscribe(_1 =>
-                        {
-                            //Debug.LogFormat ("UVA: reach end point  c2: {0}", MediaPlayer.Control.GetCurrentTime ());
-                            _onFinished();
-                        })
-                );
+                OnFinishedPlayingAsObservable()
+                    .Where(_mediaPlayer => _mediaPlayer == MediaPlayer)
+                    .First()
+                    .Subscribe(_1 =>
+                    {
+                        _onFinished();
+                    })
+                    .AddTo(_playDisposables);
             };
 
             void _registerFinishedSeekingEvent()
             {
-                playHandlers.Add(
-                    OnFinishedSeekingAsObservable()
-                        .Subscribe(_ =>
-                        {
-                            _playVideo();
-                        })
-                );
+                OnFinishedSeekingAsObservable()
+                    .Subscribe(_ =>
+                    {
+                        _playVideo();
+                    })
+                    .AddTo(_playDisposables);
             }
 
             void _startSeek()
@@ -238,7 +237,12 @@ namespace UNIHper
                 }
             }
             MediaPlayer.Loop = bLoop;
-            if (MediaPlayer.MediaPath.Path != videoPath || MediaPlayer.Control == null)
+
+            if (
+                MediaPlayer.MediaPath.Path != videoPath
+                || MediaPlayer.Control == null
+                || !MediaPlayer.Control.HasMetaData()
+            )
             {
                 _readyHandler = OnFirstFrameReadyAsObservable()
                     .Subscribe(_ =>
@@ -290,7 +294,7 @@ namespace UNIHper
 
         public void ClearPlayHandlers()
         {
-            disposeHandlers(playHandlers);
+            _playDisposables.Clear();
         }
 
         public void Rewind(bool pause = false, Action<AVProPlayer> onCompleted = null)
@@ -312,6 +316,7 @@ namespace UNIHper
             {
                 return;
             }
+            ClearPlayHandlers();
             MediaPlayer.Control.Play();
         }
 
@@ -321,12 +326,13 @@ namespace UNIHper
             {
                 return;
             }
+            ClearPlayHandlers();
             MediaPlayer.Control.Pause();
         }
 
         public void Stop()
         {
-            //Rewind(true);
+            ClearPlayHandlers();
             MediaPlayer.Control.Stop();
         }
 
@@ -336,6 +342,7 @@ namespace UNIHper
             {
                 return;
             }
+            ClearPlayHandlers();
             OnFinishedSeekingAsObservable()
                 .First()
                 .Subscribe(_ =>
@@ -355,35 +362,22 @@ namespace UNIHper
                 {
                     onFinished?.Invoke(this);
                 });
-            mediaPlayer.Control.SeekToFrame(Frame);
+            mediaPlayer.Control?.SeekToFrame(Frame);
         }
 
         public void SetPlaybackRate(float rate)
         {
-            mediaPlayer.Control.SetPlaybackRate(rate);
+            mediaPlayer.Control?.SetPlaybackRate(rate);
         }
 
         public void SetVolume(float volume)
         {
-            mediaPlayer.Control.SetVolume(volume);
+            mediaPlayer.Control?.SetVolume(volume);
         }
 
         public void MuteAudio(bool bMute)
         {
-            mediaPlayer.Control.MuteAudio(bMute);
-        }
-
-        private void disposeHandlers(List<IDisposable> InHandlers)
-        {
-            InHandlers.ForEach(_handler =>
-            {
-                if (_handler != null)
-                {
-                    _handler.Dispose();
-                    _handler = null;
-                }
-            });
-            InHandlers.Clear();
+            mediaPlayer.Control?.MuteAudio(bMute);
         }
 
         #region  播放器事件
@@ -489,7 +483,7 @@ namespace UNIHper
             MediaPlayer.Events.AddListener(
                 (_media, _type, err) =>
                 {
-                    // Debug.LogWarningFormat ("new event: {0}", _type);
+                    // Debug.LogWarningFormat($"{gameObject.name} OnEvent: {_type}");
                     switch (_type)
                     {
                         case MediaPlayerEvent.EventType.MetaDataReady: // Triggered when meta data(width, duration etc) is available

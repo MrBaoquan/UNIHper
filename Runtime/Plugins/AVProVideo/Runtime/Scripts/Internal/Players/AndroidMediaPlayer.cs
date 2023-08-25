@@ -78,7 +78,12 @@ namespace RenderHeads.Media.AVProVideo
 		}
 
 #if AVPROVIDEO_FIXREGRESSION_TEXTUREQUALITY_UNITY542
+	#if UNITY_2022_2_OR_NEWER
+		// Note: See https://docs.unity3d.com/2022.2/Documentation/ScriptReference/QualitySettings-masterTextureLimit.html
+		private int _textureQuality = QualitySettings.globalTextureMipmapLimit;
+	#else
 		private int _textureQuality = QualitySettings.masterTextureLimit;
+	#endif
 #endif
 		static private System.Threading.Thread		m_MainThread;
 
@@ -911,7 +916,12 @@ namespace RenderHeads.Media.AVProVideo
 			}
 
 #if AVPROVIDEO_FIXREGRESSION_TEXTUREQUALITY_UNITY542
+	#if UNITY_2022_2_OR_NEWER
+		// Note: See https://docs.unity3d.com/2022.2/Documentation/ScriptReference/QualitySettings-masterTextureLimit.html
+			_textureQuality = QualitySettings.globalTextureMipmapLimit;
+	#else
 			_textureQuality = QualitySettings.masterTextureLimit;
+	#endif
 #endif
 		}
 
@@ -1082,11 +1092,18 @@ namespace RenderHeads.Media.AVProVideo
 			}
 
 #if AVPROVIDEO_FIXREGRESSION_TEXTUREQUALITY_UNITY542
+	#if UNITY_2022_2_OR_NEWER
+			// Note: See https://docs.unity3d.com/2022.2/Documentation/ScriptReference/QualitySettings-masterTextureLimit.html
+			int textureQualityToTestAgainst = QualitySettings.globalTextureMipmapLimit;
+	#else
+			int textureQualityToTestAgainst = QualitySettings.masterTextureLimit;
+	#endif
+
 			// In Unity 5.4.2 and above the video texture turns black when changing the TextureQuality in the Quality Settings
 			// The code below gets around this issue.  A bug report has been sent to Unity.  So far we have tested and replicated the
 			// "bug" in Windows only, but a user has reported it in Android too.  
 			// Texture.GetNativeTexturePtr() must sync with the rendering thread, so this is a large performance hit!
-			if (_textureQuality != QualitySettings.masterTextureLimit)
+			if (_textureQuality != textureQualityToTestAgainst)
 			{
 				if (m_Texture != null && textureHandle > 0 && m_Texture.GetNativeTexturePtr() == System.IntPtr.Zero)
 				{
@@ -1094,7 +1111,7 @@ namespace RenderHeads.Media.AVProVideo
 					m_Texture.UpdateExternalTexture(new System.IntPtr(textureHandle));
 				}
 
-				_textureQuality = QualitySettings.masterTextureLimit;
+				_textureQuality = textureQualityToTestAgainst;
 			}
 #endif
 		}

@@ -33,6 +33,7 @@
 			#pragma multi_compile __ HIGH_QUALITY
 			#pragma multi_compile __ APPLY_GAMMA
 			#pragma multi_compile __ USING_DEFAULT_TEXTURE
+			#pragma multi_compile __ USING_URP
 
 			#extension GL_OES_EGL_image_external : require
 			#extension GL_OES_EGL_image_external_essl3 : enable
