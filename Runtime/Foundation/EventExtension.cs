@@ -51,6 +51,16 @@ namespace UNIHper
             return button;
         }
 
+        public static IObservable<Unit> OnClickAsObservable(
+            this Button button,
+            float throttleSeconds
+        )
+        {
+            return button.onClick
+                .AsObservable()
+                .ThrottleFirst(TimeSpan.FromSeconds(throttleSeconds));
+        }
+
         public static Image WithSound(this Image image)
         {
             image
