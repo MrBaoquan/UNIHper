@@ -333,7 +333,7 @@ namespace UNIHper
         public void Stop()
         {
             ClearPlayHandlers();
-            MediaPlayer.Control.Stop();
+            MediaPlayer.Control?.Stop();
         }
 
         public void Seek(double InTime, Action<AVProPlayer> onCompleted = null)
