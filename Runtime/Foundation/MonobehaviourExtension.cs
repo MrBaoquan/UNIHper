@@ -170,11 +170,7 @@ namespace UNIHper
         {
             for (int _index = 0; _index < _self.transform.childCount; ++_index)
             {
-                var _go = _self.transform.GetChild(_index).gameObject;
-                if (_go.activeInHierarchy != bActive)
-                {
-                    _go.SetActive(bActive);
-                }
+                _self.transform.GetChild(_index).gameObject.SetActive(bActive);
             }
         }
 

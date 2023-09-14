@@ -13,6 +13,7 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 using Sirenix.OdinInspector;
 using System.ComponentModel;
+using DNHper;
 
 namespace UNIHper
 {
@@ -41,9 +42,11 @@ namespace UNIHper
             }
         }
 
-        public bool Loop { get; set; } = false;
+        //public bool Loop { get; set; } = false;
 
         private readonly Indexer videoIndex = new(0);
+
+        // TODO: 此路径应由PlayList的Items决定， 不应另外维护一份
         private List<string> videoPaths = new();
 
         public void PrepareVideos(
@@ -68,6 +71,7 @@ namespace UNIHper
                             ? _path.Replace(Application.streamingAssetsPath + "\\", "")
                             : _path
                 )
+                .Select(_path => _path.ToForwardSlash())
                 .ToList();
             PrepareVideos(_videoPaths, settingCallback);
         }
@@ -101,7 +105,9 @@ namespace UNIHper
             listPlayer = this.Get<PlaylistMediaPlayer>();
             listPlayer.LoopMode = PlaylistMediaPlayer.PlaylistLoopMode.None;
             listPlayer.AutoCloseVideo = false;
-            listPlayer.AutoProgress = true;
+
+            // 播放到视频结尾是否自动跳到下一个视频
+            listPlayer.AutoProgress = false;
 
             // Build the playlist
             listPlayer.Playlist.Items.Clear();
@@ -117,7 +123,7 @@ namespace UNIHper
                 // item.isOverrideTransition = false;
                 // item.overrideTransition = PlaylistMediaPlayer.Transition.Black;
                 // item.overrideTransitionDuration = 1.0f;
-                //item.overrideTransitionEasing = PlaylistMediaPlayer.Easing.Preset.Linear;
+                // item.overrideTransitionEasing = PlaylistMediaPlayer.Easing.Preset.Linear;
                 listPlayer.Playlist.Items.Add(_mediaItem);
 
                 //var _playerUI = new GameObject(_videoPath);
@@ -186,7 +192,7 @@ namespace UNIHper
 
         public void Play()
         {
-            listPlayer.Play();
+            ListPlayer.Play();
         }
 
         /// <summary>
@@ -263,7 +269,13 @@ namespace UNIHper
             CurrentPlayer.SeekToFrame(Frame);
         }
 
-        public void Switch(string videoName, bool bRewind = false, bool bAutoPlay = false)
+        public void Switch(
+            string videoName,
+            bool bRewind = false,
+            bool bAutoPlay = false,
+            float StartTime = 0,
+            float EndTime = 0
+        )
         {
             var _idx = FindVideoIndex(videoName);
             if (_idx == -1)
@@ -272,20 +284,73 @@ namespace UNIHper
                 return;
             }
 
-            Switch(_idx, bRewind, bAutoPlay);
+            Switch(_idx, bRewind, bAutoPlay, StartTime, EndTime);
         }
 
-        public void Switch(int mediaIndex, bool bRewind = false, bool bAutoPlay = false)
+        public MediaPlaylist.MediaItem PlaylistItem => listPlayer.PlaylistItem;
+
+        public MediaPlaylist.MediaItem GetMediaItem(int playListIndex)
         {
-            if (mediaIndex < 0 || mediaIndex >= videoPaths.Count)
+            if (listPlayer.Playlist.HasItemAt(playListIndex))
             {
-                Debug.LogWarning("mediaIndex out of range: " + mediaIndex);
+                return listPlayer.Playlist.Items[playListIndex];
+            }
+            return null;
+        }
+
+        public MediaPlaylist.MediaItem GetMediaItem(string videoPath)
+        {
+            return GetMediaItem(FindVideoIndex(videoPath));
+        }
+
+        public bool SetMediaLoop(string videoPath, bool bLoop)
+        {
+            var _mediaItem = GetMediaItem(videoPath);
+            if (_mediaItem == null)
+            {
+                Debug.LogWarning($"media not found, path:{videoPath}");
+                return false;
+            }
+
+            _mediaItem.loop = bLoop;
+            return true;
+        }
+
+        public bool SetMediaTransition(string videoPath, PlaylistMediaPlayer.Transition transition)
+        {
+            var _mediaItem = GetMediaItem(videoPath);
+            if (_mediaItem == null)
+            {
+                Debug.LogWarning($"media not found, path:{videoPath}");
+                return false;
+            }
+
+            _mediaItem.isOverrideTransition = true;
+            _mediaItem.overrideTransition = transition;
+            return true;
+        }
+
+        public void Switch(
+            int mediaIndex,
+            bool bRewind = false,
+            bool bAutoPlay = false,
+            float StartTime = 0,
+            float EndTime = 0
+        )
+        {
+            var _mediaItem = GetMediaItem(mediaIndex);
+
+            if (_mediaItem == null)
+            {
+                Debug.LogWarning($"media not found, index:{mediaIndex}");
                 return;
             }
+
             //mediaPlayer.JumpToItem(mediaIndex);
             if (bAutoPlay)
             {
-                Play(videoPaths[mediaIndex], null, Loop, 0, 0, false);
+                // Play(videoPaths[mediaIndex], null, Loop, 0, 0, false);
+                Play(_mediaItem.mediaPath.Path, null, _mediaItem.loop, StartTime, EndTime, false);
             }
             else
             {
@@ -337,7 +402,7 @@ namespace UNIHper
             return _idx;
         }
 
-        private AVProPlayer CurrentPlayer => listPlayer.CurrentPlayer.Get<AVProPlayer>();
+        public AVProPlayer CurrentPlayer => listPlayer.CurrentPlayer.Get<AVProPlayer>();
         public AVProPlayer NextPlayer => listPlayer.NextPlayer.Get<AVProPlayer>();
     }
 }

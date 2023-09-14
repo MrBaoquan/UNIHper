@@ -198,7 +198,8 @@ namespace UNIHper
                     .First()
                     .Subscribe(_1 =>
                     {
-                        _onFinished();
+                        //_onFinished();
+                        OnFinishedPlaying.Invoke(MediaPlayer);
                     })
                     .AddTo(_playDisposables);
 

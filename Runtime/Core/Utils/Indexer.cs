@@ -211,6 +211,16 @@ namespace UNIHper
             return _next < minIndex;
         }
 
+        public bool IsLast()
+        {
+            return this.Current == Max;
+        }
+
+        public bool IsFirst()
+        {
+            return this.Current == Min;
+        }
+
         private int limitIndex(int newIndex)
         {
             if (newIndex < minIndex || newIndex > maxIndex)

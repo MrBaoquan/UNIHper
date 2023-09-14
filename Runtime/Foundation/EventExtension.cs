@@ -97,6 +97,30 @@ namespace UNIHper
             return image;
         }
 
+        public static Toggle WithSound(this Toggle toggle)
+        {
+            toggle
+                .OnValueChangedAsObservable()
+                .Subscribe(_ =>
+                {
+                    Managements.Audio.PlayEffect(UNIHperSettings.DefaultClickSound);
+                })
+                .AddTo(toggle);
+            return toggle;
+        }
+
+        public static Toggle WithSound(this Toggle toggle, string soundName)
+        {
+            toggle
+                .OnValueChangedAsObservable()
+                .Subscribe(_ =>
+                {
+                    Managements.Audio.PlayEffect(soundName);
+                })
+                .AddTo(toggle);
+            return toggle;
+        }
+
         public static Button WithAnimation(
             this Button button,
             string stateName,
