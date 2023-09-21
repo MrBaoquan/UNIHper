@@ -153,7 +153,6 @@ namespace AVProUI
             {
                 if (gesture.State == GestureRecognizerState.Ended)
                 {
-                    Debug.LogWarning("tap gesture");
                     var _touchPoint = new Vector2(gesture.FocusX, gesture.FocusY);
 
                     if (checkIfScreenPointInControlsArea(_touchPoint))

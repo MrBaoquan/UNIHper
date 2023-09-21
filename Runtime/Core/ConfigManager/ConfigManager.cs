@@ -160,9 +160,10 @@ namespace UNIHper
 
             UReflection.SetPrivateField(_configInstance, "__path", _path);
             UReflection.SetPrivateField(_configInstance, "__driver", _driver);
-            UReflection.CallPrivateMethod(_configInstance, "OnLoaded");
 
             this.configs[_configKey] = _configInstance;
+            UReflection.CallPrivateMethod(_configInstance, "OnLoaded");
+
             return _configInstance as T;
         }
 
