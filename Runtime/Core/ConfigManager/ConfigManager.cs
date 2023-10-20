@@ -12,6 +12,7 @@ namespace UNIHper
     public class ConfigManager : Singleton<ConfigManager>
     {
         private Dictionary<string, UConfig> configs = new Dictionary<string, UConfig>();
+        private string backupDir => Path.Combine(Application.persistentDataPath, "Backup/Configs");
 
         //private ConfigDriver driverMode = ConfigDriver.XML;
         private const string configDir = "Configs";
@@ -56,8 +57,8 @@ namespace UNIHper
             foreach (var _configClass in _configClasses)
             {
                 UConfig _configInstance = Activator.CreateInstance(_configClass) as UConfig;
-                // 配置文件默认保存在 %userprofile%\AppData\LocalLow\<companyname>\<productname>
 
+                // 配置文件默认保存在 %userprofile%\AppData\LocalLow\<companyname>\<productname>
                 var _attributes = Attribute.GetCustomAttributes(_configClass);
                 var _serializeAtAttr = _attributes.Where(_attr => _attr is SerializedAt).First();
                 var _serializeWithAttr = _attributes.Where(_attr => _attr is SerializeWith).First();
@@ -180,7 +181,7 @@ namespace UNIHper
         }
 
         private void serializeConfig(
-            object target,
+            UConfig target,
             string path,
             ConfigDriver driver = ConfigDriver.XML
         )
@@ -197,17 +198,23 @@ namespace UNIHper
             if (driver == ConfigDriver.YAML)
             {
                 USerialization.SerializeYAML(target, path);
+                Backup(target);
                 UReflection.CallPrivateMethod(target, "OnSerialized");
+
                 return;
             }
             else if (driver == ConfigDriver.JSON)
             {
                 USerialization.SerializeJSON(target, path);
+                Backup(target);
                 UReflection.CallPrivateMethod(target, "OnSerialized");
+
                 return;
             }
-            UReflection.CallPrivateMethod(target, "OnSerialized");
+
             DNHper.USerialization.SerializeXML(target, path);
+            Backup(target);
+            UReflection.CallPrivateMethod(target, "OnSerialized");
         }
 
         private UConfig deserializeConfig(
@@ -216,6 +223,7 @@ namespace UNIHper
             ConfigDriver driver = ConfigDriver.XML
         )
         {
+            restoreIfConfigError(path);
             if (driver == ConfigDriver.YAML)
             {
                 var _methodYAML = typeof(USerialization)
@@ -269,6 +277,67 @@ namespace UNIHper
             DNHper.USerialization.SerializeXML(_config, _config.FilePath);
             UReflection.CallPrivateMethod(_config, "OnSerialized");
             return true;
+        }
+
+        public void Backup(UConfig config)
+        {
+            var _srcFilePath = config.FilePath;
+            if (Directory.Exists(backupDir) == false)
+            {
+                Directory.CreateDirectory(backupDir);
+            }
+            var _backupFilePath = Path.Combine(backupDir, Path.GetFileName(_srcFilePath) + ".bak");
+            File.Copy(_srcFilePath, _backupFilePath, true);
+        }
+
+        // public void Restore(UConfig config)
+        // {
+        //     var _srcFilePath = config.FilePath;
+        //     var _backupFilePath = _srcFilePath + ".bak";
+        //     File.Copy(_backupFilePath, _srcFilePath, true);
+        // }
+
+        private void restoreConfig(string sourceFilePath)
+        {
+            var _srcFilePath = sourceFilePath;
+            var _backupFilePath = Path.Combine(backupDir, Path.GetFileName(_srcFilePath) + ".bak");
+            if (File.Exists(_backupFilePath) == false)
+            {
+                Debug.LogWarning($"Backup file {_backupFilePath} not found.");
+                return;
+            }
+            File.Copy(_backupFilePath, _srcFilePath, true);
+            Debug.LogWarning($"Restored config file {_srcFilePath} from backup.");
+        }
+
+        private void restoreIfConfigError(string filePath)
+        {
+            if (checkIfXMLValid(filePath))
+            {
+                return;
+            }
+            Debug.Log($"Config file {filePath} is invalid, try restore from backup.");
+            this.restoreConfig(filePath);
+        }
+
+        private bool checkIfBackupExists(string filePath)
+        {
+            var _backupFilePath = Path.Combine(backupDir, Path.GetFileName(filePath) + ".bak");
+            return File.Exists(_backupFilePath);
+        }
+
+        private bool checkIfXMLValid(string filePath)
+        {
+            try
+            {
+                var _xmlDoc = new System.Xml.XmlDocument();
+                _xmlDoc.Load(filePath);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
     }
 }
