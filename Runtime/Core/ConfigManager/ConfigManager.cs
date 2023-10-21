@@ -13,6 +13,7 @@ namespace UNIHper
     {
         private Dictionary<string, UConfig> configs = new Dictionary<string, UConfig>();
         private string backupDir => Path.Combine(Application.persistentDataPath, "Backup/Configs");
+        private string errorDir => Path.Combine(Application.persistentDataPath, "Error/Configs");
 
         //private ConfigDriver driverMode = ConfigDriver.XML;
         private const string configDir = "Configs";
@@ -198,7 +199,6 @@ namespace UNIHper
             if (driver == ConfigDriver.YAML)
             {
                 USerialization.SerializeYAML(target, path);
-                Backup(target);
                 UReflection.CallPrivateMethod(target, "OnSerialized");
 
                 return;
@@ -206,7 +206,6 @@ namespace UNIHper
             else if (driver == ConfigDriver.JSON)
             {
                 USerialization.SerializeJSON(target, path);
-                Backup(target);
                 UReflection.CallPrivateMethod(target, "OnSerialized");
 
                 return;
@@ -306,16 +305,37 @@ namespace UNIHper
                 Debug.LogWarning($"Backup file {_backupFilePath} not found.");
                 return;
             }
+
+            // 将错误文件备份到error目录
+            if (Directory.Exists(errorDir) == false)
+            {
+                Directory.CreateDirectory(errorDir);
+            }
+            var _errorFilePath = Path.Combine(
+                errorDir,
+                Path.GetFileNameWithoutExtension(_srcFilePath)
+                    + " "
+                    + DateTime.Now.ToString("yyyy-MM-dd-HHmmss")
+                    + ".xml"
+            );
+            File.Copy(_srcFilePath, _errorFilePath, true);
+
             File.Copy(_backupFilePath, _srcFilePath, true);
             Debug.LogWarning($"Restored config file {_srcFilePath} from backup.");
         }
 
         private void restoreIfConfigError(string filePath)
         {
+            // 仅针对 XML 文件进行检查
+            if (Path.GetExtension(filePath) != ".xml")
+            {
+                return;
+            }
             if (checkIfXMLValid(filePath))
             {
                 return;
             }
+
             Debug.Log($"Config file {filePath} is invalid, try restore from backup.");
             this.restoreConfig(filePath);
         }
