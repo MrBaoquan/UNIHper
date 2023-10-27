@@ -121,7 +121,8 @@ namespace UNIHper
                 .ToList()
                 .ForEach(_config =>
                 {
-                    UReflection.CallPrivateMethod(_config, "OnLoaded");
+                    // UReflection.CallPrivateMethod(_config, "OnLoaded");
+                    _config.Loaded();
                 });
             await Task.CompletedTask;
         }
@@ -132,7 +133,8 @@ namespace UNIHper
                 .ToList()
                 .ForEach(_config =>
                 {
-                    UReflection.CallPrivateMethod(_config, "OnUnloaded");
+                    // UReflection.CallPrivateMethod(_config, "OnUnloaded");
+                    _config.Unloaded();
                 });
             this.configs.Clear();
         }
@@ -147,7 +149,8 @@ namespace UNIHper
             }
 
             var _configInstance = this.configs[_configKey];
-            UReflection.CallPrivateMethod(_configInstance, "OnUnloaded");
+            // UReflection.CallPrivateMethod(_configInstance, "OnUnloaded");
+            _configInstance.Unloaded();
 
             var _path = UReflection.GetPrivateField<string>(_configInstance, "__path");
             var _driver = UReflection.GetPrivateField<int>(_configInstance, "__driver");
@@ -164,7 +167,8 @@ namespace UNIHper
             UReflection.SetPrivateField(_configInstance, "__driver", _driver);
 
             this.configs[_configKey] = _configInstance;
-            UReflection.CallPrivateMethod(_configInstance, "OnLoaded");
+            // UReflection.CallPrivateMethod(_configInstance, "OnLoaded");
+            _configInstance.Loaded();
 
             return _configInstance as T;
         }
@@ -195,25 +199,29 @@ namespace UNIHper
                 return;
             }
 
-            UReflection.CallPrivateMethod(target, "OnSerializing");
+            // UReflection.CallPrivateMethod(target, "OnSerializing");
+            target.Serializing();
             if (driver == ConfigDriver.YAML)
             {
                 USerialization.SerializeYAML(target, path);
-                UReflection.CallPrivateMethod(target, "OnSerialized");
+                // UReflection.CallPrivateMethod(target, "OnSerialized");
+                target.Serialized();
 
                 return;
             }
             else if (driver == ConfigDriver.JSON)
             {
                 USerialization.SerializeJSON(target, path);
-                UReflection.CallPrivateMethod(target, "OnSerialized");
+                // UReflection.CallPrivateMethod(target, "OnSerialized");
+                target.Serialized();
 
                 return;
             }
 
             DNHper.USerialization.SerializeXML(target, path);
             Backup(target);
-            UReflection.CallPrivateMethod(target, "OnSerialized");
+            // UReflection.CallPrivateMethod(target, "OnSerialized");
+            target.Serialized();
         }
 
         private UConfig deserializeConfig(
@@ -261,7 +269,8 @@ namespace UNIHper
                 return false;
 
             ConfigDriver _driver = UReflection.GetPrivateField<ConfigDriver>(_config, "__driver");
-            UReflection.CallPrivateMethod(_config, "OnSerializing");
+            // UReflection.CallPrivateMethod(_config, "OnSerializing");
+            _config.Serializing();
             if (_driver == ConfigDriver.YAML)
             {
                 USerialization.SerializeYAML(_config, _config.FilePath);
@@ -274,7 +283,8 @@ namespace UNIHper
             }
 
             DNHper.USerialization.SerializeXML(_config, _config.FilePath);
-            UReflection.CallPrivateMethod(_config, "OnSerialized");
+            // UReflection.CallPrivateMethod(_config, "OnSerialized");
+            _config.Serialized();
             return true;
         }
 

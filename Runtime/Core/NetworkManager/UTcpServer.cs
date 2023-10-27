@@ -56,7 +56,7 @@ namespace UNIHper
 
         public void Send2Client(byte[] InData, string InKey)
         {
-            if (InData == null)
+            if (InData == null || connections.Count == 0)
                 return;
 
             if (string.IsNullOrEmpty(InKey))
@@ -82,11 +82,20 @@ namespace UNIHper
 
         public void Send2Clients(byte[] InData)
         {
+            if (connections.Count == 0)
+                return;
             connections.Values
                 .ToList()
                 .ForEach(_connection =>
                 {
-                    _connection.Send(InData);
+                    try
+                    {
+                        _connection.Send(InData);
+                    }
+                    catch (System.Exception e)
+                    {
+                        UnityEngine.Debug.LogWarning(e.Message);
+                    }
                 });
         }
 

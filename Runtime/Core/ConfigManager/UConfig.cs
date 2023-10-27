@@ -96,6 +96,26 @@ namespace UNIHper
             return JsonConvert.SerializeObject(this);
         }
 
+        internal void Loaded()
+        {
+            OnLoaded();
+        }
+
+        internal void Unloaded()
+        {
+            OnUnloaded();
+        }
+
+        internal void Serializing()
+        {
+            OnSerializing();
+        }
+
+        internal void Serialized()
+        {
+            OnSerialized();
+        }
+
         /// <summary>
         /// Called once when config data is loaded
         /// </summary>
