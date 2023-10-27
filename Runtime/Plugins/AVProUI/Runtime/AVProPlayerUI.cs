@@ -982,6 +982,7 @@ namespace AVProUI
                 if (!_isAudioFadingUpToPlay)
                 {
                     Pause(skipFeedback: true);
+                    _isAudioFadingUpToPlay = true;
                 }
             }
 
