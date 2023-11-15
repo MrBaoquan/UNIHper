@@ -40,18 +40,27 @@ namespace UNIHper
             MediaPlayer.AutoStart = false;
         }
 
-        private MediaPlayer mediaPlayer;
+        private MediaPlayer.OptionsWindows optionsWindows;
+
+        private MediaPlayer _mediaPlayer;
         public MediaPlayer MediaPlayer
         {
             get
             {
-                if (mediaPlayer == null)
+                if (_mediaPlayer == null)
                 {
-                    mediaPlayer = this.GetComponent<MediaPlayer>();
+                    _mediaPlayer = this.GetComponent<MediaPlayer>();
+                    if (_mediaPlayer == null)
+                        _mediaPlayer = this.gameObject.AddComponent<MediaPlayer>();
                     if (Application.isPlaying)
                         registerAllEvents();
+
+#if (UNITY_EDITOR_WIN) || (!UNITY_EDITOR && UNITY_STANDALONE_WIN)
+                    optionsWindows =
+                        _mediaPlayer.GetCurrentPlatformOptions() as MediaPlayer.OptionsWindows;
+#endif
                 }
-                return mediaPlayer;
+                return _mediaPlayer;
             }
         }
 
@@ -94,12 +103,12 @@ namespace UNIHper
 
         public int DurationFrames
         {
-            get { return mediaPlayer.Info.GetDurationFrames(); }
+            get { return _mediaPlayer.Info.GetDurationFrames(); }
         }
 
         public int MaxFrameNumber
         {
-            get { return mediaPlayer.Info.GetMaxFrameNumber(); }
+            get { return _mediaPlayer.Info.GetMaxFrameNumber(); }
         }
 
         public float PlaybackRate
@@ -118,7 +127,7 @@ namespace UNIHper
 
         public int CurrentFrame
         {
-            get { return mediaPlayer.Control.GetCurrentTimeFrames(); }
+            get { return _mediaPlayer.Control.GetCurrentTimeFrames(); }
         }
 
         public double StartTime { get; protected set; }
@@ -167,7 +176,7 @@ namespace UNIHper
             {
                 MediaPlayer.Play();
                 bool _bFinished = false;
-                var _duration = mediaPlayer.Info.GetDuration();
+                var _duration = _mediaPlayer.Info.GetDuration();
                 endTime = endTime == 0 ? _duration : endTime;
 
                 // 播放结束回调
@@ -188,17 +197,18 @@ namespace UNIHper
 
                     // 播放结束，是否跳到开始时间
                     if (seek2StartAfterFinished || bLoop)
-                        MediaPlayer.Control.Seek(startTime);
+                    {
+                        __seek(startTime);
+                    }
                 };
 
                 // 正常播放时间大于指定结束时间
                 Observable
                     .EveryUpdate()
-                    .Where(_1 => MediaPlayer.Control.GetCurrentTime() >= endTime)
+                    .Where(_1 => MediaPlayer.Control.GetCurrentTime() >= endTime && !_bFinished)
                     .First()
                     .Subscribe(_1 =>
                     {
-                        //_onFinished();
                         OnFinishedPlaying.Invoke(MediaPlayer);
                     })
                     .AddTo(_playDisposables);
@@ -230,14 +240,13 @@ namespace UNIHper
                 var _currentTime = MediaPlayer.Control.GetCurrentTime();
                 if (_currentTime != startTime)
                 {
-                    MediaPlayer.Control.Seek(startTime);
+                    __seek(startTime);
                 }
                 else
                 {
                     _playVideo();
                 }
             }
-            MediaPlayer.Loop = bLoop;
 
             if (
                 MediaPlayer.MediaPath.Path != videoPath
@@ -286,11 +295,11 @@ namespace UNIHper
 
         void Update()
         {
-            if (mediaPlayer == null)
+            if (_mediaPlayer == null)
                 return;
-            _isPlaying.Value = mediaPlayer.Control.IsPlaying();
-            _isMute.Value = mediaPlayer.Control.IsMuted();
-            _volume.Value = mediaPlayer.Control.GetVolume();
+            _isPlaying.Value = _mediaPlayer.Control.IsPlaying();
+            _isMute.Value = _mediaPlayer.Control.IsMuted();
+            _volume.Value = _mediaPlayer.Control.GetVolume();
         }
 
         public void ClearPlayHandlers()
@@ -331,6 +340,18 @@ namespace UNIHper
             MediaPlayer.Control.Pause();
         }
 
+        private void __seek(double time)
+        {
+            MediaPlayer.Control.Seek(time);
+#if (UNITY_EDITOR_WIN) || (!UNITY_EDITOR && UNITY_STANDALONE_WIN)
+            // TODO: DirectShow 驱动下，没有seek相关事件 seek 好像是同步的，需要后续验证
+            if (optionsWindows.videoApi == Windows.VideoApi.DirectShow)
+            {
+                OnFinishedSeeking.Invoke(MediaPlayer);
+            }
+#endif
+        }
+
         public void Stop()
         {
             ClearPlayHandlers();
@@ -363,22 +384,22 @@ namespace UNIHper
                 {
                     onFinished?.Invoke(this);
                 });
-            mediaPlayer.Control?.SeekToFrame(Frame);
+            _mediaPlayer.Control?.SeekToFrame(Frame);
         }
 
         public void SetPlaybackRate(float rate)
         {
-            mediaPlayer.Control?.SetPlaybackRate(rate);
+            _mediaPlayer.Control?.SetPlaybackRate(rate);
         }
 
         public void SetVolume(float volume)
         {
-            mediaPlayer.Control?.SetVolume(volume);
+            _mediaPlayer.Control?.SetVolume(volume);
         }
 
         public void MuteAudio(bool bMute)
         {
-            mediaPlayer.Control?.MuteAudio(bMute);
+            _mediaPlayer.Control?.MuteAudio(bMute);
         }
 
         #region  播放器事件
@@ -484,7 +505,7 @@ namespace UNIHper
             MediaPlayer.Events.AddListener(
                 (_media, _type, err) =>
                 {
-                    // Debug.LogWarningFormat($"{gameObject.name} OnEvent: {_type}");
+                    // Debug.LogWarningFormat($"{gameObject.name} OnEvent: {_type}, {err}");
                     switch (_type)
                     {
                         case MediaPlayerEvent.EventType.MetaDataReady: // Triggered when meta data(width, duration etc) is available
