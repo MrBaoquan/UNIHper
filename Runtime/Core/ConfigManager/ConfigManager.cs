@@ -291,6 +291,13 @@ namespace UNIHper
         public void Backup(UConfig config)
         {
             var _srcFilePath = config.FilePath;
+
+            if (checkIfXMLValid(_srcFilePath) == false)
+            {
+                Debug.LogWarning($"Config file {_srcFilePath} is invalid, skip backup.");
+                return;
+            }
+
             if (Directory.Exists(backupDir) == false)
             {
                 Directory.CreateDirectory(backupDir);
@@ -313,6 +320,12 @@ namespace UNIHper
             if (File.Exists(_backupFilePath) == false)
             {
                 Debug.LogWarning($"Backup file {_backupFilePath} not found.");
+                return;
+            }
+
+            if (checkIfXMLValid(_backupFilePath) == false)
+            {
+                Debug.LogWarning($"Backup file {_backupFilePath} is invalid.");
                 return;
             }
 
@@ -348,12 +361,6 @@ namespace UNIHper
 
             Debug.Log($"Config file {filePath} is invalid, try restore from backup.");
             this.restoreConfig(filePath);
-        }
-
-        private bool checkIfBackupExists(string filePath)
-        {
-            var _backupFilePath = Path.Combine(backupDir, Path.GetFileName(filePath) + ".bak");
-            return File.Exists(_backupFilePath);
         }
 
         private bool checkIfXMLValid(string filePath)
