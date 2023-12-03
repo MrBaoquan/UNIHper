@@ -3,6 +3,8 @@ using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
 using UNIHper;
+using Michsky.MUIP;
+using TMPro;
 
 public class LicenseUI : UIBase
 {
@@ -56,20 +58,22 @@ public class LicenseUI : UIBase
     // Start is called before the first frame update
     private void Start()
     {
-        this.Get<InputField>("input_license")
-            .OnValueChangedAsObservable()
+        this.Get<TMP_InputField>("input_field/input_license")
+            .onValueChanged.AsObservable()
+            //.OnValueChangedAsObservable()
             .Subscribe(_ =>
             {
                 licenseContent.Value = _;
             });
 
+        ButtonManager _btnActive = this.Get<ButtonManager>("btn_active");
         licenseContent.Subscribe(_ =>
         {
-            this.Get<Button>("btn_active").gameObject.SetActive(_.Length >= 128);
+            _btnActive.Interactable(_.Length >= 128);
         });
 
-        this.Get<Text>("text_machineNumber").text = machineID;
-        this.Get<Button>("btn_active")
+        this.Get<Text>("text_MACNumber").text = machineID;
+        _btnActive
             .OnClickAsObservable()
             .Subscribe(_1 =>
             {
@@ -84,7 +88,7 @@ public class LicenseUI : UIBase
                             {
                                 PlayerPrefs.SetString(encrypter_key, licenseContent.Value);
                                 PlayerPrefs.SetString(machineNumber_key, machineID);
-                                Managements.UI.Hide("LicenseUI");
+                                Managements.UI.Hide<LicenseUI>();
                             }
                         );
                     }

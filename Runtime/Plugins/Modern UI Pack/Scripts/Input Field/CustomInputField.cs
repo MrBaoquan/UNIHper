@@ -32,18 +32,40 @@ namespace Michsky.MUIP
 
         void Awake()
         {
-            if (inputText == null) { inputText = gameObject.GetComponent<TMP_InputField>(); }
-            if (inputFieldAnimator == null) { inputFieldAnimator = gameObject.GetComponent<Animator>(); }
+            if (inputText == null)
+            {
+                inputText = gameObject.GetComponent<TMP_InputField>();
+            }
+            if (inputFieldAnimator == null)
+            {
+                inputFieldAnimator = gameObject.GetComponent<Animator>();
+            }
 
-            inputText.onSelect.AddListener(delegate { AnimateIn(); });
-            inputText.onEndEdit.AddListener(delegate { AnimateOut(); });
+            inputText.onSelect.AddListener(
+                delegate
+                {
+                    AnimateIn();
+                }
+            );
+            inputText.onEndEdit.AddListener(
+                delegate
+                {
+                    AnimateOut();
+                }
+            );
             UpdateStateInstant();
         }
 
         void OnEnable()
         {
-            if (inputText == null) { return; }
-            if (gameObject.activeInHierarchy == true) { StartCoroutine("DisableAnimator"); }
+            if (inputText == null)
+            {
+                return;
+            }
+            if (gameObject.activeInHierarchy == true)
+            {
+                StartCoroutine("DisableAnimator");
+            }
 
             inputText.ForceLabelUpdate();
             UpdateStateInstant();
@@ -51,21 +73,42 @@ namespace Michsky.MUIP
 
         void Update()
         {
-            if (processSubmit == false ||
-                string.IsNullOrEmpty(inputText.text) == true ||
-                EventSystem.current.currentSelectedGameObject != inputText.gameObject)
-            { return; }
+            if (
+                processSubmit == false
+                || string.IsNullOrEmpty(inputText.text) == true
+                || EventSystem.current.currentSelectedGameObject != inputText.gameObject
+            )
+            {
+                return;
+            }
 
 #if ENABLE_LEGACY_INPUT_MANAGER
-            if (Input.GetKeyDown(KeyCode.Return)) { onSubmit.Invoke(); if (clearOnSubmit == true) { inputText.text = ""; } }
+            if (Input.GetKeyDown(KeyCode.Return))
+            {
+                onSubmit.Invoke();
+                if (clearOnSubmit == true)
+                {
+                    inputText.text = "";
+                }
+            }
 #elif ENABLE_INPUT_SYSTEM
-            if (Keyboard.current.enterKey.wasPressedThisFrame) { onSubmit.Invoke(); if (clearOnSubmit == true) { inputText.text = ""; } }
+            if (Keyboard.current.enterKey.wasPressedThisFrame)
+            {
+                onSubmit.Invoke();
+                if (clearOnSubmit == true)
+                {
+                    inputText.text = "";
+                }
+            }
 #endif
         }
 
-        public void AnimateIn() 
-        {      
-            if (inputFieldAnimator.gameObject.activeInHierarchy == true && !inputFieldAnimator.GetCurrentAnimatorStateInfo(0).IsName("Instant In")) 
+        public void AnimateIn()
+        {
+            if (
+                inputFieldAnimator.gameObject.activeInHierarchy == true
+                && !inputFieldAnimator.GetCurrentAnimatorStateInfo(0).IsName("Instant In")
+            )
             {
                 StopCoroutine("DisableAnimator");
                 StartCoroutine("DisableAnimator");
@@ -85,14 +128,23 @@ namespace Michsky.MUIP
                 StartCoroutine("DisableAnimator");
 
                 inputFieldAnimator.enabled = true;
-                if (inputText.text.Length == 0) { inputFieldAnimator.Play(outAnim); }     
+                if (inputText.text.Length == 0)
+                {
+                    inputFieldAnimator.Play(outAnim);
+                }
             }
         }
 
         public void UpdateState()
         {
-            if (inputText.text.Length == 0) { AnimateOut(); }
-            else { AnimateIn(); }
+            if (inputText.text.Length == 0)
+            {
+                AnimateOut();
+            }
+            else
+            {
+                AnimateIn();
+            }
         }
 
         public void UpdateStateInstant()
@@ -102,14 +154,23 @@ namespace Michsky.MUIP
             StopCoroutine("DisableAnimator");
             StartCoroutine("DisableAnimator");
 
-            if (inputText.text.Length == 0) { inputFieldAnimator.Play(instaOutAnim); }
-            else { inputFieldAnimator.Play(instaInAnim); }
+            if (inputText.text.Length == 0)
+            {
+                inputFieldAnimator.Play(instaOutAnim);
+            }
+            else
+            {
+                inputFieldAnimator.Play(instaInAnim);
+            }
         }
 
         IEnumerator DisableAnimator()
         {
-            yield return new WaitForSecondsRealtime(MUIPInternalTools.GetAnimatorClipLength(inputFieldAnimator, "Standard In") + 0.1f);
-            inputFieldAnimator.enabled = false;
+            // yield return new WaitForSecondsRealtime(
+            //     MUIPInternalTools.GetAnimatorClipLength(inputFieldAnimator, "Standard In") + 0.1f
+            // );
+            // inputFieldAnimator.enabled = false;
+            yield return null;
         }
     }
 }
