@@ -105,15 +105,16 @@ namespace UNIHper
                 );
                 if (!File.Exists(_path))
                 {
+                    _configInstance.filePath = _path;
+                    _configInstance.driver = _driverMode;
                     this.serializeConfig(_configInstance, _path, _driverMode);
                 }
                 else
                 {
                     _configInstance = this.deserializeConfig(_configClass, _path, _driverMode);
+                    _configInstance.filePath = _path;
+                    _configInstance.driver = _driverMode;
                 }
-
-                UReflection.SetPrivateField(_configInstance, "__path", _path);
-                UReflection.SetPrivateField(_configInstance, "__driver", (int)_driverMode);
 
                 this.configs.Add(_configClass.Name, _configInstance);
             }
@@ -149,25 +150,24 @@ namespace UNIHper
             }
 
             var _configInstance = this.configs[_configKey];
-            // UReflection.CallPrivateMethod(_configInstance, "OnUnloaded");
             _configInstance.Unloaded();
 
-            var _path = UReflection.GetPrivateField<string>(_configInstance, "__path");
-            var _driver = UReflection.GetPrivateField<int>(_configInstance, "__driver");
+            var _path = _configInstance.FilePath;
+            var _driver = _configInstance.Driver;
             if (!File.Exists(_path))
             {
+                _configInstance.filePath = _path;
+                _configInstance.driver = _driver;
                 this.serializeConfig(_configInstance, _path, (ConfigDriver)_driver);
             }
             else
             {
                 _configInstance = this.deserializeConfig(typeof(T), _path);
+                _configInstance.filePath = _path;
+                _configInstance.driver = _driver;
             }
 
-            UReflection.SetPrivateField(_configInstance, "__path", _path);
-            UReflection.SetPrivateField(_configInstance, "__driver", _driver);
-
             this.configs[_configKey] = _configInstance;
-            // UReflection.CallPrivateMethod(_configInstance, "OnLoaded");
             _configInstance.Loaded();
 
             return _configInstance as T;
@@ -268,7 +268,7 @@ namespace UNIHper
             if (!this.configs.TryGetValue(typeof(T).Name, out UConfig _config))
                 return false;
 
-            ConfigDriver _driver = UReflection.GetPrivateField<ConfigDriver>(_config, "__driver");
+            ConfigDriver _driver = _config.Driver;
             // UReflection.CallPrivateMethod(_config, "OnSerializing");
             _config.Serializing();
             if (_driver == ConfigDriver.YAML)

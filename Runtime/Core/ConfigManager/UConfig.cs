@@ -66,21 +66,27 @@ namespace UNIHper
     [SerializedAt(AppPath.PersistentDir, Priority = -1), SerializeWith(ConfigDriver.XML)]
     public class UConfig
     {
-        [XmlIgnore]
-        protected string __path;
+        [XmlIgnore, JsonIgnore]
+        internal string filePath;
 
         [XmlIgnore, JsonIgnore]
         public string FilePath
         {
-            get { return __path; }
+            get { return filePath; }
         }
 
-        [XmlIgnore]
-        protected string __driver;
+        [XmlIgnore, JsonIgnore]
+        internal ConfigDriver driver;
+
+        [XmlIgnore, JsonIgnore]
+        public ConfigDriver Driver
+        {
+            get { return driver; }
+        }
 
         public void Delete()
         {
-            File.Delete(__path);
+            File.Delete(filePath);
         }
 
         [JsonIgnore]
