@@ -7,28 +7,33 @@ using DNHper;
 using TMPro;
 using UniRx;
 using UnityEngine.InputSystem;
+using Michsky.MUIP;
 
 public class HelpUI : UIBase
 {
-    public string builtinHelpText =>
-        $"{Application.productName}   " + $"Version: {Application.version}\n";
+    private string builtinHelpText =>
+        $"{Application.productName}   "
+        + $"Version: {Application.version}\n"
+        + Managements.UI.Get<LicenseUI>().LicenseText;
+
+    private ReactiveProperty<string> userHelpText = new ReactiveProperty<string>(string.Empty);
 
     public void SetContent(string helpText)
     {
-        this.setContent(helpText);
+        userHelpText.Value = helpText;
     }
 
     public void SetContent(string helpText, float textSize, Color textColor)
     {
-        this.setContent(helpText);
         this.helpText.color = textColor;
         this.helpText.fontSize = textSize;
+        SetContent(helpText);
     }
 
     public void SetContent(string helpText, float textSize)
     {
-        this.setContent(helpText);
         this.helpText.fontSize = textSize;
+        SetContent(helpText);
     }
 
     public void SetBackgroundColor(Color color)
@@ -36,13 +41,17 @@ public class HelpUI : UIBase
         this.Get<Image>().color = color;
     }
 
-    private void setContent(string helpText)
-    {
-        this.helpText.text = builtinHelpText + "\n" + helpText;
-    }
-
     // Start is called before the first frame update
-    private void Start() { }
+    private void Start()
+    {
+        userHelpText
+            .Merge(Managements.UI.Get<LicenseUI>().OnLicenseValidChanged.Select(_ => string.Empty))
+            .Subscribe(helpText =>
+            {
+                this.helpText.text = builtinHelpText + "\r\n" + helpText;
+            })
+            .AddTo(this);
+    }
 
     // Update is called once per frame
     private void Update() { }
@@ -53,6 +62,7 @@ public class HelpUI : UIBase
     protected override void OnLoaded()
     {
         helpText = this.Get<TextMeshProUGUI>("text_help");
+        SetContent(string.Empty);
         Observable
             .EveryUpdate()
             .Subscribe(_ =>
@@ -63,6 +73,13 @@ public class HelpUI : UIBase
                 }
             })
             .AddTo(this);
+
+        this.Get<ButtonManager>("btn_license")
+            .OnClickAsObservable()
+            .Subscribe(_ =>
+            {
+                Managements.UI.Show<LicenseUI>();
+            });
     }
 
     // Called when this ui is shown
