@@ -15,7 +15,7 @@ MonoBehaviour:
   _isEnabled: 1
   _uiInputMode: 0
   _defaultTab: 2
-  _triggerEnableMode: 0
+  _triggerEnableMode: 2
   _triggerBehaviour: 0
   _errorNotification: 0
   _enableKeyboardShortcuts: 1

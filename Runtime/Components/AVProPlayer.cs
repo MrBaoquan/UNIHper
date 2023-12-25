@@ -40,7 +40,16 @@ namespace UNIHper
             MediaPlayer.AutoStart = false;
         }
 
-        private MediaPlayer.OptionsWindows optionsWindows;
+#if (UNITY_EDITOR_WIN) || (!UNITY_EDITOR && UNITY_STANDALONE_WIN)
+        public AVProPlayer SetWindowsVideoAPI(Windows.VideoApi videoApi)
+        {
+            var _platformOptions =
+                MediaPlayer.GetCurrentPlatformOptions()
+                as RenderHeads.Media.AVProVideo.MediaPlayer.OptionsWindows;
+            _platformOptions.videoApi = videoApi;
+            return this;
+        }
+#endif
 
         private MediaPlayer _mediaPlayer;
         public MediaPlayer MediaPlayer
@@ -54,11 +63,6 @@ namespace UNIHper
                         _mediaPlayer = this.gameObject.AddComponent<MediaPlayer>();
                     if (Application.isPlaying)
                         registerAllEvents();
-
-#if (UNITY_EDITOR_WIN) || (!UNITY_EDITOR && UNITY_STANDALONE_WIN)
-                    optionsWindows =
-                        _mediaPlayer.GetCurrentPlatformOptions() as MediaPlayer.OptionsWindows;
-#endif
                 }
                 return _mediaPlayer;
             }
@@ -103,12 +107,12 @@ namespace UNIHper
 
         public int DurationFrames
         {
-            get { return _mediaPlayer.Info.GetDurationFrames(); }
+            get { return MediaPlayer.Info.GetDurationFrames(); }
         }
 
         public int MaxFrameNumber
         {
-            get { return _mediaPlayer.Info.GetMaxFrameNumber(); }
+            get { return MediaPlayer.Info.GetMaxFrameNumber(); }
         }
 
         public float PlaybackRate
@@ -127,7 +131,7 @@ namespace UNIHper
 
         public int CurrentFrame
         {
-            get { return _mediaPlayer.Control.GetCurrentTimeFrames(); }
+            get { return MediaPlayer.Control.GetCurrentTimeFrames(); }
         }
 
         public double StartTime { get; protected set; }
@@ -176,7 +180,7 @@ namespace UNIHper
             {
                 MediaPlayer.Play();
                 bool _bFinished = false;
-                var _duration = _mediaPlayer.Info.GetDuration();
+                var _duration = MediaPlayer.Info.GetDuration();
                 endTime = endTime == 0 ? _duration : endTime;
 
                 // 播放结束回调
@@ -215,7 +219,7 @@ namespace UNIHper
 
                 // 视频到达结尾
                 OnFinishedPlayingAsObservable()
-                    .Where(_mediaPlayer => _mediaPlayer == MediaPlayer)
+                    .Where(_mPlayer => _mPlayer == MediaPlayer)
                     .First()
                     .Subscribe(_1 =>
                     {
@@ -295,11 +299,11 @@ namespace UNIHper
 
         void Update()
         {
-            if (_mediaPlayer == null)
+            if (MediaPlayer == null)
                 return;
-            _isPlaying.Value = _mediaPlayer.Control.IsPlaying();
-            _isMute.Value = _mediaPlayer.Control.IsMuted();
-            _volume.Value = _mediaPlayer.Control.GetVolume();
+            _isPlaying.Value = MediaPlayer.Control.IsPlaying();
+            _isMute.Value = MediaPlayer.Control.IsMuted();
+            _volume.Value = MediaPlayer.Control.GetVolume();
         }
 
         public void ClearPlayHandlers()
@@ -345,6 +349,9 @@ namespace UNIHper
             MediaPlayer.Control.Seek(time);
 #if (UNITY_EDITOR_WIN) || (!UNITY_EDITOR && UNITY_STANDALONE_WIN)
             // TODO: DirectShow 驱动下，没有seek相关事件 seek 好像是同步的，需要后续验证
+            var optionsWindows =
+                MediaPlayer.GetCurrentPlatformOptions()
+                as RenderHeads.Media.AVProVideo.MediaPlayer.OptionsWindows;
             if (optionsWindows.videoApi == Windows.VideoApi.DirectShow)
             {
                 OnFinishedSeeking.Invoke(MediaPlayer);
@@ -384,22 +391,22 @@ namespace UNIHper
                 {
                     onFinished?.Invoke(this);
                 });
-            _mediaPlayer.Control?.SeekToFrame(Frame);
+            MediaPlayer.Control?.SeekToFrame(Frame);
         }
 
         public void SetPlaybackRate(float rate)
         {
-            _mediaPlayer.Control?.SetPlaybackRate(rate);
+            MediaPlayer.Control?.SetPlaybackRate(rate);
         }
 
         public void SetVolume(float volume)
         {
-            _mediaPlayer.Control?.SetVolume(volume);
+            MediaPlayer.Control?.SetVolume(volume);
         }
 
         public void MuteAudio(bool bMute)
         {
-            _mediaPlayer.Control?.MuteAudio(bMute);
+            MediaPlayer.Control?.MuteAudio(bMute);
         }
 
         #region  播放器事件
