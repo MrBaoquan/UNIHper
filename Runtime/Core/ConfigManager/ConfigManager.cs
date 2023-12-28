@@ -103,7 +103,7 @@ namespace UNIHper
                     _configDir,
                     _configClass.Name + this.suffix(_driverMode)
                 );
-                if (!File.Exists(_path))
+                if (!File.Exists(_path) || !this.checkIfXMLRestoreable(_path))
                 {
                     _configInstance.filePath = _path;
                     _configInstance.driver = _driverMode;
@@ -154,7 +154,7 @@ namespace UNIHper
 
             var _path = _configInstance.FilePath;
             var _driver = _configInstance.Driver;
-            if (!File.Exists(_path))
+            if (!File.Exists(_path) || !this.checkIfXMLRestoreable(_path))
             {
                 _configInstance.filePath = _path;
                 _configInstance.driver = _driver;
@@ -313,10 +313,15 @@ namespace UNIHper
         //     File.Copy(_backupFilePath, _srcFilePath, true);
         // }
 
+        private string getBackupFilePath(string sourceFilePath)
+        {
+            return Path.Combine(backupDir, Path.GetFileName(sourceFilePath) + ".bak");
+        }
+
         private void restoreConfig(string sourceFilePath)
         {
             var _srcFilePath = sourceFilePath;
-            var _backupFilePath = Path.Combine(backupDir, Path.GetFileName(_srcFilePath) + ".bak");
+            var _backupFilePath = this.getBackupFilePath(_srcFilePath);
             if (File.Exists(_backupFilePath) == false)
             {
                 Debug.LogWarning($"Backup file {_backupFilePath} not found.");
@@ -375,6 +380,12 @@ namespace UNIHper
             {
                 return false;
             }
+        }
+
+        private bool checkIfXMLRestoreable(string filePath)
+        {
+            var _backupFilePath = this.getBackupFilePath(filePath);
+            return File.Exists(_backupFilePath) && checkIfXMLValid(_backupFilePath);
         }
     }
 }
