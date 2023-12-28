@@ -402,7 +402,7 @@ namespace UNIHper
             return _idx;
         }
 
-        public AVProPlayer CurrentPlayer => listPlayer.CurrentPlayer.Get<AVProPlayer>();
-        public AVProPlayer NextPlayer => listPlayer.NextPlayer.Get<AVProPlayer>();
+        public AVProPlayer CurrentPlayer => ListPlayer.CurrentPlayer.Get<AVProPlayer>();
+        public AVProPlayer NextPlayer => ListPlayer.NextPlayer.Get<AVProPlayer>();
     }
 }

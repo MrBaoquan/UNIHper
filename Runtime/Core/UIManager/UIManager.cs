@@ -422,6 +422,17 @@ namespace UNIHper
             mergeUIConfig(additionalConfigData, _configData);
         }
 
+        public void SetRenderMode(RenderMode renderMode, string canvasKey = CANVAS_DEFAULT)
+        {
+            var _uiLayout = getUIRootLayout(canvasKey);
+            if (_uiLayout == null)
+            {
+                Debug.LogWarning("UI Layout not found: " + canvasKey);
+                return;
+            }
+            _uiLayout.SetRenderMode(renderMode);
+        }
+
         /// <summary>
         /// Private Methods
         /// </summary>

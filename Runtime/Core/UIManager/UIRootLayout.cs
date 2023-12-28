@@ -44,6 +44,16 @@ namespace UNIHper
             m_popupUIRoot.SetAsLastSibling();
         }
 
+        public void SetRenderMode(RenderMode renderMode)
+        {
+            var _canvas = m_root.GetComponent<Canvas>();
+            if (_canvas == null)
+            {
+                _canvas = m_root.gameObject.AddComponent<Canvas>();
+            }
+            _canvas.renderMode = renderMode;
+        }
+
         private RectTransform newUIRoot(string InName)
         {
             var _uiRoot = m_root.Find(InName);
