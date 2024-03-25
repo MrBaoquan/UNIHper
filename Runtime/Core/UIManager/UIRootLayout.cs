@@ -67,6 +67,9 @@ namespace UNIHper
                 _rectTrans.anchorMin = Vector2.zero;
                 _rectTrans.anchorMax = Vector2.one;
 
+                _rectTrans.localScale = Vector3.one;
+                _rectTrans.localPosition = Vector3.zero;
+
                 _uiRoot = _rectTrans;
             }
             return _uiRoot as RectTransform;
