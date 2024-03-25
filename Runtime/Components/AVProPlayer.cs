@@ -41,7 +41,9 @@ namespace UNIHper
         }
 
 #if (UNITY_EDITOR_WIN) || (!UNITY_EDITOR && UNITY_STANDALONE_WIN)
-        public AVProPlayer SetWindowsVideoAPI(Windows.VideoApi videoApi)
+        public AVProPlayer SetWindowsVideoAPI(
+            RenderHeads.Media.AVProVideo.Windows.VideoApi videoApi
+        )
         {
             var _platformOptions =
                 MediaPlayer.GetCurrentPlatformOptions()
