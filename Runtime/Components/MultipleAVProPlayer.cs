@@ -195,6 +195,36 @@ namespace UNIHper
             ListPlayer.Play();
         }
 
+        public void Play(
+            int videoIndex,
+            Action<AVProPlayer> OnCompleted,
+            bool Loop = false,
+            double StartTime = 0f,
+            double EndTime = 0f,
+            bool seek2StartAfterFinished = true
+        )
+        {
+            if (videoIndex < 0 || videoIndex >= videoPaths.Count)
+            {
+                Debug.LogWarning((object)("Video ID out of range: " + videoIndex));
+                return;
+            }
+            var _avProPlayer = NextPlayer;
+            onPlayerBeforeChanged.Invoke(_avProPlayer);
+            listPlayer.JumpToItem((int)videoIndex);
+            this.videoIndex.Set((int)videoIndex);
+            onPlayerAfterChanged.Invoke(_avProPlayer);
+
+            _avProPlayer.Play(
+                videoPaths[videoIndex],
+                OnCompleted,
+                Loop,
+                StartTime,
+                EndTime,
+                seek2StartAfterFinished
+            );
+        }
+
         /// <summary>
         /// 播放指定路径的视频
         /// </summary>

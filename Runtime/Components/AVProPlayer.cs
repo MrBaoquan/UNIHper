@@ -354,7 +354,7 @@ namespace UNIHper
             var optionsWindows =
                 MediaPlayer.GetCurrentPlatformOptions()
                 as RenderHeads.Media.AVProVideo.MediaPlayer.OptionsWindows;
-            if (optionsWindows.videoApi == Windows.VideoApi.DirectShow)
+            if (optionsWindows.videoApi == RenderHeads.Media.AVProVideo.Windows.VideoApi.DirectShow)
             {
                 OnFinishedSeeking.Invoke(MediaPlayer);
             }
