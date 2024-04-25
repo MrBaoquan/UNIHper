@@ -89,6 +89,7 @@ namespace UNIHper
             File.Delete(filePath);
         }
 
+#if !UNITY_ANDROID
         [JsonIgnore]
         [XmlAnyElement("FileComment")]
         public XmlComment FileComment
@@ -96,6 +97,7 @@ namespace UNIHper
             get { return new XmlDocument().CreateComment(Comment()); }
             set { }
         }
+#endif
 
         public string ToJson()
         {

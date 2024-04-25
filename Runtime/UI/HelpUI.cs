@@ -67,10 +67,12 @@ public class HelpUI : UIBase
             .EveryUpdate()
             .Subscribe(_ =>
             {
+#if ENABLE_INPUT_SYSTEM
                 if (Keyboard.current.f1Key.wasPressedThisFrame)
                 {
                     this.Toggle();
                 }
+#endif
             })
             .AddTo(this);
 

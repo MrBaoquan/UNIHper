@@ -36,8 +36,19 @@ namespace UNIHper
             _unihperEntryGO.name = "__UNIHper";
         }
 
+        public IObservable<Unit> OnInitializedAsObservable()
+        {
+            return isInitialized.Value
+                ? Observable.Return(Unit.Default)
+                : isInitialized.Where(_isInit => _isInit).AsUnitObservable();
+        }
+
+        ReactiveProperty<bool> isInitialized = new ReactiveProperty<bool>(false);
+
         private async void Awake()
         {
+            if (isInitialized.Value)
+                return;
             if (UNIHperEntry.Instance != this)
             {
                 GameObject.Destroy(this.gameObject);
@@ -81,6 +92,8 @@ namespace UNIHper
             // 6. 初始化网络模块
             await UNetManager.Instance.Initialize();
             this.Initialize();
+
+            isInitialized.Value = true;
         }
 
         private void CreateDefaultEventSystem()

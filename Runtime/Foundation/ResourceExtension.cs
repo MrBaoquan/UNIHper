@@ -15,10 +15,12 @@ namespace UNIHper
             string filePath
         )
         {
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN
             if (!Path.IsPathRooted(filePath))
             {
                 filePath = Path.Combine(Application.streamingAssetsPath, filePath);
             }
+#endif
             return Observable
                 .FromCoroutine<Texture2D>(
                     (_observer, _cancellationToken) =>

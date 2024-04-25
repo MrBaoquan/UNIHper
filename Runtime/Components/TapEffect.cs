@@ -170,16 +170,16 @@ namespace UNIHper
             }
             else if (TapArea == TapArea.FullScreen)
             {
-                Observable
-                    .EveryUpdate()
-                    .Where(
-                        _ => Pointer.current != null && Pointer.current.press.wasPressedThisFrame
-                    )
-                    .Subscribe(_ =>
-                    {
-                        showEffect(Pointer.current.position.ReadValue());
-                    })
-                    .AddTo(this);
+                // Observable
+                //     .EveryUpdate()
+                //     .Where(
+                //         _ => Pointer.current != null && Pointer.current.press.wasPressedThisFrame
+                //     )
+                //     .Subscribe(_ =>
+                //     {
+                //         showEffect(Pointer.current.position.ReadValue());
+                //     })
+                //     .AddTo(this);
             }
         }
     }

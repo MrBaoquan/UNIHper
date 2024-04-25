@@ -11,6 +11,8 @@ namespace UNIHper
         public static readonly ResourceManager Resource = ResourceManager.Instance;
         public static readonly USceneManager Scene = USceneManager.Instance;
         public static readonly UNetManager Network = UNetManager.Instance;
+        public static readonly UNIHperEntry Entry = UNIHperEntry.Instance;
+
         public static UAudioManager Audio
         {
             get => UAudioManager.Instance;
