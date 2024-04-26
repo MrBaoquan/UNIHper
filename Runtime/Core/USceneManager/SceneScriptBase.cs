@@ -9,12 +9,15 @@ namespace UNIHper
 {
     public abstract class SceneScriptBase
     {
-        internal bool isSceneReady { get; set; } = false;
+        internal ReactiveProperty<bool> isSceneReady { get; set; } =
+            new ReactiveProperty<bool>(false);
 
-        /// <summary>
-        /// 当前场景脚本是否就绪
-        /// </summary>
-        public bool IsSceneReady => isSceneReady;
+        public IObservable<Unit> OnSceneReadyAsObservable()
+        {
+            return isSceneReady.Value
+                ? Observable.Return(Unit.Default)
+                : isSceneReady.Where(_isReady => _isReady).AsUnitObservable();
+        }
 
         protected virtual void OnLongTimeNoOperation() { }
     }

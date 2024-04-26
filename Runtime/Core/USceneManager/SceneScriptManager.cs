@@ -137,7 +137,7 @@ namespace UNIHper
                     {
                         _updateAction?.Invoke(_sceneScript, null);
                     });
-                _sceneScript.isSceneReady = true;
+                _sceneScript.isSceneReady.Value = true;
                 _startAction?.Invoke(_sceneScript, null);
             }
             else
