@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using DNHper;
 using Newtonsoft.Json;
+using Sirenix.Utilities;
 using UnityEngine;
 
 namespace UNIHper
@@ -127,12 +128,14 @@ namespace UNIHper
         /// <param name="assemblyName"></param>
         public void LoadNewAssembly(string assemblyName)
         {
-            // var _allTypes = allTypes;
-            var _assembly = Assembly.Load(assemblyName);
-            //var _assembly = Assembly.Load(new AssemblyName(assemblyName));
-            if (_assembly == null)
+            Assembly _assembly = null;
+            try
             {
-                UnityEngine.Debug.LogWarningFormat("can not load {0}", assemblyName);
+                _assembly = Assembly.Load(assemblyName);
+            }
+            catch (Exception)
+            {
+                UnityEngine.Debug.LogWarningFormat("Can not load assembly: {0}", assemblyName);
                 return;
             }
 

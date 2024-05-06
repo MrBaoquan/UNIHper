@@ -535,7 +535,6 @@ namespace UNIHper
 
         private void SpawnUI(string uiKey, UIConfig uiConfig)
         {
-            //string _scriptName = InUIConfig.GetScript(InUIKey) + ", MainGame, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null";
             Type _T = AssemblyConfig.GetUNIType(uiKey);
 
             if (_T == null)

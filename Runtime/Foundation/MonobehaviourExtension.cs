@@ -31,7 +31,7 @@ namespace UNIHper
             where T : Component
         {
             Transform _target = Get(_behaviour, InPath);
-            return _target.GetComponent<T>();
+            return _target?.GetComponent<T>();
         }
 
         /// <summary>
@@ -57,20 +57,19 @@ namespace UNIHper
             where T : Component
         {
             Transform _target = Get(_transform, InPath);
-            return _target.GetComponent<T>();
+            return _target?.GetComponent<T>();
         }
 
         public static T Get<T>(this GameObject _gameObject, string InPath)
             where T : Component
         {
-            Transform _target = Get(_gameObject.transform, InPath);
-            return _target.GetComponent<T>();
+            return Get<T>(_gameObject.transform, InPath);
         }
 
         public static T Get<T>(this GameObject _gameObject)
             where T : Component
         {
-            return _gameObject.GetComponent<T>();
+            return Get<T>(_gameObject.transform);
         }
 
         public static Transform Get(this MonoBehaviour _behaviour, string InPath)

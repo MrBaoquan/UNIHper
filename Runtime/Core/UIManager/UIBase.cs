@@ -19,14 +19,27 @@ namespace UNIHper
         public UIType Type => __Type;
         public string Key => __UIKey;
 
+        private UnityEvent onShowingEvent = new UnityEvent();
         private UnityEvent onShownEvent = new UnityEvent();
 
-        public IObservable<Unit> OnShowAsObservable()
+        public IObservable<Unit> OnShowingAsObservable()
+        {
+            return onShowingEvent.AsObservable();
+        }
+
+        public IObservable<Unit> OnShownAsObservable()
         {
             return onShownEvent.AsObservable();
         }
 
+        private UnityEvent onHidingEvent = new UnityEvent();
+
         private UnityEvent onHiddenEvent = new UnityEvent();
+
+        public IObservable<Unit> OnHidingAsObservable()
+        {
+            return onHidingEvent.AsObservable();
+        }
 
         public IObservable<Unit> OnHideAsObservable()
         {
@@ -101,6 +114,7 @@ namespace UNIHper
 
             _status = UIStatus.Showing;
             this.OnShowing();
+            onShowingEvent.Invoke();
             try
             {
                 showOrHideCancellationTokenSource = new CancellationTokenSource();
@@ -130,6 +144,7 @@ namespace UNIHper
 
             _status = UIStatus.Hiding;
             this.OnHiding();
+            onHidingEvent.Invoke();
             try
             {
                 showOrHideCancellationTokenSource = new CancellationTokenSource();
