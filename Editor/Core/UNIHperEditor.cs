@@ -133,7 +133,7 @@ namespace UNIHper.Editor
                 }
                 if (!File.Exists(UNIPaths.ProjectPath(_projectStartupPrefabPath)))
                 {
-                    string _UNIHperPrefabPath = UNIPaths.PackagePathRelativeToProject(
+                    string _UNIHperPrefabPath = UNIPaths.PackagePath(
                         "Assets/Resources/__Prefabs/UNIHper.prefab"
                     );
                     var _tempUNIHper = GameObject.Instantiate<GameObject>(
@@ -205,9 +205,7 @@ namespace UNIHper.Editor
                 {
                     var _configAsset = ScriptableObject.CreateInstance<UNIHperSettings>();
                     _configAsset.defaultClickSound = AssetDatabase.LoadAssetAtPath<AudioClip>(
-                        UNIPaths.PackagePathRelativeToProject(
-                            "Assets/Resources/__AudioClips/click_effect_00.wav"
-                        )
+                        UNIPaths.PackagePath("Assets/Resources/__AudioClips/click_effect_00.wav")
                     );
                     AssetDatabase.CreateAsset(_configAsset, _configPath);
                 }

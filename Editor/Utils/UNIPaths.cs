@@ -27,10 +27,10 @@ namespace UNIHper.Editor
             return Path.Combine(PackageRoot, path).ToForwardSlash();
         }
 
-        public static string PackagePathRelativeToProject(string path)
-        {
-            return PackagePath(path).Replace(ProjectRoot, "").TrimStart('/').ToForwardSlash();
-        }
+        // public static string PackagePathRelativeToProject(string path)
+        // {
+        //     return PackagePath(path).Replace(ProjectRoot, "").TrimStart('/').ToForwardSlash();
+        // }
 
         const string bundleName = "com.parful.unihper";
 
@@ -40,7 +40,7 @@ namespace UNIHper.Editor
         /// <value></value>
         public static string PackageRoot
         {
-            get => Path.GetFullPath($@"Packages\{bundleName}").ToForwardSlash();
+            get => $@"Packages\{bundleName}".ToForwardSlash();
         }
 
         /// <summary>
