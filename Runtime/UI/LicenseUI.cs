@@ -1,5 +1,4 @@
-﻿using UHelper;
-using UniRx;
+﻿using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
 using UNIHper;
@@ -84,7 +83,7 @@ public class LicenseUI : UIBase
                 // 当machineID被修改后, 会导致解密失败, 这里捕获异常, 重新生成machineID
                 _machineID = AES.Decrypt(_machineID, passphrase);
             }
-            catch (System.Exception ex)
+            catch (System.Exception)
             {
                 _machineID = UnityEngine.Random.Range(100000, 999999).ToString();
                 _machineID = AES.Encrypt(_machineID, passphrase);
