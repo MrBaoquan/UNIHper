@@ -267,7 +267,12 @@ namespace UNIHper
                         _readyHandler = null;
                         _startSeek();
                     });
+
                 var _mediaPathType = MediaPathType.RelativeToStreamingAssetsFolder;
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+                _mediaPathType = MediaPathType.RelativeToPersistentDataFolder;
+#endif
                 if (Path.IsPathRooted(videoPath))
                 {
                     _mediaPathType = MediaPathType.AbsolutePathOrURL;
