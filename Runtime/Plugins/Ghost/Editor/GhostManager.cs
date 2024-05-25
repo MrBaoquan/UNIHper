@@ -42,7 +42,7 @@ namespace UNIHper.Ghost.Editor
                     _component =>
                         _component
                         && !builtNameSpaces.Exists(
-                            _ => _component.GetType().Namespace.StartsWith(_)
+                            _ => _component.GetType().Assembly.ToString().StartsWith(_)
                         )
                 )
                 .Where(_component => !GhostType.IsAssignableFrom(_component.GetType()));
