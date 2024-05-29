@@ -1,4 +1,4 @@
 [submodule "Runtime/Plugins/DNHper"]
 	path = Runtime/Plugins/DNHper
-	url = http://git.andcrane.com:3000/git_admin/dnhper.git
+	url = https://github.com/mrbaoquan/dnhper.git
 	branch = master
