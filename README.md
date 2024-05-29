@@ -24,6 +24,10 @@
 
 
 ### 版本更新日志
+v1.24.529
+- 工作流默认自动重载域
+- 优化项目名自动化逻辑
+
 v1.24.525
 - 修复GhostManager.cs文件NonBuiltInComponents接口bug
 - 兼容Unity2023

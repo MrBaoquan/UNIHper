@@ -97,8 +97,8 @@ namespace UNIHper.Editor
             {
                 SessionState.SetBool(kFirstEnterUnity, false);
 
-                // 默认开启手动重载
-                PlayerPrefs.SetInt(kManualReloadDomain, 1);
+                // 默认关闭手动重载
+                PlayerPrefs.SetInt(kManualReloadDomain, -1);
 
                 Menu.SetChecked(menuEnableManualReload, IsManualReload ? true : false);
                 Menu.SetChecked(menuDisenableManualReload, IsManualReload ? false : true);
@@ -108,7 +108,7 @@ namespace UNIHper.Editor
                     UnlockReloadDomain();
                     LockReloadDomain();
                 }
-                //Debug.Log($"<color=lime>当前ReloadDomain状态,是否手动: {IsManualReload}</color>");
+                // Debug.Log($"<color=lime>当前ReloadDomain状态,是否手动: {IsManualReload}</color>");
             }
         }
 

@@ -19,8 +19,8 @@ namespace UNIHper.Editor
         static void SetProductName()
         {
             if (
-                !ProjectName.StartsWith("UNIHper_template")
-                && PlayerSettings.productName.StartsWith("UNIHper_template")
+                !ProjectName.ToLower().StartsWith("unihper_template")
+                && PlayerSettings.productName.ToLower().StartsWith("unihper_template")
             )
                 PlayerSettings.productName = ProjectName;
         }
