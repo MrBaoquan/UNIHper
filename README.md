@@ -24,6 +24,11 @@
 
 
 ### 版本更新日志
+
+v1.24-未发布
+- 修复LongTimeNoOperation安卓平台bug
+- 拓展Linq至DNHper
+
 v1.24.529
 - 工作流默认自动重载域
 - 优化项目名自动化逻辑
