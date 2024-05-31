@@ -99,27 +99,13 @@ namespace UNIHper
         {
 #if ENABLE_INPUT_SYSTEM
             bool _hasAnyInput =
-                Keyboard.current.anyKey.wasPressedThisFrame
-                || Mouse.current.leftButton.wasPressedThisFrame
-                || Mouse.current.rightButton.wasPressedThisFrame
-                || Mouse.current.middleButton.wasPressedThisFrame;
-
-            if (!_hasAnyInput)
-            {
-                // check any touch
-                if (Touchscreen.current != null)
-                {
-                    _hasAnyInput = Touchscreen.current.touches
-                        .ToList()
-                        .Exists(_ => _.press.wasPressedThisFrame);
-                }
-            }
+                Keyboard.current.HasAnyInput()
+                || Mouse.current.HasAnyInput()
+                || Touchscreen.current.HasAnyInput();
+#elif ENABLE_LEGACY_INPUT_MANAGER
+            bool _hasAnyInput = Input.touchCount > 0 || Input.anyKeyDown;
 #else
-            bool _hasAnyInput = Input.anyKeyDown;
-            if (!_hasAnyInput)
-            {
-                _hasAnyInput = Input.touchCount > 0;
-            }
+            bool _hasAnyInput = false;
 #endif
 
             return _hasAnyInput;
