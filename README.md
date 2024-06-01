@@ -25,9 +25,11 @@
 
 ### 版本更新日志
 
-v1.24-未发布
+v1.24.601
 - 修复LongTimeNoOperation安卓平台bug
 - 拓展Linq至DNHper
+- 增加Managements.Framework框架实用接口
+- 增加屏幕右上角三连击事件，启用/禁用调试模式
 
 v1.24.529
 - 工作流默认自动重载域

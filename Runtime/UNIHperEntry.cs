@@ -4,9 +4,6 @@ using DNHper;
 using UniRx;
 using UnityEngine;
 using UnityEngine.EventSystems;
-#if ENABLE_INPUT_SYSTEM
-using UnityEngine.InputSystem;
-#endif
 
 namespace UNIHper
 {
@@ -36,7 +33,7 @@ namespace UNIHper
             _unihperEntryGO.name = "__UNIHper";
         }
 
-        public IObservable<Unit> OnInitializedAsObservable()
+        internal IObservable<Unit> OnInitializedAsObservable()
         {
             return isInitialized.Value
                 ? Observable.Return(Unit.Default)
@@ -93,6 +90,7 @@ namespace UNIHper
             await UNetManager.Instance.Initialize();
             this.Initialize();
 
+            Framework.Instance.Initialize();
             isInitialized.Value = true;
         }
 
@@ -141,63 +139,7 @@ namespace UNIHper
             }
         }
 
-        private void Update()
-        {
-#if ENABLE_INPUT_SYSTEM
-            if (Keyboard.current == null)
-                return;
-            if (Keyboard.current.ctrlKey.isPressed && Keyboard.current.sKey.wasPressedThisFrame)
-            {
-                Managements.Config.SerializeAll();
-                Debug.Log("Save config successfully.");
-            }
-            if (Keyboard.current.f12Key.wasPressedThisFrame)
-            {
-                Managements.UI.Get<UNIDebuggerPanel>().Toggle();
-            }
-
-            if (Keyboard.current.altKey.isPressed && Keyboard.current.f10Key.wasPressedThisFrame)
-            {
-                SRDebug.Instance.DockConsole.IsVisible = !SRDebug.Instance.DockConsole.IsVisible;
-                if (SRDebug.Instance.DockConsole.IsVisible)
-                    SRDebug.Instance.HideDebugPanel();
-            }
-            else if (Keyboard.current.f10Key.wasPressedThisFrame)
-            {
-                if (SRDebug.Instance.IsDebugPanelVisible)
-                    SRDebug.Instance.HideDebugPanel();
-                else
-                    SRDebug.Instance.ShowDebugPanel(SRDebugger.DefaultTabs.Console);
-            }
-#else
-            if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.S))
-            {
-                Managements.Config.SerializeAll();
-                Debug.Log("Save config successfully.");
-            }
-            if (Input.GetKeyDown(KeyCode.F12))
-            {
-                Managements.UI.Get<UNIDebuggerPanel>().Toggle();
-            }
-
-            if (
-                (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt))
-                && Input.GetKeyDown(KeyCode.F10)
-            )
-            {
-                SRDebug.Instance.DockConsole.IsVisible = !SRDebug.Instance.DockConsole.IsVisible;
-                if (SRDebug.Instance.DockConsole.IsVisible)
-                    SRDebug.Instance.HideDebugPanel();
-            }
-            else if (Input.GetKeyDown(KeyCode.F10))
-            {
-                if (SRDebug.Instance.IsDebugPanelVisible)
-                    SRDebug.Instance.HideDebugPanel();
-                else
-                    SRDebug.Instance.ShowDebugPanel(SRDebugger.DefaultTabs.Console);
-            }
-#endif
-        }
+        private void Update() { }
 
         private void OnDestroy()
         {

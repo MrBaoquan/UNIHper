@@ -14,6 +14,7 @@ namespace UNIHper
     internal class UIRootLayout
     {
         private Transform m_root;
+        public RectTransform Root => m_root as RectTransform;
         private RectTransform m_normalUIRoot;
         public RectTransform NormalUIRoot
         {
