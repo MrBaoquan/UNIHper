@@ -433,6 +433,17 @@ namespace UNIHper
             _uiLayout.SetRenderMode(renderMode);
         }
 
+        public Canvas RootCanvas(string canvasKey = CANVAS_DEFAULT)
+        {
+            var _uiLayout = getUIRootLayout(canvasKey);
+            if (_uiLayout == null)
+            {
+                Debug.LogWarning("UI Layout not found: " + canvasKey);
+                return null;
+            }
+            return _uiLayout.Root.GetComponent<Canvas>();
+        }
+
         /// <summary>
         /// Private Methods
         /// </summary>

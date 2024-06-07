@@ -108,6 +108,10 @@ namespace UNIHper
         // );
 
         //public KeepWindowTop KeepWindowTop = new KeepWindowTop();
+
+        [XmlAttribute]
+        public float LongTimeNoOperationTimeout = 180;
+
         public ScreenConfig PrimaryScreen = new ScreenConfig() { KeepTop = true };
 
         [XmlArray("Displays")]

@@ -17,10 +17,11 @@ namespace UNIHper
         public IObservable<Unit> OnResetOperationAsObservable() =>
             onResetOperationEvent.AsObservable();
 
-        public void ResetOperation()
+        public LongTimeNoOperation ResetOperation()
         {
             elapsedTime.Value = 0f;
             onResetOperationEvent.Invoke();
+            return this;
         }
 
         /// <summary>
@@ -54,9 +55,10 @@ namespace UNIHper
         /// 设置超时时间
         /// </summary>
         /// <param name="timeout">超时时间(s)</param>
-        public void SetTimeout(float timeout)
+        public LongTimeNoOperation SetTimeout(float timeout)
         {
             this.timeout = timeout;
+            return this;
         }
 
         /// <summary>
