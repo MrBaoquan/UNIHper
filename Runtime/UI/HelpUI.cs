@@ -7,7 +7,6 @@ using DNHper;
 using TMPro;
 using UniRx;
 using UnityEngine.InputSystem;
-using Michsky.MUIP;
 
 public class HelpUI : UIBase
 {
@@ -76,7 +75,7 @@ public class HelpUI : UIBase
             })
             .AddTo(this);
 
-        this.Get<ButtonManager>("btn_license")
+        this.Get<Button>("btn_license")
             .OnClickAsObservable()
             .Subscribe(_ =>
             {

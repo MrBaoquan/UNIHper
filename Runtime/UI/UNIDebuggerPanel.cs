@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using UNIHper;
 using System.Collections.Generic;
-using Michsky.MUIP;
 using TMPro;
 
 public class UNIDebuggerPanel : UIBase
@@ -13,7 +12,7 @@ public class UNIDebuggerPanel : UIBase
     private void Start()
     {
 #if UNITY_STANDALONE_WIN||UNITY_EDITOR_WIN
-        this.Get<ButtonManager>("open_folders/btn_persistentData")
+        this.Get<Button>("open_folders/btn_persistentData")
             .OnClickAsObservable()
             .Subscribe(_ =>
             {
@@ -24,7 +23,7 @@ public class UNIDebuggerPanel : UIBase
                 );
             });
 
-        this.Get<ButtonManager>("open_folders/btn_streamingAssets")
+        this.Get<Button>("open_folders/btn_streamingAssets")
             .OnClickAsObservable()
             .Subscribe(_ =>
             {
@@ -38,29 +37,27 @@ public class UNIDebuggerPanel : UIBase
         loadDefaultValues();
         refreshMenuSettings();
 
-        this.Get<SwitchManager>("window_settings/switch_fullscreen")
+        this.Get<Toggle>("window_settings/switch_fullscreen")
             .onValueChanged.AsObservable()
             .Subscribe(_ =>
             {
                 refreshMenuSettings();
             });
 
-        this.Get<ButtonManager>("window_settings/btn_apply")
+        this.Get<Button>("window_settings/btn_apply")
             .OnClickAsObservable()
             .Subscribe(_ =>
             {
-                var _posX = this.Get<CustomInputField>("window_settings/input_x")
-                    .inputText.text.Parse2Int();
-                var _posY = this.Get<CustomInputField>("window_settings/input_y")
-                    .inputText.text.Parse2Int();
+                var _posX = this.Get<TMP_InputField>("window_settings/input_x").text.Parse2Int();
+                var _posY = this.Get<TMP_InputField>("window_settings/input_y").text.Parse2Int();
 
-                var _width = this.Get<CustomInputField>("window_settings/input_width")
-                    .inputText.text.Parse2Int();
-                var _height = this.Get<CustomInputField>("window_settings/input_height")
-                    .inputText.text.Parse2Int();
-                var _fullScreen = this.Get<SwitchManager>("window_settings/switch_fullscreen").isOn;
-                var _useTitleBar = this.Get<SwitchManager>("window_settings/switch_caption").isOn;
-                var _keepTop = this.Get<SwitchManager>("window_settings/switch_keepTop").isOn;
+                var _width = this.Get<TMP_InputField>("window_settings/input_width")
+                    .text.Parse2Int();
+                var _height = this.Get<TMP_InputField>("window_settings/input_height")
+                    .text.Parse2Int();
+                var _fullScreen = this.Get<Toggle>("window_settings/switch_fullscreen").isOn;
+                var _useTitleBar = this.Get<Toggle>("window_settings/switch_caption").isOn;
+                var _keepTop = this.Get<Toggle>("window_settings/switch_keepTop").isOn;
 
                 var _appConfig = Managements.Config.Get<AppConfig>();
                 _appConfig.PrimaryScreen.PosX = _posX;
@@ -92,35 +89,28 @@ public class UNIDebuggerPanel : UIBase
 #endif
         }
 
-        this.Get<CustomInputField>("window_settings/input_x").inputText.text =
+        this.Get<TMP_InputField>("window_settings/input_x").text =
             _appConfig.PrimaryScreen.PosX.ToString();
 
-        this.Get<CustomInputField>("window_settings/input_y").inputText.text =
+        this.Get<TMP_InputField>("window_settings/input_y").text =
             _appConfig.PrimaryScreen.PosY.ToString();
 
-        this.Get<CustomInputField>("window_settings/input_width").inputText.text =
-            _screenWidth.ToString();
-        this.Get<CustomInputField>("window_settings/input_height").inputText.text =
-            _screenHeight.ToString();
+        this.Get<TMP_InputField>("window_settings/input_width").text = _screenWidth.ToString();
+        this.Get<TMP_InputField>("window_settings/input_height").text = _screenHeight.ToString();
 
-        this.Get<SwitchManager>("window_settings/switch_fullscreen").isOn =
+        this.Get<Toggle>("window_settings/switch_fullscreen").isOn =
             _fullScreen == FullScreenMode.FullScreenWindow;
-        this.Get<SwitchManager>("window_settings/switch_fullscreen").UpdateUI();
 
-        this.Get<SwitchManager>("window_settings/switch_caption").isOn = _appConfig
+        this.Get<Toggle>("window_settings/switch_caption").isOn = _appConfig
             .PrimaryScreen
             .UseTitleBar;
-        this.Get<SwitchManager>("window_settings/switch_caption").UpdateUI();
 
-        this.Get<SwitchManager>("window_settings/switch_keepTop").isOn = _appConfig
-            .PrimaryScreen
-            .KeepTop;
-        this.Get<SwitchManager>("window_settings/switch_keepTop").UpdateUI();
+        this.Get<Toggle>("window_settings/switch_keepTop").isOn = _appConfig.PrimaryScreen.KeepTop;
     }
 
     private void refreshMenuSettings()
     {
-        var _fullScreen = this.Get<SwitchManager>("window_settings/switch_fullscreen").isOn;
+        var _fullScreen = this.Get<Toggle>("window_settings/switch_fullscreen").isOn;
         this.Get("window_settings/switch_caption").SetActive(!_fullScreen);
         this.Get("window_settings/text_caption").SetActive(!_fullScreen);
         this.Get("window_settings/switch_keepTop").SetActive(!_fullScreen);

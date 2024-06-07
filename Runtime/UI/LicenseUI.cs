@@ -2,7 +2,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UNIHper;
-using Michsky.MUIP;
 using TMPro;
 using DNHper;
 using System.Text.RegularExpressions;
@@ -147,10 +146,10 @@ public class LicenseUI : UIBase
                 licenseContent.Value = _;
             });
 
-        ButtonManager _btnActive = this.Get<ButtonManager>("btn_active");
+        Button _btnActive = this.Get<Button>("btn_active");
         licenseContent.Subscribe(_ =>
         {
-            _btnActive.Interactable(_.Length >= 64);
+            _btnActive.interactable = _.Length >= 64;
         });
 
         this.Get<TMP_InputField>("input_field/input_license").text = PlayerPrefs.GetString(
@@ -187,7 +186,7 @@ public class LicenseUI : UIBase
                 );
             });
 
-        this.Get<ButtonManager>("btn_close")
+        this.Get<Button>("btn_close")
             .OnClickAsObservable()
             .Subscribe(_ =>
             {
@@ -199,7 +198,7 @@ public class LicenseUI : UIBase
             this.Get("btn_close").SetActive(_valid);
             this.Get<TextMeshProUGUI>("text_license").text = LicenseText;
             this.Get<TextMeshProUGUI>("title").text = _valid ? "软件授权管理" : "软件需要授权";
-            this.Get<ButtonManager>("btn_active").SetText(_valid ? "重新授权" : "开始授权");
+            this.Get<TextMeshProUGUI>("btn_active/Text (TMP)").SetText(_valid ? "重新授权" : "请求授权");
         });
     }
 

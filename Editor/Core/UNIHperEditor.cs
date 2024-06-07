@@ -243,6 +243,7 @@ namespace UNIHper.Editor
 
             Debug.Log("<color=#00ff00>UNIHper framework initialized successfully</color>");
 
+            AddressableUtil.LoadOrCreateAddressableSettings();
             importTMPEssentialResourcesIfNotExists();
         }
 

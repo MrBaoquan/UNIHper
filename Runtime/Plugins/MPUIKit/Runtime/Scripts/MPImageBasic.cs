@@ -226,6 +226,10 @@ namespace MPUIKIT {
             set => Debug.LogWarning("Setting Material of MPImageBasic has no effect.");
         }
 
+        public override float preferredWidth => sprite == MPImageUtility.EmptySprite ? 0 : base.preferredWidth;
+        public override float preferredHeight => sprite == MPImageUtility.EmptySprite ? 0 : base.preferredHeight;
+
+
         protected override void OnEnable() {
             base.OnEnable();
             MPImageUtility.FixAdditionalShaderChannelsInCanvas(canvas);

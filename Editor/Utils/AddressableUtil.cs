@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class AddressableUtil
 {
-    static UnityEditor.AddressableAssets.Settings.AddressableAssetSettings addressableSettings()
+    public static UnityEditor.AddressableAssets.Settings.AddressableAssetSettings LoadOrCreateAddressableSettings()
     {
         if (!AddressableAssetSettingsDefaultObject.SettingsExists)
         {
@@ -29,7 +29,7 @@ public class AddressableUtil
 
     static bool isEntryExist()
     {
-        var settings = addressableSettings();
+        var settings = LoadOrCreateAddressableSettings();
         var _curDir = UNIEditorUtil.GetSelectedDirectory();
         string guid = AssetDatabase.AssetPathToGUID(_curDir);
         var entry = settings.FindAssetEntry(guid);
@@ -39,7 +39,7 @@ public class AddressableUtil
     [MenuItem("Assets/Add To Addressable System")]
     static void Add2Addressable()
     {
-        var settings = addressableSettings();
+        var settings = LoadOrCreateAddressableSettings();
         var _curDir = UNIEditorUtil.GetSelectedDirectory();
         string guid = AssetDatabase.AssetPathToGUID(_curDir);
 
@@ -74,7 +74,7 @@ public class AddressableUtil
     [MenuItem("Assets/Remove From Addressable System")]
     static void RemoveFromAddressable()
     {
-        var settings = addressableSettings();
+        var settings = LoadOrCreateAddressableSettings();
         var _curDir = UNIEditorUtil.GetSelectedDirectory();
         string guid = AssetDatabase.AssetPathToGUID(_curDir);
         settings.RemoveAssetEntry(guid, true);

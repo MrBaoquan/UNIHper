@@ -69,9 +69,9 @@ Shader "MPUI/Procedural Image"
         
         _ColorMask ("Color Mask", Float) = 15
         
-              /* //SOFTMASK_HANDLE_START
+                 /* //SOFTMASK_HANDLE_START
          [PerRendererData] _SoftMask ("Mask", 2D) = "white" {}
-              */ //SOFTMASK_HANDLE_END
+                 */ //SOFTMASK_HANDLE_END
         
         [Toggle(UNITY_UI_ALPHACLIP)] _UseUIAlphaClip ("Use Alpha Clip", Float) = 0
     }
@@ -107,9 +107,9 @@ Shader "MPUI/Procedural Image"
             #include "UnityCG.cginc"
             #include "UnityUI.cginc"
             #include "2D_SDF.cginc"
-                  /* //SOFTMASK_HANDLE_START
-			#include "Assets/SoftMask/Shaders/SoftMask.cginc" //SOFTMASK_INCLUDE_HANDLE
-                  */ //SOFTMASK_HANDLE_END
+                     /* //SOFTMASK_HANDLE_START
+			#include "Packages/com.olegknyazev.softmask/Assets/Shaders/Resources/SoftMask.cginc" //SOFTMASK_INCLUDE_HANDLE
+                     */ //SOFTMASK_HANDLE_END
             
             
             #pragma multi_compile_local _ UNITY_UI_CLIP_RECT
@@ -120,9 +120,9 @@ Shader "MPUI/Procedural Image"
             #pragma multi_compile_local _ STROKE OUTLINED OUTLINED_STROKE
             #pragma multi_compile_local _ GRADIENT_LINEAR GRADIENT_RADIAL GRADIENT_CORNER
 
-                  /* //SOFTMASK_HANDLE_START
+                     /* //SOFTMASK_HANDLE_START
             #pragma multi_compile _ SOFTMASK_SIMPLE
-                  */ //SOFTMASK_HANDLE_END
+                     */ //SOFTMASK_HANDLE_END
             
             struct appdata_t
             {
@@ -145,9 +145,9 @@ Shader "MPUI/Procedural Image"
                 float4 worldPosition : TEXCOORD3;
 
 
-                      /* //SOFTMASK_HANDLE_START
+                         /* //SOFTMASK_HANDLE_START
                 SOFTMASK_COORDS(4)
-                      */ //SOFTMASK_HANDLE_END
+                         */ //SOFTMASK_HANDLE_END
                 
                 UNITY_VERTEX_OUTPUT_STEREO
             };
@@ -568,13 +568,13 @@ Shader "MPUI/Procedural Image"
                 OUT.color = v.color * _Color;
 
 
-                      /* //SOFTMASK_HANDLE_START
+                         /* //SOFTMASK_HANDLE_START
                 SOFTMASK_CALCULATE_COORDS(OUT, v.vertex);
-                      */ //SOFTMASK_HANDLE_END
+                         */ //SOFTMASK_HANDLE_END
                 return OUT;
             }
             
-            fixed4 frag(v2f IN): SV_Target
+            half4 frag(v2f IN): SV_Target
             {
                 half4 color = IN.color;
                 half2 texcoord = IN.texcoord;
@@ -664,9 +664,9 @@ Shader "MPUI/Procedural Image"
                     #endif
                 #endif
 
-                      /* //SOFTMASK_HANDLE_START
+                         /* //SOFTMASK_HANDLE_START
                 color.a *= SOFTMASK_GET_MASK(IN);
-                      */ //SOFTMASK_HANDLE_END
+                         */ //SOFTMASK_HANDLE_END
                 
                 #ifdef UNITY_UI_CLIP_RECT
                     color.a *= UnityGet2DClipping(IN.worldPosition.xy, _ClipRect);
@@ -676,7 +676,7 @@ Shader "MPUI/Procedural Image"
                     clip(color.a - 0.001);
                 #endif
                 
-                return fixed4(color);
+                return half4(color);
             }
             ENDCG
             
