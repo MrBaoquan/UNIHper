@@ -25,6 +25,12 @@
 
 ### 版本更新日志
 
+
+v1.24.607
+- 移除AVPro Player极少可能用到的IOS TV平台依赖库
+- 移除 Modern UI Pack 组件
+- 调整Plugins层次结构
+
 v1.24.601
 - 修复LongTimeNoOperation安卓平台bug
 - 拓展Linq至DNHper
