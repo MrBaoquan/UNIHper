@@ -8,6 +8,8 @@ using DNHper;
 using UniRx;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.SceneManagement;
 
 namespace UNIHper
@@ -156,12 +158,45 @@ namespace UNIHper
             return _asset;
         }
 
-        // public IObservable<T> LoadAddessableAssetAsync<T>(string InResKey)
+        // TODO: 编辑器下和打包后获取的资源路径列表不一致， 现在存在多个资源重复加载情况，后续考虑优化
+        // private Task<T> ConvertToGeneric<T>(Task task, T result)
         // {
-        //     return Addressables
-        //         .LoadAssetAsync<T>(InResKey)
-        //         .Task.ToObservable()
-        //         .ObserveOnMainThread();
+        //     var tcs = new TaskCompletionSource<T>();
+
+        //     task.ContinueWith(t =>
+        //     {
+        //         if (t.IsFaulted)
+        //         {
+        //             tcs.TrySetException(t.Exception.InnerExceptions);
+        //         }
+        //         else if (t.IsCanceled)
+        //         {
+        //             tcs.TrySetCanceled();
+        //         }
+        //         else
+        //         {
+        //             tcs.TrySetResult(result);
+        //         }
+        //     });
+
+        //     return tcs.Task;
+        // }
+
+        // private IObservable<object> LoadAssetAsync(IResourceLocation location, Type type)
+        // {
+        //     var _method = typeof(Addressables)
+        //         .GetMethod("LoadAssetAsync", new Type[] { typeof(IResourceLocation) })
+        //         .MakeGenericMethod(new Type[] { type });
+
+        //     var _handle = _method.Invoke(null, new object[] { location });
+
+        //     var genericHandleType = typeof(AsyncOperationHandle<>).MakeGenericType(type);
+        //     Debug.LogWarning(genericHandleType);
+        //     var taskProperty = genericHandleType.GetProperty("Task");
+        //     Debug.LogWarning(taskProperty);
+
+        //     var task = (System.Threading.Tasks.Task)taskProperty.GetValue(_handle);
+        //     return ConvertToGeneric(task, type).ToObservable();
         // }
 
         /// <summary>
