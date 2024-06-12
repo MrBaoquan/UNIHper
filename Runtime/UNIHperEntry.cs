@@ -82,15 +82,18 @@ namespace UNIHper
             await ResourceManager.Instance.Initialize();
             // 3. 初始化 UI管理类
             await UIManager.Instance.Initialize();
+
             // 4. 初始化场景管理类
             await USceneManager.Instance.Initialize();
+
+            Framework.Instance.Initialize();
+
             // 5. 初始化Timer管理类
             await UTimerManager.Instance.Initialize();
             // 6. 初始化网络模块
             await UNetManager.Instance.Initialize();
             this.Initialize();
 
-            Framework.Instance.Initialize();
             isInitialized.Value = true;
         }
 

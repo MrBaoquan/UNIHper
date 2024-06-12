@@ -21,7 +21,6 @@ namespace UNIHper
 
         internal async Task Initialize()
         {
-            UNIHperLogger.Log("SceneManager Initializing ...");
             UIManager.Instance.OnEnterScene(SceneManager.GetActiveScene().name);
             SceneScriptManager.Instance.TriggerOnStart(SceneManager.GetActiveScene().name);
             Application.quitting += () =>

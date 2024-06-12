@@ -1,12 +1,8 @@
-﻿using System.Text.RegularExpressions;
-using System;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using DNHper;
 using UniRx;
@@ -26,6 +22,9 @@ namespace UNIHper
 
     public class ResourceManager : Singleton<ResourceManager>
     {
+        const string ASSET_BUDDLE_DRIVER = "AssetBundle";
+        const string ADDRESSABLE_DRIVER = "Addressable";
+        const string RESOURCES_DRIVER = "Resources";
         const string CUSTOM_RES_KEY = "__custom";
 
         // 自定义资源配置
@@ -49,32 +48,24 @@ namespace UNIHper
         /// <summary>
         ///  所有已加载资源实例 [Persistence,CUSTOM_RES_KEY,SCENE_NAME]
         /// </summary>
-        private Dictionary<string, Dictionary<string, UnityEngine.Object>> resources;
-
-        /// <summary>
-        /// Addressable 按标签分组的资源实例
-        /// </summary>
-        private readonly Dictionary<
-            string,
-            Dictionary<string, UnityEngine.Object>
-        > addressableLabelAssets = new();
+        private Dictionary<string, Dictionary<string, AssetItem>> resources;
 
         // 所有AB包实例
         private readonly Dictionary<string, Dictionary<string, AssetBundle>> bundles = new();
 
+        // 加载资源入口
         internal async Task Initialize()
         {
             UNIHperLogger.Log("ResourceManager Initializing ...");
-            this.ReadConfigData();
+            this.readConfigData();
             registerEvents();
-            resources = new Dictionary<string, Dictionary<string, UnityEngine.Object>>();
 
             resources = resourcesConfigData.Keys
                 .Select(
                     _key =>
-                        new KeyValuePair<string, Dictionary<string, UnityEngine.Object>>(
+                        new KeyValuePair<string, Dictionary<string, AssetItem>>(
                             _key,
-                            new Dictionary<string, UnityEngine.Object>()
+                            new Dictionary<string, AssetItem>()
                         )
                 )
                 .ToDictionary(_ => _.Key, _ => _.Value);
@@ -82,8 +73,10 @@ namespace UNIHper
             // 框架层持久性资源
             await loadResourceAssets(persistConfigData, "Persistence");
             UNIHperLogger.Log("load framework persistence assets finished");
+
             // 应用层持久性资源
             await this.LoadAssetByKey("Persistence");
+
             UNIHperLogger.Log("load application persistence assets finished");
             // 加载场景资源
             await this.LoadSceneResources();
@@ -130,17 +123,11 @@ namespace UNIHper
             this.UnLoadAssetByKey(InSceneName);
         }
 
-        /// <summary>
-        /// 获取资源名为[InResName]的资源
-        /// </summary>
-        /// <param name="InResName"></param>
-        /// <returns></returns>
-        public List<UnityEngine.Object> Get(string InResName)
-        {
-            var _resources = resources.Keys
+        internal Dictionary<string, AssetItem> allAssets =>
+            resources.Keys
                 .Where(
                     _key =>
-                        new List<string>()
+                        new List<string>
                         {
                             "Persistence",
                             getCurrentSceneName(),
@@ -148,135 +135,84 @@ namespace UNIHper
                         }.Contains(_key)
                 )
                 .Select(_key => resources[_key])
-                .SelectMany(_v => _v);
-            return _resources
-                .Where(_res => _res.Key.EndsWith($"_{InResName}"))
-                .Select(_res => _res.Value)
-                .ToList();
-        }
+                .SelectMany(_kv => _kv)
+                .ToDictionary(_kv => _kv.Key, _kv => _kv.Value);
 
         /// <summary>
-        /// 获取资源名为{InResName},类型为{InResType}的资源
+        /// 获取资源名为{assetName},类型为{T}的资源, assetName可以是资源路径(可以写进行部分匹配)
         /// </summary>
-        /// <param name="InResName"></param>
+        /// <param name="assetName"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public T Get<T>(string InResName)
+        public T Get<T>(string assetName)
             where T : UnityEngine.Object
         {
-            // 1. 从持久层资源查询
-            T _resource = GetPersistRes<T>(InResName);
-            if (_resource == null)
+            var _asset = getResource<T>(allAssets, assetName);
+            if (_asset == null)
             {
-                // 2. 从场景层资源查询
-                _resource = GetSceneRes<T>(InResName);
-            }
-
-            // 3. 从自定义资源查询(用户通过ResourceManager主动添加的资源)
-            if (_resource == null)
-            {
-                _resource = GetCustomRes<T>(InResName);
-            }
-
-            if (_resource == null)
-            {
-                Debug.LogWarning($"Resource not found: {InResName}");
+                Debug.LogWarning($"Resource not found: {assetName}");
                 return null;
             }
-            return _resource;
+            return _asset;
         }
 
-        public IObservable<T> LoadAddessableAssetAsync<T>(string InResKey)
-        {
-            return Addressables
-                .LoadAssetAsync<T>(InResKey)
-                .Task.ToObservable()
-                .ObserveOn(Scheduler.MainThread);
-        }
+        // public IObservable<T> LoadAddessableAssetAsync<T>(string InResKey)
+        // {
+        //     return Addressables
+        //         .LoadAssetAsync<T>(InResKey)
+        //         .Task.ToObservable()
+        //         .ObserveOnMainThread();
+        // }
 
         /// <summary>
         /// 加载addressable资源
         /// </summary>
-        /// <param name="InResKey"></param>
+        /// <param name="labelName"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        private IObservable<IList<T>> LoadAddressableAssetsAsync<T>(string InResKey)
-        {
-            return Addressables
-                .LoadAssetsAsync<T>(InResKey, null)
-                .Task.ToObservable()
-                .ObserveOn(Scheduler.MainThread);
-        }
-
-        /// <summary>
-        /// 资源转为基类Object
-        /// </summary>
-        /// <param name="InResKey"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        private IObservable<IList<UnityEngine.Object>> loadAddressableAssetsAsync<T>(
-            string InResKey
+        private IObservable<IEnumerable<AssetItem>> LoadAddressableAssetsByLabel<T>(
+            string labelName
         )
         {
-            return LoadAddressableAssetsAsync<T>(InResKey)
-                .Select(_item => _item.Select(_ => _ as UnityEngine.Object).ToList());
+            return Addressables
+                .LoadResourceLocationsAsync(labelName, typeof(T))
+                .Task.ToObservable()
+                .SubscribeOnMainThread()
+                .SelectMany(locations =>
+                {
+                    return locations
+                        .ToObservable()
+                        // 加载资源并返回资源和位置
+                        .SelectMany(
+                            location =>
+                                Addressables.LoadAssetAsync<T>(location).Task.ToObservable(),
+                            (location, asset) => new { location.PrimaryKey, asset }
+                        )
+                        .ToList()
+                        .Select(
+                            loadedAssets =>
+                                loadedAssets
+                                    .AsEnumerable()
+                                    .Select(
+                                        x =>
+                                            new AssetItem
+                                            {
+                                                asset = x.asset as UnityEngine.Object,
+                                                path = x.PrimaryKey,
+                                                asssetDriver = AsssetDriver.Addressable,
+                                                label = labelName
+                                            }
+                                    )
+                        );
+                })
+                .SubscribeOnMainThread();
         }
 
-        /// <summary>
-        /// 在指定的{InSceneName}场景中获取资源名为{InResName},类型为{InResType}的资源
-        /// </summary>
-        /// <param name="InName"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public T GetSceneRes<T>(string InName)
+        public bool Exists<T>(string assetName)
             where T : UnityEngine.Object
         {
-            string _sceneName = getCurrentSceneName();
-            Dictionary<string, UnityEngine.Object> _resources;
-            if (!resources.TryGetValue(_sceneName, out _resources))
-            {
-                return null;
-            }
-
-            return getResource<T>(_resources, InName);
-        }
-
-        /// <summary>
-        /// 获取持久区资源名为{InName},类型为T的资源
-        /// </summary>
-        /// <param name="InName"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public T GetPersistRes<T>(string InName)
-            where T : UnityEngine.Object
-        {
-            Dictionary<string, UnityEngine.Object> _resources;
-            if (!resources.TryGetValue("Persistence", out _resources))
-            {
-                Debug.LogWarning("There is no Persistence assets.");
-                return null;
-            }
-
-            return getResource<T>(_resources, InName);
-        }
-
-        public T GetCustomRes<T>(string InName)
-            where T : UnityEngine.Object
-        {
-            if (!resources.ContainsKey(CUSTOM_RES_KEY))
-                return null;
-            return getResource<T>(resources[CUSTOM_RES_KEY], InName);
-        }
-
-        public bool Exists<T>(string InResKey)
-            where T : UnityEngine.Object
-        {
-            foreach (var _res in resources)
-            {
-                if (_res.Value.ContainsKey($"{typeof(T).FullName}_{InResKey}"))
-                    return true;
-            }
-            return false;
+            string _key = string.Format("{0}_{1}", assetName, typeof(T).FullName);
+            return allAssets.Keys.ToList().Exists(_assetKey => _assetKey.EndsWith(_key));
         }
 
         /// <summary>
@@ -289,31 +225,11 @@ namespace UNIHper
             loadABAssets(
                 new List<ResourceItem>
                 {
-                    new ResourceItem { path = InPath, type = "AssetBundle" }
+                    new ResourceItem { path = InPath, type = ASSET_BUDDLE_DRIVER }
                 },
                 CUSTOM_RES_KEY
             );
             return bundles[CUSTOM_RES_KEY][getABFullPath(InPath)];
-        }
-
-        // 按标签加载Addressable资源
-        public async Task<IEnumerable<UnityEngine.Object>> AppendAddressableLabelAssets<T>(
-            string labelName
-        )
-            where T : UnityEngine.Object
-        {
-            var _labelKey = buildAALabelKey(labelName, typeof(T));
-            if (addressableLabelAssets.ContainsKey(_labelKey))
-                return addressableLabelAssets[_labelKey].Values;
-
-            var _assets = await loadAddressableAssetsAsync<T>(labelName);
-            appendResources(_assets, labelName);
-            addressableLabelAssets.Add(
-                _labelKey,
-                _assets.Cast<UnityEngine.Object>().ToDictionary(_ => buildResKey(_), _ => _)
-            );
-
-            return _assets;
         }
 
         /// <summary>
@@ -325,35 +241,10 @@ namespace UNIHper
         public List<T> GetLabelAssets<T>(string labelName)
             where T : UnityEngine.Object
         {
-            var _labelKey = buildAALabelKey(labelName, typeof(T));
-            if (!addressableLabelAssets.ContainsKey(_labelKey))
-            {
-                UNIHperLogger.LogWarning($"can not find label assets with key: {labelName}");
-                return null;
-            }
-
-            return addressableLabelAssets[_labelKey].Values.OfType<T>().ToList();
-        }
-
-        public T GetLabelAsset<T>(string labelName, string resName)
-            where T : UnityEngine.Object
-        {
-            var _labelKey = buildAALabelKey(labelName, typeof(T));
-            if (!addressableLabelAssets.ContainsKey(_labelKey))
-            {
-                Debug.LogWarning($"label not found: {_labelKey}");
-                return null;
-            }
-            var _labelAssets = addressableLabelAssets[_labelKey];
-            string _key = string.Format("{0}_{1}", typeof(T).FullName, resName);
-
-            if (_labelAssets.ContainsKey(_key) == false)
-            {
-                Debug.LogWarning($"resource not found: {_key}");
-                return null;
-            }
-
-            return _labelAssets[_key] as T;
+            return allAssets
+                .Where(_ => _.Value.label == labelName)
+                .Select(_ => _.Value.asset as T)
+                .ToList();
         }
 
         public async Task<IEnumerable<AudioClip>> AppendAudioClips(IEnumerable<string> AudioPaths)
@@ -502,27 +393,30 @@ namespace UNIHper
 
         private void RefreshResources()
         {
-            resources = resources
-                .Select(_ =>
-                {
-                    return new KeyValuePair<string, Dictionary<string, UnityEngine.Object>>(
-                        _.Key,
-                        _.Value
-                            .Where(_1 => _1.Value != null)
-                            .ToDictionary(_1 => _1.Key, _2 => _2.Value)
-                    );
-                })
-                .ToDictionary(_ => _.Key, _ => _.Value);
+            // resources = resources
+            //     .Select(_ =>
+            //     {
+            //         return new KeyValuePair<string, Dictionary<string, UnityEngine.Object>>(
+            //             _.Key,
+            //             _.Value
+            //                 .Where(_1 => _1.Value != null)
+            //                 .ToDictionary(_1 => _1.Key, _2 => _2.Value)
+            //         );
+            //     })
+            //     .ToDictionary(_ => _.Key, _ => _.Value);
         }
 
-        private T getResource<T>(Dictionary<string, UnityEngine.Object> InResources, string InName)
+        private T getResource<T>(Dictionary<string, AssetItem> assets, string assetPath)
             where T : UnityEngine.Object
         {
-            string _key = string.Format("{0}_{1}", typeof(T).FullName, InName);
+            assetPath = assetPath.ToForwardSlash();
+
+            string _key = string.Format("{0}_{1}", assetPath, typeof(T).FullName);
+            // 根据InResources的Key值进行正则匹配，结尾匹配InName即可
+            string _findKey = assets.Keys.Where(_resKey => _resKey.EndsWith(_key)).FirstOrDefault();
+
             UNIHperLogger.Log($"Try to get resource with key: {_key}");
-            if (!InResources.ContainsKey(_key))
-                return default(T);
-            return InResources[_key] as T;
+            return _findKey == null ? null : assets[_findKey].asset as T;
         }
 
         public void AddConfig(string configPath)
@@ -550,7 +444,7 @@ namespace UNIHper
             }
         }
 
-        private void ReadConfigData()
+        private void readConfigData()
         {
             string _resPath = UNIHperSettings.ResourceConfigPath;
             TextAsset _resAsset = Resources.Load<TextAsset>(_resPath);
@@ -567,7 +461,9 @@ namespace UNIHper
                 {
                     return new KeyValuePair<string, List<ResourceItem>>(
                         _configNode.Key,
-                        _configNode.Value.Where(_resItem => _resItem.driver == "Resources").ToList()
+                        _configNode.Value
+                            .Where(_resItem => _resItem.driver == RESOURCES_DRIVER)
+                            .ToList()
                     );
                 })
                 .ToDictionary(_ => _.Key, _ => _.Value);
@@ -579,19 +475,20 @@ namespace UNIHper
                     return new KeyValuePair<string, List<ResourceItem>>(
                         _configNode.Key,
                         _configNode.Value
-                            .Where(_resItem => _resItem.driver == "AssetBundle")
+                            .Where(_resItem => _resItem.driver == ASSET_BUDDLE_DRIVER)
                             .ToList()
                     );
                 })
                 .ToDictionary(_ => _.Key, _ => _.Value);
 
+            // 应用层Addressable资源加载配置项
             addressableConfigData = _appConfigData
                 .Select(_configNode =>
                 {
                     return new KeyValuePair<string, List<ResourceItem>>(
                         _configNode.Key,
                         _configNode.Value
-                            .Where(_resItem => _resItem.driver == "Addressable")
+                            .Where(_resItem => _resItem.driver == ADDRESSABLE_DRIVER)
                             .ToList()
                     );
                 })
@@ -603,7 +500,9 @@ namespace UNIHper
             var _persistConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<
                 List<ResourceItem>
             >(_persistAsset.text);
-            persistConfigData = _persistConfigData.Where(_ => _.driver == "Resources").ToList();
+            persistConfigData = _persistConfigData
+                .Where(_ => _.driver == RESOURCES_DRIVER)
+                .ToList();
 
             // 框架层AB包
             var _persistABList = _persistConfigData.Except(persistConfigData).ToList();
@@ -662,7 +561,18 @@ namespace UNIHper
                     UnityEngine.Object[] _resources = await Task.FromResult(
                         Resources.LoadAll(_item.path, _T)
                     );
-                    appendResources(_resources, InResID);
+                    var _assetItems = _resources.Select(
+                        _res =>
+                            new AssetItem
+                            {
+                                path = System.IO.Path
+                                    .Combine("Resources", _item.path, _res.name)
+                                    .ToForwardSlash(),
+                                asset = _res,
+                                asssetDriver = AsssetDriver.Resources
+                            }
+                    );
+                    appendResources(_assetItems, InResID);
                 }
                 catch (Exception e)
                 {
@@ -689,37 +599,17 @@ namespace UNIHper
                 {
                     var _T = Type.GetType("UnityEngine." + _resItem.type + ",UnityEngine");
 
-                    var _labelKey = buildAALabelKey(_resItem.label, _T);
-                    UNIHperLogger.Log($"loading addressable assets with label: {_labelKey}");
                     var _assets = await (
                         GetType()
                             .GetMethod(
-                                "loadAddressableAssetsAsync",
+                                "LoadAddressableAssetsByLabel",
                                 BindingFlags.NonPublic | BindingFlags.Instance
                             )
                             .MakeGenericMethod(new Type[] { _T })
                             .Invoke(this, new object[] { _resItem.label })
-                        as IObservable<List<UnityEngine.Object>>
+                        as IObservable<IEnumerable<AssetItem>>
                     );
-                    if (!addressableLabelAssets.ContainsKey(_labelKey))
-                    {
-                        Dictionary<string, UnityEngine.Object> _assetsDict = new();
-                        _assets.ForEach(_asset =>
-                        {
-                            string _key = buildResKey(_asset);
-                            if (!_assetsDict.ContainsKey(_key))
-                            {
-                                _assetsDict.Add(_key, _asset);
-                            }
-                        });
-
-                        addressableLabelAssets.Add(
-                            buildAALabelKey(_resItem.label, _T),
-                            _assetsDict
-                        );
-                    }
-
-                    appendResources(_assets.ToArray(), InResID);
+                    appendResources(_assets, InResID);
                     UNIHperLogger.Log($"load with label [{_resItem.label}] completed");
                 }
                 catch (Exception _ex)
@@ -762,24 +652,47 @@ namespace UNIHper
             return Path.Combine(Application.streamingAssetsPath, "AssetBundles", InPath);
         }
 
+        internal enum AsssetDriver
+        {
+            Resources,
+            AssetBundle,
+            Addressable
+        }
+
+        internal class AssetItem
+        {
+            public AsssetDriver asssetDriver;
+            public string label = string.Empty;
+            public string path;
+            public UnityEngine.Object asset;
+        }
+
         private void appendResources(IEnumerable<UnityEngine.Object> InResources, string InResID)
         {
-            if (!resources.ContainsKey(InResID))
-                resources.Add(InResID, new Dictionary<string, UnityEngine.Object>());
+            appendResources(
+                InResources.Select(_ => new AssetItem { path = _.name, asset = _ }),
+                InResID
+            );
+        }
 
-            Action<UnityEngine.Object> _appendResource = (_resource) =>
+        private void appendResources(IEnumerable<AssetItem> assetItems, string InResID)
+        {
+            if (!resources.ContainsKey(InResID))
+                resources.Add(InResID, new Dictionary<string, AssetItem>());
+
+            Action<AssetItem> _appendResource = (_resItem) =>
             {
-                string _key = buildResKey(_resource);
+                string _key = buildResKey(_resItem.asset, _resItem.path);
                 if (resources[InResID].ContainsKey(_key))
                 {
                     UNIHperLogger.LogWarning($"resource key can not duplicate, error key: {_key}");
                     return;
                 }
                 UNIHperLogger.Log($"{InResID} add asset {_key}");
-                resources[InResID].Add(_key, _resource);
+                resources[InResID].Add(_key, _resItem);
             };
 
-            foreach (var _resource in InResources.Where(_ => _ != null))
+            foreach (var _resource in assetItems.Where(_ => _.asset != null))
             {
                 // TODO: 子资源的加载处理
                 _appendResource(_resource);
@@ -797,7 +710,23 @@ namespace UNIHper
             }
         }
 
-        private string buildResKey(UnityEngine.Object resObj)
+        private static string removeFileExtension(string path)
+        {
+            // 获取文件名和目录
+            string directory = Path.GetDirectoryName(path);
+            string filenameWithoutExtension = Path.GetFileNameWithoutExtension(path);
+
+            // 如果没有目录信息，只返回去掉扩展名的文件名
+            if (string.IsNullOrEmpty(directory))
+            {
+                return filenameWithoutExtension;
+            }
+
+            // 否则返回包含目录和去掉扩展名的文件名的完整路径
+            return Path.Combine(directory, filenameWithoutExtension).ToForwardSlash();
+        }
+
+        private string buildResKey(UnityEngine.Object resObj, string path = "")
         {
             var _resTypeName = resObj.GetType().FullName;
 #if UNITY_EDITOR
@@ -806,12 +735,8 @@ namespace UNIHper
                 _resTypeName = typeof(UnityEngine.RuntimeAnimatorController).FullName;
             }
 #endif
-            return string.Format("{0}_{1}", _resTypeName, resObj.name);
-        }
 
-        private string buildAALabelKey(string label, Type resType)
-        {
-            return string.Format("{0}_{1}", resType.FullName, label);
+            return string.Format("{0}_{1}", removeFileExtension(path), _resTypeName);
         }
 
         private string getCurrentSceneName()

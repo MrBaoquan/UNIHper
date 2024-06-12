@@ -19,7 +19,6 @@ namespace UNIHper
                 Managements.Config.Get<AppConfig>().LongTimeNoOperationTimeout
             );
             enableConsolePanel();
-            Debug.Log("UNIHper.Framework.Initialized");
         }
 
         ReactiveProperty<bool> debugModeEnabled = new ReactiveProperty<bool>(false);
@@ -44,7 +43,6 @@ namespace UNIHper
 
             // debugModeEnabled.SetValueAndForceNotify(false);
             var _rootCanvas = Managements.UI.RootCanvas();
-#if UNITY_ANDROID
             var _tapObject = new GameObject("__debugMode_trigger");
             _tapObject.transform.parent = _rootCanvas.transform;
             _tapObject.transform.SetAsLastSibling();
@@ -70,7 +68,6 @@ namespace UNIHper
             );
             FingersScript.Instance.AddGesture(_tapGesture);
             FingersScript.Instance.ShowTouches = false;
-#endif
         }
 
         private void queryShortcutEvents()
