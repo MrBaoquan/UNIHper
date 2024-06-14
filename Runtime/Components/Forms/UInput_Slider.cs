@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Globalization;
 using DNHper;
+using TMPro;
 using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
@@ -21,8 +19,8 @@ namespace UNIHper
             set { syncValue(value); }
         }
 
-        private Text textTitle;
-        private InputField inputValue;
+        private TextMeshProUGUI textTitle;
+        private TMP_InputField inputValue;
         private Slider sliderValue;
         private Slider SliderValue
         {
@@ -40,12 +38,10 @@ namespace UNIHper
 
         public IObservable<float> OnValueChangedAsObservable()
         {
-            return Observable
-                .FromEvent<float>(
-                    _action => onValueChanged += _action,
-                    _action => onValueChanged -= _action
-                )
-                .ThrottleFrame(1);
+            return Observable.FromEvent<float>(
+                _action => onValueChanged += _action,
+                _action => onValueChanged -= _action
+            );
         }
 
         private void OnValidate()
@@ -60,8 +56,8 @@ namespace UNIHper
 
         void BuildRefs()
         {
-            textTitle = this.Get<Text>("text_title");
-            inputValue = this.Get<InputField>("input_value");
+            textTitle = this.Get<TextMeshProUGUI>("text_title");
+            inputValue = this.Get<TMP_InputField>("input_value");
             sliderValue = this.Get<Slider>("slider_value");
         }
 
@@ -70,8 +66,8 @@ namespace UNIHper
         {
             BuildRefs();
 
-            inputValue
-                .OnValueChangedAsObservable()
+            inputValue.onValueChanged
+                .AsObservable()
                 .Subscribe(_ =>
                 {
                     float _value = _.Parse2Float();
