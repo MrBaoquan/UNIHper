@@ -19,6 +19,11 @@ namespace UNIHper
         public UIType Type => __Type;
         public string Key => __UIKey;
 
+        /// <summary>
+        /// 跟随UI显示/隐藏的Disposable集合
+        /// </summary>
+        public CompositeDisposable LifeCycleDisposables { get; private set; } = null;
+
         private UnityEvent onShowingEvent = new UnityEvent();
         private UnityEvent onShownEvent = new UnityEvent();
 
@@ -112,6 +117,9 @@ namespace UNIHper
         {
             clearShowOrHideCancellationTokenSource();
 
+            LifeCycleDisposables?.Dispose();
+            LifeCycleDisposables = new CompositeDisposable();
+
             _status = UIStatus.Showing;
             this.OnShowing();
             onShowingEvent.Invoke();
@@ -162,6 +170,7 @@ namespace UNIHper
             this.gameObject.SetActive(false);
             this.OnHidden();
             onHiddenEvent.Invoke();
+            LifeCycleDisposables?.Dispose();
         }
 
         protected async virtual Task handleShowAction(CancellationToken cancellationToken)
