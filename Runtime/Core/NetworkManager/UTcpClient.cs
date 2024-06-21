@@ -5,7 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using UniRx;
 
-namespace UNIHper
+namespace UNIHper.Network
 {
     public class UTcpClient : USocket
     {

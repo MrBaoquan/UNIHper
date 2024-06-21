@@ -25,8 +25,9 @@
 
 ### 版本更新日志
 
-未发布
+v1.24.621
 - UI增加LifeCycleDisposables变量, 跟随UI显示/隐藏自动释放
+- 修复与Sentis包Google.ProtoBuf包冲突问题
 
 
 v1.24.614

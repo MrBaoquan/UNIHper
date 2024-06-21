@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using UniRx;
 
-namespace UNIHper
+namespace UNIHper.Network
 {
     public class UNetMsgReceiver
     {

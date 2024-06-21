@@ -5,7 +5,7 @@ using System.Net.Sockets;
 using System.Threading;
 using UniRx;
 
-namespace UNIHper
+namespace UNIHper.Network
 {
     public class UUdpClient : USocket
     {

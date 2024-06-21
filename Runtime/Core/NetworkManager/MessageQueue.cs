@@ -1,10 +1,6 @@
-using System.Net.Sockets;
 using System.Collections.Generic;
-using System.Collections;
-using UnityEngine;
-using Google.Protobuf;
 
-namespace UNIHper
+namespace UNIHper.Network
 {
     public class UMessage : UEvent
     {

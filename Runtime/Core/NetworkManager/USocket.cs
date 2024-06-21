@@ -5,7 +5,7 @@ using System.Net.Sockets;
 using UniRx;
 using UnityEngine.Events;
 
-namespace UNIHper
+namespace UNIHper.Network
 {
     public class UNetConnectedEvent : UEvent
     {

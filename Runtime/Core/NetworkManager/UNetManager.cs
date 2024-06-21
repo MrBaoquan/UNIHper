@@ -3,10 +3,9 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using DNHper;
-using Google.Protobuf;
 using UniRx;
 
-namespace UNIHper
+namespace UNIHper.Network
 {
     public class UNetManager : Singleton<UNetManager>
     {
@@ -208,12 +207,6 @@ namespace UNIHper
             }
             ;
             allTcpClients[InKey].Send2Server(InData);
-        }
-
-        public void Send2TcpServer(IMessage InMessage, string InKey = "")
-        {
-            byte[] _data = ProtoMessage.PackageMessage(InMessage);
-            Send2TcpServer(_data, InKey);
         }
 
         public void Send2TcpClient(byte[] InData, string InLocalKey = "", string InRemoteKey = "")
