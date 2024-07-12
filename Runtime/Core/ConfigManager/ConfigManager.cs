@@ -103,7 +103,7 @@ namespace UNIHper
                     _configDir,
                     _configClass.Name + this.suffix(_driverMode)
                 );
-                if (!File.Exists(_path) || !this.checkIfXMLRestoreable(_path))
+                if (!File.Exists(_path))
                 {
                     _configInstance.filePath = _path;
                     _configInstance.driver = _driverMode;
@@ -154,7 +154,7 @@ namespace UNIHper
 
             var _path = _configInstance.FilePath;
             var _driver = _configInstance.Driver;
-            if (!File.Exists(_path) || !this.checkIfXMLRestoreable(_path))
+            if (!File.Exists(_path))
             {
                 _configInstance.filePath = _path;
                 _configInstance.driver = _driver;

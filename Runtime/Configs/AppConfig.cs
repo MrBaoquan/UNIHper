@@ -12,22 +12,22 @@ namespace UNIHper
 {
     public class ScreenConfig
     {
-        [XmlAttribute()]
+        [XmlAttribute]
         public bool Activate = false;
 
-        [XmlAttribute()]
+        [XmlAttribute]
         public int PosX = 0;
 
-        [XmlAttribute()]
+        [XmlAttribute]
         public int PosY = 0;
 
-        [XmlAttribute()]
+        [XmlAttribute]
         public int Width = -1;
 
-        [XmlAttribute()]
+        [XmlAttribute]
         public int Height = -1;
 
-        [XmlAttribute()]
+        [XmlAttribute]
         public FullScreenMode Mode = FullScreenMode.FullScreenWindow;
 
         [DefaultValueAttribute(false)]
@@ -95,6 +95,7 @@ namespace UNIHper
         }
     }
 
+    [SerializedAt(AppPath.StreamingDir)]
     public class AppConfig : UConfig
     {
         protected override string Comment()
