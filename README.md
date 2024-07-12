@@ -24,6 +24,9 @@
 
 
 ### 版本更新日志
+v1.24.712
+- 修复配置文件系统bug
+- 更新dotween
 
 v1.24.621
 - UI增加LifeCycleDisposables变量, 跟随UI显示/隐藏自动释放
