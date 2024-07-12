@@ -63,7 +63,7 @@ namespace UNIHper
         }
     }
 
-    [SerializedAt(AppPath.PersistentDir, Priority = -1), SerializeWith(ConfigDriver.XML)]
+    [SerializedAt(AppPath.StreamingDir, Priority = -1), SerializeWith(ConfigDriver.XML)]
     public class UConfig
     {
         [XmlIgnore, JsonIgnore]

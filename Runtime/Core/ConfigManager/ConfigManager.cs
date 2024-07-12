@@ -381,11 +381,5 @@ namespace UNIHper
                 return false;
             }
         }
-
-        private bool checkIfXMLRestoreable(string filePath)
-        {
-            var _backupFilePath = this.getBackupFilePath(filePath);
-            return File.Exists(_backupFilePath) && checkIfXMLValid(_backupFilePath);
-        }
     }
 }
