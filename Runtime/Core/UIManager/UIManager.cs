@@ -602,10 +602,20 @@ namespace UNIHper
         {
             if (!m_uiRootLayoutDic.ContainsKey(canvasKey))
             {
+#if UNITY_2023_1_OR_NEWER
+                var _canvas = GameObject
+                    .FindObjectsByType<Canvas>(
+                        FindObjectsInactive.Include,
+                        FindObjectsSortMode.None
+                    )
+                    .Where(_ => _.gameObject.name == canvasKey)
+                    .FirstOrDefault();
+#else
                 var _canvas = GameObject
                     .FindObjectsOfType<Canvas>(true)
                     .Where(_ => _.gameObject.name == canvasKey)
                     .FirstOrDefault();
+#endif
                 if (_canvas == null)
                 {
                     var _uiLayoutGO = GameObject.Instantiate(

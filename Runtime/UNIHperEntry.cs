@@ -17,7 +17,12 @@ namespace UNIHper
             if (!UNIHperSettings.AutoInitIfNotStarted)
                 return;
 
+#if UNITY_2023_1_OR_NEWER
+            var _entry = GameObject.FindFirstObjectByType<UNIHperEntry>();
+#else
             var _entry = GameObject.FindObjectOfType<UNIHperEntry>();
+#endif
+
             if (_entry is not null)
                 return;
 
@@ -66,8 +71,11 @@ namespace UNIHper
             await _audioManager.AddComponent<UAudioManager>().Initialize();
 
             AssemblyConfig.Refresh();
-
+#if UNITY_2023_1_OR_NEWER
+            var _eventSystem = UnityEngine.Object.FindFirstObjectByType<EventSystem>();
+#else
             var _eventSystem = UnityEngine.Object.FindObjectOfType<EventSystem>();
+#endif
             if (
                 _eventSystem is null || !_eventSystem.gameObject.activeSelf || !_eventSystem.enabled
             )

@@ -26,7 +26,11 @@ namespace UNIHper
             {
                 if (instance == null)
                 {
+#if UNITY_2023_1_OR_NEWER
+                    instance = FindFirstObjectByType<T>(FindObjectsInactive.Include);
+#else
                     instance = FindObjectOfType(typeof(T), true) as T;
+#endif
                     if (instance == null)
                     {
                         var go = new GameObject(typeof(T).Name);

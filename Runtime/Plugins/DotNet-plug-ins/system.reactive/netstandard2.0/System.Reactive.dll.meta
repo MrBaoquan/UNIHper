@@ -6,7 +6,7 @@ PluginImporter:
   iconMap: {}
   executionOrder: {}
   defineConstraints:
-  - NETSTANDARD2_1
+  - '!UNITY_2022_1||NETSTANDARD'
   isPreloaded: 0
   isOverridable: 0
   isExplicitlyReferenced: 0
@@ -29,6 +29,7 @@ PluginImporter:
     second:
       enabled: 1
       settings:
+        AndroidSharedLibraryType: Executable
         CPU: ARMv7
   - first:
       Any: 
