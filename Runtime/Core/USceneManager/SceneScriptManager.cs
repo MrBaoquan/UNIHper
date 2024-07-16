@@ -2,12 +2,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using DNHper;
-using UniRx;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace UNIHper
 {
+    using UniRx;
+
     public class SceneScriptManager : Singleton<SceneScriptManager>
     {
         internal class SceneScriptData

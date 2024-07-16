@@ -1,14 +1,11 @@
-#if NET_STANDARD_2_1
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using DNHper;
-using UniRx;
-using UnityEngine;
 
 namespace UNIHper
 {
+    using UniRx;
+
     public class SPMessage : UEvent
     {
         public byte[] RawData = null;
@@ -55,4 +52,3 @@ namespace UNIHper
         }
     }
 }
-#endif

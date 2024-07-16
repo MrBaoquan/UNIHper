@@ -474,6 +474,8 @@
     </member>
     <member name="P:System.IO.Ports.SerialPort.IsOpen">
       <summary>Gets a value indicating the open or closed status of the <see cref="T:System.IO.Ports.SerialPort" /> object.</summary>
+      <exception cref="T:System.ArgumentNullException">The <see cref="P:System.IO.Ports.SerialPort.IsOpen" /> value passed is <see langword="null" />.</exception>
+      <exception cref="T:System.ArgumentException">The <see cref="P:System.IO.Ports.SerialPort.IsOpen" /> value passed is an empty string ("").</exception>
       <returns>
         <see langword="true" /> if the serial port is open; otherwise, <see langword="false" />. The default is <see langword="false" />.</returns>
     </member>

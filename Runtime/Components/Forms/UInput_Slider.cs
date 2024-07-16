@@ -1,12 +1,13 @@
 ﻿using System;
 using DNHper;
 using TMPro;
-using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace UNIHper
 {
+    using UniRx;
+
     public class UInput_Slider : MonoBehaviour
     {
         public string title = "标题";

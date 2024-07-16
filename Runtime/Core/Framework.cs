@@ -1,5 +1,4 @@
 using UnityEngine;
-using UniRx;
 using DNHper;
 using System;
 using DigitalRubyShared;
@@ -11,6 +10,8 @@ using UnityEngine.InputSystem;
 
 namespace UNIHper
 {
+    using UniRx;
+
     public class Framework : Singleton<Framework>
     {
         internal void Initialize()

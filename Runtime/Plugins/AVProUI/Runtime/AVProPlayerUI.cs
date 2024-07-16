@@ -5,8 +5,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UNIHper;
-using UniRx;
-using UniRx.Triggers;
 using DG.Tweening;
 using RenderHeads.Media.AVProVideo;
 using RenderHeads.Media.AVProVideo.Demos.UI;
@@ -16,6 +14,9 @@ using UnityEngine.InputSystem;
 
 namespace AVProUI
 {
+    using UniRx;
+    using UniRx.Triggers;
+
     [RequireComponent(typeof(AVProPlayer)), RequireComponent(typeof(AudioOutput))]
     public class AVProPlayerUI : MonoBehaviour
     {

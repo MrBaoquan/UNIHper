@@ -1,6 +1,4 @@
-#if NET_STANDARD_2_1
 using System.Collections.Generic;
-using System.IO.Ports;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,10 +6,10 @@ namespace UNIHper
 {
     public abstract class USPMsgReceiver
     {
-        protected SerialPort serialPort = null;
+        protected System.IO.Ports.SerialPort serialPort = null;
         private Queue<SPMessage> messages = null;
 
-        public void Prepare(SerialPort InSerialPort, Queue<SPMessage> InMessages)
+        public void Prepare(System.IO.Ports.SerialPort InSerialPort, Queue<SPMessage> InMessages)
         {
             serialPort = InSerialPort;
             messages = InMessages;
@@ -53,4 +51,3 @@ namespace UNIHper
         }
     }
 }
-#endif

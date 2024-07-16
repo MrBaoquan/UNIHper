@@ -6,10 +6,11 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using UniRx;
 
 namespace UNIHper.Network
 {
+    using UniRx;
+
     public class UTcpServer : USocket
     {
         private Socket socket;

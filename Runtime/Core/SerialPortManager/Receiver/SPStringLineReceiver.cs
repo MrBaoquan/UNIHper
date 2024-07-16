@@ -1,4 +1,3 @@
-#if NET_STANDARD_2_1
 using System.Text;
 
 namespace UNIHper
@@ -32,5 +31,3 @@ namespace UNIHper
         }
     }
 }
-
-#endif

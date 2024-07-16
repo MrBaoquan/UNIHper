@@ -24,6 +24,9 @@
 
 
 ### 版本更新日志
+v1.24.716-beta
+- 兼容Unity .NET Framework
+
 v1.24.712
 - 修复配置文件系统bug
 - 更新dotween

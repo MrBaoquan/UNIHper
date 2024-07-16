@@ -3,12 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace UNIHper
 {
+    using UniRx;
+
     public class FileDialog : UIBase
     {
         enum DialogType

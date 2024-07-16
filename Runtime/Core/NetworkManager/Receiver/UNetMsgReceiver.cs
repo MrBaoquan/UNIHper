@@ -3,10 +3,11 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using UniRx;
 
 namespace UNIHper.Network
 {
+    using UniRx;
+
     public class UNetMsgReceiver
     {
         public bool Connected

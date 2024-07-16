@@ -1,10 +1,11 @@
 using System;
-using UniRx;
-using UniRx.Triggers;
 using UnityEngine;
 
 namespace UNIHper
 {
+    using UniRx;
+    using UniRx.Triggers;
+
     public abstract partial class UIBase
     {
         public void EnableDragMove()

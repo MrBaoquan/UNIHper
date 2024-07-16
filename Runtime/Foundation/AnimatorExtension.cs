@@ -1,10 +1,11 @@
 using System;
 using System.Linq;
-using UniRx;
 using UnityEngine;
 
 namespace UNIHper
 {
+    using UniRx;
+
     public static class AnimatorExtension
     {
         public static AnimationClip GetClip(this Animator animator, string InName)

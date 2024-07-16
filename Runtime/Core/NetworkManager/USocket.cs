@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using UniRx;
+
 using UnityEngine.Events;
 
 namespace UNIHper.Network
 {
+    using UniRx;
+
     public class UNetConnectedEvent : UEvent
     {
         public string RemoteIP = string.Empty;

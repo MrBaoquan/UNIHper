@@ -4,12 +4,13 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using DNHper;
-using UniRx;
 using UnityEngine;
 using UnityEngine.Networking;
 
 namespace UNIHper.Network
 {
+    using UniRx;
+
     public class HttpResponse
     {
         public UnityWebRequest WebRequest;

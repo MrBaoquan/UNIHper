@@ -1,11 +1,12 @@
 using System;
 using System.Linq;
-using UniRx;
 using UnityEngine;
 using UnityEngine.Events;
 
 namespace UNIHper
 {
+    using UniRx;
+
     public class UWebCamTexture : MonoBehaviour
     {
         private UnityEvent<WebCamTexture> onCapture = new UnityEvent<WebCamTexture>();

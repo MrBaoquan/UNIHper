@@ -3,10 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using UniRx;
 
 namespace UNIHper.Network
 {
+    using UniRx;
+
     public class UTcpClient : USocket
     {
         public bool Connected

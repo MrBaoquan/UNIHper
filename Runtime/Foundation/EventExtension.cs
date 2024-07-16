@@ -1,11 +1,12 @@
 using System;
 using UnityEngine;
 using UnityEngine.UI;
-using UniRx.Triggers;
-using UniRx;
 
 namespace UNIHper
 {
+    using UniRx.Triggers;
+    using UniRx;
+
     public static class EventExtension
     {
         public static IObservable<UnityEngine.EventSystems.PointerEventData> OnPointerDownAsObservable(

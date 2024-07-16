@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
 using UNIHper;
 
 namespace UNIHper
 {
+    using UniRx;
+
     [RequireComponent(typeof(Slider))]
     public class USlider : MonoBehaviour
     {

@@ -1,4 +1,3 @@
-#if NET_STANDARD_2_1
 using System.Threading.Tasks;
 
 namespace UNIHper
@@ -28,4 +27,3 @@ namespace UNIHper
         }
     }
 }
-#endif

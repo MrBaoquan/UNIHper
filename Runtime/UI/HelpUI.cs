@@ -5,87 +5,94 @@ using UnityEngine.UI;
 using UNIHper;
 using DNHper;
 using TMPro;
-using UniRx;
+
 using UnityEngine.InputSystem;
 
-public class HelpUI : UIBase
+namespace UNIHper.UI
 {
-    private string builtinHelpText =>
-        $"{Application.productName}   "
-        + $"Version: {Application.version}\n"
-        + Managements.UI.Get<LicenseUI>().LicenseText;
+    using UniRx;
 
-    private ReactiveProperty<string> userHelpText = new ReactiveProperty<string>(string.Empty);
-
-    public void SetContent(string helpText)
+    public class HelpUI : UIBase
     {
-        userHelpText.Value = helpText;
-    }
+        private string builtinHelpText =>
+            $"{Application.productName}   "
+            + $"Version: {Application.version}\n"
+            + Managements.UI.Get<LicenseUI>().LicenseText;
 
-    public void SetContent(string helpText, float textSize, Color textColor)
-    {
-        this.helpText.color = textColor;
-        this.helpText.fontSize = textSize;
-        SetContent(helpText);
-    }
+        private ReactiveProperty<string> userHelpText = new ReactiveProperty<string>(string.Empty);
 
-    public void SetContent(string helpText, float textSize)
-    {
-        this.helpText.fontSize = textSize;
-        SetContent(helpText);
-    }
+        public void SetContent(string helpText)
+        {
+            userHelpText.Value = helpText;
+        }
 
-    public void SetBackgroundColor(Color color)
-    {
-        this.Get<Image>().color = color;
-    }
+        public void SetContent(string helpText, float textSize, Color textColor)
+        {
+            this.helpText.color = textColor;
+            this.helpText.fontSize = textSize;
+            SetContent(helpText);
+        }
 
-    // Start is called before the first frame update
-    private void Start()
-    {
-        userHelpText
-            .Merge(Managements.UI.Get<LicenseUI>().OnLicenseValidChanged.Select(_ => string.Empty))
-            .Subscribe(helpText =>
-            {
-                this.helpText.text = builtinHelpText + "\r\n" + helpText;
-            })
-            .AddTo(this);
-    }
+        public void SetContent(string helpText, float textSize)
+        {
+            this.helpText.fontSize = textSize;
+            SetContent(helpText);
+        }
 
-    // Update is called once per frame
-    private void Update() { }
+        public void SetBackgroundColor(Color color)
+        {
+            this.Get<Image>().color = color;
+        }
 
-    TextMeshProUGUI helpText;
-
-    // Called when this ui is loaded
-    protected override void OnLoaded()
-    {
-        helpText = this.Get<TextMeshProUGUI>("text_help");
-        SetContent(string.Empty);
-        Observable
-            .EveryUpdate()
-            .Subscribe(_ =>
-            {
-#if ENABLE_INPUT_SYSTEM
-                if (Keyboard.current.f1Key.wasPressedThisFrame)
+        // Start is called before the first frame update
+        private void Start()
+        {
+            userHelpText
+                .Merge(
+                    Managements.UI.Get<LicenseUI>().OnLicenseValidChanged.Select(_ => string.Empty)
+                )
+                .Subscribe(helpText =>
                 {
-                    this.Toggle();
-                }
+                    this.helpText.text = builtinHelpText + "\r\n" + helpText;
+                })
+                .AddTo(this);
+        }
+
+        // Update is called once per frame
+        private void Update() { }
+
+        TextMeshProUGUI helpText;
+
+        // Called when this ui is loaded
+        protected override void OnLoaded()
+        {
+            helpText = this.Get<TextMeshProUGUI>("text_help");
+            SetContent(string.Empty);
+            Observable
+                .EveryUpdate()
+                .Subscribe(_ =>
+                {
+#if ENABLE_INPUT_SYSTEM
+                    if (Keyboard.current.f1Key.wasPressedThisFrame)
+                    {
+                        this.Toggle();
+                    }
 #endif
-            })
-            .AddTo(this);
+                })
+                .AddTo(this);
 
-        this.Get<Button>("btn_license")
-            .OnClickAsObservable()
-            .Subscribe(_ =>
-            {
-                Managements.UI.Show<LicenseUI>();
-            });
+            this.Get<Button>("btn_license")
+                .OnClickAsObservable()
+                .Subscribe(_ =>
+                {
+                    Managements.UI.Show<LicenseUI>();
+                });
+        }
+
+        // Called when this ui is shown
+        protected override void OnShown() { }
+
+        // Called when this ui is hidden
+        protected override void OnHidden() { }
     }
-
-    // Called when this ui is shown
-    protected override void OnShown() { }
-
-    // Called when this ui is hidden
-    protected override void OnHidden() { }
 }

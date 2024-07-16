@@ -7,11 +7,12 @@ using System.Threading.Tasks;
 using DNHper;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using UniRx;
 using UnityEngine;
 
 namespace UNIHper
 {
+    using UniRx;
+
     public class UIConfig
     {
         [JsonProperty("asset"), DefaultValue("")]

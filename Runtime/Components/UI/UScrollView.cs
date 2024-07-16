@@ -5,14 +5,15 @@ using System.Linq;
 using DG.Tweening;
 using DNHper;
 using PathologicalGames;
-using UniRx;
-using UniRx.Triggers;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace UNIHper
 {
+    using UniRx;
+    using UniRx.Triggers;
+
     public enum ScrollLayout
     {
         Horizontal_Normal,

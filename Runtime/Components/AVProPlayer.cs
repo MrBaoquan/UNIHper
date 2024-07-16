@@ -3,12 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using RenderHeads.Media.AVProVideo;
-using UniRx;
 using UnityEngine;
 using UnityEngine.Events;
 
 namespace UNIHper
 {
+    using UniRx;
+
     [RequireComponent(typeof(MediaPlayer))]
     public class AVProPlayer : MonoBehaviour
     {

@@ -3,7 +3,6 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
-using UniRx;
 using System.Collections.Generic;
 
 /// <summary>
@@ -12,6 +11,8 @@ using System.Collections.Generic;
 
 namespace UNIHper
 {
+    using UniRx;
+
     public class LongTimeNoOperation
     {
         public IObservable<Unit> OnResetOperationAsObservable() =>

@@ -1,17 +1,14 @@
-#if NET_STANDARD_2_1
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.IO.Ports;
-using System.Text;
-using System.Threading;
-using UniRx;
 using UnityEngine;
 using UnityEngine.Events;
 using DNHper;
 
 namespace UNIHper
 {
+    using UniRx;
+    using System.IO.Ports;
+
     public class USerialPort
     {
         SerialPort serialPort = new SerialPort();
@@ -128,5 +125,3 @@ namespace UNIHper
         }
     }
 }
-
-#endif

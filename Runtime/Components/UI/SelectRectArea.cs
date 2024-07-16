@@ -2,10 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UniRx;
 
 namespace UNIHper
 {
+    using UniRx;
+
     [RequireComponent(typeof(ResizeableImage))]
     public class SelectRectArea : MonoBehaviour
     {

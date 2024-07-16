@@ -122,7 +122,6 @@ namespace UNIHper
                 .ToList()
                 .ForEach(_config =>
                 {
-                    // UReflection.CallPrivateMethod(_config, "OnLoaded");
                     _config.Loaded();
                 });
             await Task.CompletedTask;
@@ -134,7 +133,6 @@ namespace UNIHper
                 .ToList()
                 .ForEach(_config =>
                 {
-                    // UReflection.CallPrivateMethod(_config, "OnUnloaded");
                     _config.Unloaded();
                 });
             this.configs.Clear();
@@ -199,12 +197,10 @@ namespace UNIHper
                 return;
             }
 
-            // UReflection.CallPrivateMethod(target, "OnSerializing");
             target.Serializing();
             if (driver == ConfigDriver.YAML)
             {
                 USerialization.SerializeYAML(target, path);
-                // UReflection.CallPrivateMethod(target, "OnSerialized");
                 target.Serialized();
 
                 return;
@@ -212,7 +208,6 @@ namespace UNIHper
             else if (driver == ConfigDriver.JSON)
             {
                 USerialization.SerializeJSON(target, path);
-                // UReflection.CallPrivateMethod(target, "OnSerialized");
                 target.Serialized();
 
                 return;
@@ -220,7 +215,6 @@ namespace UNIHper
 
             DNHper.USerialization.SerializeXML(target, path);
             Backup(target);
-            // UReflection.CallPrivateMethod(target, "OnSerialized");
             target.Serialized();
         }
 
