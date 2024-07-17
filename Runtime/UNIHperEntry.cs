@@ -57,6 +57,7 @@ namespace UNIHper
                 GameObject.Destroy(this.gameObject);
                 return;
             }
+            SRDebug.Init();
             Debug.Log("UNIHper.Awake");
             DontDestroyOnLoad(this.gameObject);
             ULog.Initialize();

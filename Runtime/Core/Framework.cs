@@ -35,7 +35,6 @@ namespace UNIHper
                 .EveryUpdate()
                 .Subscribe(_ => queryShortcutEvents())
                 .AddTo(UNIHperEntry.Instance);
-
             SRDebug.Instance.IsTriggerEnabled = false;
             debugModeEnabled.Subscribe(_enable =>
             {

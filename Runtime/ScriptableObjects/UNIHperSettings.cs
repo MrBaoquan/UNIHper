@@ -57,6 +57,12 @@ namespace UNIHper
         {
             get => Self().autoInitialize;
         }
+
+        public static List<string> InvalidAppNamePrefixes
+        {
+            get => Self().invalidAppNamePrefixes;
+        }
+
         public bool autoInitialize = true;
 
         [Title("UNIHper Config File Paths")]
@@ -70,6 +76,7 @@ namespace UNIHper
 
         [Title("UNIHper Other Settings")]
         public bool ShowDebugMessage = false;
+        public List<string> invalidAppNamePrefixes = new List<string> { "unihper_template" };
 
 #if UNITY_EDITOR
         public static void AddAssemblyToSettingsIfNotExists(string assemblyName)

@@ -18,10 +18,11 @@ namespace UNIHper.Editor
         [InitializeOnLoadMethod]
         static void SetProductName()
         {
-            if (
-                !ProjectName.ToLower().StartsWith("unihper_template")
-                && PlayerSettings.productName.ToLower().StartsWith("unihper_template")
-            )
+            bool isInvalidProductName = UNIHperSettings.InvalidAppNamePrefixes.Any(
+                _prefix => PlayerSettings.productName.ToLower().StartsWith(_prefix)
+            );
+
+            if (isInvalidProductName)
                 PlayerSettings.productName = ProjectName;
         }
     }

@@ -11,7 +11,7 @@ public class UNIDebuggerPanel : UIBase
     // Start is called before the first frame update
     private void Start()
     {
-#if UNITY_STANDALONE_WIN||UNITY_EDITOR_WIN
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
         this.Get<Button>("open_folders/btn_persistentData")
             .OnClickAsObservable()
             .Subscribe(_ =>

@@ -86,6 +86,7 @@ namespace UNIHper
             Screen.SetResolution(PrimaryScreen.Width, PrimaryScreen.Height, _fullScreen);
             if (!_fullScreen)
             {
+                Debug.LogWarning("test part ");
                 await Observable.Timer(TimeSpan.FromMilliseconds(150));
                 var _currentWindow = WinAPI.CurrentWindow();
                 var _longStyle = WinAPI.GetWindowLong(
