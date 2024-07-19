@@ -24,11 +24,11 @@
 
 
 ### 版本更新日志
-- TODO
-  - Config脚本 各平台保存策略调整
 
 v1.24.719
 - 增加UNIHper/Documention菜单
+- 修复debugTrigger在非Overlay模式下的bug
+- Config脚本 各平台保存位置策略调整
 
 v1.24.717
 - 更新默认选项

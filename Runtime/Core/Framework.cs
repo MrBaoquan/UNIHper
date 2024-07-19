@@ -48,6 +48,7 @@ namespace UNIHper
             _tapObject.transform.SetAsLastSibling();
             var _rectTrans = _tapObject.AddComponent<RectTransform>();
             _tapObject.AddComponent<Image>().color = Color.clear;
+            _rectTrans.localScale = Vector3.one;
             _rectTrans.sizeDelta = new Vector2(100, 100);
             _rectTrans.pivot = Vector2.one;
             _rectTrans.anchorMin = Vector2.one;
