@@ -4,9 +4,9 @@
         "name": "MrBaoquan",
         "email": "mrma617@gmail.com"
     },
-    "version": "1.24.717",
+    "version": "1.24.719",
     "description": "UNIHper is a Unity game engine extension that provides a set of tools for game development",
-    "keywords": ["framework","development"],
+    "keywords": ["framework","development","game"],
     "displayName": "UNIHper Framework",
     "unity": "2019.1",
     "type": "tool",

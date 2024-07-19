@@ -23,6 +23,12 @@ namespace UNIHper.Editor
             EditorSceneManager.sceneSaved += SceneSaved;
         }
 
+        [MenuItem("UNIHper/Documentation", priority = 900)]
+        public static void OpenDocumentation()
+        {
+            Application.OpenURL("https://parful.gitbook.io/unihper-docs");
+        }
+
         private static void NewSceneCreatedCallback(
             Scene scene,
             NewSceneSetup setup,
