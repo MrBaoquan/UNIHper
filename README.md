@@ -24,6 +24,8 @@
 
 
 ### 版本更新日志
+- TODO
+  - Config脚本 各平台保存策略调整
 
 v1.24.719
 - 增加UNIHper/Documention菜单

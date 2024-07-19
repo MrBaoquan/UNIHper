@@ -63,7 +63,11 @@ namespace UNIHper
         }
     }
 
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN
     [SerializedAt(AppPath.StreamingDir, Priority = -1), SerializeWith(ConfigDriver.XML)]
+#else
+    [SerializedAt(AppPath.PersistentDir, Priority = -1)]
+#endif
     public class UConfig
     {
         [XmlIgnore, JsonIgnore]
