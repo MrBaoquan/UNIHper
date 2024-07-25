@@ -93,7 +93,7 @@ namespace UNIHper
             File.Delete(filePath);
         }
 
-#if !UNITY_ANDROID
+#if !UNITY_ANDROID && !ENABLE_IL2CPP
         [JsonIgnore]
         [XmlAnyElement("FileComment")]
         public XmlComment FileComment

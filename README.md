@@ -24,6 +24,7 @@
 
 
 ### 版本更新日志
+
 未发布
 - ConfigManager增加调试日志
 - AssemblyConfig移除无用引用导致的打包问题
@@ -31,6 +32,7 @@
 - 增加使用shader
 - Enable Odin Editor Only Mode
 - 移除System.Reactive&Linq自动引用
+- 增加Clean Temporary Files菜单
 
 v1.24.719
 - 增加UNIHper/Documention菜单

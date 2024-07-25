@@ -12,6 +12,7 @@ namespace UNIHper
 {
     public class ScreenConfig
     {
+        [DefaultValueAttribute(false)]
         [XmlAttribute]
         public bool Activate = false;
 
@@ -30,11 +31,9 @@ namespace UNIHper
         [XmlAttribute]
         public FullScreenMode Mode = FullScreenMode.FullScreenWindow;
 
-        [DefaultValueAttribute(false)]
         [XmlAttribute]
         public bool UseTitleBar = false;
 
-        [DefaultValueAttribute(false)]
         [XmlAttribute]
         public bool KeepTop = false;
 
