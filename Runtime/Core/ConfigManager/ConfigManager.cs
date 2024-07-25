@@ -37,6 +37,7 @@ namespace UNIHper
             this.loadConfig();
 
             var _configClasses = AssemblyConfig.GetSubClasses(typeof(UConfig)).ToList();
+            UNIHperLogger.Log($"Config Classes Count: {_configClasses.Count}");
             // 根据优先级进行排序
             _configClasses.Sort(
                 (a, b) =>
@@ -44,14 +45,18 @@ namespace UNIHper
                     var _aAttr = Attribute
                         .GetCustomAttributes(a)
                         .Where(_attr => _attr is SerializedAt)
-                        .First();
+                        .FirstOrDefault();
                     var _bAttr = Attribute
                         .GetCustomAttributes(b)
                         .Where(_attr => _attr is SerializedAt)
-                        .First();
-                    var _aPriority = (_aAttr as SerializedAt).Priority;
-                    var _bPriority = (_bAttr as SerializedAt).Priority;
-                    return _aPriority - _bPriority;
+                        .FirstOrDefault();
+                    var _aPriority = (_aAttr as SerializedAt)?.Priority;
+                    var _bPriority = (_bAttr as SerializedAt)?.Priority;
+                    if (_aPriority == null || _bPriority == null)
+                    {
+                        return _aPriority == null ? -1 : 1;
+                    }
+                    return _aPriority.Value.CompareTo(_bPriority.Value);
                 }
             );
 
@@ -61,8 +66,12 @@ namespace UNIHper
 
                 // 配置文件默认保存在 %userprofile%\AppData\LocalLow\<companyname>\<productname>
                 var _attributes = Attribute.GetCustomAttributes(_configClass);
-                var _serializeAtAttr = _attributes.Where(_attr => _attr is SerializedAt).First();
-                var _serializeWithAttr = _attributes.Where(_attr => _attr is SerializeWith).First();
+                var _serializeAtAttr = _attributes
+                    .Where(_attr => _attr is SerializedAt)
+                    .FirstOrDefault();
+                var _serializeWithAttr = _attributes
+                    .Where(_attr => _attr is SerializeWith)
+                    .FirstOrDefault();
 
                 string _configDir = Path.Combine(Application.persistentDataPath, configDir);
 
@@ -96,6 +105,9 @@ namespace UNIHper
 
                 if (!Directory.Exists(_configDir))
                 {
+                    UNIHperLogger.Log(
+                        $"Create config dir {_configDir} for : {_configClass.FullName}"
+                    );
                     Directory.CreateDirectory(_configDir);
                 }
 
@@ -103,6 +115,8 @@ namespace UNIHper
                     _configDir,
                     _configClass.Name + this.suffix(_driverMode)
                 );
+
+                UNIHperLogger.Log($"Create config file {_path}");
                 if (!File.Exists(_path))
                 {
                     _configInstance.filePath = _path;
@@ -118,6 +132,7 @@ namespace UNIHper
 
                 this.configs.Add(_configClass.Name, _configInstance);
             }
+
             this.configs.Values
                 .ToList()
                 .ForEach(_config =>
@@ -294,6 +309,7 @@ namespace UNIHper
 
             if (Directory.Exists(backupDir) == false)
             {
+                UNIHperLogger.Log($"Create backup dir {backupDir}");
                 Directory.CreateDirectory(backupDir);
             }
             var _backupFilePath = Path.Combine(backupDir, Path.GetFileName(_srcFilePath) + ".bak");
@@ -331,6 +347,7 @@ namespace UNIHper
             // 将错误文件备份到error目录
             if (Directory.Exists(errorDir) == false)
             {
+                UNIHperLogger.Log($"Create error dir {errorDir}");
                 Directory.CreateDirectory(errorDir);
             }
             var _errorFilePath = Path.Combine(

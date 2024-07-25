@@ -6,10 +6,10 @@ PluginImporter:
   iconMap: {}
   executionOrder: {}
   defineConstraints:
-  - '!UNITY_2022_1||NETSTANDARD'
+  - UNITY_2022_1_OR_NEWER
   isPreloaded: 0
   isOverridable: 0
-  isExplicitlyReferenced: 0
+  isExplicitlyReferenced: 1
   validateReferences: 1
   platformData:
   - first:

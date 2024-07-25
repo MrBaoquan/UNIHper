@@ -31,7 +31,12 @@ namespace UNIHper
             where T : Component
         {
             Transform _target = Get(_behaviour, InPath);
-            return _target?.GetComponent<T>();
+            var _component = _target?.GetComponent<T>();
+            if (_component == null)
+            {
+                Debug.LogWarning("Can not find component with path: " + InPath);
+            }
+            return _component;
         }
 
         /// <summary>

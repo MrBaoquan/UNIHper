@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection;
 using DNHper;
 using Newtonsoft.Json;
-using Sirenix.Utilities;
 using UnityEngine;
 
 namespace UNIHper
