@@ -59,7 +59,9 @@ namespace UNIHper.Network
                             pushMessage(
                                 new NetStringMessage
                                 {
-                                    Content = Encoding.UTF8.GetString(_buffer.Slice(0, _received)),
+                                    Content = Encoding.UTF8
+                                        .GetString(_buffer.Slice(0, _received))
+                                        .Trim(),
                                     RawData = _buffer.Slice(0, _received)
                                 }
                             );
@@ -96,11 +98,14 @@ namespace UNIHper.Network
                             IPEndPoint _ipEP = _endPoint as IPEndPoint;
                             RemoteIP = _ipEP.Address.ToString();
                             RemotePort = _ipEP.Port;
+
+                            var _validBuf = _buffer.Slice(0, _received);
+                            UnityEngine.Debug.Log(_received);
                             pushMessage(
                                 new NetStringMessage
                                 {
-                                    Content = Encoding.UTF8.GetString(_buffer),
-                                    RawData = _buffer.Slice(0, _received)
+                                    Content = Encoding.UTF8.GetString(_validBuf).Trim(),
+                                    RawData = _validBuf
                                 }
                             );
                         }

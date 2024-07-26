@@ -188,6 +188,11 @@ namespace UNIHper.Network
             allUdpClients[InKey].Send(InData);
         }
 
+        public void Send2UdpServer(string msgData, string InKey = "")
+        {
+            Send2UdpServer(msgData.ToBytes(), InKey);
+        }
+
         public void Send2TcpServer(byte[] InData, string InKey = "")
         {
             if (InKey == "")

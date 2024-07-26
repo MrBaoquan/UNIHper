@@ -25,7 +25,7 @@
 
 ### 版本更新日志
 
-未发布
+v1.24.726
 - ConfigManager增加调试日志
 - AssemblyConfig移除无用引用导致的打包问题
 - SerialPort独立出来，仅对Windows平台生效
@@ -33,6 +33,7 @@
 - Enable Odin Editor Only Mode
 - 移除System.Reactive&Linq自动引用
 - 增加Clean Temporary Files菜单
+- 修复Network消息空字符导致的字符串校验失败的问题
 
 v1.24.719
 - 增加UNIHper/Documention菜单
