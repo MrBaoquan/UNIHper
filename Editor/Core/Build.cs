@@ -10,29 +10,6 @@ namespace UNIHper.Editor
 {
     public class BuildUNIHper
     {
-        [MenuItem("UNIHper/Workflow/Clean Temporary Files", priority = 30)]
-        public static void CleanAssets()
-        {
-            string assetsPath = Application.dataPath;
-            string pattern = "~$"; // 正则表达式模式
-
-            // 确认删除操作
-            if (
-                EditorUtility.DisplayDialog(
-                    "Clean Temporary & Backup Files",
-                    "Are you sure you want to delete all files and folders matching the pattern '*~' in the Assets directory?",
-                    "Yes",
-                    "No"
-                )
-            )
-            {
-                DeleteMatchingFilesAndDirectories(assetsPath, pattern);
-                DeleteMatchingFilesAndDirectories(Application.streamingAssetsPath, pattern);
-                AssetDatabase.Refresh();
-                Debug.Log("Assets folder cleaned.");
-            }
-        }
-
         [PostProcessBuildAttribute(1)]
         public static void OnPostprocessBuild(BuildTarget target, string pathToBuildProject)
         {
@@ -60,10 +37,10 @@ namespace UNIHper.Editor
 
             // 删除发布后目录StreamingAssets下符合*~的文件及文件夹
             string streamingAssetsPath = GetStreamingAssetsPath(target, pathToBuildProject);
-            DeleteMatchingFilesAndDirectories(streamingAssetsPath, "~$");
+            WorkflowUtility.DeleteMatchingFilesAndDirectories(streamingAssetsPath, "~$");
         }
 
-        private static string GetStreamingAssetsPath(BuildTarget target, string pathToBuiltProject)
+        public static string GetStreamingAssetsPath(BuildTarget target, string pathToBuiltProject)
         {
             string streamingAssetsPath = string.Empty;
 
@@ -90,40 +67,6 @@ namespace UNIHper.Editor
             }
 
             return streamingAssetsPath;
-        }
-
-        private static void DeleteMatchingFilesAndDirectories(
-            string path,
-            string pattern,
-            SearchOption option = SearchOption.TopDirectoryOnly
-        )
-        {
-            if (Directory.Exists(path))
-            {
-                Regex regex = new Regex(pattern);
-
-                // Delete matching files
-                foreach (string file in Directory.GetFiles(path, "*", option))
-                {
-                    if (regex.IsMatch(Path.GetFileName(file)))
-                    {
-                        File.Delete(file);
-                        Debug.Log($"Deleted file: {file}");
-                    }
-                }
-
-                // Delete matching directories
-                foreach (string dir in Directory.GetDirectories(path, "*", option))
-                {
-                    if (regex.IsMatch(new DirectoryInfo(dir).Name))
-                    {
-                        if (Directory.Exists(dir) == false)
-                            continue;
-                        Directory.Delete(dir, true);
-                        Debug.Log($"Deleted directory: {dir}");
-                    }
-                }
-            }
         }
     }
 }

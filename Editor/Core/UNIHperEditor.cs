@@ -9,6 +9,9 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
 using TMPro.EditorUtilities;
+using UnityEditor.PackageManager;
+using UnityEditorInternal;
+using UnityEditor.PackageManager.UI;
 
 namespace UNIHper.Editor
 {
@@ -23,10 +26,17 @@ namespace UNIHper.Editor
             EditorSceneManager.sceneSaved += SceneSaved;
         }
 
-        [MenuItem("UNIHper/Documentation", priority = 900)]
+        [MenuItem("UNIHper/Help/View Documentation", priority = 900)]
         public static void OpenDocumentation()
         {
             Application.OpenURL("https://parful.gitbook.io/unihper-docs");
+        }
+
+        [MenuItem("UNIHper/Help/Check for Updates", priority = 901)]
+        public static void CheckForUpdates()
+        {
+            // 打开
+            Window.Open("com.parful.unihper");
         }
 
         private static void NewSceneCreatedCallback(

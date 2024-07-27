@@ -4,12 +4,14 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using Sirenix.OdinInspector;
+using System.ComponentModel;
 
 namespace UNIHper
 {
     public class UNIHperSettings : ScriptableObject
     {
         private static UNIHperSettings instance = null;
+        public static UNIHperSettings Instance => Self();
 
         private static UNIHperSettings Self()
         {
@@ -65,18 +67,23 @@ namespace UNIHper
 
         public bool autoInitialize = true;
 
-        [Title("UNIHper Config File Paths")]
+        [Title("Built-in Resources")]
         public string ResourcePath = "UNIHper/resources";
         public string UIPath = "UNIHper/uis";
         public string AssemblyPath = "UNIHper/assemblies";
 
-        [Title("UNIHper Interaction Settings")]
+        [Title("Interaction Settings")]
         public AudioClip defaultClickSound;
         public bool showTapEffect = true;
 
-        [Title("UNIHper Other Settings")]
-        public bool ShowDebugMessage = false;
+        [Title("Workflow Settings")]
         public List<string> invalidAppNamePrefixes = new List<string> { "unihper_template" };
+
+        // 仓库排除文件路径
+        public List<string> SVNExcludedPaths = new List<string>();
+
+        [Title("Other Settings"), LabelText("Show Framework Log")]
+        public bool ShowDebugMessage = false;
 
 #if UNITY_EDITOR
         public static void AddAssemblyToSettingsIfNotExists(string assemblyName)

@@ -1,9 +1,16 @@
 using System.Linq;
-using UnityEngine;
+
 using UnityEditor;
+using System.Diagnostics;
 
 namespace UNIHper.Editor
 {
+    using System.IO;
+    using System.Text.RegularExpressions;
+    using Sirenix.OdinInspector;
+
+    using UnityEngine;
+
     public static class WorkflowUtility
     {
         public static string ProjectName
@@ -24,6 +31,157 @@ namespace UNIHper.Editor
 
             if (isInvalidProductName)
                 PlayerSettings.productName = ProjectName;
+        }
+
+        private const string ClientCommand = "TortoiseProc.exe";
+
+        [MenuItem("Assets/SVN 更新资源", priority = 51)]
+        [MenuItem("UNIHper/Workflow/SVN Update", priority = 30), ShowIf("IsSVNInstalled")]
+        public static void RestoreSVNExcludedFolders()
+        {
+            var pathsArg = "./";
+            var result = ShellUtils.ExecuteCommand(
+                ClientCommand,
+                $"/command:update /path:\"{pathsArg}\"",
+                true
+            );
+            if (result.HasErrors)
+            {
+                // Debug.LogError($"SVN Error: {result.Error}");
+            }
+        }
+
+        [MenuItem("Assets/SVN 提交资源", priority = 52)]
+        [MenuItem("UNIHper/Workflow/SVN Commit", priority = 31)]
+        public static void RemoveSVNExcludedFolders()
+        {
+            var pathsArg = "./";
+            var result = ShellUtils.ExecuteCommand(
+                ClientCommand,
+                $"/command:commit /path:\"{pathsArg}\"",
+                true
+            );
+            if (result.HasErrors)
+            {
+                // Debug.LogError($"SVN Error: {result.Error}");
+            }
+        }
+
+        [MenuItem("Assets/SVN 提交资源", true)]
+        [MenuItem("Assets/SVN 更新资源", true)]
+        [MenuItem("UNIHper/Workflow/SVN Commit", true)]
+        [MenuItem("UNIHper/Workflow/SVN Update", true)]
+        [MenuItem("UNIHper/Workflow/SVN Make Slim Repo", true)]
+        [MenuItem("UNIHper/Workflow/SVN Make Full Repo", true)]
+        private static bool checkIfSVNRepo()
+        {
+            var _repoPath = Path.Combine(Path.GetDirectoryName(Application.dataPath), ".svn");
+            return Directory.Exists(_repoPath);
+        }
+
+        [MenuItem("UNIHper/Workflow/SVN Make Slim Repo", priority = 51)]
+        public static void CleanAssets()
+        {
+            updateSVNDepth("exclude");
+        }
+
+        [MenuItem("UNIHper/Workflow/SVN Make Full Repo", priority = 52)]
+        public static void SetFullSVNDepth()
+        {
+            updateSVNDepth("infinity");
+        }
+
+        private static void updateSVNDepth(string depth)
+        {
+            EditorUtility.DisplayProgressBar("SVN Repo Mode", "Start setting SVN depth...", 0);
+
+            var _excludedPaths = UNIHperSettings.Instance.SVNExcludedPaths;
+            foreach (var path in _excludedPaths)
+            {
+                var _progress = (float)(_excludedPaths.IndexOf(path) + 1) / _excludedPaths.Count;
+                ProcessStartInfo startInfo = new ProcessStartInfo
+                {
+                    FileName = "svn",
+                    Arguments = $"update --set-depth {depth} \"{path}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                try
+                {
+                    using (Process process = Process.Start(startInfo))
+                    {
+                        process.WaitForExit(3000);
+                        string output = process.StandardOutput.ReadToEnd();
+                        string error = process.StandardError.ReadToEnd();
+
+                        if (process.ExitCode == 0)
+                        {
+                            EditorUtility.DisplayProgressBar(
+                                "SVN Repo Mode",
+                                $"Set depth to {depth} for {path}.",
+                                _progress
+                            );
+                        }
+                        else
+                        {
+                            Debug.LogError(
+                                $"Failed to set depth to {depth} for {path}. Error: {error}"
+                            );
+                        }
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogError($"Exception while setting SVN depth: {ex.Message}");
+                }
+                finally
+                {
+                    EditorUtility.DisplayProgressBar(
+                        "SVN Repo Mode",
+                        "Finished setting SVN depth.",
+                        _progress
+                    );
+                }
+            }
+            EditorUtility.ClearProgressBar();
+            AssetDatabase.Refresh();
+        }
+
+        public static void DeleteMatchingFilesAndDirectories(
+            string path,
+            string pattern,
+            SearchOption option = SearchOption.TopDirectoryOnly
+        )
+        {
+            if (Directory.Exists(path))
+            {
+                Regex regex = new Regex(pattern);
+
+                // Delete matching files
+                foreach (string file in Directory.GetFiles(path, "*", option))
+                {
+                    if (regex.IsMatch(Path.GetFileName(file)))
+                    {
+                        File.Delete(file);
+                        Debug.Log($"Deleted file: {file}");
+                    }
+                }
+
+                // Delete matching directories
+                foreach (string dir in Directory.GetDirectories(path, "*", option))
+                {
+                    if (regex.IsMatch(new DirectoryInfo(dir).Name))
+                    {
+                        if (Directory.Exists(dir) == false)
+                            continue;
+                        Directory.Delete(dir, true);
+                        Debug.Log($"Deleted directory: {dir}");
+                    }
+                }
+            }
         }
     }
 }
