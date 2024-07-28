@@ -5,6 +5,8 @@ using System.Diagnostics;
 
 namespace UNIHper.Editor
 {
+    using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Text.RegularExpressions;
     using Sirenix.OdinInspector;
@@ -33,59 +35,13 @@ namespace UNIHper.Editor
                 PlayerSettings.productName = ProjectName;
         }
 
-        private const string ClientCommand = "TortoiseProc.exe";
-
-        [MenuItem("Assets/SVN 更新资源", priority = 51)]
-        [MenuItem("UNIHper/Workflow/SVN Update", priority = 30), ShowIf("IsSVNInstalled")]
-        public static void RestoreSVNExcludedFolders()
-        {
-            var pathsArg = "./";
-            var result = ShellUtils.ExecuteCommand(
-                ClientCommand,
-                $"/command:update /path:\"{pathsArg}\"",
-                true
-            );
-            if (result.HasErrors)
-            {
-                // Debug.LogError($"SVN Error: {result.Error}");
-            }
-        }
-
-        [MenuItem("Assets/SVN 提交资源", priority = 52)]
-        [MenuItem("UNIHper/Workflow/SVN Commit", priority = 31)]
-        public static void RemoveSVNExcludedFolders()
-        {
-            var pathsArg = "./";
-            var result = ShellUtils.ExecuteCommand(
-                ClientCommand,
-                $"/command:commit /path:\"{pathsArg}\"",
-                true
-            );
-            if (result.HasErrors)
-            {
-                // Debug.LogError($"SVN Error: {result.Error}");
-            }
-        }
-
-        [MenuItem("Assets/SVN 提交资源", true)]
-        [MenuItem("Assets/SVN 更新资源", true)]
-        [MenuItem("UNIHper/Workflow/SVN Commit", true)]
-        [MenuItem("UNIHper/Workflow/SVN Update", true)]
-        [MenuItem("UNIHper/Workflow/SVN Make Slim Repo", true)]
-        [MenuItem("UNIHper/Workflow/SVN Make Full Repo", true)]
-        private static bool checkIfSVNRepo()
-        {
-            var _repoPath = Path.Combine(Path.GetDirectoryName(Application.dataPath), ".svn");
-            return Directory.Exists(_repoPath);
-        }
-
-        [MenuItem("UNIHper/Workflow/SVN Make Slim Repo", priority = 51)]
+        [MenuItem("UNIHper/Workflow/SVN Update Slim Repo", priority = 51)]
         public static void CleanAssets()
         {
             updateSVNDepth("exclude");
         }
 
-        [MenuItem("UNIHper/Workflow/SVN Make Full Repo", priority = 52)]
+        [MenuItem("UNIHper/Workflow/SVN Update Full Repo", priority = 52)]
         public static void SetFullSVNDepth()
         {
             updateSVNDepth("infinity");
@@ -93,7 +49,11 @@ namespace UNIHper.Editor
 
         private static void updateSVNDepth(string depth)
         {
-            EditorUtility.DisplayProgressBar("SVN Repo Mode", "Start setting SVN depth...", 0);
+            EditorUtility.DisplayProgressBar(
+                "Switch SVN Repo Mode",
+                "Start setting SVN depth...",
+                0
+            );
 
             var _excludedPaths = UNIHperSettings.Instance.SVNExcludedPaths;
             foreach (var path in _excludedPaths)
@@ -106,7 +66,8 @@ namespace UNIHper.Editor
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
-                    CreateNoWindow = true
+                    CreateNoWindow = true,
+                    WorkingDirectory = Path.GetDirectoryName(Application.dataPath)
                 };
 
                 try
@@ -120,7 +81,7 @@ namespace UNIHper.Editor
                         if (process.ExitCode == 0)
                         {
                             EditorUtility.DisplayProgressBar(
-                                "SVN Repo Mode",
+                                "Switch SVN Repo Mode",
                                 $"Set depth to {depth} for {path}.",
                                 _progress
                             );
@@ -140,7 +101,7 @@ namespace UNIHper.Editor
                 finally
                 {
                     EditorUtility.DisplayProgressBar(
-                        "SVN Repo Mode",
+                        "Switch SVN Repo Mode",
                         "Finished setting SVN depth.",
                         _progress
                     );
@@ -148,6 +109,14 @@ namespace UNIHper.Editor
             }
             EditorUtility.ClearProgressBar();
             AssetDatabase.Refresh();
+        }
+
+        [MenuItem("UNIHper/Workflow/SVN Update Slim Repo", true)]
+        [MenuItem("UNIHper/Workflow/SVN Update Full Repo", true)]
+        private static bool checkIfSVNRepo()
+        {
+            var _repoPath = Path.Combine(Path.GetDirectoryName(Application.dataPath), ".svn");
+            return Directory.Exists(_repoPath);
         }
 
         public static void DeleteMatchingFilesAndDirectories(

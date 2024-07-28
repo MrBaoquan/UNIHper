@@ -633,7 +633,7 @@ namespace UNIHper.Ghost.Editor
             AssetDatabase.Refresh();
         }
 
-        [MenuItem("Assets/Make Ghosts", false, 61)]
+        [MenuItem("Assets/Make Ghosts", false, 81)]
         private static void GenerateFoldersEntities()
         {
             var _curDir = EditorUtil.GetSelectedDirectory();
@@ -668,7 +668,7 @@ namespace UNIHper.Ghost.Editor
             return false;
         }
 
-        [MenuItem("Assets/Restore Entities", false, 62)]
+        [MenuItem("Assets/Restore Entities", false, 82)]
         private static void restoreFoldersEntities()
         {
             var _curDir = EditorUtil.GetSelectedDirectory();
@@ -686,7 +686,7 @@ namespace UNIHper.Ghost.Editor
             return isValidGhostFolder();
         }
 
-        [MenuItem("Assets/Export Package (Ghost Mode) %e", false, 63)]
+        [MenuItem("Assets/Export Package (Ghost Mode) %e", false, 83)]
         private static void exportPackageWithGhosts()
         {
             var _selectPaths = Selection
