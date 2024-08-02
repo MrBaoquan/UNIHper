@@ -24,6 +24,10 @@
 
 
 ### 版本更新日志
+v1.24.802
+ - Unity日志调整输出至Logs文件夹
+ - 优化Workflow,增加 Clean Excluded Files 菜单
+  
 v1.24.728
 - 增加SVN仓库实用选项
 

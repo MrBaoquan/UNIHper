@@ -202,7 +202,7 @@ namespace UNIHper.Editor
             }
         }
 
-        [MenuItem(menuEnableManualReload, priority = 15)]
+        [MenuItem(menuEnableManualReload, priority = 22)]
         static void EnableManualReloadDomain()
         {
             //Debug.Log("<color=cyan>开启手动 Reload Domain</color>");
@@ -218,7 +218,7 @@ namespace UNIHper.Editor
             LockReloadDomain();
         }
 
-        [MenuItem(menuDisenableManualReload, priority = 16)]
+        [MenuItem(menuDisenableManualReload, priority = 23)]
         static void DisenableManualReloadDomain()
         {
             //Debug.Log("<color=cyan>关闭手动 Reload Domain</color>");
@@ -232,7 +232,7 @@ namespace UNIHper.Editor
         }
 
         //手动刷新
-        [MenuItem(menuReloadDomain, priority = 17)]
+        [MenuItem(menuReloadDomain, priority = 24)]
         static void ManualReload()
         {
             if (IsManualReload)

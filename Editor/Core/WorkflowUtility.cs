@@ -1,16 +1,11 @@
 using System.Linq;
 
 using UnityEditor;
-using System.Diagnostics;
 
 namespace UNIHper.Editor
 {
-    using System;
-    using System.Collections.Generic;
     using System.IO;
     using System.Text.RegularExpressions;
-    using Sirenix.OdinInspector;
-
     using UnityEngine;
 
     public static class WorkflowUtility
@@ -35,19 +30,37 @@ namespace UNIHper.Editor
                 PlayerSettings.productName = ProjectName;
         }
 
-        [MenuItem("UNIHper/Workflow/SVN Update Slim Repo", priority = 51)]
+        [MenuItem("UNIHper/Workflow/Clean Excluded Files", priority = 41)]
+        public static void CleanExcludedPaths()
+        {
+            var _excludedPaths = UNIHperSettings.Instance.SVNExcludedPaths;
+            foreach (var path in _excludedPaths)
+            {
+                if (Directory.Exists(path))
+                {
+                    Directory.Delete(path, true);
+                }
+                else if (File.Exists(path))
+                {
+                    File.Delete(path);
+                }
+            }
+            Debug.Log("<color=#00ff00>All excluded paths have been cleaned.</color>");
+        }
+
+        [MenuItem("UNIHper/Workflow/SVN Update Slim Repo", priority = 61)]
         public static void CleanAssets()
         {
-            updateSVNDepth("exclude");
+            UpdateSVNDepth("exclude");
         }
 
-        [MenuItem("UNIHper/Workflow/SVN Update Full Repo", priority = 52)]
+        [MenuItem("UNIHper/Workflow/SVN Update Full Repo", priority = 62)]
         public static void SetFullSVNDepth()
         {
-            updateSVNDepth("infinity");
+            UpdateSVNDepth("infinity");
         }
 
-        private static void updateSVNDepth(string depth)
+        private static void UpdateSVNDepth(string depth)
         {
             EditorUtility.DisplayProgressBar(
                 "Switch SVN Repo Mode",
@@ -59,40 +72,14 @@ namespace UNIHper.Editor
             foreach (var path in _excludedPaths)
             {
                 var _progress = (float)(_excludedPaths.IndexOf(path) + 1) / _excludedPaths.Count;
-                ProcessStartInfo startInfo = new ProcessStartInfo
-                {
-                    FileName = "svn",
-                    Arguments = $"update --set-depth {depth} \"{path}\"",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    WorkingDirectory = Path.GetDirectoryName(Application.dataPath)
-                };
-
                 try
                 {
-                    using (Process process = Process.Start(startInfo))
-                    {
-                        process.WaitForExit(3000);
-                        string output = process.StandardOutput.ReadToEnd();
-                        string error = process.StandardError.ReadToEnd();
-
-                        if (process.ExitCode == 0)
-                        {
-                            EditorUtility.DisplayProgressBar(
-                                "Switch SVN Repo Mode",
-                                $"Set depth to {depth} for {path}.",
-                                _progress
-                            );
-                        }
-                        else
-                        {
-                            Debug.LogError(
-                                $"Failed to set depth to {depth} for {path}. Error: {error}"
-                            );
-                        }
-                    }
+                    var _output = ShellUtils.ExecuteCommand(
+                        "svn",
+                        $"update --set-depth {depth} \"{path}\"",
+                        true
+                    );
+                    if (_output.HasErrors) { }
                 }
                 catch (System.Exception ex)
                 {

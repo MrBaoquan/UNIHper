@@ -57,10 +57,10 @@ namespace UNIHper
                 GameObject.Destroy(this.gameObject);
                 return;
             }
+            UNILogger.Initialize();
             SRDebug.Init();
             Debug.Log("UNIHper.Awake");
             DontDestroyOnLoad(this.gameObject);
-            ULog.Initialize();
 
             GameObject _utilGO = new GameObject("UNIBehaviour");
             _utilGO.transform.parent = this.transform;
@@ -164,8 +164,8 @@ namespace UNIHper
             ConfigManager.Instance.CleanUp();
             UIManager.Instance.CleanUp();
             ResourceManager.Instance.CleanUp();
-            ULog.Shutdown();
             Debug.Log("Application Quit");
+            UNILogger.CleanUp();
         }
     }
 };
