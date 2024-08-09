@@ -4,7 +4,7 @@
 // http://www.digitalruby.com
 // Source code may be used for personal or commercial projects.
 // Source code may NOT be redistributed or sold.
-// 
+//
 
 using System.Collections;
 using System.Collections.Generic;
@@ -54,27 +54,39 @@ namespace DigitalRubyShared
         public bool EnableMultiTouch = true;
 
         /// <summary>True to treat the mouse as a finger, false otherwise. Left, middle and right mouse buttons can be used as individual fingers and will all have the same location.</summary>
-        [Tooltip("True to treat the mouse as a finger, false otherwise. Left, middle and right mouse buttons can be used as individual fingers and will all have the same location.")]
+        [Tooltip(
+            "True to treat the mouse as a finger, false otherwise. Left, middle and right mouse buttons can be used as individual fingers and will all have the same location."
+        )]
         public bool TreatMousePointerAsFinger = true;
 
         /// <summary>True to treat the mouse wheel as two fingers for rotation and scaling, false otherwise.</summary>
-        [Tooltip("True to treat the mouse wheel as two fingers for rotation and scaling, false otherwise.")]
+        [Tooltip(
+            "True to treat the mouse wheel as two fingers for rotation and scaling, false otherwise."
+        )]
         public bool TreatMouseWheelAsFingers = true;
 
         /// <summary>Whether to treat touches as mouse pointer? This needs to be set before the script Awake method is called.</summary>
-        [Tooltip("Whether to treat touches as mouse pointer? This needs to be set before the script Awake method is called.")]
+        [Tooltip(
+            "Whether to treat touches as mouse pointer? This needs to be set before the script Awake method is called."
+        )]
         public bool SimulateMouseWithTouches;
 
         /// <summary>Whether to process Unity touch events. If false, you will need to implement the VirtualTouch* methods to implement touch handling.</summary>
-        [Tooltip("Whether to process Unity touch events. If false, you will need to implement the VirtualTouch* methods to implement touch handling.")]
+        [Tooltip(
+            "Whether to process Unity touch events. If false, you will need to implement the VirtualTouch* methods to implement touch handling."
+        )]
         public bool ProcessUnityTouches = true;
 
         /// <summary>Whether the control key is required for mouse zoom. If true, control pluse mouse wheel zooms. If false, mouse wheel alone will zoom.</summary>
-        [Tooltip("Whether the control key is required for mouse zoom. If true, control pluse mouse wheel zooms. If false, mouse wheel alone will zoom.")]
+        [Tooltip(
+            "Whether the control key is required for mouse zoom. If true, control pluse mouse wheel zooms. If false, mouse wheel alone will zoom."
+        )]
         public bool RequireControlKeyForMouseZoom = true;
 
         /// <summary>The distance (in units, default is inches) for simulated fingers to start at for a mouse zoom or rotate.</summary>
-        [Tooltip("The distance (in units, default is inches) for simulated fingers to start at for a mouse zoom or rotate.")]
+        [Tooltip(
+            "The distance (in units, default is inches) for simulated fingers to start at for a mouse zoom or rotate."
+        )]
         [Range(0.1f, 10.0f)]
         public float MouseDistanceInUnitsForScaleAndRotate = 1.0f;
 
@@ -84,25 +96,35 @@ namespace DigitalRubyShared
         public float MouseWheelDeltaMultiplier = 0.01f;
 
         /// <summary>Mouse wheel snap back option. X is distance to snap back at in units, Y is distance to snap back to in units.</summary>
-        [Tooltip("Mouse wheel snap back option. X is distance to snap back at in units, Y is distance to snap back to in units.")]
+        [Tooltip(
+            "Mouse wheel snap back option. X is distance to snap back at in units, Y is distance to snap back to in units."
+        )]
         public Vector2 MouseWheelZoomOutSnapBack;
 
         /// <summary>Objects that should pass gestures through. By default, some UI components block gestures, such as Panel, Button, Dropdown, etc. See the SetupDefaultPassThroughComponents method for the full list of defaults.</summary>
         [Header("Other Settings")]
-        [Tooltip("Objects that should pass gestures through. By default, some UI components block gestures, such as Panel, Button, Dropdown, etc. See the SetupDefaultPassThroughComponents method for " +
-            "the full list of defaults.")]
+        [Tooltip(
+            "Objects that should pass gestures through. By default, some UI components block gestures, such as Panel, Button, Dropdown, etc. See the SetupDefaultPassThroughComponents method for "
+                + "the full list of defaults."
+        )]
         public List<GameObject> PassThroughObjects;
 
         /// <summary>Whether to auto-add required components like physics raycasters, event system, etc. if they are missing.</summary>
-        [Tooltip("Whether to auto-add required components like physics raycasters, event system, etc. if they are missing.")]
+        [Tooltip(
+            "Whether to auto-add required components like physics raycasters, event system, etc. if they are missing."
+        )]
         public bool AutoAddRequiredComponents = true;
 
         /// <summary>Whether to show touches using the TouchCircles array. Make sure to turn this off before releasing your game or app.</summary>
-        [Tooltip("Whether to show touches using the TouchCircles array. Make sure to turn this off before releasing your game or app.")]
+        [Tooltip(
+            "Whether to show touches using the TouchCircles array. Make sure to turn this off before releasing your game or app."
+        )]
         public bool ShowTouches;
 
         /// <summary>If ShowTouches is true, this array is used to show the touches. The FingersScriptPrefab sets this up as 10 circles.</summary>
-        [Tooltip("If ShowTouches is true, this array is used to show the touches. The FingersScriptPrefab sets this up as 10 circles.")]
+        [Tooltip(
+            "If ShowTouches is true, this array is used to show the touches. The FingersScriptPrefab sets this up as 10 circles."
+        )]
         public GameObject[] TouchCircles;
         private GameObject[] origTouchCircles;
 
@@ -111,18 +133,25 @@ namespace DigitalRubyShared
         public int DefaultDPI = 200;
 
         /// <summary>Allows resetting state (keeps the gestures, just resets them) or clearing all gestures when a level is unloaded.</summary>
-        [Tooltip("Allows resetting state (keeps the gestures, just resets them) or clearing all gestures when a level is unloaded.")]
-        public GestureLevelUnloadOption LevelUnloadOption = GestureLevelUnloadOption.ClearAllGestures;
+        [Tooltip(
+            "Allows resetting state (keeps the gestures, just resets them) or clearing all gestures when a level is unloaded."
+        )]
+        public GestureLevelUnloadOption LevelUnloadOption =
+            GestureLevelUnloadOption.ClearAllGestures;
 
         /// <summary>Whether to use fixed update instead of update. Using fixed update can result in slightly more responsibe input, depending on project settings -> time -> fixed update rate.</summary>
-        [Tooltip("Whether to use fixed update instead of update. Using fixed update can result in slightly more responsibe input, depending on project settings -> time -> fixed update rate.")]
+        [Tooltip(
+            "Whether to use fixed update instead of update. Using fixed update can result in slightly more responsibe input, depending on project settings -> time -> fixed update rate."
+        )]
         public bool UseFixedUpdate;
 
         /// <summary>
         /// Whether to record touches. Recorded touches are put into TestTouches where they can be copied and pasted once you exit play mode. Use copy component and paste component values.
         /// </summary>
         [Header("Testing")]
-        [Tooltip("Whether to record touches. Recorded touches are put into TestTouches where they can be copied and pasted once you exit play mode. Use copy component and paste component values.")]
+        [Tooltip(
+            "Whether to record touches. Recorded touches are put into TestTouches where they can be copied and pasted once you exit play mode. Use copy component and paste component values."
+        )]
         public bool RecordTouches;
 
         /// <summary>
@@ -131,7 +160,8 @@ namespace DigitalRubyShared
         [Tooltip("Fake touches, for testing and automation.")]
         public List<FakeTouch> TestTouches = new List<FakeTouch>();
         private float accumulatedTime;
-        private Dictionary<int, GestureTouch> fakeTouchesInProgress = new Dictionary<int, GestureTouch>();
+        private Dictionary<int, GestureTouch> fakeTouchesInProgress =
+            new Dictionary<int, GestureTouch>();
 
         /// <summary>Mask that will restrict gestures to the collider area(s). The colliders MUST be in a canvas. Leave empty for no mask. Leave gesture recognizer list empty for all gestures.</summary>
         private readonly List<GestureMask> masks = new List<GestureMask>();
@@ -182,22 +212,29 @@ namespace DigitalRubyShared
         /// </summary>
         public const int MouseRotatePinchId1 = int.MaxValue - 6;
 
-        private readonly List<DigitalRubyShared.GestureRecognizer> gestures = new List<DigitalRubyShared.GestureRecognizer>();
-        private readonly List<DigitalRubyShared.GestureRecognizer> gesturesTemp = new List<DigitalRubyShared.GestureRecognizer>();
+        private readonly List<DigitalRubyShared.GestureRecognizer> gestures =
+            new List<DigitalRubyShared.GestureRecognizer>();
+        private readonly List<DigitalRubyShared.GestureRecognizer> gesturesTemp =
+            new List<DigitalRubyShared.GestureRecognizer>();
         private readonly List<GestureTouch> touchesBegan = new List<GestureTouch>();
         private readonly List<GestureTouch> touchesMoved = new List<GestureTouch>();
         private readonly List<GestureTouch> touchesEnded = new List<GestureTouch>();
-        private readonly Dictionary<int, List<GameObject>> gameObjectsForTouch = new Dictionary<int, List<GameObject>>();
+        private readonly Dictionary<int, List<GameObject>> gameObjectsForTouch =
+            new Dictionary<int, List<GameObject>>();
         private readonly List<RaycastResult> captureRaycastResults = new List<RaycastResult>();
         private readonly List<GestureTouch> filteredTouches = new List<GestureTouch>();
         private readonly List<GestureTouch> touches = new List<GestureTouch>();
         private readonly List<GameObject> availableShowTouches = new List<GameObject>();
-        private readonly Dictionary<int, ShownTouch> shownTouches = new Dictionary<int, ShownTouch>();
+        private readonly Dictionary<int, ShownTouch> shownTouches =
+            new Dictionary<int, ShownTouch>();
         private readonly List<int> shownTouchesToRemove = new List<int>();
-        private readonly Dictionary<int, Vector2> previousTouchPositions = new Dictionary<int, Vector2>();
+        private readonly Dictionary<int, Vector2> previousTouchPositions =
+            new Dictionary<int, Vector2>();
         private readonly List<Component> components = new List<Component>();
-        private readonly HashSet<System.Type> componentTypesToDenyPassThrough = new HashSet<System.Type>();
-        private readonly HashSet<System.Type> componentTypesToIgnorePassThrough = new HashSet<System.Type>();
+        private readonly HashSet<System.Type> componentTypesToDenyPassThrough =
+            new HashSet<System.Type>();
+        private readonly HashSet<System.Type> componentTypesToIgnorePassThrough =
+            new HashSet<System.Type>();
         private readonly Collider2D[] hackResults = new Collider2D[128];
         private readonly List<GestureTouch> previousTouches = new List<GestureTouch>();
         private readonly List<GestureTouch> currentTouches = new List<GestureTouch>();
@@ -213,8 +250,10 @@ namespace DigitalRubyShared
 
 #if UNITY_INPUT_SYSTEM_V2
 
-        private static readonly Dictionary<UnityEngine.KeyCode, UnityEngine.InputSystem.Key> keyCodeMappings = new Dictionary<KeyCode, UnityEngine.InputSystem.Key>();
-
+        private static readonly Dictionary<
+            UnityEngine.KeyCode,
+            UnityEngine.InputSystem.Key
+        > keyCodeMappings = new Dictionary<KeyCode, UnityEngine.InputSystem.Key>();
 #endif
 
         private static FingersScript singleton;
@@ -257,7 +296,10 @@ namespace DigitalRubyShared
 
             keyCodeMappings.Clear();
             keyCodeMappings.Add(UnityEngine.KeyCode.None, UnityEngine.InputSystem.Key.None);
-            keyCodeMappings.Add(UnityEngine.KeyCode.Backspace, UnityEngine.InputSystem.Key.Backspace);
+            keyCodeMappings.Add(
+                UnityEngine.KeyCode.Backspace,
+                UnityEngine.InputSystem.Key.Backspace
+            );
             keyCodeMappings.Add(UnityEngine.KeyCode.Tab, UnityEngine.InputSystem.Key.Tab);
             //keyCodeMappings.Add(UnityEngine.KeyCode.Clear, UnityEngine.InputSystem.Key.Clear);
             keyCodeMappings.Add(UnityEngine.KeyCode.Return, UnityEngine.InputSystem.Key.Enter);
@@ -290,15 +332,27 @@ namespace DigitalRubyShared
             keyCodeMappings.Add(UnityEngine.KeyCode.Alpha8, UnityEngine.InputSystem.Key.Digit8);
             keyCodeMappings.Add(UnityEngine.KeyCode.Alpha9, UnityEngine.InputSystem.Key.Digit9);
             //keyCodeMappings.Add(UnityEngine.KeyCode.Colon, UnityEngine.InputSystem.Key.Colon);
-            keyCodeMappings.Add(UnityEngine.KeyCode.Semicolon, UnityEngine.InputSystem.Key.Semicolon);
+            keyCodeMappings.Add(
+                UnityEngine.KeyCode.Semicolon,
+                UnityEngine.InputSystem.Key.Semicolon
+            );
             //keyCodeMappings.Add(UnityEngine.KeyCode.Less, UnityEngine.InputSystem.Key.Less);
             keyCodeMappings.Add(UnityEngine.KeyCode.Equals, UnityEngine.InputSystem.Key.Equals);
             //keyCodeMappings.Add(UnityEngine.KeyCode.Greater, UnityEngine.InputSystem.Key.Greater);
             //keyCodeMappings.Add(UnityEngine.KeyCode.Question, UnityEngine.InputSystem.Key.Question);
             //keyCodeMappings.Add(UnityEngine.KeyCode.At, UnityEngine.InputSystem.Key.At);
-            keyCodeMappings.Add(UnityEngine.KeyCode.LeftBracket, UnityEngine.InputSystem.Key.LeftBracket);
-            keyCodeMappings.Add(UnityEngine.KeyCode.Backslash, UnityEngine.InputSystem.Key.Backslash);
-            keyCodeMappings.Add(UnityEngine.KeyCode.RightBracket, UnityEngine.InputSystem.Key.RightBracket);
+            keyCodeMappings.Add(
+                UnityEngine.KeyCode.LeftBracket,
+                UnityEngine.InputSystem.Key.LeftBracket
+            );
+            keyCodeMappings.Add(
+                UnityEngine.KeyCode.Backslash,
+                UnityEngine.InputSystem.Key.Backslash
+            );
+            keyCodeMappings.Add(
+                UnityEngine.KeyCode.RightBracket,
+                UnityEngine.InputSystem.Key.RightBracket
+            );
             //keyCodeMappings.Add(UnityEngine.KeyCode.Caret, UnityEngine.InputSystem.Key.Caret);
             //keyCodeMappings.Add(UnityEngine.KeyCode.Underscore, UnityEngine.InputSystem.Key.Underscore);
             //keyCodeMappings.Add(UnityEngine.KeyCode.BackQuote, UnityEngine.InputSystem.Key.BackQuote);
@@ -351,9 +405,18 @@ namespace DigitalRubyShared
             //keyCodeMappings.Add(UnityEngine.KeyCode.KeypadEnter, UnityEngine.InputSystem.Key.KeypadEnter);
             //keyCodeMappings.Add(UnityEngine.KeyCode.KeypadEquals, UnityEngine.InputSystem.Key.KeypadEquals);
             keyCodeMappings.Add(UnityEngine.KeyCode.UpArrow, UnityEngine.InputSystem.Key.UpArrow);
-            keyCodeMappings.Add(UnityEngine.KeyCode.DownArrow, UnityEngine.InputSystem.Key.DownArrow);
-            keyCodeMappings.Add(UnityEngine.KeyCode.RightArrow, UnityEngine.InputSystem.Key.RightArrow);
-            keyCodeMappings.Add(UnityEngine.KeyCode.LeftArrow, UnityEngine.InputSystem.Key.LeftArrow);
+            keyCodeMappings.Add(
+                UnityEngine.KeyCode.DownArrow,
+                UnityEngine.InputSystem.Key.DownArrow
+            );
+            keyCodeMappings.Add(
+                UnityEngine.KeyCode.RightArrow,
+                UnityEngine.InputSystem.Key.RightArrow
+            );
+            keyCodeMappings.Add(
+                UnityEngine.KeyCode.LeftArrow,
+                UnityEngine.InputSystem.Key.LeftArrow
+            );
             keyCodeMappings.Add(UnityEngine.KeyCode.Insert, UnityEngine.InputSystem.Key.Insert);
             keyCodeMappings.Add(UnityEngine.KeyCode.Home, UnityEngine.InputSystem.Key.Home);
             keyCodeMappings.Add(UnityEngine.KeyCode.End, UnityEngine.InputSystem.Key.End);
@@ -376,19 +439,46 @@ namespace DigitalRubyShared
             //keyCodeMappings.Add(UnityEngine.KeyCode.F15, UnityEngine.InputSystem.Key.F15);
             keyCodeMappings.Add(UnityEngine.KeyCode.Numlock, UnityEngine.InputSystem.Key.NumLock);
             keyCodeMappings.Add(UnityEngine.KeyCode.CapsLock, UnityEngine.InputSystem.Key.CapsLock);
-            keyCodeMappings.Add(UnityEngine.KeyCode.ScrollLock, UnityEngine.InputSystem.Key.ScrollLock);
-            keyCodeMappings.Add(UnityEngine.KeyCode.RightShift, UnityEngine.InputSystem.Key.RightShift);
-            keyCodeMappings.Add(UnityEngine.KeyCode.LeftShift, UnityEngine.InputSystem.Key.LeftShift);
-            keyCodeMappings.Add(UnityEngine.KeyCode.RightControl, UnityEngine.InputSystem.Key.RightCtrl);
-            keyCodeMappings.Add(UnityEngine.KeyCode.LeftControl, UnityEngine.InputSystem.Key.LeftCtrl);
+            keyCodeMappings.Add(
+                UnityEngine.KeyCode.ScrollLock,
+                UnityEngine.InputSystem.Key.ScrollLock
+            );
+            keyCodeMappings.Add(
+                UnityEngine.KeyCode.RightShift,
+                UnityEngine.InputSystem.Key.RightShift
+            );
+            keyCodeMappings.Add(
+                UnityEngine.KeyCode.LeftShift,
+                UnityEngine.InputSystem.Key.LeftShift
+            );
+            keyCodeMappings.Add(
+                UnityEngine.KeyCode.RightControl,
+                UnityEngine.InputSystem.Key.RightCtrl
+            );
+            keyCodeMappings.Add(
+                UnityEngine.KeyCode.LeftControl,
+                UnityEngine.InputSystem.Key.LeftCtrl
+            );
             keyCodeMappings.Add(UnityEngine.KeyCode.RightAlt, UnityEngine.InputSystem.Key.RightAlt);
             keyCodeMappings.Add(UnityEngine.KeyCode.LeftAlt, UnityEngine.InputSystem.Key.LeftAlt);
-            keyCodeMappings.Add(UnityEngine.KeyCode.RightCommand, UnityEngine.InputSystem.Key.RightCommand);
+            keyCodeMappings.Add(
+                UnityEngine.KeyCode.RightCommand,
+                UnityEngine.InputSystem.Key.RightCommand
+            );
             //keyCodeMappings.Add(UnityEngine.KeyCode.RightApple, UnityEngine.InputSystem.Key.RightApple);
-            keyCodeMappings.Add(UnityEngine.KeyCode.LeftCommand, UnityEngine.InputSystem.Key.LeftCommand);
+            keyCodeMappings.Add(
+                UnityEngine.KeyCode.LeftCommand,
+                UnityEngine.InputSystem.Key.LeftCommand
+            );
             //keyCodeMappings.Add(UnityEngine.KeyCode.LeftApple, UnityEngine.InputSystem.Key.LeftApple);
-            keyCodeMappings.Add(UnityEngine.KeyCode.LeftWindows, UnityEngine.InputSystem.Key.LeftWindows);
-            keyCodeMappings.Add(UnityEngine.KeyCode.RightWindows, UnityEngine.InputSystem.Key.RightWindows);
+            keyCodeMappings.Add(
+                UnityEngine.KeyCode.LeftWindows,
+                UnityEngine.InputSystem.Key.LeftWindows
+            );
+            keyCodeMappings.Add(
+                UnityEngine.KeyCode.RightWindows,
+                UnityEngine.InputSystem.Key.RightWindows
+            );
             keyCodeMappings.Add(UnityEngine.KeyCode.AltGr, UnityEngine.InputSystem.Key.AltGr);
             //keyCodeMappings.Add(UnityEngine.KeyCode.Help, UnityEngine.InputSystem.Key.Help);
             //keyCodeMappings.Add(UnityEngine.KeyCode.Print, UnityEngine.InputSystem.Key.Print);
@@ -397,7 +487,6 @@ namespace DigitalRubyShared
             //keyCodeMappings.Add(UnityEngine.KeyCode.Menu, UnityEngine.InputSystem.Key.Menu);
 
 #endif
-
         }
 
         static FingersScript()
@@ -428,7 +517,6 @@ namespace DigitalRubyShared
             {
                 return CaptureResult.Default;
             }
-
             // if we have a capture gesture handler, perform a check to see if the user has custom pass through logic
             else if (CaptureGestureHandler != null)
             {
@@ -436,7 +524,11 @@ namespace DigitalRubyShared
                 if (tmp != null)
                 {
                     // user has decided on pass through, stop the loop
-                    return (tmp.Value ? CaptureResult.ForceDenyPassThrough : CaptureResult.ForcePassThrough);
+                    return (
+                        tmp.Value
+                            ? CaptureResult.ForceDenyPassThrough
+                            : CaptureResult.ForcePassThrough
+                    );
                 }
             }
 
@@ -516,14 +608,21 @@ namespace DigitalRubyShared
             EventSystem.current.RaycastAll(p, captureRaycastResults);
 
             // HACK: Unity doesn't get collider2d on UI element, get those now
+
+
+
             int hackCount = Physics2D.OverlapPointNonAlloc(p.position, hackResults);
             for (int i = 0; i < hackCount; i++)
             {
                 RaycastResult result = new RaycastResult { gameObject = hackResults[i].gameObject };
-                if (captureRaycastResults.FindIndex((cmp) =>
-                {
-                    return cmp.gameObject == result.gameObject;
-                }) < 0)
+                if (
+                    captureRaycastResults.FindIndex(
+                        (cmp) =>
+                        {
+                            return cmp.gameObject == result.gameObject;
+                        }
+                    ) < 0
+                )
                 {
                     captureRaycastResults.Add(result);
                 }
@@ -539,7 +638,7 @@ namespace DigitalRubyShared
             //var panel = GameObject.FindObjectsOfType<UIDocumentPanelRaycaster>();
             //if (panel != null)
             //{
-                //panel.Raycast(p, captureRaycastResults);
+            //panel.Raycast(p, captureRaycastResults);
             //}
 
             // determine what game object, if any should capture the gesture
@@ -561,7 +660,8 @@ namespace DigitalRubyShared
                             // this specific object stops any further pass through checks underneath
                             list.Add(r.gameObject);
                             return;
-                        } break;
+                        }
+                        break;
 
                     case CaptureResult.Default:
                         // if forcing pass through, only add if matches a platform specific view
@@ -601,7 +701,9 @@ namespace DigitalRubyShared
 
 #if UNITY_INPUT_SYSTEM_V2
 
-        private GestureTouch GestureTouchFromTouch(ref UnityEngine.InputSystem.EnhancedTouch.Touch t)
+        private GestureTouch GestureTouchFromTouch(
+            ref UnityEngine.InputSystem.EnhancedTouch.Touch t
+        )
         {
             // convert Unity touch to Gesture touch
             Vector2 prev;
@@ -649,7 +751,6 @@ namespace DigitalRubyShared
 
             return touch;
         }
-
 #else
 
         private GestureTouch GestureTouchFromTouch(ref UnityEngine.Touch t)
@@ -688,13 +789,21 @@ namespace DigitalRubyShared
                     phase = TouchPhase.Unknown;
                     break;
             }
-            GestureTouch touch = new GestureTouch(t.fingerId, t.position.x, t.position.y, prev.x, prev.y, t.pressure, t, phase);
+            GestureTouch touch = new GestureTouch(
+                t.fingerId,
+                t.position.x,
+                t.position.y,
+                prev.x,
+                prev.y,
+                t.pressure,
+                t,
+                phase
+            );
             prev.x = t.position.x;
             prev.y = t.position.y;
             previousTouchPositions[t.fingerId] = prev;
             return touch;
         }
-
 #endif
 
         private void FingersBeginTouch(ref GestureTouch g)
@@ -725,18 +834,19 @@ namespace DigitalRubyShared
 
         private void FingersProcessTouch(ref GestureTouch g)
         {
-
 #if UNITY_EDITOR
 
             if (RecordTouches)
             {
-                TestTouches.Add(new FakeTouch
-                {
-                    Id = g.Id,
-                    Phase = g.TouchPhase,
-                    ScreenPosition = new Vector2(g.X, g.Y),
-                    Time = Time.timeSinceLevelLoad
-                });
+                TestTouches.Add(
+                    new FakeTouch
+                    {
+                        Id = g.Id,
+                        Phase = g.TouchPhase,
+                        ScreenPosition = new Vector2(g.X, g.Y),
+                        Time = Time.timeSinceLevelLoad
+                    }
+                );
             }
 
 #endif
@@ -768,16 +878,21 @@ namespace DigitalRubyShared
             UnityEngine.InputSystem.Controls.ButtonControl mouseButton;
             switch (index)
             {
-                case 0: mouseButton = UnityEngine.InputSystem.Mouse.current.leftButton; break;
-                case 1: mouseButton = UnityEngine.InputSystem.Mouse.current.middleButton; break;
-                case 2: mouseButton = UnityEngine.InputSystem.Mouse.current.rightButton; break;
-                default: throw new System.ArgumentException("Invalid mouse button index " + index);
+                case 0:
+                    mouseButton = UnityEngine.InputSystem.Mouse.current.leftButton;
+                    break;
+                case 1:
+                    mouseButton = UnityEngine.InputSystem.Mouse.current.middleButton;
+                    break;
+                case 2:
+                    mouseButton = UnityEngine.InputSystem.Mouse.current.rightButton;
+                    break;
+                default:
+                    throw new System.ArgumentException("Invalid mouse button index " + index);
             }
             return mouseButton;
         }
-
 #endif
-
 
         private void AddMouseTouch(int index, int pointerId)
         {
@@ -801,7 +916,6 @@ namespace DigitalRubyShared
             {
                 phase = TouchPhase.Ended;
             }
-
 #else
 
             float x = UnityEngine.Input.mousePosition.x;
@@ -820,7 +934,6 @@ namespace DigitalRubyShared
             {
                 phase = TouchPhase.Moved;
             }
-
 #endif
 
             else
@@ -843,11 +956,14 @@ namespace DigitalRubyShared
 
         private void ProcessTouches()
         {
-
 #if UNITY_INPUT_SYSTEM_V2
 
             touchCount = UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches.Count;
-            for (int i = 0; i < UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches.Count; i++)
+            for (
+                int i = 0;
+                i < UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches.Count;
+                i++
+            )
             {
                 var touch = UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches[i];
                 GestureTouch gestureTouch = GestureTouchFromTouch(ref touch);
@@ -866,7 +982,6 @@ namespace DigitalRubyShared
             }
 
 #endif
-
         }
 
         private void ProcessVirtualTouches()
@@ -880,7 +995,8 @@ namespace DigitalRubyShared
                     {
                         TestTouches.RemoveAt(i--);
                         GestureTouch inProgress;
-                        float prevX, prevY;
+                        float prevX,
+                            prevY;
                         if (fakeTouchesInProgress.TryGetValue(fake.Id, out inProgress))
                         {
                             prevX = inProgress.ScreenX;
@@ -903,8 +1019,19 @@ namespace DigitalRubyShared
                             screenX *= Screen.width;
                             screenY *= Screen.height;
                         }
-                        GestureTouch g = new GestureTouch(fake.Id, screenX, screenY, prevX, prevY, 1.0f, null, fake.Phase);
-                        if (g.TouchPhase == TouchPhase.Cancelled || g.TouchPhase == TouchPhase.Ended)
+                        GestureTouch g = new GestureTouch(
+                            fake.Id,
+                            screenX,
+                            screenY,
+                            prevX,
+                            prevY,
+                            1.0f,
+                            null,
+                            fake.Phase
+                        );
+                        if (
+                            g.TouchPhase == TouchPhase.Cancelled || g.TouchPhase == TouchPhase.Ended
+                        )
                         {
                             FingersProcessTouch(ref g);
                             fakeTouchesInProgress.Remove(g.Id);
@@ -931,7 +1058,9 @@ namespace DigitalRubyShared
                 }
                 if (VirtualTouchUpdateHandler == null)
                 {
-                    Debug.LogError("Please implement VirtualTouchUpdateHandler and remove any ended gestures in that callback");
+                    Debug.LogError(
+                        "Please implement VirtualTouchUpdateHandler and remove any ended gestures in that callback"
+                    );
                 }
                 else
                 {
@@ -940,7 +1069,13 @@ namespace DigitalRubyShared
             }
         }
 
-        private void RotateAroundPoint(ref float rotX, ref float rotY, float anchorX, float anchorY, float angleRadians)
+        private void RotateAroundPoint(
+            ref float rotX,
+            ref float rotY,
+            float anchorX,
+            float anchorY,
+            float angleRadians
+        )
         {
             // rotate around a point in 2D space
             float cosTheta = Mathf.Cos(angleRadians);
@@ -953,7 +1088,6 @@ namespace DigitalRubyShared
 
         private bool HasMouse()
         {
-
 #if UNITY_INPUT_SYSTEM_V2
 
             if (UnityEngine.InputSystem.Mouse.current == null || !TreatMousePointerAsFinger)
@@ -976,7 +1110,6 @@ namespace DigitalRubyShared
 
         private bool HasKeyboard()
         {
-
 #if UNITY_INPUT_SYSTEM_V2
 
             if (UnityEngine.InputSystem.Keyboard.current == null)
@@ -1016,7 +1149,6 @@ namespace DigitalRubyShared
             var mouse = UnityEngine.InputSystem.Mouse.current;
             var keyboard = UnityEngine.InputSystem.Keyboard.current;
             Vector2 delta = mouse.scroll.ReadValue() * 0.1f; // new input system is different from old input system by ~10x
-
 #else
 
             Vector2 delta = UnityEngine.Input.mouseScrollDelta * 10.0f;
@@ -1024,7 +1156,9 @@ namespace DigitalRubyShared
 #endif
 
             float scrollDelta = (delta.y == 0.0f ? delta.x : delta.y) * MouseWheelDeltaMultiplier;
-            float threshold = DeviceInfo.UnitsToPixels(MouseDistanceInUnitsForScaleAndRotate * 0.5f);
+            float threshold = DeviceInfo.UnitsToPixels(
+                MouseDistanceInUnitsForScaleAndRotate * 0.5f
+            );
 
             // add type 1 = moved, 2 = begin, 3 = ended, 4 = none
             int addType1 = 4;
@@ -1065,10 +1199,12 @@ namespace DigitalRubyShared
                     lastMouseWheelTime = System.DateTime.UtcNow;
                 }
             }
-
 #if UNITY_INPUT_SYSTEM_V2
 
-            else if (keyboard.leftCtrlKey.wasPressedThisFrame || keyboard.rightCtrlKey.wasPressedThisFrame)
+            else if (
+                keyboard.leftCtrlKey.wasPressedThisFrame
+                || keyboard.rightCtrlKey.wasPressedThisFrame
+            )
             {
                 // initial start of scale
                 addType1 = 2;
@@ -1080,13 +1216,19 @@ namespace DigitalRubyShared
                 addType1 = 1;
             }
             // left or right control initial up means end
-            else if (keyboard.leftCtrlKey.wasReleasedThisFrame || keyboard.rightCtrlKey.wasReleasedThisFrame)
+            else if (
+                keyboard.leftCtrlKey.wasReleasedThisFrame
+                || keyboard.rightCtrlKey.wasReleasedThisFrame
+            )
             {
                 addType1 = 3;
             }
 
             // left or right shift initial down means begin
-            if (keyboard.leftShiftKey.wasPressedThisFrame || keyboard.rightShiftKey.wasPressedThisFrame)
+            if (
+                keyboard.leftShiftKey.wasPressedThisFrame
+                || keyboard.rightShiftKey.wasPressedThisFrame
+            )
             {
                 addType2 = 2;
             }
@@ -1097,43 +1239,64 @@ namespace DigitalRubyShared
                 addType2 = 1;
             }
             // left or right shift initial up means end
-            else if (keyboard.leftShiftKey.wasReleasedThisFrame || keyboard.rightShiftKey.wasReleasedThisFrame)
+            else if (
+                keyboard.leftShiftKey.wasReleasedThisFrame
+                || keyboard.rightShiftKey.wasReleasedThisFrame
+            )
             {
                 addType2 = 3;
             }
 
 #else
 
-            else if (UnityEngine.Input.GetKeyDown(KeyCode.LeftControl) || UnityEngine.Input.GetKeyDown(KeyCode.RightControl))
+            else if (
+                UnityEngine.Input.GetKeyDown(KeyCode.LeftControl)
+                || UnityEngine.Input.GetKeyDown(KeyCode.RightControl)
+            )
             {
                 // initial start of scale
                 addType1 = 2;
             }
             // left or right control still down means move
-            else if (UnityEngine.Input.GetKey(KeyCode.LeftControl) || UnityEngine.Input.GetKey(KeyCode.RightControl))
+            else if (
+                UnityEngine.Input.GetKey(KeyCode.LeftControl)
+                || UnityEngine.Input.GetKey(KeyCode.RightControl)
+            )
             {
                 pinchScale = Mathf.Max(0.35f, pinchScale + scrollDelta);
                 addType1 = 1;
             }
             // left or right control initial up means end
-            else if (UnityEngine.Input.GetKeyUp(KeyCode.LeftControl) || UnityEngine.Input.GetKeyUp(KeyCode.RightControl))
+            else if (
+                UnityEngine.Input.GetKeyUp(KeyCode.LeftControl)
+                || UnityEngine.Input.GetKeyUp(KeyCode.RightControl)
+            )
             {
                 addType1 = 3;
             }
 
             // left or right shift initial down means begin
-            if (UnityEngine.Input.GetKeyDown(KeyCode.LeftShift) || UnityEngine.Input.GetKeyDown(KeyCode.RightShift))
+            if (
+                UnityEngine.Input.GetKeyDown(KeyCode.LeftShift)
+                || UnityEngine.Input.GetKeyDown(KeyCode.RightShift)
+            )
             {
                 addType2 = 2;
             }
             // left or right shift still down means move
-            else if (UnityEngine.Input.GetKey(KeyCode.LeftShift) || UnityEngine.Input.GetKey(KeyCode.RightShift))
+            else if (
+                UnityEngine.Input.GetKey(KeyCode.LeftShift)
+                || UnityEngine.Input.GetKey(KeyCode.RightShift)
+            )
             {
                 rotateAngle += scrollDelta;
                 addType2 = 1;
             }
             // left or right shift initial up means end
-            else if (UnityEngine.Input.GetKeyUp(KeyCode.LeftShift) || UnityEngine.Input.GetKeyUp(KeyCode.RightShift))
+            else if (
+                UnityEngine.Input.GetKeyUp(KeyCode.LeftShift)
+                || UnityEngine.Input.GetKeyUp(KeyCode.RightShift)
+            )
             {
                 addType2 = 3;
             }
@@ -1190,26 +1353,83 @@ namespace DigitalRubyShared
             if (addType == 1)
             {
                 // moved
-                rotatePinch1 = new GestureTouch(MouseRotatePinchId0, xRot1, yRot1, rotatePinch1.X, rotatePinch1.Y, 1.0f, addType, TouchPhase.Moved);
-                rotatePinch2 = new GestureTouch(MouseRotatePinchId1, xRot2, yRot2, rotatePinch2.X, rotatePinch2.Y, 1.0f, addType, TouchPhase.Moved);
+                rotatePinch1 = new GestureTouch(
+                    MouseRotatePinchId0,
+                    xRot1,
+                    yRot1,
+                    rotatePinch1.X,
+                    rotatePinch1.Y,
+                    1.0f,
+                    addType,
+                    TouchPhase.Moved
+                );
+                rotatePinch2 = new GestureTouch(
+                    MouseRotatePinchId1,
+                    xRot2,
+                    yRot2,
+                    rotatePinch2.X,
+                    rotatePinch2.Y,
+                    1.0f,
+                    addType,
+                    TouchPhase.Moved
+                );
             }
             else if (addType == 2)
             {
                 // begin
-                rotatePinch1 = new GestureTouch(MouseRotatePinchId0, xRot1, yRot1, xRot1, yRot1, 1.0f, addType, TouchPhase.Began);
-                rotatePinch2 = new GestureTouch(MouseRotatePinchId1, xRot2, yRot2, xRot2, yRot2, 1.0f, addType, TouchPhase.Began);
+                rotatePinch1 = new GestureTouch(
+                    MouseRotatePinchId0,
+                    xRot1,
+                    yRot1,
+                    xRot1,
+                    yRot1,
+                    1.0f,
+                    addType,
+                    TouchPhase.Began
+                );
+                rotatePinch2 = new GestureTouch(
+                    MouseRotatePinchId1,
+                    xRot2,
+                    yRot2,
+                    xRot2,
+                    yRot2,
+                    1.0f,
+                    addType,
+                    TouchPhase.Began
+                );
             }
             else if (addType == 3)
             {
                 // end
-                rotatePinch1 = new GestureTouch(MouseRotatePinchId0, xRot1, yRot1, xRot1, yRot1, 1.0f, addType, TouchPhase.Ended);
-                rotatePinch2 = new GestureTouch(MouseRotatePinchId1, xRot2, yRot2, xRot2, yRot2, 1.0f, addType, TouchPhase.Ended);
+                rotatePinch1 = new GestureTouch(
+                    MouseRotatePinchId0,
+                    xRot1,
+                    yRot1,
+                    xRot1,
+                    yRot1,
+                    1.0f,
+                    addType,
+                    TouchPhase.Ended
+                );
+                rotatePinch2 = new GestureTouch(
+                    MouseRotatePinchId1,
+                    xRot2,
+                    yRot2,
+                    xRot2,
+                    yRot2,
+                    1.0f,
+                    addType,
+                    TouchPhase.Ended
+                );
             }
 
             if (addType >= 1 && addType <= 3)
             {
                 // apply snap back option if needed
-                if (MouseWheelZoomOutSnapBack.x > 0.0f && MouseWheelZoomOutSnapBack.y > MouseWheelZoomOutSnapBack.x)
+                if (
+                    MouseWheelZoomOutSnapBack.x > 0.0f
+                    && MouseWheelZoomOutSnapBack.y > MouseWheelZoomOutSnapBack.x
+                )
                 {
                     Vector2 v1 = new Vector2(rotatePinch1.X, rotatePinch1.Y);
                     Vector2 v2 = new Vector2(rotatePinch2.X, rotatePinch2.Y);
@@ -1222,10 +1442,28 @@ namespace DigitalRubyShared
                         dir *= dist;
                         v1 -= dir;
                         v2 += dir;
-                        rotatePinch1 = new GestureTouch(rotatePinch1.Id, v1.x, v1.y, v1.x, v1.y,
-                            rotatePinch1.Pressure, rotatePinch1.PlatformSpecificTouch, rotatePinch1.TouchPhase, rotatePinch1.DeviceId);
-                        rotatePinch2 = new GestureTouch(rotatePinch2.Id, v2.x, v2.y, v2.x, v2.y,
-                            rotatePinch2.Pressure, rotatePinch2.PlatformSpecificTouch, rotatePinch2.TouchPhase, rotatePinch2.DeviceId);
+                        rotatePinch1 = new GestureTouch(
+                            rotatePinch1.Id,
+                            v1.x,
+                            v1.y,
+                            v1.x,
+                            v1.y,
+                            rotatePinch1.Pressure,
+                            rotatePinch1.PlatformSpecificTouch,
+                            rotatePinch1.TouchPhase,
+                            rotatePinch1.DeviceId
+                        );
+                        rotatePinch2 = new GestureTouch(
+                            rotatePinch2.Id,
+                            v2.x,
+                            v2.y,
+                            v2.x,
+                            v2.y,
+                            rotatePinch2.Pressure,
+                            rotatePinch2.PlatformSpecificTouch,
+                            rotatePinch2.TouchPhase,
+                            rotatePinch2.DeviceId
+                        );
                         pinchScale = 1.0f;
                         rotateAngle = 0.0f;
                     }
@@ -1274,13 +1512,22 @@ namespace DigitalRubyShared
             tempTouches.Clear();
         }
 
-        private bool GameObjectMatchesPlatformSpecificView(List<GameObject> list, DigitalRubyShared.GestureRecognizer r)
+        private bool GameObjectMatchesPlatformSpecificView(
+            List<GameObject> list,
+            DigitalRubyShared.GestureRecognizer r
+        )
         {
             GameObject platformSpecificView = r.PlatformSpecificView as GameObject;
 
-            if ((platformSpecificView == null && EventSystem.current == null) ||
+            if (
+                (platformSpecificView == null && EventSystem.current == null)
+                ||
                 // HACK: If the platform specific view is a Canvas, always match
-                (platformSpecificView != null && platformSpecificView.GetComponent<Canvas>() != null))
+                (
+                    platformSpecificView != null
+                    && platformSpecificView.GetComponent<Canvas>() != null
+                )
+            )
             {
                 return true;
             }
@@ -1297,7 +1544,13 @@ namespace DigitalRubyShared
                 else
                 {
                     // if we have a collider and no platform specific view, count as a match
-                    bool hasCollider = (obj != null && (obj.GetComponent<Collider2D>() != null || obj.GetComponent<Collider>() != null));
+                    bool hasCollider = (
+                        obj != null
+                        && (
+                            obj.GetComponent<Collider2D>() != null
+                            || obj.GetComponent<Collider>() != null
+                        )
+                    );
                     if (hasCollider && platformSpecificView == null)
                     {
                         return true;
@@ -1307,14 +1560,20 @@ namespace DigitalRubyShared
             return false;
         }
 
-        private ICollection<GestureTouch> FilterTouchesBegan(List<GestureTouch> touches, DigitalRubyShared.GestureRecognizer r)
+        private ICollection<GestureTouch> FilterTouchesBegan(
+            List<GestureTouch> touches,
+            DigitalRubyShared.GestureRecognizer r
+        )
         {
             // in order to begin, touches must match the platform specific view
             List<GameObject> gameObjects;
             filteredTouches.Clear();
             foreach (GestureTouch t in touches)
             {
-                if (!gameObjectsForTouch.TryGetValue(t.Id, out gameObjects) || GameObjectMatchesPlatformSpecificView(gameObjects, r))
+                if (
+                    !gameObjectsForTouch.TryGetValue(t.Id, out gameObjects)
+                    || GameObjectMatchesPlatformSpecificView(gameObjects, r)
+                )
                 {
                     // make sure gesture is not masked out
                     if (masks.Count != 0)
@@ -1324,15 +1583,27 @@ namespace DigitalRubyShared
                         foreach (GestureMask mask in masks)
                         {
                             Collider2D collider = mask.Collider;
-                            if (collider != null && collider.enabled && collider.gameObject.activeInHierarchy)
+                            if (
+                                collider != null
+                                && collider.enabled
+                                && collider.gameObject.activeInHierarchy
+                            )
                             {
                                 Canvas canvas = collider.GetComponentInParent<Canvas>();
                                 if (canvas != null)
                                 {
-                                    if (mask.Gestures == null || mask.Gestures.Count == 0 || mask.Gestures.Contains(r))
+                                    if (
+                                        mask.Gestures == null
+                                        || mask.Gestures.Count == 0
+                                        || mask.Gestures.Contains(r)
+                                    )
                                     {
                                         needsMask = true;
-                                        Vector2 canvasSpacePoint = FingersUtility.ScreenToCanvasPoint(canvas, new Vector2(t.ScreenX, t.ScreenY));
+                                        Vector2 canvasSpacePoint =
+                                            FingersUtility.ScreenToCanvasPoint(
+                                                canvas,
+                                                new Vector2(t.ScreenX, t.ScreenY)
+                                            );
                                         if (collider.OverlapPoint(canvasSpacePoint))
                                         {
                                             hit = true;
@@ -1391,7 +1662,6 @@ namespace DigitalRubyShared
 
         private void SceneManagerSceneUnloaded(UnityEngine.SceneManagement.Scene scene)
         {
-
 #if UNITY_EDITOR
 
             if (scene.name.IndexOf("Preview Scene", System.StringComparison.OrdinalIgnoreCase) >= 0)
@@ -1417,10 +1687,11 @@ namespace DigitalRubyShared
         {
             if (singleton != null && singleton != this)
             {
-
 #if UNITY_EDITOR
 
-                Debug.LogError("Multiple fingers scripts found, there should only be one. When you access FingersScript.Instance, the prefab will be loaded automatically from the resources folder if it isn't already in the scene. If you are dragging the prefab into your scenes, then every scene needs to have the prefab dragged in, otherwise no scene should have the prefab dragged in and it will load automatically when you call FingersScript.Instance.");
+                Debug.LogError(
+                    "Multiple fingers scripts found, there should only be one. When you access FingersScript.Instance, the prefab will be loaded automatically from the resources folder if it isn't already in the scene. If you are dragging the prefab into your scenes, then every scene needs to have the prefab dragged in, otherwise no scene should have the prefab dragged in and it will load automatically when you call FingersScript.Instance."
+                );
 
 #endif
 
@@ -1448,15 +1719,21 @@ namespace DigitalRubyShared
 
 #else
 
-                if (UnityEngine.SystemInfo.graphicsDeviceType != UnityEngine.Rendering.GraphicsDeviceType.Null)
+                if (
+                    UnityEngine.SystemInfo.graphicsDeviceType
+                    != UnityEngine.Rendering.GraphicsDeviceType.Null
+                )
 
 #endif
 
-                Debug.LogError("Unable to determine DPI, using default DPI of " + DefaultDPI);
+                    Debug.LogError("Unable to determine DPI, using default DPI of " + DefaultDPI);
             }
 
             // set the main thread callback so gestures can callback after a delay
-            DigitalRubyShared.GestureRecognizer.MainThreadCallback = (float delay, System.Action callback) =>
+            DigitalRubyShared.GestureRecognizer.MainThreadCallback = (
+                float delay,
+                System.Action callback
+            ) =>
             {
                 StartCoroutine(MainThreadCallback(delay, callback));
             };
@@ -1506,7 +1783,15 @@ namespace DigitalRubyShared
             }
 
             // add event system if needed
-            if (EventSystem.current == null && AutoAddRequiredComponents && FindObjectOfType<EventSystem>() == null)
+            if (
+                EventSystem.current == null
+                && AutoAddRequiredComponents
+#if UNITY_2023_1_OR_NEWER
+                && FindFirstObjectByType<EventSystem>() == null
+#else
+                && FindObjectOfType<EventSystem>() == null
+#endif
+            )
             {
                 gameObject.AddComponent<EventSystem>().hideFlags = HideFlags.HideAndDontSave;
             }
@@ -1551,18 +1836,23 @@ namespace DigitalRubyShared
                     {
                         if (camera.GetComponent<PhysicsRaycaster>() == null)
                         {
-                            camera.gameObject.AddComponent<PhysicsRaycaster>().hideFlags = HideFlags.HideAndDontSave;
+                            camera.gameObject.AddComponent<PhysicsRaycaster>().hideFlags =
+                                HideFlags.HideAndDontSave;
                         }
                         if (camera.GetComponent<Physics2DRaycaster>() == null)
                         {
-                            camera.gameObject.AddComponent<Physics2DRaycaster>().hideFlags = HideFlags.HideAndDontSave;
+                            camera.gameObject.AddComponent<Physics2DRaycaster>().hideFlags =
+                                HideFlags.HideAndDontSave;
                         }
                     }
                 }
             }
 
             // turn on the canvas to see touches - don't do this unless you are debugging as it can mess up other canvases
-            if (gameObject.transform.childCount > 0 && gameObject.transform.GetChild(0).GetComponent<Canvas>() != null)
+            if (
+                gameObject.transform.childCount > 0
+                && gameObject.transform.GetChild(0).GetComponent<Canvas>() != null
+            )
             {
                 gameObject.transform.GetChild(0).gameObject.SetActive(ShowTouches);
             }
@@ -1646,7 +1936,11 @@ namespace DigitalRubyShared
                     {
                         // create a new entry
                         int index = availableShowTouches.Count - 1;
-                        shownTouches[t.Id] = obj = new ShownTouch { GameObject = availableShowTouches[index], Timestamp = timestamp };
+                        shownTouches[t.Id] = obj = new ShownTouch
+                        {
+                            GameObject = availableShowTouches[index],
+                            Timestamp = timestamp
+                        };
                         availableShowTouches.RemoveAt(index);
 
                         // activate the game object
@@ -1689,8 +1983,10 @@ namespace DigitalRubyShared
             }
         }
 
-        private static readonly List<RaycastResult> captureRaycastResultsTemp = new List<RaycastResult>();
-        private static readonly System.Comparison<RaycastResult> raycastResultCompare = RaycastResultCompare;
+        private static readonly List<RaycastResult> captureRaycastResultsTemp =
+            new List<RaycastResult>();
+        private static readonly System.Comparison<RaycastResult> raycastResultCompare =
+            RaycastResultCompare;
 
         private static int RaycastResultCompare(RaycastResult r1, RaycastResult r2)
         {
@@ -1708,7 +2004,9 @@ namespace DigitalRubyShared
                     return comp;
                 }
             }
-            return r2.gameObject.transform.GetSiblingIndex().CompareTo(r1.gameObject.transform.GetSiblingIndex());
+            return r2.gameObject.transform
+                .GetSiblingIndex()
+                .CompareTo(r1.gameObject.transform.GetSiblingIndex());
         }
 
         /// <summary>
@@ -1720,8 +2018,13 @@ namespace DigitalRubyShared
         /// <param name="mode">Gesture mode</param>
         /// <param name="comparer">Comparer or null for default</param>
         /// <returns>The intersected game object or null if none</returns>
-        public static GameObject GestureIntersectsObject(DigitalRubyShared.GestureRecognizer r, Camera camera, GameObject obj,
-            GestureRecognizerComponentScriptBase.GestureObjectMode mode, System.Comparison<RaycastResult> comparer = null)
+        public static GameObject GestureIntersectsObject(
+            DigitalRubyShared.GestureRecognizer r,
+            Camera camera,
+            GameObject obj,
+            GestureRecognizerComponentScriptBase.GestureObjectMode mode,
+            System.Comparison<RaycastResult> comparer = null
+        )
         {
             if (EventSystem.current == null || camera == null)
             {
@@ -1741,11 +2044,19 @@ namespace DigitalRubyShared
                 {
                     return result.gameObject;
                 }
-                else if (result.gameObject.GetComponent<Collider>() != null ||
-                    result.gameObject.GetComponent<Collider2D>() != null ||
-                    result.gameObject.GetComponent<FingersPanRotateScaleComponentScript>() != null)
+                else if (
+                    result.gameObject.GetComponent<Collider>() != null
+                    || result.gameObject.GetComponent<Collider2D>() != null
+                    || result.gameObject.GetComponent<FingersPanRotateScaleComponentScript>()
+                        != null
+                )
                 {
-                    if (mode == GestureRecognizerComponentScriptBase.GestureObjectMode.AllowOnAnyGameObjectViaRaycast)
+                    if (
+                        mode
+                        == GestureRecognizerComponentScriptBase
+                            .GestureObjectMode
+                            .AllowOnAnyGameObjectViaRaycast
+                    )
                     {
                         return result.gameObject;
                     }
@@ -1763,7 +2074,10 @@ namespace DigitalRubyShared
         /// <param name="r">Gesture recognizer</param>
         /// <param name="cameras">Cameras</param>
         /// <returns>Camera or null if none found</returns>
-        public static Camera GetCameraForGesture(DigitalRubyShared.GestureRecognizer r, Camera[] cameras)
+        public static Camera GetCameraForGesture(
+            DigitalRubyShared.GestureRecognizer r,
+            Camera[] cameras
+        )
         {
             Camera camera = null;
             if (cameras != null && cameras.Length != 0)
@@ -1792,8 +2106,15 @@ namespace DigitalRubyShared
         /// <param name="mode">Gesture mode</param>
         /// <param name="camera">Receies found camera or null if none</param>
         /// <returns></returns>
-        public static GameObject StartOrResetGesture(DigitalRubyShared.GestureRecognizer r, bool bringToFront, Camera[] cameras, GameObject obj,
-            SpriteRenderer spriteRenderer, GestureRecognizerComponentScriptBase.GestureObjectMode mode, out Camera camera)
+        public static GameObject StartOrResetGesture(
+            DigitalRubyShared.GestureRecognizer r,
+            bool bringToFront,
+            Camera[] cameras,
+            GameObject obj,
+            SpriteRenderer spriteRenderer,
+            GestureRecognizerComponentScriptBase.GestureObjectMode mode,
+            out Camera camera
+        )
         {
             GameObject result = null;
             camera = FingersScript.GetCameraForGesture(r, cameras);
@@ -1802,7 +2123,10 @@ namespace DigitalRubyShared
                 if ((result = GestureIntersectsObject(r, camera, obj, mode)) != null)
                 {
                     SpriteRenderer _spriteRenderer;
-                    if (bringToFront && (_spriteRenderer = result.GetComponent<SpriteRenderer>()) != null)
+                    if (
+                        bringToFront
+                        && (_spriteRenderer = result.GetComponent<SpriteRenderer>()) != null
+                    )
                     {
                         _spriteRenderer.sortingOrder = 1000;
                     }
@@ -2007,7 +2331,12 @@ namespace DigitalRubyShared
         /// <param name="touchPhase">Virtual touch phase</param>
         /// <param name="touchPressure">Virtual touch pressure</param>
         /// <returns>GestureTouch</returns>
-        public GestureTouch GestureTouchFromVirtualTouch(int touchId, Vector2 touchPosition, UnityEngine.TouchPhase touchPhase, float touchPressure = 1.0f)
+        public GestureTouch GestureTouchFromVirtualTouch(
+            int touchId,
+            Vector2 touchPosition,
+            UnityEngine.TouchPhase touchPhase,
+            float touchPressure = 1.0f
+        )
         {
             // convert Unity touch to Gesture touch
             Vector2 prev;
@@ -2043,7 +2372,16 @@ namespace DigitalRubyShared
                     mappedTouchPhase = TouchPhase.Unknown;
                     break;
             }
-            GestureTouch touch = new GestureTouch(touchId, touchPosition.x, touchPosition.y, prev.x, prev.y, touchPressure, null, mappedTouchPhase);
+            GestureTouch touch = new GestureTouch(
+                touchId,
+                touchPosition.x,
+                touchPosition.y,
+                prev.x,
+                prev.y,
+                touchPressure,
+                null,
+                mappedTouchPhase
+            );
             prev.x = touchPosition.x;
             prev.y = touchPosition.y;
             previousTouchPositions[touchId] = prev;
@@ -2057,7 +2395,6 @@ namespace DigitalRubyShared
         /// <returns>Touch</returns>
         public GestureTouch GetTouch(int index)
         {
-
 #if UNITY_INPUT_SYSTEM_V2
 
             var touch = UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches[index];
@@ -2072,27 +2409,25 @@ namespace DigitalRubyShared
             return g;
 
 #endif
-
         }
 
         public bool IsKeyDownThisFrame(UnityEngine.KeyCode key)
         {
-
 #if UNITY_INPUT_SYSTEM_V2
 
-            return UnityEngine.InputSystem.Keyboard.current[keyCodeMappings[key]].wasPressedThisFrame;
+            return UnityEngine.InputSystem.Keyboard.current[
+                keyCodeMappings[key]
+            ].wasPressedThisFrame;
 
 #else
 
             return UnityEngine.Input.GetKeyDown(key);
 
 #endif
-
         }
 
         public bool IsKeyDown(UnityEngine.KeyCode key)
         {
-
 #if UNITY_INPUT_SYSTEM_V2
 
             return UnityEngine.InputSystem.Keyboard.current[keyCodeMappings[key]].isPressed;
@@ -2102,27 +2437,25 @@ namespace DigitalRubyShared
             return UnityEngine.Input.GetKey(key);
 
 #endif
-
         }
 
         public bool IsKeyUpThisFrame(UnityEngine.KeyCode key)
         {
-
 #if UNITY_INPUT_SYSTEM_V2
 
-            return UnityEngine.InputSystem.Keyboard.current[keyCodeMappings[key]].wasReleasedThisFrame;
+            return UnityEngine.InputSystem.Keyboard.current[
+                keyCodeMappings[key]
+            ].wasReleasedThisFrame;
 
 #else
 
             return UnityEngine.Input.GetKeyUp(key);
 
 #endif
-
         }
 
         public bool IsMouseDownThisFrame(int index)
         {
-
 #if UNITY_INPUT_SYSTEM_V2
 
             UnityEngine.InputSystem.Controls.ButtonControl mouseButton = GetMouseButton(index);
@@ -2133,12 +2466,10 @@ namespace DigitalRubyShared
             return UnityEngine.Input.GetMouseButtonDown(index);
 
 #endif
-
         }
 
         public bool IsMouseDown(int index)
         {
-
 #if UNITY_INPUT_SYSTEM_V2
 
             UnityEngine.InputSystem.Controls.ButtonControl mouseButton = GetMouseButton(index);
@@ -2149,12 +2480,10 @@ namespace DigitalRubyShared
             return UnityEngine.Input.GetMouseButton(index);
 
 #endif
-
         }
 
         public bool IsMouseUpThisFrame(int index)
         {
-
 #if UNITY_INPUT_SYSTEM_V2
 
             UnityEngine.InputSystem.Controls.ButtonControl mouseButton = GetMouseButton(index);
@@ -2165,13 +2494,15 @@ namespace DigitalRubyShared
             return UnityEngine.Input.GetMouseButtonUp(index);
 
 #endif
-
         }
 
         /// <summary>
         /// Gets a collection of the current touches
         /// </summary>
-        public ICollection<GestureTouch> Touches { get { return touches; } }
+        public ICollection<GestureTouch> Touches
+        {
+            get { return touches; }
+        }
 
         /// <summary>
         /// Optional handler to determine whether a game object will pass through or not.
@@ -2207,28 +2538,43 @@ namespace DigitalRubyShared
         /// A set of component types that will stop the gesture from passing through. By default includes UI components like Button, Dropdown, etc.
         /// You can add additional component types if you like, but you should not remove items from this set or clear the set.
         /// </summary>
-        public HashSet<System.Type> ComponentTypesToDenyPassThrough { get { return componentTypesToDenyPassThrough; } }
+        public HashSet<System.Type> ComponentTypesToDenyPassThrough
+        {
+            get { return componentTypesToDenyPassThrough; }
+        }
 
         /// <summary>
         /// A set of component types that will be ignored for purposes of pass through checking. By default includes the Text UI component.
         /// You can add additional component types if you like, but you should not remove items from this set or clear the set.
         /// </summary>
-        public HashSet<System.Type> ComponentTypesToIgnorePassThrough { get { return componentTypesToIgnorePassThrough; } }
+        public HashSet<System.Type> ComponentTypesToIgnorePassThrough
+        {
+            get { return componentTypesToIgnorePassThrough; }
+        }
 
         /// <summary>
         /// Previous touch locations
         /// </summary>
-        public System.Collections.ObjectModel.ReadOnlyCollection<GestureTouch> PreviousTouches { get { return previousTouches.AsReadOnly(); } }
+        public System.Collections.ObjectModel.ReadOnlyCollection<GestureTouch> PreviousTouches
+        {
+            get { return previousTouches.AsReadOnly(); }
+        }
 
         /// <summary>
         /// Current touch objects begin tracked
         /// </summary>
-        public System.Collections.ObjectModel.ReadOnlyCollection<GestureTouch> CurrentTouches { get { return currentTouches.AsReadOnly(); } }
+        public System.Collections.ObjectModel.ReadOnlyCollection<GestureTouch> CurrentTouches
+        {
+            get { return currentTouches.AsReadOnly(); }
+        }
 
         /// <summary>
         /// All gestures added to the script
         /// </summary>
-        public System.Collections.ObjectModel.ReadOnlyCollection<DigitalRubyShared.GestureRecognizer> Gestures { get { return gestures.AsReadOnly(); } }
+        public System.Collections.ObjectModel.ReadOnlyCollection<DigitalRubyShared.GestureRecognizer> Gestures
+        {
+            get { return gestures.AsReadOnly(); }
+        }
 
         /// <summary>
         /// Shared static instance of fingers script that lives forever - the prefab MUST exist in a resources folder!
@@ -2241,10 +2587,16 @@ namespace DigitalRubyShared
             {
                 if (singleton == null)
                 {
+#if UNITY_2023_1_OR_NEWER
+                    singleton = GameObject.FindFirstObjectByType<FingersScript>();
+#else
                     singleton = GameObject.FindObjectOfType<FingersScript>();
+#endif
                     if (singleton == null)
                     {
-                        GameObject prefab = GameObject.Instantiate(Resources.Load("FingersScriptPrefab") as GameObject);
+                        GameObject prefab = GameObject.Instantiate(
+                            Resources.Load("FingersScriptPrefab") as GameObject
+                        );
                         GameObject.DontDestroyOnLoad(prefab);
                         singleton = prefab.GetComponent<FingersScript>();
                     }
@@ -2256,23 +2608,35 @@ namespace DigitalRubyShared
         /// <summary>
         /// Get the current touch count
         /// </summary>
-        public int TouchCount { get { return touchCount; } }
+        public int TouchCount
+        {
+            get { return touchCount; }
+        }
 
         /// <summary>
         /// Determines if a mouse is present
         /// </summary>
-        public bool MousePresent { get { return HasMouse(); } }
+        public bool MousePresent
+        {
+            get { return HasMouse(); }
+        }
 
         /// <summary>
         /// Get the current mouse position
         /// </summary>
-        public Vector2 MousePosition { get { return mousePosition; } }
+        public Vector2 MousePosition
+        {
+            get { return mousePosition; }
+        }
 
         /// <summary>
         /// Check whether Instance is not null without it actually creating a prefab if needed
         /// Call this when removing the gestures in OnDisable to avoid creating a prefab in OnDestroy methods and causing lots of errors
         /// </summary>
-        public static bool HasInstance { get { return singleton != null; } }
+        public static bool HasInstance
+        {
+            get { return singleton != null; }
+        }
     }
 
     /// <summary>
@@ -2293,7 +2657,9 @@ namespace DigitalRubyShared
         [Tooltip("Screen position")]
         public Vector2 ScreenPosition;
 
-        [Tooltip("Whether the screen position is a percentage (0 to 1) or absolute pixel coordinate")]
+        [Tooltip(
+            "Whether the screen position is a percentage (0 to 1) or absolute pixel coordinate"
+        )]
         public bool ScreenPositionIsPercentage;
 
         /// <summary>

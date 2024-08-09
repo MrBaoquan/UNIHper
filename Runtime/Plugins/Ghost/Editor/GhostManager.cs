@@ -597,8 +597,13 @@ namespace UNIHper.Ghost.Editor
                 .ForEach(_item =>
                 {
                     var _scene = EditorSceneManager.OpenScene(_item._path, OpenSceneMode.Single);
+#if UNITY_2023_1_OR_NEWER
+                    UnityEngine.Object
+                        .FindObjectsByType(goType, FindObjectsSortMode.None)
+#else
                     UnityEngine.Object
                         .FindObjectsOfType(goType)
+#endif
                         .OfType<Component>()
                         .ToList()
                         .ForEach(_component => handler(_component.gameObject, _scene));

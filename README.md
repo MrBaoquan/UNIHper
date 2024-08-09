@@ -24,6 +24,12 @@
 
 
 ### 版本更新日志
+v1.24.809
+ - 更新Fingers & MPUIKIT
+ - 优化工程初始化工作流
+ - 修复MPUIKIT导致的初始工程报错
+ - 兼容Unity2023.1版本
+
 v1.24.802
  - Unity日志调整输出至Logs文件夹
  - 优化Workflow,增加 Clean Excluded Files 菜单

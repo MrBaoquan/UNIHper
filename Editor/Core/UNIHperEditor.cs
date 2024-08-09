@@ -119,12 +119,23 @@ namespace UNIHper.Editor
             EditorBuildSettings.scenes = _sceneBuildSettings.ToArray();
 
             // 1. 复制  UNIHper.prefab
+
+#if UNITY_2023_1_OR_NEWER
+            Component[] _objs =
+                FindObjectsByType(
+                    Type.GetType(
+                        "UNIHper.UNIHperEntry, UNIHper, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"
+                    ),
+                    FindObjectsSortMode.None
+                ) as Component[];
+#else
             Component[] _objs =
                 FindObjectsOfType(
                     Type.GetType(
                         "UNIHper.UNIHperEntry, UNIHper, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"
                     )
                 ) as Component[];
+#endif
             if (_objs.Length > 1)
             {
                 _objs

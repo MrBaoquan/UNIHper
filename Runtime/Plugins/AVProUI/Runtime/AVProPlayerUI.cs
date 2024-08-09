@@ -280,7 +280,11 @@ namespace AVProUI
                 }
                 if (FullScreenRect == null)
                 {
+#if UNITY_2023_1_OR_NEWER
+                    var _canvas_default = GameObject.FindFirstObjectByType<Canvas>();
+#else
                     var _canvas_default = GameObject.FindObjectOfType<Canvas>();
+#endif
                     if (_canvas_default == null)
                     {
                         Debug.LogError("No Canvas found in scene");
