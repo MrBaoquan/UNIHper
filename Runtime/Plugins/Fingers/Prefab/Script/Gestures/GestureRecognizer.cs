@@ -8,6 +8,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace DigitalRubyShared
@@ -267,7 +268,6 @@ namespace DigitalRubyShared
         {
             public float VelocityX;
             public float VelocityY;
-            public float Seconds;
         }
 
         private const int maxHistory = 8;
@@ -277,31 +277,38 @@ namespace DigitalRubyShared
         private float previousX;
         private float previousY;
 
-        private void AddItem(float velocityX, float velocityY, float elapsed)
+        private void AddItem(float velocityX, float velocityY)
         {
             VelocityHistory item = new VelocityHistory
             {
                 VelocityX = velocityX,
-                VelocityY = velocityY,
-                Seconds = elapsed
+                VelocityY = velocityY
             };
             history.Enqueue(item);
             if (history.Count > maxHistory)
             {
                 history.Dequeue();
             }
-            float totalSeconds = 0.0f;
+            
+            // weighted average velocity
+            float count = 1.0f / (float)history.Count;
+            float idx = 0.0f;
+            float weightSum = 0.0f;
             VelocityX = VelocityY = 0.0f;
             foreach (VelocityHistory h in history)
             {
-                totalSeconds += h.Seconds;
+                float weight = (++idx * count);
+                VelocityX = (h.VelocityX * weight);
+                VelocityY = (h.VelocityY * weight);
+                weightSum += weight;
             }
-            foreach (VelocityHistory h in history)
-            {
-                float weight = h.Seconds / totalSeconds;
-                VelocityX += (h.VelocityX * weight);
-                VelocityY += (h.VelocityY * weight);
-            }
+
+            // final velocity
+            VelocityX /= weightSum;
+            VelocityY /= weightSum;
+            VelocityXUnits = DeviceInfo.PixelsToUnits(VelocityX);
+            VelocityYUnits = DeviceInfo.PixelsToUnits(VelocityY);
+
             timer.Reset();
             timer.Start();
         }
@@ -344,14 +351,16 @@ namespace DigitalRubyShared
         /// <param name="y">Next y pos</param>
         public void Update(float x, float y)
         {
-            float elapsed = ElapsedSeconds;
-            if (previousX != float.MinValue)
+            var elapsed = ElapsedSeconds;
+            if (elapsed == 0.0f)
             {
-                float px = previousX;
-                float py = previousY;
-                float velocityX = (x - px) / elapsed;
-                float velocityY = (y - py) / elapsed;
-                AddItem(velocityX, velocityY, elapsed);
+                AddItem(0.0f, 0.0f);
+            }
+            else if (previousX != float.MinValue)
+            {
+                float velocityX = (x - previousX) / elapsed;
+                float velocityY = (y - previousY) / elapsed;
+                AddItem(velocityX, velocityY);
             }
             previousX = x;
             previousY = y;
@@ -363,19 +372,34 @@ namespace DigitalRubyShared
         public float ElapsedSeconds { get { return (float)timer.Elapsed.TotalSeconds; } }
 
         /// <summary>
-        /// Current x velocity
+        /// Current x velocity in pixels
         /// </summary>
         public float VelocityX { get; private set; }
 
         /// <summary>
-        /// Current y velocity
+        /// Current y velocity in pixels
         /// </summary>
         public float VelocityY { get; private set; }
 
         /// <summary>
-        /// Current speed
+        /// Current x velocity in units
+        /// </summary>
+        public float VelocityXUnits { get; private set; }
+
+        /// <summary>
+        /// Current y velocity in units
+        /// </summary>
+        public float VelocityYUnits { get; private set; }
+
+        /// <summary>
+        /// Current speed in units
         /// </summary>
         public float Speed { get { return (float)Math.Sqrt(VelocityX * VelocityX + VelocityY * VelocityY); } }
+
+        /// <summary>
+        /// Current speed in units
+        /// </summary>
+        public float SpeedUnits { get { return (float)Math.Sqrt(VelocityXUnits * VelocityXUnits + VelocityYUnits * VelocityYUnits); } }
     }
 
     /// <summary>
@@ -565,7 +589,7 @@ namespace DigitalRubyShared
                 // do not track higher than the max touch count if in another state
                 if ((DeviceId <= 0 || DeviceId == touch.DeviceId) &&
                     currentTrackedTouches.Count < MaximumNumberOfTouchesToTrack &&
-                    State == GestureRecognizerState.Possible &&
+                    (State == GestureRecognizerState.Possible || (State == GestureRecognizerState.Executing && AllowNewTouchesOverTime)) &&
                     !currentTrackedTouches.Contains(touch) &&
                     !consumedTouches.Contains(touch.Id))
                 {
@@ -1159,7 +1183,7 @@ namespace DigitalRubyShared
                 bool withinDistance = false;
                 for (int i = touchStartLocations.Count - 1; i >= 0; i--)
                 {
-                    if (PointsAreWithinDistance(touch.X, touch.Y, touchStartLocations[i].Key, touchStartLocations[i].Value, thresholdUnits))
+                    if (PointsAreWithinDistancePixelsToUnits(touch.X, touch.Y, touchStartLocations[i].Key, touchStartLocations[i].Value, thresholdUnits))
                     {
                         withinDistance = true;
                         break;
@@ -1183,9 +1207,9 @@ namespace DigitalRubyShared
         /// <param name="x2">The second x value in pixels.</param>
         /// <param name="y2">The second y value in pixels.</param>
         /// <param name="d">Distance in units</param>
-        public bool PointsAreWithinDistance(float x1, float y1, float x2, float y2, float d)
+        public bool PointsAreWithinDistancePixelsToUnits(float x1, float y1, float x2, float y2, float d)
         {
-            return (DistanceBetweenPoints(x1, y1, x2, y2) <= d);
+            return (DistanceBetweenPointsPixelsToUnits(x1, y1, x2, y2) <= d);
         }
 
         /// <summary>
@@ -1196,7 +1220,7 @@ namespace DigitalRubyShared
         /// <param name="y1">The first y value in pixels.</param>
         /// <param name="x2">The second x value in pixels.</param>
         /// <param name="y2">The second y value in pixels.</param>
-        public float DistanceBetweenPoints(float x1, float y1, float x2, float y2)
+        public float DistanceBetweenPointsPixelsToUnits(float x1, float y1, float x2, float y2)
         {
             float a = (float)(x2 - x1);
             float b = (float)(y2 - y1);
@@ -1210,7 +1234,7 @@ namespace DigitalRubyShared
         /// <param name="xVector">X vector</param>
         /// <param name="yVector">Y vector</param>
         /// <returns>The distance of the vector in units.</returns>
-        public float Distance(float xVector, float yVector)
+        public float DistancePixelsToUnits(float xVector, float yVector)
         {
             float d = (float)Math.Sqrt(xVector * xVector + yVector * yVector) * PlatformSpecificViewScale;
             return DeviceInfo.PixelsToUnits(d);
@@ -1221,7 +1245,7 @@ namespace DigitalRubyShared
         /// </summary>
         /// <param name="length">Length</param>
         /// <returns>Distance in units</returns>
-        public float Distance(float length)
+        public float DistancePixelsToUnits(float length)
         {
             float d = Math.Abs(length) * PlatformSpecificViewScale;
             return DeviceInfo.PixelsToUnits(d);
@@ -1472,8 +1496,26 @@ namespace DigitalRubyShared
         /// <summary>
         /// The speed of the gesture in pixels using focus
         /// </summary>
-        /// <value>The speed of the gesture</value>
+        /// <value>The speed of the gesture in pixels</value>
         public float Speed { get { return velocityTracker.Speed; } }
+
+        /// <summary>
+        /// Velocity x in units using focus
+        /// </summary>
+        /// <value>The velocity x value in units</value>
+        public float VelocityXUnits { get { return velocityTracker.VelocityXUnits; } }
+
+        /// <summary>
+        /// Velocity y in units using focus
+        /// </summary>
+        /// <value>The velocity y value in units</value>
+        public float VelocityYUnits { get { return velocityTracker.VelocityYUnits; } }
+
+        /// <summary>
+        /// The speed of the gesture in units using focus
+        /// </summary>
+        /// <value>The speed of the gesture in units</value>
+        public float SpeedUnits { get { return velocityTracker.SpeedUnits; } }
 
         /// <summary>
         /// Average pressure of all tracked touches
@@ -1485,6 +1527,12 @@ namespace DigitalRubyShared
         /// </summary>
         /// <value>The platform specific view this gesture can execute in</value>
         public object PlatformSpecificView { get; set; }
+
+        /// <summary>
+        /// A hint that the gesture should be restricted to the PlatformSpecificView. Different implementations may
+        /// honor this property or ignore it.
+        /// </summary>
+        public bool RestrictToPlatformSpecificView { get; set; }
 
         /// <summary>
         /// The platform specific view scale (default is 1.0). Change this if the view this gesture is attached to is being scaled.
@@ -1618,7 +1666,13 @@ namespace DigitalRubyShared
         /// <summary>
         /// Whether additional touches were added to the gesture since the last execute state.
         /// </summary>
-        public bool ReceivedAdditionalTouches { get; set; }
+        public bool ReceivedAdditionalTouches { get; internal set; }
+
+        /// <summary>
+        /// Whether additional touches can be added to the gesture over time. Default is false. Can set
+        /// to true for cases like a pan gesture that wants multiple drags and touches to come in and out.
+        /// </summary>
+        public bool AllowNewTouchesOverTime { get; set; }
 
         /// <summary>
         /// The device id this gesture is allowed to track touches on, 0 is default (track touches from all devices)

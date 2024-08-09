@@ -128,7 +128,7 @@ namespace DigitalRubyShared
                 return;
             }
 
-            float distance = DistanceBetweenPoints(StartFocusX, StartFocusY, FocusX, FocusY);
+            float distance = DistanceBetweenPointsPixelsToUnits(StartFocusX, StartFocusY, FocusX, FocusY);
             if (distance < MinimumDistanceUnits || !CalculateEndDirection(FocusX, FocusY))
             {
                 // not enough distance covered to be a swipe, or direction failure

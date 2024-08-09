@@ -1,7 +1,24 @@
 ﻿Changelog
 --------------------
+3.0.14	(2023-05-17)
+- Attempt to support fast enter play mode (no app domain and no scene reload)
+
+3.0.13	(2023-05-11)
+- Fix an issue where the DemoSceneDragSwipe was using pixels instead of units for swipe away calculation.
+
+3.0.12	(2022-12-02)
+- Add example on how to load scenes additively while keeping gesture states intact.
+
+3.0.11	(2022-11-27)
+- Fix multi drag script.
+- New property on all gestures: AllowNewTouchesOverTime, allows additional touches to come in to an executing gesture.
+
+3.0.10	(2022-11-01)
+- Fix multiplier for mouse wheel and new input system.
+
 3.0.9	(2022-08-10)
 - Bug fixes and code cleanup.
+- Fix null reference issue adding gesture components in script.
 
 3.0.8	(2022-04-15)
 - Demo scene showing how to have multiple pan gestures.

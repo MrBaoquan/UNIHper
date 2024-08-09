@@ -435,7 +435,10 @@ namespace MPUIKIT
             {
                 if (_dynamicMaterial == null)
                 {
-                    _dynamicMaterial = new Material(Shader.Find(MpShaderName));
+                    var _shader = Shader.Find(MpShaderName);
+                    if (_shader == null)
+                        return null;
+                    _dynamicMaterial = new Material(_shader);
                     _dynamicMaterial.name += " [Dynamic]";
                 }
 
@@ -489,6 +492,8 @@ namespace MPUIKIT
         protected override void OnValidate()
         {
             InitializeComponents();
+            if (material == null)
+                return;
             if (_parseAgainOnValidate)
             {
                 InitValuesFromSharedMaterial();
@@ -522,6 +527,8 @@ namespace MPUIKIT
 
         private void InitializeComponents()
         {
+            if (material == null)
+                return;
             m_Circle.Init(m_Material, material, rectTransform);
             m_Triangle.Init(m_Material, material, rectTransform);
             m_Rectangle.Init(m_Material, material, rectTransform);

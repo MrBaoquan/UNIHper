@@ -46,7 +46,7 @@ namespace DigitalRubyShared
             }
             else if (!needsDistanceThreshold && (State == GestureRecognizerState.Began || State == GestureRecognizerState.Executing))
             {
-                if (SpeedUnitsToRestartThresholdUnits > 0.0f && Distance(VelocityX, VelocityY) < SpeedUnitsToRestartThresholdUnits &&
+                if (SpeedUnitsToRestartThresholdUnits > 0.0f && DistancePixelsToUnits(VelocityX, VelocityY) < SpeedUnitsToRestartThresholdUnits &&
                     (float)timeBelowSpeedUnitsToRestartThresholdUnits.Elapsed.TotalSeconds >= TimeToRestartThresholdUnits)
                 {
                     if (!needsDistanceThreshold)
@@ -67,7 +67,7 @@ namespace DigitalRubyShared
             {
                 if (needsDistanceThreshold)
                 {
-                    float distance = Distance(FocusX - startX, FocusY - startY);
+                    float distance = DistancePixelsToUnits(FocusX - startX, FocusY - startY);
                     if (distance >= ThresholdUnits)
                     {
                         needsDistanceThreshold = false;

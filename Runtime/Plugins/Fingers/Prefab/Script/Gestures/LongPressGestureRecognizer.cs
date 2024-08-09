@@ -50,7 +50,7 @@ namespace DigitalRubyShared
             else if (TrackedTouchCountIsWithinRange && State == GestureRecognizerState.Possible)
             {
                 // if the touch moved too far to count as a long tap, fail the gesture
-                float distance = Distance(DistanceX, DistanceY);
+                float distance = DistancePixelsToUnits(DistanceX, DistanceY);
                 if (distance > ThresholdUnits)
                 {
                     SetState(GestureRecognizerState.Failed);

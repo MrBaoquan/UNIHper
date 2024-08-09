@@ -4,7 +4,7 @@
 // http://www.digitalruby.com
 // Source code may be used for personal or commercial projects.
 // Source code may NOT be redistributed or sold.
-//
+// 
 
 
 using System.Collections;
@@ -24,9 +24,7 @@ namespace DigitalRubyShared
         private Rigidbody2D playerBody;
 
         /// <summary>Max velocity in x and y direction. The x and y component will be clamped to this speed.</summary>
-        [Tooltip(
-            "Max velocity in x and y direction. The x and y component will be clamped to this speed."
-        )]
+        [Tooltip("Max velocity in x and y direction. The x and y component will be clamped to this speed.")]
         [Range(1.0f, 128.0f)]
         public float MaxSpeed = 32.0f;
 
@@ -141,16 +139,8 @@ namespace DigitalRubyShared
             int count = playerBody.OverlapCollider(filter, overlapArray);
             for (int i = 0; i < count; i++)
             {
-                if (
-                    (!string.IsNullOrEmpty(PlatformTag) && overlapArray[i].tag == PlatformTag)
-                    || (
-                        !string.IsNullOrEmpty(PlatformName)
-                        && overlapArray[i].name.IndexOf(
-                            PlatformName,
-                            System.StringComparison.OrdinalIgnoreCase
-                        ) >= 0
-                    )
-                )
+                if ((!string.IsNullOrEmpty(PlatformTag) && overlapArray[i].tag == PlatformTag) ||
+                    (!string.IsNullOrEmpty(PlatformName) && overlapArray[i].name.IndexOf(PlatformName, System.StringComparison.OrdinalIgnoreCase) >= 0))
                 {
                     return overlapArray[i];
                 }

@@ -72,6 +72,10 @@ namespace DigitalRubyShared
         [Tooltip("The game object the gesture must execute over, null to allow the gesture to execute anywhere.")]
         public GameObject GestureView;
 
+        /// <summary>Whether to restrict gesture to the GestureView. Default is false which means gesture can leave the view.</summary>
+        [Tooltip("Whether to restrict gesture to the GestureView. Default is false which means gesture can leave the view.")]
+        public bool RestrictToGestureView;
+
         /// <summary>The minimum number of touches to track. This gesture will not start unless this many touches are tracked. Default is usually 1 or 2. Not all gestures will honor values higher than 1.</summary>
         [Tooltip("The minimum number of touches to track. This gesture will not start unless this many touches are tracked. Default is usually 1 or 2. Not all gestures will honor values higher than 1.")]
         [Range(1, 10)]
@@ -163,10 +167,20 @@ namespace DigitalRubyShared
         /// </summary>
         protected virtual void OnEnable()
         {
+            if (AllowSimultaneousExecutionWith == null)
+            {
+                AllowSimultaneousExecutionWith = new List<GestureRecognizerComponentScriptBase>();
+            }
+            if (RequireGestureRecognizersToFail == null)
+            {
+                RequireGestureRecognizersToFail = new List<GestureRecognizerComponentScriptBase>();
+            }
+            
             if (gesture == null)
             {
                 Gesture.StateUpdated += GestureStateUpdatedCallback;
                 Gesture.PlatformSpecificView = GestureView;
+                Gesture.RestrictToPlatformSpecificView = RestrictToGestureView;
                 Gesture.MinimumNumberOfTouchesToTrack = MinimumNumberOfTouchesToTrack;
                 Gesture.MaximumNumberOfTouchesToTrack = MaximumNumberOfTouchesToTrack;
                 Gesture.ClearTrackedTouchesOnEndOrFail = ClearTrackedTouchesOnEndOrFail;

@@ -68,7 +68,23 @@ namespace DigitalRubyShared
             int idx = Gesture.PathCount - 1;
             if (idx >= 0 && idx < LineRenderers.Length)
             {
-                Vector3 worldPos = new Vector3(Gesture.FocusX, Gesture.FocusY, 0.0f);
+                var x = Gesture.FocusX;
+                var y = Gesture.FocusY;
+                if (Gesture.RestrictToPlatformSpecificView)
+                {
+                    var go = Gesture.PlatformSpecificView as GameObject;
+                    if (go != null)
+                    {
+                        var bounds = go.GetComponent<Collider2D>();
+                        if (bounds != null)
+                        {
+                            var rect = bounds.bounds;
+                            x = Mathf.Clamp(x, rect.min.x, rect.max.x);
+                            y = Mathf.Clamp(y, rect.min.y, rect.max.y);
+                        }
+                    }
+                }
+                Vector3 worldPos = new Vector3(x, y, 0.0f);
                 worldPos = Camera.main.ScreenToWorldPoint(worldPos);
                 worldPos.z = 0.0f;
                 LineRenderers[idx].positionCount++;

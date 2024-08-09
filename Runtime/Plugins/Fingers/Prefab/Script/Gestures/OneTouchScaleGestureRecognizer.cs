@@ -59,7 +59,7 @@ namespace DigitalRubyShared
             else if (State == GestureRecognizerState.Possible)
             {
                 // see if we have moved far enough to start scaling
-                if (Distance(DistanceX, DistanceY) < ThresholdUnits)
+                if (DistancePixelsToUnits(DistanceX, DistanceY) < ThresholdUnits)
                 {
                     return;
                 }
@@ -71,9 +71,9 @@ namespace DigitalRubyShared
             else if (DeltaX != 0.0f || DeltaY != 0.0f)
             {
                 // continue the gesture
-                ScaleMultiplier = 1.0f + (Distance(DeltaX, DeltaY) * Math.Sign(DeltaY) * ZoomSpeed);
-                ScaleMultiplierX = 1.0f + (Distance(DeltaX) * -Math.Sign(DeltaX) * ZoomSpeed);
-                ScaleMultiplierY = 1.0f + (Distance(DeltaY) * Math.Sign(DeltaY) * ZoomSpeed);
+                ScaleMultiplier = 1.0f + (DistancePixelsToUnits(DeltaX, DeltaY) * Math.Sign(DeltaY) * ZoomSpeed);
+                ScaleMultiplierX = 1.0f + (DistancePixelsToUnits(DeltaX) * -Math.Sign(DeltaX) * ZoomSpeed);
+                ScaleMultiplierY = 1.0f + (DistancePixelsToUnits(DeltaY) * Math.Sign(DeltaY) * ZoomSpeed);
                 SetState(GestureRecognizerState.Executing);
             }
         }

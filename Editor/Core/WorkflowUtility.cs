@@ -1,9 +1,11 @@
+using System;
 using System.Linq;
-
 using UnityEditor;
 
 namespace UNIHper.Editor
 {
+    using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Text.RegularExpressions;
     using UnityEngine;
@@ -20,14 +22,128 @@ namespace UNIHper.Editor
         }
 
         [InitializeOnLoadMethod]
-        static void SetProductName()
+        static void AutoWorkEnv()
         {
-            bool isInvalidProductName = UNIHperSettings.InvalidAppNamePrefixes.Any(
-                _prefix => PlayerSettings.productName.ToLower().StartsWith(_prefix)
-            );
+            setProductName();
+            EditorApplication.delayCall += delayedCall;
+            EditorApplication.update += update;
+        }
 
-            if (isInvalidProductName)
+        private static bool setProductName()
+        {
+            if (SessionState.GetBool(bSetProductName, false))
+            {
+                return true;
+            }
+
+            Func<bool> isInvalidProductName = () =>
+            {
+                return UNIHperSettings.InvalidAppNamePrefixes.Any(
+                    _prefix => PlayerSettings.productName.ToLower().StartsWith(_prefix)
+                );
+            };
+
+            if (isInvalidProductName())
+            {
                 PlayerSettings.productName = ProjectName;
+                SessionState.SetBool(bSetProductName, true);
+            }
+
+            return isInvalidProductName();
+        }
+
+        // 延迟调用
+        private static void delayedCall()
+        {
+            moveOdinConfig();
+        }
+
+        const string bWorkflowComplete = "WorkflowComplete";
+        const string bSetProductName = "SetProductName";
+        const string bOdinConfigMoved = "OdinConfigMoved";
+
+        private static bool checkAllWorkflowComplete()
+        {
+            return new List<string> { bSetProductName, bOdinConfigMoved }
+                .Select(_field => SessionState.GetBool(_field, false))
+                .All(b => b);
+        }
+
+        private static void update()
+        {
+            if (SessionState.GetBool(bWorkflowComplete, false))
+            {
+                EditorApplication.update -= update;
+                return;
+            }
+
+            setProductName();
+            moveOdinConfig();
+
+            if (checkAllWorkflowComplete())
+            {
+                SessionState.SetBool(bWorkflowComplete, true);
+            }
+        }
+
+        private static bool moveOdinConfig()
+        {
+            if (SessionState.GetBool(bOdinConfigMoved, false))
+            {
+                return true;
+            }
+
+            var _configPath =
+                "Assets/Packages/com.parful.unihper/Runtime/Plugins/Sirenix/Odin Inspector/Config/Editor/InspectorConfig.asset";
+            var _newConfigPath = "Assets/Resources/Odin InspectorConfig.asset";
+            Func<bool> _isOdinConfigExists = () =>
+            {
+                bool _completed =
+                    AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(_newConfigPath) != null
+                    && AssetDatabase.IsValidFolder("Assets/Packages/com.parful.unihper") == false;
+
+                if (_completed)
+                {
+                    SessionState.SetBool(bOdinConfigMoved, true);
+                }
+
+                return _completed;
+            };
+
+            var _odinConfig = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(_configPath);
+            if (_odinConfig == null)
+            {
+                if (AssetDatabase.IsValidFolder("Assets/Packages/com.parful.unihper") == true)
+                {
+                    AssetDatabase.DeleteAsset("Assets/Packages");
+                }
+
+                return _isOdinConfigExists();
+            }
+
+            if (AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(_newConfigPath) != null)
+            {
+                AssetDatabase.DeleteAsset("Assets/Packages");
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+                return _isOdinConfigExists();
+            }
+
+            if (!AssetDatabase.IsValidFolder("Assets/Resources"))
+            {
+                AssetDatabase.CreateFolder("Assets", "Resources");
+            }
+
+            var _opLog = AssetDatabase.MoveAsset(_configPath, _newConfigPath);
+            if (!string.IsNullOrEmpty(_opLog))
+            {
+                Debug.LogWarning(_opLog);
+                return _isOdinConfigExists();
+            }
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            return _isOdinConfigExists();
         }
 
         [MenuItem("UNIHper/Workflow/Clean Excluded Files", priority = 41)]
@@ -46,6 +162,7 @@ namespace UNIHper.Editor
                 }
             }
             Debug.Log("<color=#00ff00>All excluded paths have been cleaned.</color>");
+            AssetDatabase.Refresh();
         }
 
         [MenuItem("UNIHper/Workflow/SVN Update Slim Repo", priority = 61)]

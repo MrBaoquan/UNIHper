@@ -68,6 +68,7 @@ namespace DigitalRubyShared
         {
             PanGesture = new PanGestureRecognizer { MinimumNumberOfTouchesToTrack = 1, MaximumNumberOfTouchesToTrack = 32, ThresholdUnits = 0.0f };
             PanGesture.StateUpdated += Pan_StateUpdated;
+            PanGesture.AllowNewTouchesOverTime = true;
             FingersScript.Instance.AddGesture(PanGesture);
         }
 

@@ -248,11 +248,14 @@ namespace DigitalRubyShared
             public float Timestamp { get; set; }
         }
 
-        static FingersScript()
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void InitOnLoad()
         {
+            singleton = null;
 
 #if UNITY_INPUT_SYSTEM_V2
 
+            keyCodeMappings.Clear();
             keyCodeMappings.Add(UnityEngine.KeyCode.None, UnityEngine.InputSystem.Key.None);
             keyCodeMappings.Add(UnityEngine.KeyCode.Backspace, UnityEngine.InputSystem.Key.Backspace);
             keyCodeMappings.Add(UnityEngine.KeyCode.Tab, UnityEngine.InputSystem.Key.Tab);
@@ -395,6 +398,11 @@ namespace DigitalRubyShared
 
 #endif
 
+        }
+
+        static FingersScript()
+        {
+            InitOnLoad();
         }
 
         private IEnumerator MainThreadCallback(float delay, System.Action action)
@@ -1007,7 +1015,7 @@ namespace DigitalRubyShared
 
             var mouse = UnityEngine.InputSystem.Mouse.current;
             var keyboard = UnityEngine.InputSystem.Keyboard.current;
-            Vector2 delta = mouse.scroll.ReadValue() * 0.01f; // new input system is different from old input system by ~10x
+            Vector2 delta = mouse.scroll.ReadValue() * 0.1f; // new input system is different from old input system by ~10x
 
 #else
 
@@ -1369,10 +1377,12 @@ namespace DigitalRubyShared
             componentTypesToDenyPassThrough.Add(typeof(Toggle));
             componentTypesToDenyPassThrough.Add(typeof(Slider));
             componentTypesToDenyPassThrough.Add(typeof(InputField));
+            componentTypesToDenyPassThrough.Add(typeof(ScrollRect));
 
 #if UNITY_2019_1_OR_NEWER
 
             componentTypesToDenyPassThrough.Add(typeof(UnityEngine.UIElements.ScrollView));
+            componentTypesToDenyPassThrough.Add(typeof(UnityEngine.UIElements.Scroller));
 
 #endif
 

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEngine;
@@ -11,6 +12,14 @@ public class AddressableUtil
         if (!AddressableAssetSettingsDefaultObject.SettingsExists)
         {
             var _settings = AddressableAssetSettingsDefaultObject.GetSettings(true);
+            var _persistenceGroup = _settings.groups.FirstOrDefault(
+                g => g.name == "Persistence Assets"
+            );
+            if (_persistenceGroup != null)
+            {
+                return AddressableAssetSettingsDefaultObject.Settings;
+            }
+
             var _group = _settings.CreateGroup(
                 "Persistence Assets",
                 true,

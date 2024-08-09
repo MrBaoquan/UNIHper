@@ -520,7 +520,7 @@ namespace DigitalRubyShared
                 float dy = p.Y - last.Y;
                 float direction = (float)Math.Atan2(dy, dx);
                 float direction2 = (float)Math.Atan2(dy2, dx2);
-                float magnitudeUnits = DistanceBetweenPoints(last.X, last.Y, beforeLast.X, beforeLast.Y); // (float)Math.Sqrt((dx2 * dx2) + (dy2 * dy2));
+                float magnitudeUnits = DistanceBetweenPointsPixelsToUnits(last.X, last.Y, beforeLast.X, beforeLast.Y); // (float)Math.Sqrt((dx2 * dx2) + (dy2 * dy2));
                 // float magnitudeUnits = DistanceBetweenPoints(p.X, p.Y, last.X, last.Y); // (float)Math.Sqrt((dx * dx) + (dy * dy));
                 if (magnitudeUnits < MinimumDistanceBetweenPointsUnits ||
                     CompareFloat(direction, direction2, DirectionTolerance))
@@ -677,7 +677,7 @@ namespace DigitalRubyShared
                 return false;
             }
 
-            float distance = Distance(DistanceX, DistanceY);
+            float distance = DistancePixelsToUnits(DistanceX, DistanceY);
             if (distance >= ThresholdUnits)
             {
                 if (PathCount++ >= MaximumPathCount)

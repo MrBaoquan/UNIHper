@@ -51,6 +51,10 @@ namespace DigitalRubyShared
         [Tooltip("How much to dampen movement, lower values dampen faster")]
         public float Dampening = 0.95f;
 
+        /// <summary>Whether to pan exclusively or allow pan with other gestures</summary>
+        [Tooltip("Whether to pan exclusively")]
+        public bool ExclusivePan;
+
         /// <summary>
         /// The pan gesture (left/right)
         /// </summary>
@@ -137,8 +141,11 @@ namespace DigitalRubyShared
             RotateGesture.StateUpdated += RotateGestureCallback;
             FingersScript.Instance.AddGesture(RotateGesture);
 
-            PanGesture.AllowSimultaneousExecution(ScaleGesture);
-            PanGesture.AllowSimultaneousExecution(RotateGesture);
+            if (!ExclusivePan)
+            {
+                PanGesture.AllowSimultaneousExecution(ScaleGesture);
+                PanGesture.AllowSimultaneousExecution(RotateGesture);
+            }
             ScaleGesture.AllowSimultaneousExecution(RotateGesture);
         }
 

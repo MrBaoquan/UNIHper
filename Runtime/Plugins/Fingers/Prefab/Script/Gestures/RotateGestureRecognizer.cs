@@ -58,7 +58,7 @@ namespace DigitalRubyShared
         {
             CalculateFocus(CurrentTrackedTouches);
 
-            if (!TrackedTouchCountIsWithinRange || Distance(DistanceX, DistanceY) < ThresholdUnits)
+            if (!TrackedTouchCountIsWithinRange || DistancePixelsToUnits(DistanceX, DistanceY) < ThresholdUnits)
             {
                 return;
             }

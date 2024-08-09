@@ -2,7 +2,7 @@ Fingers, by Jeff Johnson
 Fingers (c) 2015-Present Digital Ruby, LLC
 https://www.digitalruby.com/unity-plugins/
 
-Version 3.0.9
+Version 3.0.14
 
 See ChangeLog.txt for history.
 

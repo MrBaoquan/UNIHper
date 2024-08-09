@@ -222,7 +222,7 @@ namespace DigitalRubyShared
                 return;
             }
 
-            StateUpdated.Invoke(PanGesture);
+            StateUpdated?.Invoke(PanGesture);
             if (scaleGesture.State == GestureRecognizerState.Began)
             {
                 SetStartState(scaleGesture, obj == null ? null : obj.transform, false);

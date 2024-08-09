@@ -94,9 +94,9 @@ namespace DigitalRubyShared
                 return;
             }
 
-            distance = DistanceBetweenPoints(CurrentTrackedTouches[0].X, CurrentTrackedTouches[0].Y, CurrentTrackedTouches[1].X, CurrentTrackedTouches[1].Y);
-            distanceX = Distance(CurrentTrackedTouches[0].X - CurrentTrackedTouches[1].X);
-            distanceY = Distance(CurrentTrackedTouches[0].Y - CurrentTrackedTouches[1].Y);
+            distance = DistanceBetweenPointsPixelsToUnits(CurrentTrackedTouches[0].X, CurrentTrackedTouches[0].Y, CurrentTrackedTouches[1].X, CurrentTrackedTouches[1].Y);
+            distanceX = DistancePixelsToUnits(CurrentTrackedTouches[0].X - CurrentTrackedTouches[1].X);
+            distanceY = DistancePixelsToUnits(CurrentTrackedTouches[0].Y - CurrentTrackedTouches[1].Y);
 
             if (State == GestureRecognizerState.Possible)
             {
