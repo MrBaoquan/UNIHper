@@ -162,7 +162,7 @@ namespace UNIHper.UI
 
         internal override void OnUIAttached()
         {
-            recordOriginTransform();
+            RecordTweenerOriginTransform();
             if (driver == UIAnimionDriver.Animator)
             {
                 if (overrideController is null)
@@ -210,7 +210,7 @@ namespace UNIHper.UI
 
         private void onUIAttached()
         {
-            recordOriginTransform();
+            RecordTweenerOriginTransform();
         }
 
         private Task getShowTask(CancellationToken cancellationToken)
@@ -321,7 +321,7 @@ namespace UNIHper.UI
         private Vector2 m_originAnchoredPosition = Vector2.zero;
         private Vector3 m_originLocalScale = Vector3.zero;
 
-        void recordOriginTransform()
+        public void RecordTweenerOriginTransform()
         {
             var _rectTransform = this.Get<RectTransform>();
             m_originAnchoredPosition = _rectTransform.anchoredPosition;

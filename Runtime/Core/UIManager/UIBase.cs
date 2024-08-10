@@ -25,7 +25,14 @@ namespace UNIHper
         public CompositeDisposable LifeCycleDisposables { get; private set; } = null;
 
         private UnityEvent onShowingEvent = new UnityEvent();
+
         private UnityEvent onShownEvent = new UnityEvent();
+
+        internal void ForceInvokeOnShownEvent()
+        {
+            if (_status == UIStatus.Shown)
+                onShownEvent.Invoke();
+        }
 
         public IObservable<Unit> OnShowingAsObservable()
         {
@@ -40,6 +47,12 @@ namespace UNIHper
         private UnityEvent onHidingEvent = new UnityEvent();
 
         private UnityEvent onHiddenEvent = new UnityEvent();
+
+        internal void ForceInvokeOnHiddenEvent()
+        {
+            if (_status == UIStatus.Hidden)
+                onHiddenEvent.Invoke();
+        }
 
         public IObservable<Unit> OnHidingAsObservable()
         {
