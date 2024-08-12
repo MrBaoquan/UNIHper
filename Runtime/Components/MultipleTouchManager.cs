@@ -10,7 +10,7 @@ using UnityEngine.InputSystem.EnhancedTouch;
 
 namespace UNIHper
 {
-    public class MultipleTouchManager : SingletonBehaviour<MultipleTouchManager>
+    public class MultipleTouchManager : SingletonBehaviourDontDestroy<MultipleTouchManager>
     {
         private UnityEvent<Finger> onFingerMove = new UnityEvent<Finger>();
         private UnityEvent<Finger> onFingerDown = new UnityEvent<Finger>();

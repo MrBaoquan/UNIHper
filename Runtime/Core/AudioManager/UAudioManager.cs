@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace UNIHper
 {
-    public class UAudioManager : SingletonBehaviour<UAudioManager>
+    public class UAudioManager : SingletonBehaviourDontDestroy<UAudioManager>
     {
         public AudioSource PlayMusic(
             AudioClip InMusic,

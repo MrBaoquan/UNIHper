@@ -41,7 +41,7 @@ namespace UNIHper
             System.Action completed = null
         )
         {
-            UNIBehaviour.Instance.StartCoroutine(IE_LoadScene(sceneName, progress, completed));
+            UNIHperEntry.Instance.StartCoroutine(IE_LoadScene(sceneName, progress, completed));
         }
 
         internal IEnumerator IE_LoadScene(

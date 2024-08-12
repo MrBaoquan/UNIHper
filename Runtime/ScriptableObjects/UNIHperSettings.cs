@@ -55,6 +55,11 @@ namespace UNIHper
             get => Self().showTapEffect;
         }
 
+        public static bool ShowPanEffect
+        {
+            get => Self().showPanEffect;
+        }
+
         public static bool AutoInitIfNotStarted
         {
             get => Self().autoInitialize;
@@ -75,6 +80,7 @@ namespace UNIHper
         [Title("Interaction Settings")]
         public AudioClip defaultClickSound;
         public bool showTapEffect = true;
+        public bool showPanEffect = true;
 
         [Title("Workflow Settings")]
         public List<string> invalidAppNamePrefixes = new List<string> { "unihper_template" };

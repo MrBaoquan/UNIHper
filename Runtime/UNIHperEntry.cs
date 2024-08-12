@@ -9,7 +9,7 @@ using UNIHper.Network;
 namespace UNIHper
 {
     [DisallowMultipleComponent, DefaultExecutionOrder(-50000)]
-    public class UNIHperEntry : SingletonBehaviour<UNIHperEntry>
+    public class UNIHperEntry : SingletonBehaviourDontDestroy<UNIHperEntry>
     {
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void initialize()
@@ -62,9 +62,9 @@ namespace UNIHper
             Debug.Log("UNIHper.Awake");
             DontDestroyOnLoad(this.gameObject);
 
-            GameObject _utilGO = new GameObject("UNIBehaviour");
-            _utilGO.transform.parent = this.transform;
-            _utilGO.AddComponent(typeof(UNIBehaviour));
+            // GameObject _utilGO = new GameObject("UNIBehaviour");
+            // _utilGO.transform.parent = this.transform;
+            // _utilGO.AddComponent(typeof(UNIBehaviour));
 
             // 创建音频管理脚本
             GameObject _audioManager = new GameObject("AudioManager");
@@ -96,13 +96,14 @@ namespace UNIHper
             // 4. 初始化场景管理类
             await USceneManager.Instance.Initialize();
 
+            this.Initialize();
+
             Framework.Instance.Initialize();
 
             // 5. 初始化Timer管理类
             await UTimerManager.Instance.Initialize();
             // 6. 初始化网络模块
             await UNetManager.Instance.Initialize();
-            this.Initialize();
 
             isInitialized.Value = true;
         }
@@ -149,6 +150,10 @@ namespace UNIHper
             if (UNIHperSettings.ShowTapEffect)
             {
                 TapEffect.Instance.Initialize();
+            }
+            if (UNIHperSettings.ShowPanEffect)
+            {
+                PanEffect.Instance.Initialize();
             }
         }
 

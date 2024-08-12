@@ -8,7 +8,7 @@ using UnityEngine;
 namespace UNIHper
 {
     [RequireComponent(typeof(AudioSource))]
-    public class MicrophoneManager : SingletonBehaviour<MicrophoneManager>
+    public class MicrophoneManager : SingletonBehaviourDontDestroy<MicrophoneManager>
     {
         const int HEADER_SIZE = 44;
         private AudioSource _audioSource;

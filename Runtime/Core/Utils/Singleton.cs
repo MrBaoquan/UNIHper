@@ -16,7 +16,7 @@ using UnityEngine;
 
 namespace UNIHper
 {
-    public class SingletonBehaviour<T> : MonoBehaviour
+    public class SingletonBehaviourDontDestroy<T> : MonoBehaviour
         where T : MonoBehaviour
     {
         private static T instance;
@@ -41,7 +41,31 @@ namespace UNIHper
                 return instance;
             }
         }
+    }
 
-        private void OnDestroy() { }
+    public class SingletonBehaviour<T> : MonoBehaviour
+        where T : MonoBehaviour
+    {
+        private static T instance;
+        public static T Instance
+        {
+            get
+            {
+                if (instance == null)
+                {
+#if UNITY_2023_1_OR_NEWER
+                    instance = FindFirstObjectByType<T>(FindObjectsInactive.Include);
+#else
+                    instance = FindObjectOfType(typeof(T), true) as T;
+#endif
+                    if (instance == null)
+                    {
+                        var go = new GameObject(typeof(T).Name);
+                        instance = go.AddComponent<T>();
+                    }
+                }
+                return instance;
+            }
+        }
     }
 }

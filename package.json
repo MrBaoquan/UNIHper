@@ -4,7 +4,7 @@
         "name": "MrBaoquan",
         "email": "mrma617@gmail.com"
     },
-    "version": "1.24.809",
+    "version": "1.24.812",
     "description": "UNIHper is a Unity game engine extension that provides a set of tools for game development",
     "keywords": ["framework","development","game"],
     "displayName": "UNIHper Framework",
@@ -20,5 +20,47 @@
         "com.unity.ide.visualstudio": "2.0.22"
     },
     "documentationUrl": "https://parful.gitbook.io/unihper-docs",
-    "changelogUrl": "https://github.com/MrBaoquan/UNIHper"
+    "changelogUrl": "https://github.com/MrBaoquan/UNIHper",
+    "samples":[
+        {
+            "displayName": "AVPro Examples",
+            "description": "A collection of examples using the AVPro video player",
+            "path": "Samples~/AVPro Examples"
+        },
+        {
+            "displayName": "Fingers Examples",
+            "description": "A collection of examples using the Fingers input system",
+            "path": "Samples~/Fingers Examples"
+        },
+        {
+            "displayName": "Particle Effect For UGUI Examples",
+            "description": "A collection of examples using the Particle Effect For UGUI",
+            "path": "Samples~/Particle Effect For UGUI Examples"
+        },
+        {
+            "displayName":"SoftMaskForUGUI Examples",
+            "description": "A collection of examples using the SoftMaskForUGUI",
+            "path": "Samples~/SoftMaskForUGUI Examples"
+        },
+        {
+            "displayName": "Odin Examples",
+            "description": "A collection of examples using the Odin Inspector",
+            "path": "Samples~/Odin Examples"
+        },
+        {
+            "displayName": "PoolManager Examples",
+            "description": "A collection of examples using the PoolManager",
+            "path": "Samples~/PoolManager Examples"
+        },
+        {
+            "displayName": "UniRx Examples",
+            "description": "A collection of examples using the UniRx library",
+            "path": "Samples~/UniRx Examples"
+        },
+        {
+            "displayName": "Yaml Examples",
+            "description": "A collection of examples using the YamlDotNet library",
+            "path": "Samples~/Yaml Examples"
+        }
+    ]
 }

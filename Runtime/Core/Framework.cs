@@ -14,6 +14,27 @@ namespace UNIHper
 
     public class Framework : Singleton<Framework>
     {
+        private Canvas _effectCanvas = null;
+        public Canvas TopmostCanvas
+        {
+            get
+            {
+                if (_effectCanvas != null)
+                {
+                    return _effectCanvas;
+                }
+                _effectCanvas = new GameObject("Topmost Canvas").AddComponent<Canvas>();
+                _effectCanvas.transform.SetParent(UNIHperEntry.Instance.transform);
+                _effectCanvas.transform.SetSiblingIndex(1);
+
+                _effectCanvas.gameObject.AddComponent<GraphicRaycaster>();
+                _effectCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                _effectCanvas.sortingOrder = 1000;
+
+                return _effectCanvas;
+            }
+        }
+
         internal void Initialize()
         {
             longTimeNoOperation.SetTimeout(
@@ -42,12 +63,11 @@ namespace UNIHper
             });
 
             // debugModeEnabled.SetValueAndForceNotify(false);
-            var _rootCanvas = Managements.UI.RootCanvas();
-            var _tapObject = new GameObject("__debugMode_trigger");
-            _tapObject.transform.parent = _rootCanvas.transform;
-            _tapObject.transform.SetAsLastSibling();
-            var _rectTrans = _tapObject.AddComponent<RectTransform>();
-            _tapObject.AddComponent<Image>().color = Color.clear;
+            var _triggerObject = new GameObject("__debugMode_trigger");
+            _triggerObject.transform.SetParent(TopmostCanvas.transform);
+            _triggerObject.transform.SetAsLastSibling();
+            var _rectTrans = _triggerObject.AddComponent<RectTransform>();
+            _triggerObject.AddComponent<Image>().color = Color.clear;
             _rectTrans.localScale = Vector3.one;
             _rectTrans.sizeDelta = new Vector2(100, 100);
             _rectTrans.pivot = Vector2.one;
@@ -57,7 +77,7 @@ namespace UNIHper
 
             var _tapGesture = new TapGestureRecognizer();
             _tapGesture.NumberOfTapsRequired = 3;
-            _tapGesture.PlatformSpecificView = _tapObject;
+            _tapGesture.PlatformSpecificView = _triggerObject;
             _tapGesture.StateUpdated += (
                 _gesture =>
                 {
