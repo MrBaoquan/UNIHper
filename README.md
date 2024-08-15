@@ -24,10 +24,13 @@
 
 
 ### 版本更新日志
-v1.24.812
+v1.24.815
  - 将所有插件包含的示例移至框架示例文件夹中
  - 增加UI Particle插件
  - 增加滑动视觉反馈PanEffect
+ - 增加UI页面代码注册机制
+ - 工作流可以默认不使用GameMain程序集
+ - Timer管理类增加Countdown功能
   
 v1.24.809
  - 更新Fingers & MPUIKIT

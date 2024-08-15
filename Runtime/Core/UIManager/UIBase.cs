@@ -1,16 +1,46 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using DNHper;
 using UniRx;
 using UnityEngine;
 using UnityEngine.Events;
-using UNIHper.UI;
 using System.Threading;
 
-namespace UNIHper
+namespace UNIHper.UI
 {
+    [AttributeUsage(AttributeTargets.Class, Inherited = true, AllowMultiple = false)]
+    public class UIPage : Attribute
+    {
+        internal string UIKey;
+
+        /// <summary>
+        /// The name of the ui asset.
+        /// </summary>
+        public string Asset;
+
+        /// <summary>
+        /// The name of the canvas to render the ui.
+        /// </summary>
+        public string Canvas;
+
+        /// <summary>
+        /// The type of the ui to show.
+        /// </summary>
+        public UIType Type;
+
+        /// <summary>
+        /// The name of the scene to load the ui, default is "Persistence".
+        /// </summary>
+        public string Scene;
+
+        public UIPage()
+        {
+            this.Asset = string.Empty;
+            this.Canvas = UIManager.CANVAS_DEFAULT;
+            this.Type = UIType.Normal;
+            this.Scene = UIManager.PERSISTENCE_SCENE;
+        }
+    }
+
     public abstract partial class UIBase : MonoBehaviour
     {
         internal string __CanvasKey = string.Empty;

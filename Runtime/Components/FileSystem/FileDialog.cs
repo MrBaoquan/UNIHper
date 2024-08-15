@@ -6,7 +6,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UNIHper
+namespace UNIHper.UI
 {
     using UniRx;
 

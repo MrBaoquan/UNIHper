@@ -9,8 +9,10 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using UnityEngine;
 
-namespace UNIHper
+namespace UNIHper.UI
 {
+    using System.Reflection;
+
     using UniRx;
 
     public class UIConfig
@@ -20,34 +22,44 @@ namespace UNIHper
 
         [JsonProperty("type"), DefaultValue(UIType.None)]
         [JsonConverter(typeof(StringEnumConverter))]
-        public UIType Type = UIType.Normal;
+        public UIType ShowType = UIType.Normal;
 
         [JsonProperty("canvas"), DefaultValue("")]
-        public string canvas = "CanvasDefault";
+        public string RenderCanvasName = "CanvasDefault";
 
-        public string GetAssetName(string InDefault)
+        [JsonIgnore]
+        internal string __UIKey = string.Empty;
+
+        [JsonIgnore]
+        public Type classType => AssemblyConfig.GetUNIType(__UIKey);
+
+        public GameObject GetAsset()
         {
-            if (Asset == string.Empty)
+            if (string.IsNullOrEmpty(Asset) == false)
             {
-                return InDefault;
+                return ResourceManager.Instance.Get<GameObject>(Asset);
             }
-            return Asset;
+
+            return ResourceManager.Instance.Get<GameObject>(__UIKey)
+                ?? ResourceManager.Instance.Get<GameObject>(__UIKey.Split('.').LastOrDefault());
         }
     }
 
     public class UIManager : Singleton<UIManager>
     {
-        const string CANVAS_DEFAULT = "CanvasDefault";
+        internal const string CANVAS_DEFAULT = "CanvasDefault";
+
+        internal const string PERSISTENCE_SCENE = "Persistence";
         private Dictionary<string, UIRootLayout> m_uiRootLayoutDic =
             new Dictionary<string, UIRootLayout>();
 
         // 自定义的UI配置
         private Dictionary<string, Dictionary<string, UIConfig>> customUIConfigData = null;
 
-        // 持久化的UI配置
-        private Dictionary<string, UIConfig> persistConfigData = null;
+        // 框架层持久化的UI配置
+        private Dictionary<string, UIConfig> builtInConfigData = null;
 
-        // 额外附加的配置
+        // 应用层 附加的配置
         private Dictionary<string, Dictionary<string, UIConfig>> additionalConfigData =
             new Dictionary<string, Dictionary<string, UIConfig>>();
 
@@ -418,7 +430,7 @@ namespace UNIHper
                 );
                 return;
             }
-            var _configData = Newtonsoft.Json.JsonConvert.DeserializeObject<
+            var _configData = JsonConvert.DeserializeObject<
                 Dictionary<string, Dictionary<string, UIConfig>>
             >(_textAsset.text);
             mergeUIConfig(additionalConfigData, _configData);
@@ -457,32 +469,68 @@ namespace UNIHper
         {
             srcConfig
                 .ToList()
-                .ForEach(_ =>
+                .ForEach(_sceneKey =>
                 {
-                    if (!dstConfig.ContainsKey(_.Key))
+                    if (!dstConfig.ContainsKey(_sceneKey.Key))
                     {
-                        dstConfig.Add(_.Key, _.Value);
+                        dstConfig.Add(_sceneKey.Key, _sceneKey.Value);
                     }
                     else
                     {
-                        _.Value
+                        _sceneKey.Value
                             .ToList()
-                            .ForEach(__ =>
+                            .ForEach(__uiKey =>
                             {
-                                if (!dstConfig[_.Key].ContainsKey(__.Key))
+                                if (!dstConfig[_sceneKey.Key].ContainsKey(__uiKey.Key))
                                 {
-                                    dstConfig[_.Key].Add(__.Key, __.Value);
+                                    dstConfig[_sceneKey.Key].Add(__uiKey.Key, __uiKey.Value);
+                                }
+                                else
+                                {
+                                    dstConfig[_sceneKey.Key][__uiKey.Key] = __uiKey.Value;
                                 }
                             });
                     }
                 });
         }
 
+        // 加载代码注册UI
+        private Dictionary<string, Dictionary<string, UIConfig>> loadCodeRegisterUI()
+        {
+            var _uis = AssemblyConfig.GetSubClasses(typeof(UIBase));
+            return _uis.Select(_uiType =>
+                {
+                    var _attr = _uiType.GetCustomAttribute<UIPage>();
+                    if (_attr != null)
+                    {
+                        _attr.UIKey = AssemblyConfig.GetTypeUniqueID(_uiType);
+                    }
+                    return _attr;
+                })
+                .Where(_uiAttr => _uiAttr != null)
+                .GroupBy(_ => _.Scene)
+                .ToDictionary(
+                    _ => _.Key,
+                    _ =>
+                        _.Select(
+                                _uiAttr =>
+                                    new UIConfig
+                                    {
+                                        __UIKey = _uiAttr.UIKey,
+                                        ShowType = _uiAttr.Type,
+                                        Asset = _uiAttr.Asset,
+                                        RenderCanvasName = _uiAttr.Canvas
+                                    }
+                            )
+                            .ToDictionary(_uiConfig => _uiConfig.__UIKey, _uiConfig => _uiConfig)
+                );
+        }
+
         private void ReadConfigData()
         {
             string _uiPath = UNIHperSettings.UIConfigPath;
             TextAsset _uiAsset = Resources.Load<TextAsset>(_uiPath);
-            customUIConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<
+            customUIConfigData = JsonConvert.DeserializeObject<
                 Dictionary<string, Dictionary<string, UIConfig>>
             >(_uiAsset.text);
 
@@ -498,11 +546,14 @@ namespace UNIHper
                 })
                 .ToDictionary(_ => _.Key, _ => _.Value);
 
+            var _codeRegisterUIs = loadCodeRegisterUI();
+            mergeUIConfig(customUIConfigData, _codeRegisterUIs);
+
             var _persistUIAsset = Resources.Load<TextAsset>("__Configs/Persistence/ui");
-            persistConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<
+            builtInConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<
                 Dictionary<string, UIConfig>
             >(_persistUIAsset.text);
-            persistConfigData = fillUIKeys(persistConfigData);
+            builtInConfigData = fillUIKeys(builtInConfigData);
         }
 
         /// <summary>
@@ -519,6 +570,7 @@ namespace UNIHper
                     if (_uiType != null)
                     {
                         var _uiKey = AssemblyConfig.GetTypeUniqueID(_uiType);
+                        _kv.Value.__UIKey = _uiKey;
                         return new KeyValuePair<string, UIConfig>(_uiKey, _kv.Value);
                     }
                     return _kv;
@@ -528,10 +580,10 @@ namespace UNIHper
 
         private void spawnPersistUIs()
         {
-            SpawnUIS(persistConfigData);
+            SpawnUIS(builtInConfigData);
 
             Dictionary<string, UIConfig> _uis = null;
-            if (!customUIConfigData.TryGetValue("Persistence", out _uis))
+            if (!customUIConfigData.TryGetValue(PERSISTENCE_SCENE, out _uis))
             {
                 return;
             }
@@ -548,7 +600,7 @@ namespace UNIHper
 
         private void SpawnUI(string uiKey, UIConfig uiConfig)
         {
-            Type _T = AssemblyConfig.GetUNIType(uiKey);
+            Type _T = uiConfig.classType;
 
             if (_T == null)
             {
@@ -556,9 +608,7 @@ namespace UNIHper
                 return;
             }
 
-            GameObject _uiPrefab = ResourceManager.Instance.Get<GameObject>(
-                uiConfig.GetAssetName(uiKey)
-            );
+            GameObject _uiPrefab = uiConfig.GetAsset();
             if (_uiPrefab == null)
             {
                 return;
@@ -566,7 +616,7 @@ namespace UNIHper
 
             GameObject _newUI = GameObject.Instantiate(
                 _uiPrefab,
-                getUIRootLayout(uiConfig.canvas).NormalUIRoot
+                getUIRootLayout(uiConfig.RenderCanvasName).NormalUIRoot
             );
             _newUI.SetActive(false);
 
@@ -576,10 +626,16 @@ namespace UNIHper
                 _uiComponent = _newUI.AddComponent(_T) as UIBase;
             }
 
-            UReflection.SetPrivateField<string>(_uiComponent, "__CanvasKey", uiConfig.canvas);
+            UReflection.SetPrivateField<string>(
+                _uiComponent,
+                "__CanvasKey",
+                uiConfig.RenderCanvasName
+            );
             UReflection.SetPrivateField<string>(_uiComponent, "__UIKey", uiKey);
-            UReflection.SetPrivateField<UIType>(_uiComponent, "__Type", uiConfig.Type);
-            _newUI.transform.SetParent(getParentUIAttachTo(_uiComponent.Type, uiConfig.canvas));
+            UReflection.SetPrivateField<UIType>(_uiComponent, "__Type", uiConfig.ShowType);
+            _newUI.transform.SetParent(
+                getParentUIAttachTo(_uiComponent.Type, uiConfig.RenderCanvasName)
+            );
             allSpawnedUICaches.Add(uiKey, _uiComponent);
             _uiComponent.OnLoad();
         }
@@ -765,13 +821,13 @@ namespace UNIHper
 
         private bool isPersistUI(string uiKey)
         {
-            if (persistConfigData.ContainsKey(uiKey))
+            if (builtInConfigData.ContainsKey(uiKey))
             {
                 return true;
             }
 
             Dictionary<string, UIConfig> _cusPersistUIs = null;
-            if (customUIConfigData.TryGetValue("Persistence", out _cusPersistUIs))
+            if (customUIConfigData.TryGetValue(PERSISTENCE_SCENE, out _cusPersistUIs))
             {
                 if (_cusPersistUIs.ContainsKey(uiKey))
                 {

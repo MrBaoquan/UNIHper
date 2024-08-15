@@ -1,7 +1,7 @@
 using System.Runtime.Serialization;
 using UnityEngine;
 
-namespace UNIHper
+namespace UNIHper.UI
 {
     public enum UIType
     {

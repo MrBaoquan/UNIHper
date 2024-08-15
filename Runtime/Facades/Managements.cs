@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UNIHper.Network;
+using UNIHper.UI;
 
 namespace UNIHper
 {
@@ -15,7 +16,7 @@ namespace UNIHper
         public static readonly Framework Framework = Framework.Instance;
         public static UAudioManager Audio => UAudioManager.Instance;
         public static readonly UEventManager Event = UEventManager.Instance;
-        public static readonly UTimerManager Timer = UTimerManager.Instance;
+        public static readonly TimerManager Timer = TimerManager.Instance;
 
         public static T SceneScript<T>()
             where T : SceneScriptBase => SceneScriptManager.Instance.GetSceneScript<T>();

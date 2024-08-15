@@ -83,6 +83,12 @@ namespace UNIHper
         public bool showPanEffect = true;
 
         [Title("Workflow Settings")]
+        [Tooltip(
+            "Generate default GameMain assembly or not, Please initialize UNIHper again if you change this value."
+        )]
+        public bool UseAssembly = true;
+
+        [Space]
         public List<string> invalidAppNamePrefixes = new List<string> { "unihper_template" };
 
         // 仓库排除文件路径

@@ -261,7 +261,8 @@ namespace UNIHper.Editor
                 Path.GetFullPath("Assets/Develop/Scripts"),
                 "GameMain.asmdef"
             );
-            if (!File.Exists(_dstAssemblyPath))
+
+            if (UNIHperSettings.Instance.UseAssembly && !File.Exists(_dstAssemblyPath))
             {
                 CodeTemplateGenerator.CreateGameMainAssemblyIfNotExists();
             }

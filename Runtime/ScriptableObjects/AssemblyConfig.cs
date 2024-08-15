@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using DNHper;
 using Newtonsoft.Json;
+using UNIHper.UI;
 using UnityEngine;
 
 namespace UNIHper
@@ -14,7 +15,7 @@ namespace UNIHper
     {
         public string ID; // example: UNIHper.IdleUI
         public string FullName;
-        public string Name => ID.Split(".")[1];
+        public string Name => ID.Split(".").Last();
     }
 
     public class AssemblyConfig : ScriptableObject
@@ -44,12 +45,13 @@ namespace UNIHper
         }
 
         public List<string> Assemblies;
-        public List<string> filterBaseTypes = new List<string>
+        public List<string> filterBaseTypes = new List<string>()
         {
             typeof(UIBase).AssemblyQualifiedName,
             typeof(SceneScriptBase).AssemblyQualifiedName,
             typeof(UConfig).AssemblyQualifiedName
         };
+
         public List<UNIType> CachedTypes;
 
         private Dictionary<string, List<Type>> allTypesMap = new Dictionary<string, List<Type>>();
@@ -73,6 +75,12 @@ namespace UNIHper
 
         public void refresh()
         {
+            filterBaseTypes.Clear();
+
+            filterBaseTypes.Add(typeof(UIBase).AssemblyQualifiedName);
+            filterBaseTypes.Add(typeof(SceneScriptBase).AssemblyQualifiedName);
+            filterBaseTypes.Add(typeof(UConfig).AssemblyQualifiedName);
+
             Assemblies.Clear();
             allTypesMap.Clear();
             CachedTypes.Clear();
@@ -134,7 +142,7 @@ namespace UNIHper
             }
             catch (Exception)
             {
-                UnityEngine.Debug.LogWarningFormat("Can not load assembly: {0}", assemblyName);
+                UNIHperLogger.LogWarning($"Can not load assembly: {assemblyName}");
                 return;
             }
 

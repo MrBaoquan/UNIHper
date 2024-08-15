@@ -12,7 +12,6 @@ using UnityEngine.InputSystem.EnhancedTouch;
 #endif
 using UniRx;
 using Sirenix.OdinInspector;
-using UnityEditor;
 
 namespace UNIHper
 {
@@ -107,7 +106,7 @@ namespace UNIHper
         private void Reset()
         {
 #if UNITY_EDITOR
-            effectClip = AssetDatabase.LoadAssetAtPath<AnimationClip>(
+            effectClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AnimationClip>(
                 "Packages/com.parful.unihper/Assets/Resources/__Animations/TapEffect.anim"
             );
 #endif

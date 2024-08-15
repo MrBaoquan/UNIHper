@@ -11,6 +11,7 @@ using UnityEngine.InputSystem;
 namespace UNIHper
 {
     using UniRx;
+    using UNIHper.UI;
 
     public class Framework : Singleton<Framework>
     {

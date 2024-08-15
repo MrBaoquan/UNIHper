@@ -77,20 +77,26 @@ namespace UNIHper
             if (scrollLayout == ScrollLayout.Horizontal_Normal)
             {
                 spawnNormalLayout();
-                Managements.Timer.NextFrame(() =>
-                {
-                    Debug.LogFormat("max show count:{0}", MaxShowCount);
-                    //ScrollTo (MaxShowCount - 1);
-                    ScrollTo(HalfShowCount);
-                });
+                Observable
+                    .NextFrame()
+                    .Subscribe(_ =>
+                    {
+                        Debug.LogFormat("max show count:{0}", MaxShowCount);
+                        //ScrollTo (MaxShowCount - 1);
+                        ScrollTo(HalfShowCount);
+                    });
             }
             else if (scrollLayout == ScrollLayout.Horizontal_Loop)
             {
                 spawnLoopLayout();
-                Managements.Timer.NextFrame(() =>
-                {
-                    scrollRect.ScrollToCenter(content.GetChild(cacheItemsCount) as RectTransform);
-                });
+                Observable
+                    .NextFrame()
+                    .Subscribe(_ =>
+                    {
+                        scrollRect.ScrollToCenter(
+                            content.GetChild(cacheItemsCount) as RectTransform
+                        );
+                    });
             }
         }
 

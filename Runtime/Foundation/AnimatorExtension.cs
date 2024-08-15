@@ -4,6 +4,8 @@ using UnityEngine;
 
 namespace UNIHper
 {
+    using System.Threading.Tasks;
+
     using UniRx;
 
     public static class AnimatorExtension
@@ -17,6 +19,20 @@ namespace UNIHper
                     return _.name == InName;
                 })
                 .FirstOrDefault();
+        }
+
+        public static Task PlayAndWait(this Animator animator, string stateName)
+        {
+            animator.Play(stateName, 0, 0);
+            return Observable
+                .EveryUpdate()
+                .Where(
+                    _ =>
+                        animator.GetCurrentAnimatorStateInfo(0).IsName(stateName)
+                        && animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= 1
+                )
+                .First()
+                .ToTask();
         }
 
         // csharpier-ignore

@@ -7,14 +7,24 @@ namespace UNIHper
 {
     using UniRx;
 
-    public class UTimerManager : Singleton<UTimerManager>
+    public class TimerManager : Singleton<TimerManager>
     {
         internal Task Initialize()
         {
             return Task.CompletedTask;
         }
 
-        public IDisposable CountDown(Action<int> update, Action completed, int duration)
+        public Task Delay(float delayInSeconds)
+        {
+            return Observable.Timer(TimeSpan.FromSeconds(delayInSeconds)).ToTask();
+        }
+
+        public Countdown Countdown(float durationInSecons, float tickInterval = 1)
+        {
+            return new Countdown(durationInSecons, tickInterval);
+        }
+
+        public IDisposable Countdown(Action<int> update, Action completed, int duration)
         {
             update?.Invoke(duration);
             return Observable
@@ -31,57 +41,57 @@ namespace UNIHper
                 });
         }
 
-        public IDisposable SetTimeout(Action InHandler, float InTime)
-        {
-            return SetTimeout(InHandler, null, InTime);
-        }
+        // public IDisposable SetTimeout(Action InHandler, float InTime)
+        // {
+        //     return SetTimeout(InHandler, null, InTime);
+        // }
 
-        public IDisposable SetTimeout(
-            Action OnCompleted,
-            Action<float> OnUpdate,
-            float InDuration,
-            float InInterval = 0.05f
-        )
-        {
-            float _startTime = Time.time;
-            IDisposable _timerHandler = null;
-            _timerHandler = Observable
-                .Interval(TimeSpan.FromSeconds(InInterval))
-                .Where(
-                    (_1, _2) =>
-                    {
-                        float _delta = Time.time - _startTime;
-                        bool _condition = _delta <= InDuration;
-                        if (_condition)
-                        {
-                            float _progress = Mathf.Clamp(_delta / InDuration, 0, 1);
-                            if (OnUpdate != null)
-                                OnUpdate(_progress);
-                        }
-                        else
-                        {
-                            if (OnUpdate != null)
-                                OnUpdate(1.0f);
-                            _timerHandler.Dispose();
-                            if (OnCompleted != null)
-                                OnCompleted();
-                        }
-                        return _condition;
-                    }
-                )
-                .Subscribe(_ => { });
-            return _timerHandler;
-        }
+        // public IDisposable SetTimeout(
+        //     Action OnCompleted,
+        //     Action<float> OnUpdate,
+        //     float InDuration,
+        //     float InInterval = 0.05f
+        // )
+        // {
+        //     float _startTime = Time.time;
+        //     IDisposable _timerHandler = null;
+        //     _timerHandler = Observable
+        //         .Interval(TimeSpan.FromSeconds(InInterval))
+        //         .Where(
+        //             (_1, _2) =>
+        //             {
+        //                 float _delta = Time.time - _startTime;
+        //                 bool _condition = _delta <= InDuration;
+        //                 if (_condition)
+        //                 {
+        //                     float _progress = Mathf.Clamp(_delta / InDuration, 0, 1);
+        //                     if (OnUpdate != null)
+        //                         OnUpdate(_progress);
+        //                 }
+        //                 else
+        //                 {
+        //                     if (OnUpdate != null)
+        //                         OnUpdate(1.0f);
+        //                     _timerHandler.Dispose();
+        //                     if (OnCompleted != null)
+        //                         OnCompleted();
+        //                 }
+        //                 return _condition;
+        //             }
+        //         )
+        //         .Subscribe(_ => { });
+        //     return _timerHandler;
+        // }
 
-        public IDisposable SetInterval(Action callback, float interval)
-        {
-            return Observable
-                .Interval(TimeSpan.FromSeconds(interval))
-                .Subscribe(_ =>
-                {
-                    callback?.Invoke();
-                });
-        }
+        // public IDisposable SetInterval(Action callback, float interval)
+        // {
+        //     return Observable
+        //         .Interval(TimeSpan.FromSeconds(interval))
+        //         .Subscribe(_ =>
+        //         {
+        //             callback?.Invoke();
+        //         });
+        // }
 
         /// <summary>
         /// 忽略InTime时间内的多次调用          (节流)
@@ -142,14 +152,14 @@ namespace UNIHper
             return _debounceDelegate;
         }
 
-        public void NextFrame(Action callback)
+        public Task NextFrame()
         {
-            Observable
-                .NextFrame()
-                .Subscribe(_ =>
-                {
-                    callback?.Invoke();
-                });
+            return Observable.NextFrame().ToTask();
+        }
+
+        public IDisposable NextFrame(Action callback)
+        {
+            return Observable.NextFrame().Subscribe(_ => callback());
         }
     }
 }

@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEditor.ProjectWindowCallback;
 using UnityEngine;
+using UNIHper.UI;
 
 namespace UNIHper.Editor
 {
@@ -30,34 +31,34 @@ namespace UNIHper.Editor
                 Object o = CreateScript(pathName, resourceFile);
                 ProjectWindowUtil.ShowCreatedAsset(o);
 
-                var _scriptName = Path.GetFileNameWithoutExtension(pathName);
+                // var _scriptName = Path.GetFileNameWithoutExtension(pathName);
 
-                TextAsset _uiAsset = Resources.Load<TextAsset>("UNIHper/uis");
-                var _jsonObj = JsonConvert.DeserializeObject<
-                    Dictionary<string, Dictionary<string, UIConfig>>
-                >(_uiAsset.text);
-                var _sceneUIs = _jsonObj["Persistence"];
-                if (!_sceneUIs.ContainsKey(_scriptName))
-                {
-                    _sceneUIs.Add(
-                        Path.GetFileNameWithoutExtension(pathName),
-                        new UIConfig { Asset = _scriptName, Type = UIType.Normal }
-                    );
-                    var _content = JsonConvert.SerializeObject(
-                        _jsonObj,
-                        Formatting.Indented,
-                        new JsonSerializerSettings
-                        {
-                            DefaultValueHandling = DefaultValueHandling.Ignore
-                        }
-                    );
-                    File.WriteAllText(
-                        Path.Combine(Application.dataPath, "Resources/UNIHper/uis.json"),
-                        JToken.Parse(_content).ToString(Formatting.Indented)
-                    );
-                    AssetDatabase.SaveAssets();
-                    AssetDatabase.Refresh();
-                }
+                // TextAsset _uiAsset = Resources.Load<TextAsset>("UNIHper/uis");
+                // var _jsonObj = JsonConvert.DeserializeObject<
+                //     Dictionary<string, Dictionary<string, UIConfig>>
+                // >(_uiAsset.text);
+                // var _sceneUIs = _jsonObj["Persistence"];
+                // if (!_sceneUIs.ContainsKey(_scriptName))
+                // {
+                //     _sceneUIs.Add(
+                //         Path.GetFileNameWithoutExtension(pathName),
+                //         new UIConfig { Asset = _scriptName, ShowType = UIShowType.Normal }
+                //     );
+                //     var _content = JsonConvert.SerializeObject(
+                //         _jsonObj,
+                //         Formatting.Indented,
+                //         new JsonSerializerSettings
+                //         {
+                //             DefaultValueHandling = DefaultValueHandling.Ignore
+                //         }
+                //     );
+                //     File.WriteAllText(
+                //         Path.Combine(Application.dataPath, "Resources/UNIHper/uis.json"),
+                //         JToken.Parse(_content).ToString(Formatting.Indented)
+                //     );
+                //     AssetDatabase.SaveAssets();
+                //     AssetDatabase.Refresh();
+                // }
 
                 //JsonUtility.FromJson (_uiAsset.text);
                 // Debug.Log(pathName);

@@ -4,8 +4,10 @@ using UnityEngine;
 using UnityEngine.UI;
 using UniRx;
 using UNIHper;
+using UNIHper.UI;
 using DNHper;
 
+[UIPage(Asset = "##CLASSNAME##", Type = UIType.Normal)]
 public class ##CLASSNAME## : UIBase
 {
     // Start is called before the first frame update

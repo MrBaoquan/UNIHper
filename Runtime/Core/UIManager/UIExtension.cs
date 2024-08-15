@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace UNIHper
+namespace UNIHper.UI
 {
     using UniRx;
     using UniRx.Triggers;
