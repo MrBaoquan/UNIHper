@@ -7,16 +7,9 @@ namespace UNIHper
 {
     public static class UNILogger
     {
-        const string configName = "NLog.config.xml";
-        const string logFileName = "${shortdate}.log";
-
         static string LogFileDir
         {
             get { return Path.Combine(Directory.GetParent(Application.dataPath).FullName, "Logs"); }
-        }
-        static string LogFilePath
-        {
-            get { return Path.Combine(LogFileDir, logFileName); }
         }
 
         public static void Debug(string InMessage)
@@ -62,6 +55,7 @@ namespace UNIHper
         public static void Initialize()
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            NLogger.LogFileName = "Player.log";
             NLogger.LogFileDir = LogFileDir;
             NLogger.Initialize();
             Application.logMessageReceivedThreaded += HandleLog;

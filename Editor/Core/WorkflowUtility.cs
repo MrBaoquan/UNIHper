@@ -8,10 +8,21 @@ namespace UNIHper.Editor
     using System.Collections.Generic;
     using System.IO;
     using System.Text.RegularExpressions;
+    using Newtonsoft.Json;
+    using UnityEditor.SceneManagement;
     using UnityEngine;
 
     public static class WorkflowUtility
     {
+        public class UNIHperCache
+        {
+            // 之前是否打开过项目
+            public bool hasOpenedBefore = true;
+        }
+
+        static string unihperCacheFilePath = Path.Combine(ProjectPath, "Library/UNIHperCache.json");
+        public static string ProjectPath => Application.dataPath.Replace("/Assets", "");
+
         public static string ProjectName
         {
             get
@@ -24,8 +35,10 @@ namespace UNIHper.Editor
         [InitializeOnLoadMethod]
         static void AutoWorkEnv()
         {
-            setProductName();
-            EditorApplication.delayCall += delayedCall;
+            if (SessionState.GetBool(bWorkflowComplete, false))
+            {
+                return;
+            }
             EditorApplication.update += update;
         }
 
@@ -58,6 +71,7 @@ namespace UNIHper.Editor
             moveOdinConfig();
         }
 
+        const string bFirstOpenProject = "FirstOpenProject";
         const string bWorkflowComplete = "WorkflowComplete";
         const string bSetProductName = "SetProductName";
         const string bOdinConfigMoved = "OdinConfigMoved";
@@ -69,8 +83,29 @@ namespace UNIHper.Editor
                 .All(b => b);
         }
 
+        private static void firstOpenWorkflow()
+        {
+            if (File.Exists(unihperCacheFilePath) == false)
+            {
+                File.WriteAllText(
+                    unihperCacheFilePath,
+                    JsonConvert.SerializeObject(new UNIHperCache(), Formatting.Indented)
+                );
+
+                if (Application.HasProLicense())
+                {
+                    PlayerSettings.SplashScreen.show = false;
+                }
+            }
+        }
+
         private static void update()
         {
+            if (SessionState.GetBool(bFirstOpenProject, true))
+            {
+                firstOpenWorkflow();
+                SessionState.SetBool(bFirstOpenProject, false);
+            }
             if (SessionState.GetBool(bWorkflowComplete, false))
             {
                 EditorApplication.update -= update;
@@ -146,7 +181,17 @@ namespace UNIHper.Editor
             return _isOdinConfigExists();
         }
 
-        [MenuItem("UNIHper/Workflow/Clean Excluded Files", priority = 41)]
+        [MenuItem("UNIHper/Workflow/Restart Editor &r", priority = 41)]
+        private static void RestartEditor()
+        {
+            if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            {
+                AssetDatabase.SaveAssets();
+                EditorApplication.OpenProject(ProjectPath);
+            }
+        }
+
+        [MenuItem("UNIHper/Workflow/Clean Excluded Files", priority = 95)]
         public static void CleanExcludedPaths()
         {
             var _excludedPaths = UNIHperSettings.Instance.SVNExcludedPaths;
@@ -165,13 +210,13 @@ namespace UNIHper.Editor
             AssetDatabase.Refresh();
         }
 
-        [MenuItem("UNIHper/Workflow/SVN Update Slim Repo", priority = 61)]
+        [MenuItem("UNIHper/Workflow/SVN Update Slim Repo", priority = 71)]
         public static void CleanAssets()
         {
             UpdateSVNDepth("exclude");
         }
 
-        [MenuItem("UNIHper/Workflow/SVN Update Full Repo", priority = 62)]
+        [MenuItem("UNIHper/Workflow/SVN Update Full Repo", priority = 72)]
         public static void SetFullSVNDepth()
         {
             UpdateSVNDepth("infinity");

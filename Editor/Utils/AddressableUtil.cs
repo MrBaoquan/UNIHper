@@ -2,8 +2,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
-using UnityEditor.AddressableAssets;
 using UnityEngine;
+using UnityEditor.AddressableAssets;
+using DNHper;
 
 public class AddressableUtil
 {
@@ -36,13 +37,20 @@ public class AddressableUtil
         return AddressableAssetSettingsDefaultObject.Settings;
     }
 
-    static bool isEntryExist()
+    static bool checkEntryExist(string path)
     {
         var settings = LoadOrCreateAddressableSettings();
-        var _curDir = UNIEditorUtil.GetSelectedDirectory();
-        string guid = AssetDatabase.AssetPathToGUID(_curDir);
-        var entry = settings.FindAssetEntry(guid);
-        return entry != null;
+        var guid = AssetDatabase.AssetPathToGUID(path);
+        var _entry = settings.FindAssetEntry(guid);
+        return _entry != null;
+    }
+
+    static bool checkParentEntryExist(string path)
+    {
+        var settings = LoadOrCreateAddressableSettings();
+        return path.GetParentPaths()
+            .Select(_path => _path.ToForwardSlash())
+            .Any(_path => checkEntryExist(_path));
     }
 
     [MenuItem("Assets/Add To Addressable System")]
@@ -77,7 +85,7 @@ public class AddressableUtil
                 return false;
         }
 
-        return !isEntryExist();
+        return !checkEntryExist(_curDir) && !checkParentEntryExist(_curDir);
     }
 
     [MenuItem("Assets/Remove From Addressable System")]
@@ -94,6 +102,7 @@ public class AddressableUtil
     [MenuItem("Assets/Remove From Addressable System", true)]
     static bool RemoveFromAddressableValidate()
     {
-        return isEntryExist();
+        var _curDir = UNIEditorUtil.GetSelectedDirectory();
+        return checkEntryExist(_curDir);
     }
 }

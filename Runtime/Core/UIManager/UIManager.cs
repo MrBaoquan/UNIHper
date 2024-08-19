@@ -27,6 +27,9 @@ namespace UNIHper.UI
         [JsonProperty("canvas"), DefaultValue("")]
         public string RenderCanvasName = "CanvasDefault";
 
+        [JsonProperty("order"), DefaultValue(-1)]
+        public int Order = -1;
+
         [JsonIgnore]
         internal string __UIKey = string.Empty;
 
@@ -519,7 +522,8 @@ namespace UNIHper.UI
                                         __UIKey = _uiAttr.UIKey,
                                         ShowType = _uiAttr.Type,
                                         Asset = _uiAttr.Asset,
-                                        RenderCanvasName = _uiAttr.Canvas
+                                        RenderCanvasName = _uiAttr.Canvas,
+                                        Order = _uiAttr.Order
                                     }
                             )
                             .ToDictionary(_uiConfig => _uiConfig.__UIKey, _uiConfig => _uiConfig)
@@ -554,6 +558,29 @@ namespace UNIHper.UI
                 Dictionary<string, UIConfig>
             >(_persistUIAsset.text);
             builtInConfigData = fillUIKeys(builtInConfigData);
+
+            // 对UI进行默认排序
+            customUIConfigData = orderUIConfig(customUIConfigData);
+            builtInConfigData = builtInConfigData.Values
+                .OrderBy(_ui => _ui.Order)
+                .ToDictionary(_ui => _ui.__UIKey, _ui => _ui);
+        }
+
+        private Dictionary<string, Dictionary<string, UIConfig>> orderUIConfig(
+            Dictionary<string, Dictionary<string, UIConfig>> uiConfig
+        )
+        {
+            return uiConfig
+                .Select(_sceneKV =>
+                {
+                    return new KeyValuePair<string, Dictionary<string, UIConfig>>(
+                        _sceneKV.Key,
+                        _sceneKV.Value.Values
+                            .OrderBy(_ui => _ui.Order)
+                            .ToDictionary(_ui => _ui.__UIKey, _ui => _ui)
+                    );
+                })
+                .ToDictionary(_ => _.Key, _ => _.Value);
         }
 
         /// <summary>
@@ -604,13 +631,14 @@ namespace UNIHper.UI
 
             if (_T == null)
             {
-                Debug.LogWarning("UI Script not found: " + uiKey);
+                Debug.LogWarning($"Create UI {uiKey} failed. UI script not found.");
                 return;
             }
 
             GameObject _uiPrefab = uiConfig.GetAsset();
             if (_uiPrefab == null)
             {
+                Debug.LogWarning($"Create UI {uiKey} failed. UI asset not found.");
                 return;
             }
 
@@ -618,6 +646,8 @@ namespace UNIHper.UI
                 _uiPrefab,
                 getUIRootLayout(uiConfig.RenderCanvasName).NormalUIRoot
             );
+
+            _newUI.name = $"{_uiPrefab.name} [{uiKey}]";
             _newUI.SetActive(false);
 
             UIBase _uiComponent = _newUI.GetComponent(_T) as UIBase;
@@ -626,16 +656,14 @@ namespace UNIHper.UI
                 _uiComponent = _newUI.AddComponent(_T) as UIBase;
             }
 
-            UReflection.SetPrivateField<string>(
-                _uiComponent,
-                "__CanvasKey",
-                uiConfig.RenderCanvasName
-            );
-            UReflection.SetPrivateField<string>(_uiComponent, "__UIKey", uiKey);
-            UReflection.SetPrivateField<UIType>(_uiComponent, "__Type", uiConfig.ShowType);
+            _uiComponent.__CanvasKey = uiConfig.RenderCanvasName;
+            _uiComponent.__UIKey = uiKey;
+            _uiComponent.__Type = uiConfig.ShowType;
+
             _newUI.transform.SetParent(
                 getParentUIAttachTo(_uiComponent.Type, uiConfig.RenderCanvasName)
             );
+
             allSpawnedUICaches.Add(uiKey, _uiComponent);
             _uiComponent.OnLoad();
         }

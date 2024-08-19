@@ -18,6 +18,11 @@ namespace UNIHper.UI
         public string Asset;
 
         /// <summary>
+        /// The order of the ui in the canvas.
+        /// </summary>
+        public int Order = -1;
+
+        /// <summary>
         /// The name of the canvas to render the ui.
         /// </summary>
         public string Canvas;
@@ -89,7 +94,7 @@ namespace UNIHper.UI
             return onHidingEvent.AsObservable();
         }
 
-        public IObservable<Unit> OnHideAsObservable()
+        public IObservable<Unit> OnHiddenAsObservable()
         {
             return onHiddenEvent.AsObservable();
         }

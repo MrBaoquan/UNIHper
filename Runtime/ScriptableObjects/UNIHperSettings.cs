@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 using Sirenix.OdinInspector;
-using System.ComponentModel;
 
 namespace UNIHper
 {
@@ -25,50 +23,23 @@ namespace UNIHper
             return instance;
         }
 
-        public static string ResourceConfigPath
-        {
-            get => Self().ResourcePath;
-        }
+        public static string ResourceConfigPath => Self().ResourcePath;
 
-        public static string UIConfigPath
-        {
-            get => Self().UIPath;
-        }
+        public static string UIConfigPath => Self().UIPath;
 
-        public static string AssemblyConfigPath
-        {
-            get => Self().AssemblyPath;
-        }
+        public static string AssemblyConfigPath => Self().AssemblyPath;
 
-        public static bool ShowDebugLog
-        {
-            get => Self().ShowDebugMessage;
-        }
+        public static bool ShowDebugLog => Self().ShowDebugMessage;
 
-        public static AudioClip DefaultClickSound
-        {
-            get => Self().defaultClickSound;
-        }
+        public static AudioClip DefaultClickSound => Self().defaultClickSound;
 
-        public static bool ShowTapEffect
-        {
-            get => Self().showTapEffect;
-        }
+        public static bool ShowTapEffect => Self().showTapEffect;
 
-        public static bool ShowPanEffect
-        {
-            get => Self().showPanEffect;
-        }
+        public static bool ShowPanEffect => Self().showPanEffect;
 
-        public static bool AutoInitIfNotStarted
-        {
-            get => Self().autoInitialize;
-        }
+        public static bool AutoInitIfNotStarted => Self().autoInitialize;
 
-        public static List<string> InvalidAppNamePrefixes
-        {
-            get => Self().invalidAppNamePrefixes;
-        }
+        public static List<string> InvalidAppNamePrefixes => Self().invalidAppNamePrefixes;
 
         public bool autoInitialize = true;
 
@@ -79,14 +50,14 @@ namespace UNIHper
 
         [Title("Interaction Settings")]
         public AudioClip defaultClickSound;
-        public bool showTapEffect = true;
-        public bool showPanEffect = true;
+        public bool showTapEffect = false;
+        public bool showPanEffect = false;
 
         [Title("Workflow Settings")]
         [Tooltip(
             "Generate default GameMain assembly or not, Please initialize UNIHper again if you change this value."
         )]
-        public bool UseAssembly = true;
+        public bool UseAssembly = false;
 
         [Space]
         public List<string> invalidAppNamePrefixes = new List<string> { "unihper_template" };

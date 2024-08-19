@@ -50,14 +50,13 @@ namespace UNIHper
                     if (string.IsNullOrEmpty(_path))
                         return;
                     sequencePath = _path;
-                    // check if sequence directory exists
+
                     if (!sequenceDirectoryExists)
                     {
                         Debug.LogError($"Sequence directory not exists: {sequenceDirectory}");
                         return;
                     }
 
-                    // check if sequence directory is empty
                     var _files = Directory.GetFiles(sequenceDirectory);
                     if (_files.Length == 0)
                     {
@@ -102,8 +101,5 @@ namespace UNIHper
                 })
                 .AddTo(this);
         }
-
-        // Update is called once per frame
-        void Update() { }
     }
 }
