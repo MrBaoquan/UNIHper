@@ -45,6 +45,11 @@ namespace UNIHper
                 Height = Screen.height;
             }
         }
+
+        public ScreenConfig ShallowCopy()
+        {
+            return (ScreenConfig)MemberwiseClone();
+        }
     }
 
     public class AppConfig : UConfig
@@ -73,26 +78,31 @@ namespace UNIHper
 #endif
         }
 
-        public async void ResetPrimaryScreen()
+        public void ResetPrimaryScreen()
+        {
+            SetScreen(PrimaryScreen);
+        }
+
+        public async void SetScreen(ScreenConfig screenConfig)
         {
             bool _fullScreen =
                 (
-                    PrimaryScreen.Mode == FullScreenMode.ExclusiveFullScreen
-                    || PrimaryScreen.Mode == FullScreenMode.FullScreenWindow
+                    screenConfig.Mode == FullScreenMode.ExclusiveFullScreen
+                    || screenConfig.Mode == FullScreenMode.FullScreenWindow
                 )
                     ? true
                     : false;
-            Screen.SetResolution(PrimaryScreen.Width, PrimaryScreen.Height, _fullScreen);
+            Screen.SetResolution(screenConfig.Width, screenConfig.Height, _fullScreen);
+            await Observable.NextFrame();
             if (!_fullScreen)
             {
-                Debug.LogWarning("test part ");
-                await Observable.Timer(TimeSpan.FromMilliseconds(150));
                 var _currentWindow = WinAPI.CurrentWindow();
+                Debug.LogWarning(_currentWindow);
                 var _longStyle = WinAPI.GetWindowLong(
                     _currentWindow,
                     (int)SetWindowLongIndex.GWL_STYLE
                 );
-                if (!PrimaryScreen.UseTitleBar)
+                if (!screenConfig.UseTitleBar)
                     _longStyle &= ~(int)GWL_STYLE.WS_CAPTION;
                 else
                     _longStyle |= (int)GWL_STYLE.WS_CAPTION;
@@ -103,16 +113,16 @@ namespace UNIHper
                 );
             }
 
-            await Observable.Timer(TimeSpan.FromMilliseconds(150));
+            // await Observable.NextFrame();
             var _ret = WinAPI.SetWindowPos(
                 WinAPI.CurrentWindow(),
-                PrimaryScreen.KeepTop
+                screenConfig.KeepTop
                     ? (int)HWndInsertAfter.HWND_TOPMOST
                     : (int)HWndInsertAfter.HWND_NOTOPMOST,
-                PrimaryScreen.PosX,
-                PrimaryScreen.PosY,
-                PrimaryScreen.Width,
-                PrimaryScreen.Height,
+                screenConfig.PosX,
+                screenConfig.PosY,
+                screenConfig.Width,
+                screenConfig.Height,
                 SetWindowPosFlags.SWP_SHOWWINDOW
             );
         }

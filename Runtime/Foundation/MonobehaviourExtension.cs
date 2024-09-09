@@ -24,19 +24,13 @@ namespace UNIHper
         /// Find type T component with path
         /// </summary>
         /// <param name="_behaviour"></param>
-        /// <param name="InPath"></param>
+        /// <param name="pathOrName"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static T Get<T>(this MonoBehaviour _behaviour, string InPath)
+        public static T Get<T>(this MonoBehaviour _behaviour, string pathOrName)
             where T : Component
         {
-            Transform _target = Get(_behaviour, InPath);
-            var _component = _target?.GetComponent<T>();
-            if (_component == null)
-            {
-                Debug.LogWarning("Can not find component with path: " + InPath);
-            }
-            return _component;
+            return _behaviour.transform.Get<T>(pathOrName);
         }
 
         /// <summary>
@@ -55,46 +49,88 @@ namespace UNIHper
         /// Find type T component with path
         /// </summary>
         /// <param name="_transform"></param>
-        /// <param name="InPath"></param>
+        /// <param name="pathOrName"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static T Get<T>(this Transform _transform, string InPath)
+        public static T Get<T>(this Transform _transform, string pathOrName)
             where T : Component
         {
-            Transform _target = Get(_transform, InPath);
-            return _target?.GetComponent<T>();
+            var _parent = _transform.Get(pathOrName, false);
+            while (_parent != null)
+            {
+                var _component = _parent?.GetComponent<T>();
+                if (_component != null)
+                {
+                    return _component;
+                }
+                _parent = _parent.Get(pathOrName, false);
+            }
+            Debug.LogWarning($"Can not find component {typeof(T).Name} from {pathOrName}");
+            return null;
         }
 
-        public static T Get<T>(this GameObject _gameObject, string InPath)
+        public static T Get<T>(this GameObject _gameObject, string pathOrName)
             where T : Component
         {
-            return Get<T>(_gameObject.transform, InPath);
+            return _gameObject.transform.Get<T>(pathOrName);
         }
 
         public static T Get<T>(this GameObject _gameObject)
             where T : Component
         {
-            return Get<T>(_gameObject.transform);
+            return _gameObject.transform.Get<T>();
         }
 
-        public static Transform Get(this MonoBehaviour _behaviour, string InPath)
+        public static Transform Get(this MonoBehaviour _behaviour, string pathOrName)
         {
-            Transform _target = _behaviour.transform.Find(InPath);
-            if (_target == null)
-            {
-                Debug.LogWarningFormat("Can not find gameobjet with path: {0}", InPath);
-                return null;
-            }
-            return _target;
+            return _behaviour.transform.Get(pathOrName);
         }
 
-        public static Transform Get(this Transform _transform, string InPath)
+        // 递归按名称查找子物体
+        private static Transform findChildByName(Transform parent, string name)
         {
-            Transform _target = _transform.Find(InPath);
-            if (_target == null)
+            foreach (Transform child in parent)
             {
-                return null;
+                if (child.name == name)
+                {
+                    return child;
+                }
+
+                Transform result = findChildByName(child, name);
+                if (result != null)
+                {
+                    return result;
+                }
             }
+            return null;
+        }
+
+        public static Transform Get(this Transform _transform, string pathOrName)
+        {
+            return _transform.Get(pathOrName, true);
+        }
+
+        private static Transform Get(this Transform _transform, string pathOrName, bool log = true)
+        {
+            Transform _target;
+
+            if (pathOrName.Contains("/"))
+            {
+                _target = _transform.Find(pathOrName);
+            }
+            else
+            {
+                _target = findChildByName(_transform.transform, pathOrName);
+            }
+
+            if (_target == null && log)
+            {
+                Debug.LogWarningFormat(
+                    "Can not find gameobject with path or name: {0}",
+                    pathOrName
+                );
+            }
+
             return _target;
         }
 
@@ -229,42 +265,6 @@ namespace UNIHper
                     _go.SetActive(!bActive);
                 }
             }
-
-            // int _endIndex =
-            //     EndIndex == int.MaxValue
-            //         ? _self.transform.childCount
-            //         : EndIndex < 0
-            //             ? _self.transform.childCount + EndIndex
-            //             : EndIndex;
-            // for (int _index = StartIndex; _index <= _endIndex; ++_index)
-            // {
-            //     var _go = _self.transform.GetChild(_index).gameObject;
-            //     if (_go.activeInHierarchy != bActive)
-            //     {
-            //         _go.SetActive(bActive);
-            //     }
-            // }
-
-            // for (int _index = 0; _index < StartIndex; ++_index)
-            // {
-            //     var _go = _self.transform.GetChild(_index).gameObject;
-            //     if (_go.activeInHierarchy == bActive)
-            //     {
-            //         _go.SetActive(!bActive);
-            //     }
-            // }
-
-            // if (!bRevertOther)
-            //     return;
-
-            // for (int _index = _endIndex + 1; _index < _self.transform.childCount; ++_index)
-            // {
-            //     var _go = _self.transform.GetChild(_index).gameObject;
-            //     if (_go.activeInHierarchy == bActive)
-            //     {
-            //         _go.SetActive(!bActive);
-            //     }
-            // }
         }
 
         // 获取指定子元素激活状态

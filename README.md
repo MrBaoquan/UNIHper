@@ -24,6 +24,13 @@
 
 
 ### 版本更新日志
+v1.24.909
+ - Managements.Audio 增加获取AudioPlayer、AudioSource相关接口
+ - string.ToHexString 拓展增加自定义分隔符
+ - F12 调整分辨率 (调试界面分辩率与实际分辨率自动调整)
+ - 修复 中文名.exe WINAPI 设置窗口样式无效bug
+ - this.Get(path)  支持直接根据对象名称查找物体
+
 v1.24.817
  - 优化UIPage，增加Order属性
  - 优化日志文件格式，日志归档启动时执行

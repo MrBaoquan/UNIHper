@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using UNIHper;
 
 using TMPro;
+using System.Linq;
 
 namespace UNIHper.UI
 {
@@ -75,7 +76,7 @@ namespace UNIHper.UI
                     _appConfig.PrimaryScreen.KeepTop = _keepTop;
                     _appConfig.Serialize();
 
-                    Managements.Config.Get<AppConfig>().ResetPrimaryScreen();
+                    RefreshScreen();
                 });
         }
 
@@ -130,10 +131,41 @@ namespace UNIHper.UI
         // Called when this ui is loaded
         protected override void OnLoaded() { }
 
+        private void RefreshScreen()
+        {
+            var _appPrimaryScreen = Managements.Config.Get<AppConfig>().PrimaryScreen;
+            var _primaryScreen = _appPrimaryScreen.ShallowCopy();
+
+            var _minWindownSize = new Vector2(1000, 700);
+            if (
+                _primaryScreen.Width < _minWindownSize.x
+                || _primaryScreen.Height < _minWindownSize.y
+            )
+            {
+                var _mainWidth = Display.main.systemWidth;
+                var _mainHeight = Display.main.systemHeight;
+                _primaryScreen.Width = _mainHeight;
+                _primaryScreen.Height = _mainHeight;
+                if ((_mainWidth - _primaryScreen.PosX) < _primaryScreen.Width)
+                    _primaryScreen.PosX = 0;
+                if ((_mainHeight - _primaryScreen.PosY) < _primaryScreen.Height)
+                    _primaryScreen.PosY = 0;
+            }
+            var _screenBG = this.Get<RectTransform>("screen_bg");
+            _screenBG.sizeDelta = new Vector2(_appPrimaryScreen.Width, _appPrimaryScreen.Height);
+            Managements.Config.Get<AppConfig>().SetScreen(_primaryScreen);
+        }
+
         // Called when this ui is showing
-        protected override void OnShown() { }
+        protected override void OnShown()
+        {
+            RefreshScreen();
+        }
 
         // Called when this ui is hidden
-        protected override void OnHidden() { }
+        protected override void OnHidden()
+        {
+            Managements.Config.Get<AppConfig>()?.ResetPrimaryScreen();
+        }
     }
 }

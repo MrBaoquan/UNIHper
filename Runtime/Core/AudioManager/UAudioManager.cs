@@ -17,7 +17,7 @@ namespace UNIHper
             int Index = 0
         )
         {
-            var _audioSource = musicPlayer.GetAudioSource(Index);
+            var _audioSource = MusicPlayer.GetAudioSource(Index);
             _audioSource.clip = InMusic;
             _audioSource.volume = InVolume;
             _audioSource.loop = bLoop;
@@ -38,20 +38,20 @@ namespace UNIHper
 
         public void PlayMusic(int Index = 0)
         {
-            var _audioSource = musicPlayer.GetAudioSource(Index);
+            var _audioSource = MusicPlayer.GetAudioSource(Index);
             if (_audioSource.clip != null && !_audioSource.isPlaying)
                 _audioSource.Play();
         }
 
         public void PauseMusic(int Index = 0)
         {
-            var _audioSource = musicPlayer.GetAudioSource(Index);
+            var _audioSource = MusicPlayer.GetAudioSource(Index);
             _audioSource.Pause();
         }
 
         public void StopMusic(int Index = 0)
         {
-            var _audioSource = musicPlayer.GetAudioSource(Index);
+            var _audioSource = MusicPlayer.GetAudioSource(Index);
             _audioSource.Stop();
         }
 
@@ -59,7 +59,7 @@ namespace UNIHper
         {
             if (effect == null)
                 return;
-            var _audioSource = effectPlayer.GetAudioSource(Index);
+            var _audioSource = EffectPlayer.GetAudioSource(Index);
             _audioSource.volume = InVolume;
             _audioSource.PlayOneShot(effect);
         }
@@ -72,22 +72,42 @@ namespace UNIHper
 
         public void StopEffect(int index = 0)
         {
-            var _audioSource = effectPlayer.GetAudioSource(index);
+            var _audioSource = EffectPlayer.GetAudioSource(index);
             _audioSource.Stop();
         }
 
-        private UAudioPlayer musicPlayer = null;
-        private UAudioPlayer effectPlayer = null;
+        private AudioPlayer musicPlayer = null;
+        public AudioPlayer MusicPlayer
+        {
+            get
+            {
+                if (musicPlayer == null)
+                {
+                    var _musicPlayer = new GameObject("music_player");
+                    _musicPlayer.transform.parent = this.transform;
+                    musicPlayer = _musicPlayer.AddComponent<AudioPlayer>();
+                }
+                return musicPlayer;
+            }
+        }
+        private AudioPlayer effectPlayer = null;
+
+        public AudioPlayer EffectPlayer
+        {
+            get
+            {
+                if (effectPlayer == null)
+                {
+                    var _effectPlayer = new GameObject("effect_player");
+                    _effectPlayer.transform.parent = this.transform;
+                    effectPlayer = _effectPlayer.AddComponent<AudioPlayer>();
+                }
+                return effectPlayer;
+            }
+        }
 
         public Task Initialize()
         {
-            var _musicPlayer = new GameObject("music_player");
-            var _effectPlayer = new GameObject("effect_player");
-            _musicPlayer.transform.parent = this.transform;
-            _effectPlayer.transform.parent = this.transform;
-
-            musicPlayer = _musicPlayer.AddComponent<UAudioPlayer>();
-            effectPlayer = _effectPlayer.AddComponent<UAudioPlayer>();
             return Task.CompletedTask;
         }
 
