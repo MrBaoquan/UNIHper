@@ -20,6 +20,12 @@ namespace UNIHper
             return _behaviour.GetComponent<T>();
         }
 
+        public static T Q<T>(this MonoBehaviour _behaviour)
+            where T : Component
+        {
+            return _behaviour.GetComponent<T>();
+        }
+
         /// <summary>
         /// Find type T component with path
         /// </summary>
@@ -33,6 +39,12 @@ namespace UNIHper
             return _behaviour.transform.Get<T>(pathOrName);
         }
 
+        public static T Q<T>(this MonoBehaviour _behaviour, string pathOrName)
+            where T : Component
+        {
+            return _behaviour.transform.Get<T>(pathOrName);
+        }
+
         /// <summary>
         /// Find type component
         /// </summary>
@@ -40,6 +52,12 @@ namespace UNIHper
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         public static T Get<T>(this Transform _transform)
+            where T : Component
+        {
+            return _transform.GetComponent<T>();
+        }
+
+        public static T Q<T>(this Transform _transform)
             where T : Component
         {
             return _transform.GetComponent<T>();
@@ -86,6 +104,11 @@ namespace UNIHper
             return _behaviour.transform.Get(pathOrName);
         }
 
+        public static Transform Q(this MonoBehaviour _behaviour, string pathOrName)
+        {
+            return _behaviour.transform.Get(pathOrName);
+        }
+
         // 递归按名称查找子物体
         private static Transform findChildByName(Transform parent, string name)
         {
@@ -106,6 +129,11 @@ namespace UNIHper
         }
 
         public static Transform Get(this Transform _transform, string pathOrName)
+        {
+            return _transform.Get(pathOrName, true);
+        }
+
+        public static Transform Q(this Transform _transform, string pathOrName)
         {
             return _transform.Get(pathOrName, true);
         }
