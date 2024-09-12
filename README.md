@@ -24,6 +24,10 @@
 
 
 ### 版本更新日志
+v1.24.912
+ - 修复TapEffect小白点bug
+ - GhostManager与UNIArt同步更新
+  
 v1.24.909
  - Managements.Audio 增加获取AudioPlayer、AudioSource相关接口
  - string.ToHexString 拓展增加自定义分隔符

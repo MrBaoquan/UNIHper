@@ -118,7 +118,7 @@ namespace UNIHper.Ghost.Editor
                 {
                     var _assembly = Assembly.Load(
                         new AssemblyName(
-                            "UNIHper.Art, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"
+                            "UNIArt.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"
                         )
                     );
                     if (_assembly is null)
@@ -126,7 +126,7 @@ namespace UNIHper.Ghost.Editor
                         LogWarning("can not find assembly");
                         return null;
                     }
-                    var _ghostType = _assembly.GetType("UNIHper.Art.Ghost");
+                    var _ghostType = _assembly.GetType("UNIArt.Runtime.Ghost");
                     if (_ghostType is null)
                     {
                         LogWarning("can not find Ghost");

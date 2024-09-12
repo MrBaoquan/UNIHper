@@ -96,6 +96,7 @@ namespace UNIHper
                                     }
                             )
                             .ToList();
+                    _effectPrefab.SetActive(false);
                 }
                 return _effectPrefab;
             }
