@@ -29,7 +29,7 @@ namespace UNIHper.Editor
         static Stopwatch compileSW = new Stopwatch();
 
         //是否手动reload
-        static bool IsManualReload => PlayerPrefs.GetInt(kManualReloadDomain, -1) == 1;
+        static bool IsManualReload => EditorPrefs.GetInt(kManualReloadDomain, -1) == 1;
 
         //缓存数据 域重载之后数据会变成false 如果不是false 那么就要重载
         static bool tempData = false;
@@ -98,7 +98,7 @@ namespace UNIHper.Editor
                 SessionState.SetBool(kFirstEnterUnity, false);
 
                 // 默认关闭手动重载
-                PlayerPrefs.SetInt(kManualReloadDomain, -1);
+                // EditorPrefs.SetInt(kManualReloadDomain, -1);
 
                 Menu.SetChecked(menuEnableManualReload, IsManualReload ? true : false);
                 Menu.SetChecked(menuDisenableManualReload, IsManualReload ? false : true);
@@ -210,7 +210,7 @@ namespace UNIHper.Editor
             Menu.SetChecked(menuEnableManualReload, true);
             Menu.SetChecked(menuDisenableManualReload, false);
 
-            PlayerPrefs.SetInt(kManualReloadDomain, 1);
+            EditorPrefs.SetInt(kManualReloadDomain, 1);
             //编辑器设置 projectsetting->editor->enterPlayModeSetting
             EditorSettings.enterPlayModeOptionsEnabled = true;
             EditorSettings.enterPlayModeOptions = EnterPlayModeOptions.DisableDomainReload;
@@ -226,7 +226,7 @@ namespace UNIHper.Editor
             Menu.SetChecked(menuEnableManualReload, false);
             Menu.SetChecked(menuDisenableManualReload, true);
 
-            PlayerPrefs.SetInt(kManualReloadDomain, 0);
+            EditorPrefs.SetInt(kManualReloadDomain, 0);
             UnlockReloadDomain();
             EditorSettings.enterPlayModeOptionsEnabled = false;
         }

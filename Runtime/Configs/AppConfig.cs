@@ -137,7 +137,7 @@ namespace UNIHper
             if (Displays.Count <= 0)
             {
                 Displays = Display.displays.Select(_ => new ScreenConfig()).ToList();
-                this.Serialize();
+                this.Save();
             }
 
             int _index = 0;
@@ -150,7 +150,7 @@ namespace UNIHper
                 {
                     _displayConfig.Width = _display.systemWidth;
                     _displayConfig.Height = _display.systemHeight;
-                    this.Serialize();
+                    this.Save();
                 }
 
                 if (_displayConfig.Activate)

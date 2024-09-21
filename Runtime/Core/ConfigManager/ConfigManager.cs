@@ -272,7 +272,7 @@ namespace UNIHper
             return null;
         }
 
-        public bool Serialize<T>()
+        public bool Save<T>()
         {
             if (!this.configs.TryGetValue(typeof(T).Name, out UConfig _config))
                 return false;

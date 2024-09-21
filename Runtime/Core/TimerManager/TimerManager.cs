@@ -14,6 +14,13 @@ namespace UNIHper
             return Task.CompletedTask;
         }
 
+        public IDisposable Delay(float delayInSeconds, Action callback)
+        {
+            return Observable
+                .Timer(TimeSpan.FromSeconds(delayInSeconds))
+                .Subscribe(_ => callback());
+        }
+
         public Task Delay(float delayInSeconds)
         {
             return Observable.Timer(TimeSpan.FromSeconds(delayInSeconds)).ToTask();
@@ -24,22 +31,22 @@ namespace UNIHper
             return new Countdown(durationInSecons, tickInterval);
         }
 
-        public IDisposable Countdown(Action<int> update, Action completed, int duration)
-        {
-            update?.Invoke(duration);
-            return Observable
-                .Interval(TimeSpan.FromSeconds(1))
-                .Take(duration + 1)
-                .Subscribe(_ =>
-                {
-                    if (duration <= 0)
-                    {
-                        completed?.Invoke();
-                        return;
-                    }
-                    update?.Invoke(Mathf.Max(--duration, 0));
-                });
-        }
+        // public IDisposable Countdown(Action<int> update, Action completed, int duration)
+        // {
+        //     update?.Invoke(duration);
+        //     return Observable
+        //         .Interval(TimeSpan.FromSeconds(1))
+        //         .Take(duration + 1)
+        //         .Subscribe(_ =>
+        //         {
+        //             if (duration <= 0)
+        //             {
+        //                 completed?.Invoke();
+        //                 return;
+        //             }
+        //             update?.Invoke(Mathf.Max(--duration, 0));
+        //         });
+        // }
 
         // public IDisposable SetTimeout(Action InHandler, float InTime)
         // {

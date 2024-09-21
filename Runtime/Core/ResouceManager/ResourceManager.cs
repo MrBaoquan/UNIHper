@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using DNHper;
 using UniRx;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
-using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.SceneManagement;
 
 namespace UNIHper
@@ -140,6 +139,8 @@ namespace UNIHper
                 .SelectMany(_kv => _kv)
                 .ToDictionary(_kv => _kv.Key, _kv => _kv.Value);
 
+        // internal Dictionary<string, AssetItem> AllAssets => allAssets;
+
         /// <summary>
         /// 获取资源名为{assetName},类型为{T}的资源, assetName可以是资源路径(可以写进行部分匹配)
         /// </summary>
@@ -156,6 +157,20 @@ namespace UNIHper
                 return null;
             }
             return _asset;
+        }
+
+        // 筛选获取多个资源
+        public List<T> GetMany<T>(string searchFilter)
+            where T : UnityEngine.Object
+        {
+            var _type = typeof(T).FullName;
+            string escapedSearchFilter = Regex.Escape(searchFilter.ToForwardSlash());
+            string pattern = @$".*{escapedSearchFilter}.*_{_type}";
+            return allAssets
+                .Where(_kv => Regex.IsMatch(_kv.Key, pattern))
+                .Select(_kv => _kv.Value.asset)
+                .OfType<T>()
+                .ToList();
         }
 
         // TODO: 编辑器下和打包后获取的资源路径列表不一致， 现在存在多个资源重复加载情况，后续考虑优化

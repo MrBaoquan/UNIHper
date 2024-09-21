@@ -11,6 +11,7 @@ public class Countdown
     private float remainingTime;
     private float interval;
     private bool isPaused;
+    public bool IsPaused => isPaused;
 
     // 已用时间
     public float ElapsedTime => duration - remainingTime;
@@ -99,6 +100,11 @@ public class Countdown
     {
         remainingTime = durationInSeconds;
         Start();
+    }
+
+    public void Restart()
+    {
+        Restart(duration);
     }
 
     // 停止计时并清理订阅

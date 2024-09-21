@@ -74,7 +74,7 @@ namespace UNIHper.UI
                         : FullScreenMode.Windowed;
                     _appConfig.PrimaryScreen.UseTitleBar = _useTitleBar;
                     _appConfig.PrimaryScreen.KeepTop = _keepTop;
-                    _appConfig.Serialize();
+                    _appConfig.Save();
 
                     RefreshScreen();
                 });

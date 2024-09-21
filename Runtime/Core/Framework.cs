@@ -13,7 +13,7 @@ namespace UNIHper
     using UniRx;
     using UNIHper.UI;
 
-    public class Framework : Singleton<Framework>
+    public partial class Framework : Singleton<Framework>
     {
         private Canvas _effectCanvas = null;
         public Canvas TopmostCanvas

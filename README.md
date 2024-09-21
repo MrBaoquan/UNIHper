@@ -24,6 +24,14 @@
 
 
 ### 版本更新日志
+v1.24.921
+ - Resource增加GetMany接口
+ - SequenceFramePlayer增加多个控制项及事件
+ - Indexer优化部分接口名称
+ - 增加UIMgr、ResMgr、CfgMgr、TimerMgr等管理类
+  
+  
+  
 v1.24.912
  - 修复TapEffect小白点bug
  - GhostManager与UNIArt同步更新
@@ -92,7 +100,6 @@ v1.24.712
 v1.24.621
 - UI增加LifeCycleDisposables变量, 跟随UI显示/隐藏自动释放
 - 修复与Sentis包Google.ProtoBuf包冲突问题
-
 
 v1.24.614
 - 资源可通过路径获取，系统内资源可重名

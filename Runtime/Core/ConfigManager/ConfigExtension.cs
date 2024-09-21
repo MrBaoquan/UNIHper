@@ -2,10 +2,10 @@ namespace UNIHper
 {
     public static class ConfigExtension
     {
-        public static void Serialize<T>(this T Self)
+        public static void Save<T>(this T Self)
             where T : UConfig
         {
-            Managements.Config.Serialize<T>();
+            Managements.Config.Save<T>();
         }
     }
 }

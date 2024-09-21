@@ -208,6 +208,12 @@ namespace UNIHper.UI
             return Hide<UIBase>(uiKey, callback, bForceNotify);
         }
 
+        public bool IsShowing<T>()
+            where T : UIBase
+        {
+            return Get<T>() != null && Get<T>().isShowing;
+        }
+
         private T Hide<T>(string uiKey, Action<T> callback = null, bool bForceNotify = false)
             where T : UIBase
         {

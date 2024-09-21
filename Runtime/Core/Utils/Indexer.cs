@@ -27,11 +27,21 @@ namespace UNIHper
             get { return current; }
         }
 
-        private UnityEvent<int> onIndexChanged = new UnityEvent<int>();
+        private UnityEvent<int> onValueChanged = new UnityEvent<int>();
 
-        public IObservable<int> OnIndexChangedAsObservable()
+        public IObservable<int> OnValueChangedAsObservable()
         {
-            return onIndexChanged.AsObservable();
+            return onValueChanged.AsObservable();
+        }
+
+        public IObservable<int> OnValueChangedToMaxAsObservable()
+        {
+            return OnValueChangedAsObservable().Where(_ => _ == Max);
+        }
+
+        public IObservable<int> OnValueChangedToMinAsObservable()
+        {
+            return OnValueChangedAsObservable().Where(_ => _ == Min);
         }
 
         public Indexer() { }
@@ -41,10 +51,23 @@ namespace UNIHper
             SetMax(Max);
         }
 
+        public Indexer(int Max, bool Loop)
+        {
+            SetMax(Max);
+            this.Loop = Loop;
+        }
+
         public Indexer(int Min, int Max)
         {
             SetMin(Min);
             SetMax(Max);
+        }
+
+        public Indexer(int Min, int Max, bool Loop)
+        {
+            SetMin(Min);
+            SetMax(Max);
+            this.Loop = Loop;
         }
 
         /// <summary>
@@ -90,12 +113,12 @@ namespace UNIHper
             if (current != _newIndex)
             {
                 current = _newIndex;
-                onIndexChanged.Invoke(current);
+                onValueChanged.Invoke(current);
             }
             return current;
         }
 
-        public int SetWithoutNotify(int newIndex)
+        public int SetValueWithoutNotify(int newIndex)
         {
             var _newIndex = limitIndex(newIndex);
             if (current != _newIndex)
@@ -105,17 +128,17 @@ namespace UNIHper
             return current;
         }
 
-        public int SetAndForceNotify(int newIndex)
+        public int SetValueAndForceNotify(int newIndex)
         {
             var _newIndex = limitIndex(newIndex);
             if (current != _newIndex)
             {
                 current = _newIndex;
-                onIndexChanged.Invoke(current);
+                onValueChanged.Invoke(current);
             }
             else
             {
-                onIndexChanged.Invoke(current);
+                onValueChanged.Invoke(current);
             }
 
             return current;
@@ -171,7 +194,7 @@ namespace UNIHper
         /// <returns></returns>
         public int Notify()
         {
-            SetAndForceNotify(current);
+            SetValueAndForceNotify(current);
             return current;
         }
 
