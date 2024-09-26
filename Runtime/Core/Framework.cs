@@ -13,7 +13,7 @@ namespace UNIHper
     using UniRx;
     using UNIHper.UI;
 
-    public partial class Framework : Singleton<Framework>
+    public class Framework : Singleton<Framework>
     {
         private Canvas _effectCanvas = null;
         public Canvas TopmostCanvas
@@ -48,8 +48,11 @@ namespace UNIHper
 
         public IObservable<bool> OnToggleDebugAsObservable()
         {
+            triggerImage.raycastTarget = true;
             return debugModeEnabled;
         }
+
+        private Image triggerImage = null;
 
         private void enableConsolePanel()
         {
@@ -63,12 +66,14 @@ namespace UNIHper
                 SRDebug.Instance.IsTriggerEnabled = _enable;
             });
 
-            // debugModeEnabled.SetValueAndForceNotify(false);
             var _triggerObject = new GameObject("__debugMode_trigger");
             _triggerObject.transform.SetParent(TopmostCanvas.transform);
             _triggerObject.transform.SetAsLastSibling();
             var _rectTrans = _triggerObject.AddComponent<RectTransform>();
-            _triggerObject.AddComponent<Image>().color = Color.clear;
+            triggerImage = _triggerObject.AddComponent<Image>();
+            triggerImage.color = Color.clear;
+            triggerImage.raycastTarget = false;
+
             _rectTrans.localScale = Vector3.one;
             _rectTrans.sizeDelta = new Vector2(100, 100);
             _rectTrans.pivot = Vector2.one;

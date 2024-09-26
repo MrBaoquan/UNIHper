@@ -24,13 +24,14 @@
 
 
 ### 版本更新日志
-v1.24.921
+v1.24.926
  - Resource增加GetMany接口
  - SequenceFramePlayer增加多个控制项及事件
  - Indexer优化部分接口名称
- - 增加UIMgr、ResMgr、CfgMgr、TimerMgr等管理类
-  
-  
+ - 提炼UIMgr、ResMgr、CfgMgr、TimerMgr、EventMgr、AudioMgr、SceneMgr等静态接口
+ - 优化初始化流程
+ - 优化分辨率设置逻辑
+ - 优化调试模式按钮的点击穿透逻辑
   
 v1.24.912
  - 修复TapEffect小白点bug

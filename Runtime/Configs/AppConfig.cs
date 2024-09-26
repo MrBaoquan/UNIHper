@@ -50,6 +50,11 @@ namespace UNIHper
         {
             return (ScreenConfig)MemberwiseClone();
         }
+
+        public override string ToString()
+        {
+            return $"PosX: {PosX}, PosY: {PosY}, Width: {Width}, Height: {Height}, Mode: {Mode}, UseTitleBar: {UseTitleBar}, KeepTop: {KeepTop}";
+        }
     }
 
     public class AppConfig : UConfig
@@ -60,7 +65,7 @@ namespace UNIHper
         }
 
         [XmlAttribute]
-        public float LongTimeNoOperationTimeout = 180;
+        public float LongTimeNoOperationTimeout = 300;
 
         public ScreenConfig PrimaryScreen = new ScreenConfig() { KeepTop = true };
 
@@ -92,12 +97,26 @@ namespace UNIHper
                 )
                     ? true
                     : false;
+
             Screen.SetResolution(screenConfig.Width, screenConfig.Height, _fullScreen);
+
+            await Observable.NextFrame();
+            WinAPI.SetWindowPos(
+                WinAPI.CurrentWindow(),
+                screenConfig.KeepTop
+                    ? (int)HWndInsertAfter.HWND_TOPMOST
+                    : (int)HWndInsertAfter.HWND_NOTOPMOST,
+                screenConfig.PosX,
+                screenConfig.PosY,
+                screenConfig.Width,
+                screenConfig.Height,
+                SetWindowPosFlags.SWP_SHOWWINDOW
+            );
+
             await Observable.NextFrame();
             if (!_fullScreen)
             {
                 var _currentWindow = WinAPI.CurrentWindow();
-                Debug.LogWarning(_currentWindow);
                 var _longStyle = WinAPI.GetWindowLong(
                     _currentWindow,
                     (int)SetWindowLongIndex.GWL_STYLE
@@ -112,19 +131,6 @@ namespace UNIHper
                     (uint)_longStyle
                 );
             }
-
-            // await Observable.NextFrame();
-            var _ret = WinAPI.SetWindowPos(
-                WinAPI.CurrentWindow(),
-                screenConfig.KeepTop
-                    ? (int)HWndInsertAfter.HWND_TOPMOST
-                    : (int)HWndInsertAfter.HWND_NOTOPMOST,
-                screenConfig.PosX,
-                screenConfig.PosY,
-                screenConfig.Width,
-                screenConfig.Height,
-                SetWindowPosFlags.SWP_SHOWWINDOW
-            );
         }
 
         private void executeWindowSettings()

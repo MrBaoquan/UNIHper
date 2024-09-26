@@ -791,7 +791,7 @@ namespace UNIHper
 
         private string getCurrentSceneName()
         {
-            return SceneManager.GetActiveScene().name;
+            return UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
         }
     }
 }

@@ -42,7 +42,12 @@ namespace UNIHper
             where T : SceneScriptBase
         {
             SceneScriptData _sceneScriptData;
-            if (!sceneScripts.TryGetValue(SceneManager.GetActiveScene().name, out _sceneScriptData))
+            if (
+                !sceneScripts.TryGetValue(
+                    UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
+                    out _sceneScriptData
+                )
+            )
             {
                 return null;
             }

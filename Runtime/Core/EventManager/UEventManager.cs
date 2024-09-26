@@ -20,7 +20,7 @@ namespace UNIHper
     /// <summary>
     /// 事件管理模块
     /// </summary>
-    public class UEventManager : Singleton<UEventManager>
+    public class EventManager : Singleton<EventManager>
     {
         /// <summary>
         /// 根据事件类型进行分组

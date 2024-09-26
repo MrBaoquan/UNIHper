@@ -11,22 +11,22 @@ using UNIHper.UI;
 
 namespace UNIHper
 {
-    public class USceneManager : Singleton<USceneManager>
+    public class SceneManager : Singleton<SceneManager>
     {
         private UnityEvent<Scene> m_onSceneLoaded = new UnityEvent<Scene>();
 
         internal void Awake()
         {
-            SceneScriptManager.Instance.TriggerOnAwake(SceneManager.GetActiveScene().name);
+            SceneScriptManager.Instance.TriggerOnAwake(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
         }
 
         internal async Task Initialize()
         {
-            UIManager.Instance.OnEnterScene(SceneManager.GetActiveScene().name);
-            SceneScriptManager.Instance.TriggerOnStart(SceneManager.GetActiveScene().name);
+            UIManager.Instance.OnEnterScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+            SceneScriptManager.Instance.TriggerOnStart(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
             Application.quitting += () =>
             {
-                SceneScriptManager.Instance.TriggerOnDestroy(SceneManager.GetActiveScene().name);
+                SceneScriptManager.Instance.TriggerOnDestroy(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
             };
             await Task.CompletedTask;
         }
@@ -51,7 +51,7 @@ namespace UNIHper
             System.Action InCompleted
         )
         {
-            string _currentSceneName = SceneManager.GetActiveScene().name;
+            string _currentSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             // 1. 触发场景脚本->销毁事件
             if (!isCurrentScene(InSceneName))
             {
@@ -64,7 +64,7 @@ namespace UNIHper
             yield return new WaitUntil(() => _task.IsCompleted);
 
             // 3. Unity 开始加载场景
-            AsyncOperation _async = SceneManager.LoadSceneAsync(InSceneName);
+            AsyncOperation _async = UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(InSceneName);
             _async.allowSceneActivation = false;
             while (!_async.isDone)
             {
@@ -89,18 +89,18 @@ namespace UNIHper
             SceneScriptManager.Instance.TriggerOnAwake(InSceneName);
             SceneScriptManager.Instance.TriggerOnStart(InSceneName);
 
-            m_onSceneLoaded.Invoke(SceneManager.GetSceneByName(InSceneName));
+            m_onSceneLoaded.Invoke(UnityEngine.SceneManagement.SceneManager.GetSceneByName(InSceneName));
             yield return null;
         }
 
         public Scene Current
         {
-            get { return SceneManager.GetActiveScene(); }
+            get { return UnityEngine.SceneManagement.SceneManager.GetActiveScene(); }
         }
 
         private bool isCurrentScene(string sceneName)
         {
-            return SceneManager.GetActiveScene().name == sceneName;
+            return UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == sceneName;
         }
     }
 }

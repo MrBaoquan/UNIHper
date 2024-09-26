@@ -63,10 +63,6 @@ namespace UNIHper
             Debug.Log("UNIHper.Awake");
             DontDestroyOnLoad(this.gameObject);
 
-            // GameObject _utilGO = new GameObject("UNIBehaviour");
-            // _utilGO.transform.parent = this.transform;
-            // _utilGO.AddComponent(typeof(UNIBehaviour));
-
             // 创建音频管理脚本
             GameObject _audioManager = new GameObject("AudioManager");
             _audioManager.transform.parent = this.transform;
@@ -85,26 +81,19 @@ namespace UNIHper
                 CreateDefaultEventSystem();
             }
 
-            USceneManager.Instance.Awake();
+            SceneManager.Instance.Awake();
 
-            // 1. 配置文件
-            await Managements.Config.Initialize();
-            // 2. 初始化资源管理类
+            // 基础组件初始化
+            await ConfigManager.Instance.Initialize();
             await ResourceManager.Instance.Initialize();
-            // 3. 初始化 UI管理类
             await UIManager.Instance.Initialize();
 
-            // 4. 初始化场景管理类
-            await USceneManager.Instance.Initialize();
-
             this.Initialize();
-
             Framework.Instance.Initialize();
 
-            // 5. 初始化Timer管理类
             await TimerManager.Instance.Initialize();
-            // 6. 初始化网络模块
             await UNetManager.Instance.Initialize();
+            await SceneManager.Instance.Initialize();
 
             isInitialized.Value = true;
         }

@@ -6,6 +6,7 @@ using UNIHper.UI;
 using System;
 using System.Threading.Tasks;
 using System.IO;
+using UnityEngine.SceneManagement;
 
 namespace UNIHper
 {
@@ -14,36 +15,83 @@ namespace UNIHper
         public static readonly ConfigManager Config = ConfigManager.Instance;
         public static readonly UIManager UI = UIManager.Instance;
         public static readonly ResourceManager Resource = ResourceManager.Instance;
-        public static readonly USceneManager Scene = USceneManager.Instance;
+        public static readonly SceneManager Scene = SceneManager.Instance;
         public static readonly UNetManager Network = UNetManager.Instance;
         public static readonly Framework Framework = Framework.Instance;
         public static AudioManager Audio => AudioManager.Instance;
-        public static readonly UEventManager Event = UEventManager.Instance;
+        public static readonly EventManager Event = EventManager.Instance;
         public static readonly TimerManager Timer = TimerManager.Instance;
 
         public static T SceneScript<T>()
             where T : SceneScriptBase => SceneScriptManager.Instance.GetSceneScript<T>();
     }
 
+    public static class SceneMgr
+    {
+        public static SceneManager Instance => SceneManager.Instance;
+        public static Scene Current => Instance.Current;
+
+        public static T SceneScript<T>()
+            where T : SceneScriptBase => SceneScriptManager.Instance.GetSceneScript<T>();
+
+        public static IObservable<Scene> OnNewSceneLoadedAsObservable() =>
+            Instance.OnNewSceneLoadedAsObservable();
+
+        public static void LoadSceneAsync(
+            string sceneName,
+            System.Action<float> progress = null,
+            System.Action completed = null
+        ) => Instance.LoadSceneAsync(sceneName, progress, completed);
+    }
+
     public static class UIMgr
     {
         public static UIManager Instance => UIManager.Instance;
 
+        /// <summary>
+        /// Get the UI of the specified type.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public static T Get<T>()
             where T : UIBase => Instance.Get<T>();
 
+        /// <summary>
+        /// Show the UI of the specified type. If it is already showing, do nothing.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="InCallback"></param>
+        /// <returns></returns>
         public static T Show<T>(Action<T> InCallback = null)
             where T : UIBase => Instance.Show<T>(InCallback);
 
+        /// <summary>
+        /// Hide the UI of the specified type. If it is not showing, do nothing.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public static T Hide<T>()
             where T : UIBase => Instance.Hide<T>();
 
+        /// <summary>
+        /// Check if the UI of the specified type is showing.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public static bool IsShowing<T>()
             where T : UIBase => Instance.IsShowing<T>();
 
+        /// <summary>
+        /// Toggle the UI of the specified type. If it is showing, hide it. If it is hidden, show it.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public static T Toggle<T>()
             where T : UIBase => Instance.Toggle<T>();
 
+        /// <summary>
+        /// Hide all UI.
+        /// </summary>
         public static void HideAll() => Instance.HideAll();
 
         public static void SetRenderMode(
@@ -51,8 +99,14 @@ namespace UNIHper
             string canvasKey = UIManager.CANVAS_DEFAULT
         ) => Instance.SetRenderMode(renderMode, canvasKey);
 
+        /// <summary>
+        /// Stash all active UI.
+        /// </summary>
         public static void StashActiveUI() => Instance.StashActiveUI();
 
+        /// <summary>
+        /// Pop all stashed UI.
+        /// </summary>
         public static void UnstashActiveUI() => Instance.PopStashedUI();
     }
 
@@ -60,17 +114,44 @@ namespace UNIHper
     {
         public static ResourceManager Instance => ResourceManager.Instance;
 
+        /// <summary>
+        /// Get the resource of the specified asset name.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="assetName"></param>
+        /// <returns></returns>
         public static T Get<T>(string assetName)
             where T : UnityEngine.Object => Instance.Get<T>(assetName);
 
+        /// <summary>
+        /// Get all resources of the specified asset name.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="assetName"></param>
+        /// <returns></returns>
         public static List<T> GetMany<T>(string assetName)
             where T : UnityEngine.Object => Instance.GetMany<T>(assetName);
 
+        /// <summary>
+        /// Check if the resource of the specified asset name exists.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="assetName"></param>
+        /// <returns></returns>
         public static bool Exists<T>(string assetName)
             where T : UnityEngine.Object => Instance.Exists<T>(assetName);
 
+        /// <summary>
+        /// Add a config file to the config manager.
+        /// </summary>
+        /// <param name="configPath"></param>
         public static void AddConfig(string configPath) => Instance.AddConfig(configPath);
 
+        /// <summary>
+        /// Append an asset bundle to the resource manager.
+        /// </summary>
+        /// <param name="assetBundleName"></param>
+        /// <returns></returns>
         public static AssetBundle AppendAssetBundle(string assetBundleName) =>
             Instance.AppendAssetBundle(assetBundleName);
 
@@ -178,5 +259,21 @@ namespace UNIHper
         public static Task NextFrame() => Instance.NextFrame();
 
         public static IDisposable NextFrame(Action callback) => Instance.NextFrame(callback);
+    }
+
+    public static class EventMgr
+    {
+        public static EventManager Instance => EventManager.Instance;
+
+        public static void Register<T>(Action<T> InDelegate)
+            where T : UEvent => Instance.Register(InDelegate);
+
+        public static void Unregister<T>(Action<T> InDelegate)
+            where T : UEvent => Instance.Unregister(InDelegate);
+
+        public static void Unregister<T>()
+            where T : UEvent => Instance.Unregister<T>();
+
+        public static void Fire(UEvent InEvent) => Instance.Fire(InEvent);
     }
 }

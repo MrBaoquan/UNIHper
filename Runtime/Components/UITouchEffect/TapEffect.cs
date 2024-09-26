@@ -161,6 +161,7 @@ namespace UNIHper
             }
             else if (TapArea == TapArea.FullScreen)
             {
+#if ENABLE_INPUT_SYSTEM
                 Observable
                     .EveryUpdate()
                     .Where(
@@ -171,6 +172,16 @@ namespace UNIHper
                         ShowEffect(Pointer.current.position.ReadValue());
                     })
                     .AddTo(this);
+#else
+                Observable
+                    .EveryUpdate()
+                    .Where(_ => Input.GetMouseButtonDown(0))
+                    .Subscribe(_ =>
+                    {
+                        ShowEffect(Input.mousePosition);
+                    })
+                    .AddTo(this);
+#endif
             }
         }
     }
