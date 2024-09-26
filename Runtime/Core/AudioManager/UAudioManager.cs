@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using DNHper;
-using UniRx;
+﻿using System.Threading.Tasks;
 using UnityEngine;
 
 namespace UNIHper
 {
-    public class UAudioManager : SingletonBehaviourDontDestroy<UAudioManager>
+    public class AudioManager : SingletonBehaviourDontDestroy<AudioManager>
     {
         public AudioSource PlayMusic(
             AudioClip InMusic,
@@ -25,7 +20,7 @@ namespace UNIHper
             return _audioSource;
         }
 
-        public void PlayMusic(
+        public AudioSource PlayMusic(
             string InMusic,
             float InVolume = 1.0f,
             bool bLoop = true,
@@ -33,7 +28,7 @@ namespace UNIHper
         )
         {
             AudioClip _clip = Managements.Resource.Get<AudioClip>(InMusic);
-            PlayMusic(_clip, InVolume, bLoop, Index);
+            return PlayMusic(_clip, InVolume, bLoop, Index);
         }
 
         public void PlayMusic(int Index = 0)

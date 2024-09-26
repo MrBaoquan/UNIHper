@@ -70,7 +70,7 @@ namespace UNIHper
             // 创建音频管理脚本
             GameObject _audioManager = new GameObject("AudioManager");
             _audioManager.transform.parent = this.transform;
-            await _audioManager.AddComponent<UAudioManager>().Initialize();
+            await _audioManager.AddComponent<AudioManager>().Initialize();
 
             AssemblyConfig.Refresh();
 #if UNITY_2023_1_OR_NEWER

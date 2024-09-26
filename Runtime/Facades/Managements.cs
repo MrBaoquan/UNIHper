@@ -17,7 +17,7 @@ namespace UNIHper
         public static readonly USceneManager Scene = USceneManager.Instance;
         public static readonly UNetManager Network = UNetManager.Instance;
         public static readonly Framework Framework = Framework.Instance;
-        public static UAudioManager Audio => UAudioManager.Instance;
+        public static AudioManager Audio => AudioManager.Instance;
         public static readonly UEventManager Event = UEventManager.Instance;
         public static readonly TimerManager Timer = TimerManager.Instance;
 
@@ -125,6 +125,42 @@ namespace UNIHper
             where T : UConfig => Instance.Reload<T>();
 
         public static void SerializeAll() => Instance.SerializeAll();
+    }
+
+    public static class AudioMgr
+    {
+        public static AudioManager Instance => AudioManager.Instance;
+
+        public static AudioSource PlayMusic(
+            AudioClip InMusic,
+            float InVolume = 1.0f,
+            bool bLoop = true,
+            int Index = 0
+        ) => Instance.PlayMusic(InMusic, InVolume, bLoop, Index);
+
+        public static AudioSource PlayMusic(
+            string InMusic,
+            float InVolume = 1.0f,
+            bool bLoop = true,
+            int Index = 0
+        ) => Instance.PlayMusic(InMusic, InVolume, bLoop, Index);
+
+        public static void PlayMusic(int Index = 0) => Instance.PlayMusic(Index);
+
+        public static void PauseMusic(int Index = 0) => Instance.PauseMusic(Index);
+
+        public static void StopMusic(int Index = 0) => Instance.StopMusic(Index);
+
+        public static void PlayEffect(AudioClip effect, float InVolume = 1.0f, int Index = 0) =>
+            Instance.PlayEffect(effect, InVolume, Index);
+
+        public static void PlayEffect(string effectName, float volume = 1.0f, int index = 0) =>
+            Instance.PlayEffect(effectName, volume, index);
+
+        public static void StopEffect(int index = 0) => Instance.StopEffect(index);
+
+        public static AudioPlayer MusicPlayer => Instance.MusicPlayer;
+        public static AudioPlayer EffectPlayer => Instance.EffectPlayer;
     }
 
     public static class TimerMgr
