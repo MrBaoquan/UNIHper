@@ -103,6 +103,11 @@ namespace UNIHper
         }
 
         /// <summary>
+        /// 上一次设置的索引值
+        /// </summary>
+        public int LastSet { get; private set; } = 0;
+
+        /// <summary>
         /// 设置当前索引值
         /// </summary>
         /// <param name="newIndex"></param>
@@ -113,6 +118,7 @@ namespace UNIHper
             if (current != _newIndex)
             {
                 current = _newIndex;
+                LastSet = current;
                 onValueChanged.Invoke(current);
             }
             return current;
@@ -124,6 +130,7 @@ namespace UNIHper
             if (current != _newIndex)
             {
                 current = _newIndex;
+                LastSet = current;
             }
             return current;
         }
@@ -134,6 +141,7 @@ namespace UNIHper
             if (current != _newIndex)
             {
                 current = _newIndex;
+                LastSet = current;
                 onValueChanged.Invoke(current);
             }
             else

@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 5848941884838334141}
   - component: {fileID: 4898475270293504108}
   - component: {fileID: 1813400796458381779}
-  - component: {fileID: 3870677178831579168}
   - component: {fileID: 240573340870913816}
   m_Layer: 5
   m_Name: Button_small
@@ -93,19 +92,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &3870677178831579168
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 856249653501366034}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2154083117a82b84093c3ebb17404fc8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Title: "\u786E\u8BA4"
 --- !u!114 &240573340870913816
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -203,6 +189,7 @@ MonoBehaviour:
       atime6: 0
       atime7: 0
       m_Mode: 0
+      m_ColorSpace: -1
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
     m_CornerGradientColors:

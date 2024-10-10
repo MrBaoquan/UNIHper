@@ -24,6 +24,11 @@
 
 
 ### 版本更新日志
+v1.24.1010
+ - Indexer 增加LastSet变量
+ - 更新Odin Inspector
+ - 消除新工程警告
+
 v1.24.926
  - Resource增加GetMany接口
  - SequenceFramePlayer增加多个控制项及事件
