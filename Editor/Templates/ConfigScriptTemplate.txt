@@ -1,0 +1,22 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+using UNIHper;
+
+[SerializedAt(AppPath.StreamingDir)]
+public class ##CLASSNAME## : UConfig
+{
+    // Write your comments here
+    protected override string Comment () {
+        return @"
+        Write your comments here...
+        ";
+    }
+
+    // Called once after the config data is loaded
+    protected override void OnLoaded () {
+        
+    }
+
+}

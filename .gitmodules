@@ -1,0 +1,4 @@
+[submodule "Runtime/Plugins/DNHper"]
+	path = Runtime/Plugins/DNHper
+	url = https://github.com/mrbaoquan/dnhper.git
+	branch = main

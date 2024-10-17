@@ -1,0 +1,32 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UNIHper;
+using UniRx;
+
+public class ##CLASSNAME## : SceneScriptBase
+{
+    // Called once after scene is loaded
+    private void Start()
+    {
+        
+    }
+
+    // Called per frame after Start
+    private void Update()
+    {
+    
+    }
+
+    // Called when scene is unloaded
+    private void OnDestroy()
+    {
+    
+    }
+
+    // Called when application is quit
+    private void OnApplicationQuit()
+    {
+    
+    }
+}

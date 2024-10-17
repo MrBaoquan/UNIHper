@@ -1,0 +1,14 @@
+[
+    {
+        "type": "GameObject",
+        "path": "__Prefabs/UI/Persistence"
+    },
+    {
+        "type": "RuntimeAnimatorController",
+        "path": "__Animations/Controllers"
+    },
+    {
+        "type": "AudioClip",
+        "path": "__Persistence/AudioClips"
+    }
+]

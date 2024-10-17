@@ -1,0 +1,16 @@
+{
+    "Persistence": [
+        {
+            "driver": "Addressable",
+            "type": "Object",
+            "label": "default"
+        },
+        {
+            "driver": "Addressable",
+            "type": "Sprite",
+            "label": "default"
+        }
+    ],
+
+    "SceneEntry": []
+}
