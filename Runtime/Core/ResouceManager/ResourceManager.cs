@@ -299,15 +299,14 @@ namespace UNIHper
 
         public async Task<IEnumerable<AudioClip>> AppendAudioClips(IEnumerable<string> AudioPaths)
         {
-            var _validPathes = AudioPaths.Where(_path => File.Exists(_path));
-            if (_validPathes.Count() <= 0)
-                return null;
-
-            var _audioClips = await Observable.Zip(
-                _validPathes.Select(_path => this.LoadAudioClip(_path))
-            );
-            appendResources(_audioClips, CUSTOM_RES_KEY);
+            var _audioClips = await LoadAudioClips(AudioPaths);
+            appendResources(_audioClips.OfType<AudioClip>(), CUSTOM_RES_KEY);
             return _audioClips;
+        }
+
+        public IObservable<IList<AudioClip>> LoadAudioClips(IEnumerable<string> AudioPaths)
+        {
+            return Observable.Zip(AudioPaths.Select(_path => this.LoadAudioClip(_path))).First();
         }
 
         /// <summary>
@@ -323,6 +322,16 @@ namespace UNIHper
             SearchOption searchOption = SearchOption.AllDirectories
         )
         {
+            if (!Path.IsPathRooted(audioDir))
+            {
+                audioDir = PathUtils.GetExternalAbsolutePath(audioDir);
+            }
+            if (!Directory.Exists(audioDir))
+            {
+                Debug.LogWarning($"Directory not exists: {audioDir}");
+                return null;
+            }
+
             var _searchPatterns = searchPattern
                 .Split('|')
                 .Select(_pattern => _pattern.Replace("*", ""));
@@ -337,7 +346,7 @@ namespace UNIHper
         public async Task<AudioClip> AppendAudioClip(string InPath)
         {
             var _audioClip = await this.LoadAudioClip(InPath);
-            appendResources(new List<AudioClip> { _audioClip }, CUSTOM_RES_KEY);
+            appendResources(new List<AudioClip> { _audioClip }.OfType<AudioClip>(), CUSTOM_RES_KEY);
             return _audioClip;
         }
 
@@ -350,14 +359,8 @@ namespace UNIHper
             IEnumerable<string> TexturePathes
         )
         {
-            var _validPathes = TexturePathes.Where(_path => File.Exists(_path));
-            if (_validPathes.Count() <= 0)
-                return null;
-
-            var _textures = await Observable.Zip(
-                _validPathes.Select(_path => this.LoadTexture2D(_path))
-            );
-            appendResources(_textures, CUSTOM_RES_KEY);
+            var _textures = await LoadTexture2Ds(TexturePathes);
+            appendResources(_textures.OfType<Texture2D>(), CUSTOM_RES_KEY);
             return _textures;
         }
 
@@ -379,6 +382,16 @@ namespace UNIHper
             SearchOption searchOption = SearchOption.AllDirectories
         )
         {
+            if (!Path.IsPathRooted(textureDir))
+            {
+                textureDir = PathUtils.GetExternalAbsolutePath(textureDir);
+            }
+            if (!Directory.Exists(textureDir))
+            {
+                Debug.LogWarning($"Directory not exists: {textureDir}");
+                return null;
+            }
+
             var _searchPatterns = searchPattern
                 .Split('|')
                 .Select(_pattern => _pattern.Replace("*", ""));
@@ -462,11 +475,30 @@ namespace UNIHper
             assetPath = assetPath.ToForwardSlash();
 
             string _key = string.Format("{0}_{1}", assetPath, typeof(T).FullName);
-            // 根据InResources的Key值进行正则匹配，结尾匹配InName即可
-            string _findKey = assets.Keys.Where(_resKey => _resKey.EndsWith(_key)).FirstOrDefault();
-
             UNIHperLogger.Log($"Try to get resource with key: {_key}");
-            return _findKey == null ? null : assets[_findKey].asset as T;
+
+            // 先从当前资源实例中查找，如果存在直接返回
+            if (assets.ContainsKey(_key))
+            {
+                return assets[_key].asset as T;
+            }
+
+            _key = $"/{_key}";
+            string _findKey = assets.Keys.Where(_resKey => _resKey.EndsWith(_key)).FirstOrDefault();
+            if (_findKey != null)
+            {
+                return assets[_findKey].asset as T;
+            }
+
+            _key = _key.TrimStart('/');
+            // 根据InResources的Key值进行正则匹配，结尾匹配InName即可
+            _findKey = assets.Keys.Where(_resKey => _resKey.EndsWith(_key)).FirstOrDefault();
+            if (_findKey != null)
+            {
+                return assets[_findKey].asset as T;
+            }
+
+            return null;
         }
 
         public void AddConfig(string configPath)

@@ -79,10 +79,7 @@ namespace UNIHper.Network
                         },
                         Scheduler.MainThread
                     )
-                    .Subscribe(_ =>
-                    {
-                        Dispose();
-                    });
+                    .Subscribe();
             }
         }
 
@@ -100,23 +97,6 @@ namespace UNIHper.Network
             return this.MemberwiseClone() as UNetMsgReceiver;
         }
 
-        public virtual void Dispose()
-        {
-            if (socket != null)
-            {
-                try
-                {
-                    socket.Shutdown(SocketShutdown.Both);
-                    socket.Disconnect(false);
-                    socket.Close();
-                    socket.Dispose();
-                    socket = null;
-                }
-                catch (System.Exception e)
-                {
-                    UnityEngine.Debug.LogWarning(e.Message);
-                }
-            }
-        }
+        public virtual void Dispose() { }
     }
 }

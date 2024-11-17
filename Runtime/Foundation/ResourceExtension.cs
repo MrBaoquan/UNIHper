@@ -5,6 +5,7 @@ using System.Threading;
 using UniRx;
 using UnityEngine;
 using UnityEngine.Networking;
+using DNHper;
 
 namespace UNIHper
 {
@@ -15,12 +16,15 @@ namespace UNIHper
             string filePath
         )
         {
-#if UNITY_EDITOR || UNITY_STANDALONE_WIN
             if (!Path.IsPathRooted(filePath))
             {
-                filePath = Path.Combine(Application.streamingAssetsPath, filePath);
+                filePath = PathUtils.GetExternalAbsolutePath(filePath);
             }
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+            filePath = PathUtils.BuildWebRequestJARUri(filePath);
 #endif
+
             return Observable
                 .FromCoroutine<Texture2D>(
                     (_observer, _cancellationToken) =>
@@ -120,25 +124,26 @@ namespace UNIHper
             CancellationToken cancellationToken
         )
         {
-            using (UnityWebRequest _www = UnityWebRequestTexture.GetTexture(InPath))
+            using (UnityWebRequest _wwwRequest = UnityWebRequestTexture.GetTexture(InPath))
             {
-                yield return _www.SendWebRequest();
+                yield return _wwwRequest.SendWebRequest();
 #if UNITY_2021_1_OR_NEWER
-                if (_www.result == UnityWebRequest.Result.ConnectionError)
+                if (_wwwRequest.result == UnityWebRequest.Result.ConnectionError)
                 {
 #else
                 if (_www.isNetworkError)
                 {
 #endif
-                    Debug.LogError(_www.error);
-                    observer.OnError(new Exception(_www.error));
+                    Debug.LogError(_wwwRequest.error);
+                    observer.OnError(new Exception(_wwwRequest.error));
                 }
                 else
                 {
+                    yield return new WaitForEndOfFrame();
                     try
                     {
-                        var _texture = DownloadHandlerTexture.GetContent(_www);
-                        _texture.name = System.IO.Path.GetFileNameWithoutExtension(InPath);
+                        var _texture = DownloadHandlerTexture.GetContent(_wwwRequest);
+                        _texture.name = Path.GetFileNameWithoutExtension(InPath);
                         observer.OnNext(_texture);
                         observer.OnCompleted();
                     }

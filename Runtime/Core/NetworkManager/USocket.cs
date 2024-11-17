@@ -8,6 +8,7 @@ using UnityEngine.Events;
 namespace UNIHper.Network
 {
     using UniRx;
+    using UnityEngine;
 
     public class UNetConnectedEvent : UEvent
     {
@@ -161,7 +162,7 @@ namespace UNIHper.Network
             return this;
         }
 
-        public USocket OnReceived(UnityAction<NetMessage, USocket> InMessageHandler)
+        public USocket OnReceived(UnityAction<(UMessage Message, USocket Socket)> InMessageHandler)
         {
             onMessageReceived.AddListener(InMessageHandler);
             return this;
@@ -188,9 +189,10 @@ namespace UNIHper.Network
 
         IDisposable messageDispatcherHandler = null;
 
-        UnityEvent<NetMessage, USocket> onMessageReceived = new UnityEvent<NetMessage, USocket>();
+        UnityEvent<(UMessage Message, USocket Socket)> onMessageReceived =
+            new UnityEvent<(UMessage Message, USocket Socket)>();
 
-        public IObservable<Tuple<NetMessage, USocket>> OnReceivedAsObservable()
+        public IObservable<(UMessage Message, USocket Socket)> OnReceivedAsObservable()
         {
             return onMessageReceived.AsObservable();
         }
@@ -206,13 +208,8 @@ namespace UNIHper.Network
                     var _message = messageDispatcher.PopMessage();
                     while (_message != null)
                     {
-                        var _netMessage = new NetMessage
-                        {
-                            Message = _message,
-                            Protocol = protocol
-                        };
-                        onMessageReceived.Invoke(_netMessage, this);
-                        Managements.Event.Fire(_netMessage);
+                        onMessageReceived.Invoke((_message, this));
+                        Managements.Event.Fire(_message);
                         _message = messageDispatcher.PopMessage();
                     }
                 });
@@ -252,22 +249,22 @@ namespace UNIHper.Network
         {
             if (InSocket == null)
                 return;
+
             try
             {
-                if (InSocket.Connected)
-                {
+                if (InSocket.SocketType == SocketType.Stream)
                     InSocket.Shutdown(SocketShutdown.Both);
-                    InSocket.Disconnect(false);
-                }
-
-                InSocket.Close();
-                InSocket.Dispose();
             }
             catch (System.Exception e)
             {
                 UnityEngine.Debug.LogWarning(e.Message);
             }
+
+            InSocket.Close();
+            InSocket.Dispose();
+
             InSocket = null;
+            UnityEngine.Debug.Log($"Socket {localEndPoint} closed.");
         }
     }
 }

@@ -15,7 +15,6 @@ namespace UNIHper.Network
             : base(NetProtocol.Udp)
         {
             udpClient = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            //LocalEndPoint = new IPEndPoint(IPAddress.Any, 0);
         }
 
         public UUdpClient(string InLocalIP, int InLocalPort, UNetMsgReceiver messageReceiver)
@@ -56,6 +55,8 @@ namespace UNIHper.Network
                 UnityEngine.Debug.LogWarning("local endpoint not set yet.");
                 return this;
             }
+
+            udpClient.MulticastLoopback = false;
             udpClient.EnableBroadcast = true;
             udpClient.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, 1);
             return this;
@@ -70,6 +71,10 @@ namespace UNIHper.Network
         public override void Dispose()
         {
             base.Dispose();
+            if (udpClient != null)
+            {
+                destroySocket(ref udpClient);
+            }
             udpClientTokenSource.Cancel();
         }
 

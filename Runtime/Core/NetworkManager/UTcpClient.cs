@@ -7,6 +7,7 @@ using System.Net.Sockets;
 namespace UNIHper.Network
 {
     using UniRx;
+    using UnityEngine;
 
     public class UTcpClient : USocket
     {
@@ -59,22 +60,22 @@ namespace UNIHper.Network
         {
             if (connected)
             {
-                UnityEngine.Debug.LogWarning("Already connected.");
+                Debug.LogWarning("Already connected.");
                 return this;
             }
             if (remoteEndPoint == null)
             {
-                UnityEngine.Debug.LogWarning("Remote endpoint not set yet.");
+                Debug.LogWarning("Remote endpoint not set yet.");
                 return null;
             }
 
             Connect(remoteEndPoint);
             connectDisposable = Observable
                 .Interval(TimeSpan.FromMilliseconds(3000))
-                .Where((_1, _2) => clientReuse && !Connected)
-                .Subscribe(_3 =>
+                .Where(_ => clientReuse && !Connected)
+                .Subscribe(_ =>
                 {
-                    UnityEngine.Debug.Log("Reconnecting...");
+                    Debug.Log("Reconnecting...");
                     destroySocket(ref socket);
                     Connect(remoteEndPoint);
                 });
@@ -91,14 +92,14 @@ namespace UNIHper.Network
         {
             if (socket == null || !Connected || InData == null)
             {
-                UnityEngine.Debug.LogWarning("Send package failed");
+                Debug.LogWarning("Send package failed");
                 return 0;
             }
             try
             {
                 if (!socket.Connected)
                 {
-                    UnityEngine.Debug.LogWarning("Socket not connect yet");
+                    Debug.LogWarning("Socket not connect yet");
                     doDisconnect(true);
                     return 0;
                 }
@@ -107,7 +108,7 @@ namespace UNIHper.Network
             }
             catch (System.Exception e)
             {
-                UnityEngine.Debug.LogWarning(e.Message);
+                Debug.LogWarning(e.Message);
                 doDisconnect(true);
             }
             return 0;
@@ -164,19 +165,18 @@ namespace UNIHper.Network
         {
             socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             if (localEndPoint != null)
+            {
                 socket.Bind(localEndPoint);
+            }
 
             Observable
                 .Start(() =>
                 {
                     try
                     {
+                        Debug.Log(socket.LocalEndPoint);
                         socket.Connect(InRemoteEndPoint);
-                        if (localEndPoint == null)
-                        {
-                            setLocalEndPoint(socket.LocalEndPoint as IPEndPoint);
-                        }
-                        UnityEngine.Debug.LogFormat(
+                        Debug.LogFormat(
                             ("Try connect to: {0}:{1}"),
                             InRemoteEndPoint.Address.ToString(),
                             InRemoteEndPoint.Port
@@ -185,21 +185,25 @@ namespace UNIHper.Network
                     }
                     catch (Exception e)
                     {
-                        UnityEngine.Debug.Log(e.Message);
-                        UnityEngine.Debug.Log(e.StackTrace);
+                        Debug.Log(e.Message);
+                        Debug.Log(e.StackTrace);
                         return false;
                     }
                 })
                 .ObserveOnMainThread()
-                .Subscribe(_ =>
+                .Subscribe(_isConnected =>
                 {
-                    if (!_)
+                    if (!_isConnected)
                         return;
-                    UnityEngine.Debug.LogFormat(
+                    Debug.LogFormat(
                         ("Connected to: {0}:{1}"),
                         InRemoteEndPoint.Address.ToString(),
                         InRemoteEndPoint.Port
                     );
+                    if (localEndPoint == null)
+                    {
+                        setLocalEndPoint(socket.LocalEndPoint as IPEndPoint);
+                    }
                     connected = true;
                     var _event = new UNetConnectedEvent
                     {

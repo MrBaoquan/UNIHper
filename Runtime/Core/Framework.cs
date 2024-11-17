@@ -30,7 +30,7 @@ namespace UNIHper
 
                 _effectCanvas.gameObject.AddComponent<GraphicRaycaster>();
                 _effectCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                _effectCanvas.sortingOrder = 1000;
+                _effectCanvas.sortingOrder = 110;
 
                 return _effectCanvas;
             }
@@ -64,6 +64,10 @@ namespace UNIHper
             debugModeEnabled.Subscribe(_enable =>
             {
                 SRDebug.Instance.IsTriggerEnabled = _enable;
+                if (_enable)
+                {
+                    Debug.LogError("Debug mode enabled.");
+                }
             });
 
             var _triggerObject = new GameObject("__debugMode_trigger");

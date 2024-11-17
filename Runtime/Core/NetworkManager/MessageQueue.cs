@@ -1,20 +1,32 @@
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace UNIHper.Network
 {
     public class UMessage : UEvent
     {
+        [JsonIgnore]
         public string LocalIP = string.Empty;
+
+        [JsonIgnore]
         public int LocalPort = -1;
+
+        [JsonIgnore]
         public string RemoteIP = string.Empty;
+
+        [JsonIgnore]
         public int RemotePort = -1;
+
+        [JsonIgnore]
         public byte[] RawData = null;
 
+        [JsonIgnore]
         public string RemoteKey
         {
             get { return string.Format("{0}_{1}", RemoteIP, RemotePort); }
         }
 
+        [JsonIgnore]
         public string LocalKey
         {
             get { return string.Format("{0}_{1}", LocalIP, LocalPort); }
@@ -28,11 +40,11 @@ namespace UNIHper.Network
         Udp = 17
     }
 
-    public class NetMessage : UEvent
-    {
-        public UMessage Message;
-        public NetProtocol Protocol = NetProtocol.Tcp;
-    }
+    // public class NetMessage : UEvent
+    // {
+    //     public UMessage Message;
+    //     // public NetProtocol Protocol = NetProtocol.Tcp;
+    // }
 
     public class MessageQueue
     {
