@@ -17,20 +17,20 @@ using DNHper;
 
 namespace UNIHper
 {
-    public class MultipleAVProPlayer : MonoBehaviour
+    public class MultipleAVProPlayer : AVProBase
     {
-        private readonly UnityEvent<AVProPlayer> onPlayerBeforeChanged = new();
-        private readonly UnityEvent<AVProPlayer> onPlayerAfterChanged = new();
+        // private readonly UnityEvent<AVProPlayer> onPlayerBeforeChanged = new();
+        // private readonly UnityEvent<AVProPlayer> onPlayerAfterChanged = new();
 
-        public IObservable<AVProPlayer> OnPlayerBeforeChangedAsObservable()
-        {
-            return onPlayerBeforeChanged.AsObservable();
-        }
+        // public IObservable<AVProPlayer> OnPlayerBeforeChangedAsObservable()
+        // {
+        //     return onPlayerBeforeChanged.AsObservable();
+        // }
 
-        public IObservable<AVProPlayer> OnPlayerAfterChangedAsObservable()
-        {
-            return onPlayerAfterChanged.AsObservable();
-        }
+        // public IObservable<AVProPlayer> OnPlayerAfterChangedAsObservable()
+        // {
+        //     return onPlayerAfterChanged.AsObservable();
+        // }
 
         public double CurrentTime
         {
@@ -99,6 +99,8 @@ namespace UNIHper
                 Debug.LogWarning("No video found.");
             }
 
+            this.registerAllEvents();
+
             videoIndex.SetMax(VideoPaths.Count() - 1);
             this.videoPaths = VideoPaths.ToList();
 
@@ -141,15 +143,7 @@ namespace UNIHper
             listPlayer.Pause();
         }
 
-        public bool IsPaused
-        {
-            get
-            {
-                if (CurrentPlayer == null)
-                    return false;
-                return CurrentPlayer.IsPaused;
-            }
-        }
+        public bool IsPaused => listPlayer.IsPaused();
 
         public bool IsFinished
         {
@@ -209,20 +203,42 @@ namespace UNIHper
                 Debug.LogWarning((object)("Video ID out of range: " + videoIndex));
                 return;
             }
-            var _avProPlayer = NextPlayer;
-            onPlayerBeforeChanged.Invoke(_avProPlayer);
-            listPlayer.JumpToItem((int)videoIndex);
-            this.videoIndex.Set((int)videoIndex);
-            onPlayerAfterChanged.Invoke(_avProPlayer);
 
-            _avProPlayer.Play(
-                videoPaths[videoIndex],
-                OnCompleted,
-                Loop,
-                StartTime,
-                EndTime,
-                seek2StartAfterFinished
-            );
+            // listPlayer.JumpToItem((int)videoIndex);
+            // this.videoIndex.Set((int)videoIndex);
+
+            _playDisposables.Clear();
+            // OnItemChangedAsObservable()
+            //     .First()
+            //     .Subscribe(_player =>
+            //     {
+            //         Debug.LogWarning("OnItemChangedAsObservable");
+            //         _player.Play(
+            //             videoPaths[videoIndex],
+            //             OnCompleted,
+            //             Loop,
+            //             StartTime,
+            //             EndTime,
+            //             seek2StartAfterFinished
+            //         );
+            //     })
+            //     .AddTo(_playDisposables);
+
+            Switch(videoIndex, true);
+
+            SwitchAsObservable(videoIndex, StartTime)
+                .Subscribe(_player =>
+                {
+                    // Debug.Log("[debug] 视频切换完成, 开始播放...");
+                    _player.Play(
+                        videoPaths[videoIndex],
+                        OnCompleted,
+                        Loop,
+                        StartTime,
+                        EndTime,
+                        seek2StartAfterFinished
+                    );
+                });
         }
 
         /// <summary>
@@ -250,21 +266,7 @@ namespace UNIHper
                 return;
             }
 
-            var _avProPlayer = NextPlayer;
-
-            onPlayerBeforeChanged.Invoke(_avProPlayer);
-            listPlayer.JumpToItem(_idx);
-            videoIndex.Set(_idx);
-            onPlayerAfterChanged.Invoke(_avProPlayer);
-
-            _avProPlayer.Play(
-                videoPaths[_idx],
-                OnCompleted,
-                Loop,
-                StartTime,
-                EndTime,
-                seek2StartAfterFinished
-            );
+            Play(_idx, OnCompleted, Loop, StartTime, EndTime, seek2StartAfterFinished);
         }
 
         public void TogglePlay()
@@ -379,22 +381,64 @@ namespace UNIHper
             //mediaPlayer.JumpToItem(mediaIndex);
             if (bAutoPlay)
             {
+                Debug.Log("Play: " + _mediaItem.mediaPath.Path);
                 // Play(videoPaths[mediaIndex], null, Loop, 0, 0, false);
                 Play(_mediaItem.mediaPath.Path, null, _mediaItem.loop, StartTime, EndTime, false);
             }
             else
             {
-                var _avProPlayer = NextPlayer;
-                if (!bAutoPlay && _avProPlayer.IsPlaying)
-                    _avProPlayer.Pause();
-                if (bRewind)
-                    _avProPlayer.Rewind();
+                _playDisposables.Clear();
 
-                onPlayerBeforeChanged.Invoke(_avProPlayer);
+                OnItemChangedAsObservable()
+                    .First()
+                    .Subscribe(_ =>
+                    {
+                        _.Pause();
+                        if (bRewind)
+                            _.Rewind();
+                    })
+                    .AddTo(_playDisposables);
+
                 listPlayer.JumpToItem(mediaIndex);
                 videoIndex.Set(mediaIndex);
-                onPlayerAfterChanged.Invoke(_avProPlayer);
             }
+        }
+
+        public IObservable<AVProPlayer> SwitchAsObservable(string videoPath, double startTime)
+        {
+            return SwitchAsObservable(FindVideoIndex(videoPath), startTime);
+        }
+
+        public IObservable<AVProPlayer> SwitchAsObservable(int mediaIndex, double startTime = 0f)
+        {
+            return Observable.Create<AVProPlayer>(_observer =>
+            {
+                _playDisposables.Clear();
+                OnItemChangedAsObservable()
+                    .First()
+                    .Do(_player =>
+                    {
+                        // Debug.Log("[debug] 视频切换完成, 暂停...");
+                        _player.Pause();
+                    })
+                    .SelectMany(
+                        _player =>
+                            _player.CurrentTime != startTime
+                                ? _player.SeekAsObservable(startTime)
+                                : Observable.Return(_player)
+                    )
+                    .Subscribe(_ =>
+                    {
+                        // Debug.Log("[debug] 视频Seek完成");
+                        _observer.OnNext(CurrentPlayer);
+                        _observer.OnCompleted();
+                    })
+                    .AddTo(_playDisposables);
+
+                listPlayer.JumpToItem(mediaIndex);
+                videoIndex.Set(mediaIndex);
+                return Disposable.Empty;
+            });
         }
 
         public void SwitchNext(bool bRewind = false, bool bAutoPlay = false)
@@ -430,6 +474,12 @@ namespace UNIHper
                 return videoPaths.FindIndex(_ => _.EndsWith(videoName));
             }
             return _idx;
+        }
+
+        public IObservable<AVProPlayer> OnItemChangedAsObservable()
+        {
+            return this.OnPlaylistItemChangedAsObservable()
+                .SelectMany(_ => Observable.NextFrame().Select(_1 => CurrentPlayer));
         }
 
         public AVProPlayer CurrentPlayer => ListPlayer.CurrentPlayer.Get<AVProPlayer>();

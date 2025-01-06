@@ -299,6 +299,11 @@ namespace UNIHper
 
         public async Task<IEnumerable<AudioClip>> AppendAudioClips(IEnumerable<string> AudioPaths)
         {
+            if (AudioPaths.Count() <= 0)
+            {
+                return new List<AudioClip>();
+            }
+
             var _audioClips = await LoadAudioClips(AudioPaths);
             appendResources(_audioClips.OfType<AudioClip>(), CUSTOM_RES_KEY);
             return _audioClips;

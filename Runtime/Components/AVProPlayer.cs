@@ -3,38 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using RenderHeads.Media.AVProVideo;
+using UniRx;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace UNIHper
 {
-    using UniRx;
-
     [RequireComponent(typeof(MediaPlayer))]
-    public class AVProPlayer : MonoBehaviour
+    public class AVProPlayer : AVProBase
     {
-        #region 事件列表
-        private readonly UnityEvent<MediaPlayer> OnMetaDataReady = new(); // Triggered when meta data(width, duration etc) is available
-        private readonly UnityEvent<MediaPlayer> OnReadyToPlay = new(); // Triggered when the video is loaded and ready to play
-        private readonly UnityEvent<MediaPlayer> OnStarted = new(); // Triggered when the playback starts
-        private readonly UnityEvent<MediaPlayer> OnFirstFrameReady = new(); // Triggered when the first frame has been rendered
-        private readonly UnityEvent<MediaPlayer> OnFinishedPlaying = new(); // Triggered when a non-looping video has finished playing
-        private readonly UnityEvent<MediaPlayer> OnClosing = new(); // Triggered when the media is closed
-        private readonly UnityEvent<MediaPlayer> OnError = new(); // Triggered when an error occurs
-        private readonly UnityEvent<MediaPlayer> OnSubtitleChange = new(); // Triggered when the subtitles change
-        private readonly UnityEvent<MediaPlayer> OnStalled = new(); // Triggered when media is stalled (eg. when lost connection to media stream) - Currently only supported on Windows platforms
-        private readonly UnityEvent<MediaPlayer> OnUnstalled = new(); // Triggered when media is resumed form a stalled state (eg. when lost connection is re-established)
-        private readonly UnityEvent<MediaPlayer> OnResolutionChanged = new(); // Triggered when the resolution of the video has changed (including the load) Useful for adaptive streams
-        private readonly UnityEvent<MediaPlayer> OnStartedSeeking = new(); // Triggered when seeking begins
-        private readonly UnityEvent<MediaPlayer> OnFinishedSeeking = new(); // Triggered when seeking has finished
-        private readonly UnityEvent<MediaPlayer> OnStartedBuffering = new(); // Triggered when buffering begins
-        private readonly UnityEvent<MediaPlayer> OnFinishedBuffering = new(); // Triggered when buffering has finished
-        private readonly UnityEvent<MediaPlayer> OnPropertiesChanged = new(); // Triggered when any properties (eg stereo packing are changed) - this has to be triggered manually
-        private readonly UnityEvent<MediaPlayer> OnPlaylistItemChanged = new(); // Triggered when the new item is played in the playlist
-        private readonly UnityEvent<MediaPlayer> OnPlaylistFinished = new(); // Triggered when the playlist reaches the end
-        private readonly UnityEvent<MediaPlayer> OnTextTracksChanged = new(); // Triggered when the text tracks are added or removed
-        #endregion
-
         void Reset()
         {
             MediaPlayer.AutoOpen = false;
@@ -42,9 +18,7 @@ namespace UNIHper
         }
 
 #if (UNITY_EDITOR_WIN) || (!UNITY_EDITOR && UNITY_STANDALONE_WIN)
-        public AVProPlayer SetWindowsVideoAPI(
-            RenderHeads.Media.AVProVideo.Windows.VideoApi videoApi
-        )
+        public AVProBase SetWindowsVideoAPI(RenderHeads.Media.AVProVideo.Windows.VideoApi videoApi)
         {
             var _platformOptions =
                 MediaPlayer.GetCurrentPlatformOptions()
@@ -53,23 +27,6 @@ namespace UNIHper
             return this;
         }
 #endif
-
-        private MediaPlayer _mediaPlayer;
-        public MediaPlayer MediaPlayer
-        {
-            get
-            {
-                if (_mediaPlayer == null)
-                {
-                    _mediaPlayer = this.GetComponent<MediaPlayer>();
-                    if (_mediaPlayer == null)
-                        _mediaPlayer = this.gameObject.AddComponent<MediaPlayer>();
-                    if (Application.isPlaying)
-                        registerAllEvents();
-                }
-                return _mediaPlayer;
-            }
-        }
 
         /// <summary>
         /// 标识当前播放器是否准备就绪
@@ -141,16 +98,40 @@ namespace UNIHper
 
         public double EndTime { get; protected set; }
 
-        public IObservable<MediaPlayer> Prepare(string path)
+        public IObservable<AVProPlayer> SwitchAsObservable(string path, double startTime = 0)
         {
-            MediaPlayer.OpenMedia(MediaPathType.RelativeToStreamingAssetsFolder, path, false);
-            return OnMetaDataReadyAsObservable().First();
+            return Observable.Create<AVProPlayer>(observer =>
+            {
+                var _disposable = new CompositeDisposable();
+
+                OnMetaDataReadyAsObservable()
+                    .First()
+                    .SelectMany(_ => SeekAsObservable(startTime))
+                    .Subscribe(_ =>
+                    {
+                        observer.OnNext(this);
+                        observer.OnCompleted();
+                    })
+                    .AddTo(_disposable);
+
+                MediaPlayer.OpenMedia(MediaPathType.RelativeToStreamingAssetsFolder, path, false);
+                return _disposable;
+            });
+        }
+
+        public bool Switch(string path)
+        {
+            return MediaPlayer.OpenMedia(
+                MediaPathType.RelativeToStreamingAssetsFolder,
+                path,
+                false
+            );
         }
 
         IDisposable _readyHandler = null;
 
         //private List<IDisposable> playHandlers = new List<IDisposable>();
-        CompositeDisposable _playDisposables = new CompositeDisposable();
+
 
         /// <summary>
         /// 播放指定地址的视频  可为网络地址 或者本地地址
@@ -290,17 +271,17 @@ namespace UNIHper
         readonly ReactiveProperty<bool> _isMute = new(false);
         readonly ReactiveProperty<float> _volume = new(1f);
 
-        public IObservable<AVProPlayer> OnPausedAsObservable()
+        public IObservable<AVProBase> OnPausedAsObservable()
         {
             return _isPlaying.Where(_ => !_isPlaying.Value).Select(_ => this);
         }
 
-        public IObservable<AVProPlayer> OnMuteChangedAsObservable()
+        public IObservable<AVProBase> OnMuteChangedAsObservable()
         {
             return _isMute.Select(_ => this);
         }
 
-        public IObservable<AVProPlayer> OnVolumeChangedAsObservable()
+        public IObservable<AVProBase> OnVolumeChangedAsObservable()
         {
             return _volume.Select(_ => this);
         }
@@ -319,7 +300,7 @@ namespace UNIHper
             _playDisposables.Clear();
         }
 
-        public void Rewind(bool pause = false, Action<AVProPlayer> onCompleted = null)
+        public void Rewind(bool pause = false, Action<AVProBase> onCompleted = null)
         {
             ClearPlayHandlers();
             if (pause)
@@ -327,9 +308,21 @@ namespace UNIHper
             Seek(this.StartTime, onCompleted);
         }
 
-        public void Rewind(Action<AVProPlayer> onCompleted)
+        public void Rewind(Action<AVProBase> onCompleted)
         {
             Rewind(false, onCompleted);
+        }
+
+        public void TogglePlay()
+        {
+            if (this.IsPlaying)
+            {
+                this.Pause();
+            }
+            else
+            {
+                this.Play();
+            }
         }
 
         public void Play()
@@ -373,7 +366,7 @@ namespace UNIHper
             MediaPlayer.Control?.Stop();
         }
 
-        public void Seek(double InTime, Action<AVProPlayer> onCompleted = null)
+        public void Seek(double InTime, Action<AVProBase> onCompleted = null)
         {
             if (!Ready2Play)
             {
@@ -389,7 +382,28 @@ namespace UNIHper
             MediaPlayer.Control.Seek(InTime);
         }
 
-        public void SeekToFrame(int Frame, Action<AVProPlayer> onFinished = null)
+        public IObservable<AVProPlayer> SeekAsObservable(double InTime)
+        {
+            ClearPlayHandlers();
+            return Observable.Create<AVProPlayer>(_observer =>
+            {
+                // Debug.Log("seek start");
+                var disposable = new CompositeDisposable();
+                OnFinishedSeekingAsObservable()
+                    .First()
+                    .Subscribe(_ =>
+                    {
+                        // Debug.Log("Seek Finished");
+                        _observer.OnNext(this);
+                        _observer.OnCompleted();
+                    })
+                    .AddTo(disposable);
+                __seek(InTime);
+                return disposable;
+            });
+        }
+
+        public void SeekToFrame(int Frame, Action<AVProBase> onFinished = null)
         {
             if (!Ready2Play)
                 return;
@@ -415,171 +429,6 @@ namespace UNIHper
         public void MuteAudio(bool bMute)
         {
             MediaPlayer.Control?.MuteAudio(bMute);
-        }
-
-        #region  播放器事件
-        public IObservable<MediaPlayer> OnMetaDataReadyAsObservable()
-        {
-            return OnMetaDataReady.AsObservable();
-        }
-
-        public IObservable<MediaPlayer> OnReadyToPlayAsObservable()
-        {
-            return OnReadyToPlay.AsObservable();
-        }
-
-        public IObservable<MediaPlayer> OnStartedAsObservable()
-        {
-            return OnStarted.AsObservable();
-        }
-
-        public IObservable<MediaPlayer> OnFirstFrameReadyAsObservable()
-        {
-            return OnFirstFrameReady.AsObservable();
-        }
-
-        public IObservable<MediaPlayer> OnFinishedPlayingAsObservable()
-        {
-            return OnFinishedPlaying.AsObservable();
-        }
-
-        public IObservable<MediaPlayer> OnClosingAsObservable()
-        {
-            return OnClosing.AsObservable();
-        }
-
-        public IObservable<MediaPlayer> OnErrorAsObservable()
-        {
-            return OnError.AsObservable();
-        }
-
-        public IObservable<MediaPlayer> OnSubtitleChangeAsObservable()
-        {
-            return OnSubtitleChange.AsObservable();
-        }
-
-        public IObservable<MediaPlayer> OnStalledAsObservable()
-        {
-            return OnStalled.AsObservable();
-        }
-
-        public IObservable<MediaPlayer> OnUnstalledAsObservable()
-        {
-            return OnUnstalled.AsObservable();
-        }
-
-        public IObservable<MediaPlayer> OnResolutionChangedAsObservable()
-        {
-            return OnResolutionChanged.AsObservable();
-        }
-
-        public IObservable<MediaPlayer> OnStartedSeekingAsObservable()
-        {
-            return OnStartedSeeking.AsObservable();
-        }
-
-        public IObservable<MediaPlayer> OnFinishedSeekingAsObservable()
-        {
-            return OnFinishedSeeking.AsObservable();
-        }
-
-        public IObservable<MediaPlayer> OnStartedBufferingAsObservable()
-        {
-            return OnStartedBuffering.AsObservable();
-        }
-
-        public IObservable<MediaPlayer> OnFinishedBufferingAsObservable()
-        {
-            return OnFinishedBuffering.AsObservable();
-        }
-
-        public IObservable<MediaPlayer> OnPropertiesChangedAsObservable()
-        {
-            return OnPropertiesChanged.AsObservable();
-        }
-
-        public IObservable<MediaPlayer> OnPlaylistItemChangedAsObservable()
-        {
-            return OnPlaylistItemChanged.AsObservable();
-        }
-
-        public IObservable<MediaPlayer> OnPlaylistFinishedAsObservable()
-        {
-            return OnPlaylistFinished.AsObservable();
-        }
-
-        public IObservable<MediaPlayer> OnTextTracksChangedAsObservable()
-        {
-            return OnTextTracksChanged.AsObservable();
-        }
-        #endregion
-
-        // 注册所有播放器相关事件
-        private void registerAllEvents()
-        {
-            MediaPlayer.Events.AddListener(
-                (_media, _type, err) =>
-                {
-                    // Debug.LogWarningFormat($"{gameObject.name} OnEvent: {_type}, {err}");
-                    switch (_type)
-                    {
-                        case MediaPlayerEvent.EventType.MetaDataReady: // Triggered when meta data(width, duration etc) is available
-                            OnMetaDataReady.Invoke(_media);
-                            break;
-                        case MediaPlayerEvent.EventType.ReadyToPlay: // Triggered when the video is loaded and ready to play
-                            OnReadyToPlay.Invoke(_media);
-                            break;
-                        case MediaPlayerEvent.EventType.Started: // Triggered when the playback starts
-                            OnStarted.Invoke(_media);
-                            break;
-                        case MediaPlayerEvent.EventType.FirstFrameReady: // Triggered when the first frame has been rendered
-                            OnFirstFrameReady.Invoke(_media);
-                            break;
-                        case MediaPlayerEvent.EventType.FinishedPlaying: // Triggered when a non-looping video has finished playing
-                            OnFinishedPlaying.Invoke(_media);
-                            break;
-                        case MediaPlayerEvent.EventType.Closing: // Triggered when the media is closed
-                            OnClosing.Invoke(_media);
-                            break;
-                        case MediaPlayerEvent.EventType.Error: // Triggered when an error occurs
-                            OnError.Invoke(_media);
-                            break;
-                        case MediaPlayerEvent.EventType.SubtitleChange: // Triggered when the subtitles change
-                            OnSubtitleChange.Invoke(_media);
-                            break;
-                        case MediaPlayerEvent.EventType.Stalled: // Triggered when media is stalled (eg. when lost connection to media stream) - Currently only supported on Windows platforms
-                            OnStalled.Invoke(_media);
-                            break;
-                        case MediaPlayerEvent.EventType.Unstalled: // Triggered when media is resumed form a stalled state (eg. when lost connection is re-established)
-                            OnUnstalled.Invoke(_media);
-                            break;
-                        case MediaPlayerEvent.EventType.ResolutionChanged: // Triggered when the resolution of the video has changed (including the load) Useful for adaptive streams
-                            OnResolutionChanged.Invoke(_media);
-                            break;
-                        case MediaPlayerEvent.EventType.StartedSeeking: // Triggered when seeking begins
-                            OnStartedSeeking.Invoke(_media);
-                            break;
-                        case MediaPlayerEvent.EventType.FinishedSeeking: // Triggered when seeking has finished
-                            OnFinishedSeeking.Invoke(_media);
-                            break;
-                        case MediaPlayerEvent.EventType.StartedBuffering: // Triggered when buffering begins
-                            OnStartedBuffering.Invoke(_media);
-                            break;
-                        case MediaPlayerEvent.EventType.FinishedBuffering: // Triggered when buffering has finished
-                            OnFinishedBuffering.Invoke(_media);
-                            break;
-                        case MediaPlayerEvent.EventType.PropertiesChanged: // Triggered when any properties (eg stereo packing are changed) - this has to be triggered manually
-                            OnPropertiesChanged.Invoke(_media);
-                            break;
-                        case MediaPlayerEvent.EventType.PlaylistItemChanged: // Triggered when the new item is played in the playlist
-                            OnPlaylistItemChanged.Invoke(_media);
-                            break;
-                        case MediaPlayerEvent.EventType.PlaylistFinished: // Triggered when the playlist reaches the end
-                            OnPlaylistFinished.Invoke(_media);
-                            break;
-                    }
-                }
-            );
         }
     }
 }
