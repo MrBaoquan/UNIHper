@@ -188,7 +188,7 @@ namespace UNIHper
 
         private void loadConfig() { }
 
-        public void SerializeAll()
+        public void SaveAll()
         {
             this.configs.Values
                 .ToList()

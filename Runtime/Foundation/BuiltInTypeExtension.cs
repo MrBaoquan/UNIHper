@@ -1,6 +1,7 @@
 using System.IO;
 using UnityEngine.UI;
 using UnityEngine;
+using UniRx;
 
 namespace UNIHper
 {
@@ -24,6 +25,154 @@ namespace UNIHper
             RenderTexture.active = null;
             _rt.Release();
             return _texture2D;
+        }
+
+        // public static Texture2D ResizeWithRenderTexture(
+        //     this Texture2D source,
+        //     int targetWidth,
+        //     int targetHeight
+        // )
+        // {
+        //     // 创建 RenderTexture
+        //     RenderTexture rt = new RenderTexture(targetWidth, targetHeight, 24);
+        //     RenderTexture.active = rt;
+
+        //     // 将源纹理拷贝到 RenderTexture
+        //     Graphics.Blit(source, rt);
+
+        //     // 创建目标 Texture2D
+        //     Texture2D result = new Texture2D(targetWidth, targetHeight, source.format, false);
+
+        //     // 从 RenderTexture 读取像素数据
+        //     result.ReadPixels(new Rect(0, 0, targetWidth, targetHeight), 0, 0);
+        //     result.Apply();
+
+        //     // 释放 RenderTexture
+        //     RenderTexture.active = null;
+        //     rt.Release();
+
+        //     return result;
+        // }
+
+        public static Texture2D Resize(
+            this Texture texture,
+            int width,
+            int height,
+            FilterMode filterMode = FilterMode.Bilinear
+        )
+        {
+            RenderTexture active = RenderTexture.active;
+            RenderTexture temporary = RenderTexture.GetTemporary(
+                width,
+                height,
+                0,
+                RenderTextureFormat.ARGB32,
+                RenderTextureReadWrite.Default,
+                1
+            );
+            temporary.filterMode = FilterMode.Bilinear;
+            RenderTexture.active = temporary;
+            GL.Clear(clearDepth: false, clearColor: true, new Color(1f, 1f, 1f, 0f));
+            bool sRGBWrite = GL.sRGBWrite;
+            GL.sRGBWrite = false;
+            Graphics.Blit(texture, temporary);
+            Texture2D texture2D = new Texture2D(
+                width,
+                height,
+                TextureFormat.ARGB32,
+                mipChain: true,
+                linear: false
+            );
+            texture2D.filterMode = filterMode;
+            texture2D.ReadPixels(new Rect(0f, 0f, width, height), 0, 0);
+            texture2D.Apply();
+            RenderTexture.active = active;
+            RenderTexture.ReleaseTemporary(temporary);
+            GL.sRGBWrite = sRGBWrite;
+            return texture2D;
+        }
+
+        public static Texture2D MakeSquare(this Texture2D source, Color fillColor = default(Color))
+        {
+            // 获取原始图片的宽度和高度
+            int originalWidth = source.width;
+            int originalHeight = source.height;
+
+            // 计算正方形的边长（取宽度和高度的最大值）
+            int squareSize = Mathf.Max(originalWidth, originalHeight);
+
+            // 创建一个新的正方形纹理
+            Texture2D squareTexture = new Texture2D(squareSize, squareSize);
+
+            // 初始化整个纹理为填充颜色
+            Color[] fillPixels = new Color[squareSize * squareSize];
+            for (int i = 0; i < fillPixels.Length; i++)
+            {
+                fillPixels[i] = fillColor;
+            }
+            squareTexture.SetPixels(fillPixels);
+
+            // 计算原始图片的偏移位置，使其居中
+            int xOffset = (squareSize - originalWidth) / 2;
+            int yOffset = (squareSize - originalHeight) / 2;
+
+            // 将原始图片的像素复制到正方形纹理的居中位置
+            squareTexture.SetPixels(
+                xOffset,
+                yOffset,
+                originalWidth,
+                originalHeight,
+                source.GetPixels()
+            );
+
+            // 应用更改
+            squareTexture.Apply();
+
+            return squareTexture;
+        }
+
+        public static Texture2D AddPadding(
+            this Texture2D source,
+            int padding,
+            Color fillColor = default(Color)
+        )
+        {
+            // 获取原始图片的宽度和高度
+            int originalWidth = source.width;
+            int originalHeight = source.height;
+
+            // 计算新纹理的宽度和高度
+            int paddedWidth = originalWidth + 2 * padding;
+            int paddedHeight = originalHeight + 2 * padding;
+
+            // 创建一个新的纹理，大小为添加 padding 后的尺寸
+            Texture2D paddedTexture = new Texture2D(paddedWidth, paddedHeight);
+
+            // 初始化整个纹理为填充颜色
+            Color[] fillPixels = new Color[paddedWidth * paddedHeight];
+            for (int i = 0; i < fillPixels.Length; i++)
+            {
+                fillPixels[i] = fillColor;
+            }
+            paddedTexture.SetPixels(fillPixels);
+
+            // 计算源图片在新纹理中的起始偏移位置
+            int xOffset = padding;
+            int yOffset = padding;
+
+            // 将源图片的像素复制到新纹理的居中区域
+            paddedTexture.SetPixels(
+                xOffset,
+                yOffset,
+                originalWidth,
+                originalHeight,
+                source.GetPixels()
+            );
+
+            // 应用更改
+            paddedTexture.Apply();
+
+            return paddedTexture;
         }
 
         public static Sprite ToSprite(this Texture2D texture2D)

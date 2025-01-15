@@ -147,13 +147,6 @@ namespace UNIHper
             }
         }
 
-        private void Update() { }
-
-        private void OnDestroy()
-        {
-            Debug.Log("UNIHper.OnDestroy");
-        }
-
         private void OnApplicationQuit()
         {
             ConfigManager.Instance.CleanUp();

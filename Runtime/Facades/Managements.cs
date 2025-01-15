@@ -205,7 +205,7 @@ namespace UNIHper
         public static T Reload<T>()
             where T : UConfig => Instance.Reload<T>();
 
-        public static void SerializeAll() => Instance.SerializeAll();
+        public static void SerializeAll() => Instance.SaveAll();
     }
 
     public static class AudioMgr

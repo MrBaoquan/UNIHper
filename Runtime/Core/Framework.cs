@@ -108,7 +108,7 @@ namespace UNIHper
                 return;
             if (Keyboard.current.ctrlKey.isPressed && Keyboard.current.sKey.wasPressedThisFrame)
             {
-                Managements.Config.SerializeAll();
+                Managements.Config.SaveAll();
                 Debug.Log("Save config successfully.");
             }
             if (Keyboard.current.f12Key.wasPressedThisFrame)
