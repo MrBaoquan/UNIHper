@@ -91,7 +91,7 @@ namespace UNIHper.Editor
         );
 
         /// <summary>Creates a new C# Class.</summary>
-        [MenuItem("Assets/Create/UNIHper Framework/SceneScript", priority = 51)]
+        [MenuItem("Assets/Create/📦 UNIHper Framework/SceneScript", priority = 51)]
         [MenuItem("UNIHper/Create/SceneScript", priority = 11)]
         private static void CreateSceneScript()
         {
@@ -101,7 +101,7 @@ namespace UNIHper.Editor
             );
         }
 
-        [MenuItem("Assets/Create/UNIHper Framework/UIScript", priority = 52)]
+        [MenuItem("Assets/Create/📦 UNIHper Framework/UIScript", priority = 52)]
         [MenuItem("UNIHper/Create/UIScript", priority = 12)]
         private static void CreateUIScript()
         {
@@ -112,7 +112,7 @@ namespace UNIHper.Editor
             );
         }
 
-        [MenuItem("Assets/Create/UNIHper Framework/ConfigScript", priority = 53)]
+        [MenuItem("Assets/Create/📦 UNIHper Framework/ConfigScript", priority = 53)]
         [MenuItem("UNIHper/Create/ConfigScript", priority = 13)]
         private static void CreateConfigScript()
         {
@@ -122,7 +122,7 @@ namespace UNIHper.Editor
             );
         }
 
-        [MenuItem("Assets/Create/UNIHper Framework/Game Assembly Definition", priority = 54)]
+        [MenuItem("Assets/Create/📦 UNIHper Framework/Game Assembly Definition", priority = 54)]
         [MenuItem("UNIHper/Create/Game Assembly Definition", priority = 14)]
         private static void CreateGameAssemblyDefinition()
         {

@@ -32,7 +32,7 @@ namespace UNIHper.Editor
         static bool IsManualReload => EditorPrefs.GetInt(kManualReloadDomain, -1) == 1;
 
         //缓存数据 域重载之后数据会变成false 如果不是false 那么就要重载
-        static bool tempData = false;
+        static bool shouldReloadAssemlies = false;
 
         //https://github.com/INeatFreak/unity-background-recompiler 来自这个库 反射获取是否锁住
         static MethodInfo CanReloadAssembliesMethod;
@@ -97,40 +97,46 @@ namespace UNIHper.Editor
             {
                 SessionState.SetBool(kFirstEnterUnity, false);
 
-                // 默认关闭手动重载
-                // EditorPrefs.SetInt(kManualReloadDomain, -1);
-
                 Menu.SetChecked(menuEnableManualReload, IsManualReload ? true : false);
                 Menu.SetChecked(menuDisenableManualReload, IsManualReload ? false : true);
 
+                UnlockReloadDomain();
+
                 if (IsManualReload)
                 {
-                    UnlockReloadDomain();
                     LockReloadDomain();
                 }
-                // Debug.Log($"<color=lime>当前ReloadDomain状态,是否手动: {IsManualReload}</color>");
             }
         }
 
         //运行模式改变
         private static void EditorApplication_playModeStateChanged(PlayModeStateChange state)
         {
+            if (IsManualReload)
+                return;
+
+            Debug.Log(IsManualReload);
             switch (state)
             {
                 case PlayModeStateChange.EnteredEditMode:
                     break;
                 case PlayModeStateChange.ExitingEditMode:
-                    if (tempData)
-                    {
-                        UnlockReloadDomain();
-                        EditorUtility.RequestScriptReload();
-                    }
+                    RequestScriptReloadIfNeed();
                     break;
                 case PlayModeStateChange.EnteredPlayMode:
-                    tempData = true;
+                    // shouldReloadAssemlies = true;
                     break;
                 case PlayModeStateChange.ExitingPlayMode:
                     break;
+            }
+        }
+
+        public static void RequestScriptReloadIfNeed()
+        {
+            if (shouldReloadAssemlies)
+            {
+                UnlockReloadDomain();
+                EditorUtility.RequestScriptReload();
             }
         }
 
@@ -154,6 +160,7 @@ namespace UNIHper.Editor
                     $"<color=yellow>Compile finished, took {compileSW.ElapsedMilliseconds} ms</color>"
                 );
                 compileSW.Reset();
+                shouldReloadAssemlies = true;
             }
         }
 
@@ -162,8 +169,6 @@ namespace UNIHper.Editor
         {
             if (IsManualReload)
             {
-                //Debug.Log("<color=yellow>Begin Reload Domain ......</color>");
-                //记录时间
                 SessionState.SetInt(
                     kReloadDomainTimer,
                     (int)(EditorApplication.timeSinceStartup * 1000)
@@ -186,7 +191,6 @@ namespace UNIHper.Editor
 
         static void LockReloadDomain()
         {
-            //如果没有锁住 锁住
             if (!IsLocked)
             {
                 EditorApplication.LockReloadAssemblies();
@@ -195,7 +199,6 @@ namespace UNIHper.Editor
 
         static void UnlockReloadDomain()
         {
-            //如果锁住了 打开
             if (IsLocked)
             {
                 EditorApplication.UnlockReloadAssemblies();
@@ -205,12 +208,13 @@ namespace UNIHper.Editor
         [MenuItem(menuEnableManualReload, priority = 22)]
         static void EnableManualReloadDomain()
         {
-            //Debug.Log("<color=cyan>开启手动 Reload Domain</color>");
+            Debug.Log("<color=cyan>开启手动 Reload Domain</color>");
 
             Menu.SetChecked(menuEnableManualReload, true);
             Menu.SetChecked(menuDisenableManualReload, false);
 
             EditorPrefs.SetInt(kManualReloadDomain, 1);
+
             //编辑器设置 projectsetting->editor->enterPlayModeSetting
             EditorSettings.enterPlayModeOptionsEnabled = true;
             EditorSettings.enterPlayModeOptions = EnterPlayModeOptions.DisableDomainReload;
@@ -219,19 +223,19 @@ namespace UNIHper.Editor
         }
 
         [MenuItem(menuDisenableManualReload, priority = 23)]
-        static void DisenableManualReloadDomain()
+        static void DisableManualReloadDomain()
         {
-            //Debug.Log("<color=cyan>关闭手动 Reload Domain</color>");
+            Debug.Log("<color=cyan>关闭手动 Reload Domain </color>");
 
             Menu.SetChecked(menuEnableManualReload, false);
             Menu.SetChecked(menuDisenableManualReload, true);
 
             EditorPrefs.SetInt(kManualReloadDomain, 0);
+
             UnlockReloadDomain();
             EditorSettings.enterPlayModeOptionsEnabled = false;
         }
 
-        //手动刷新
         [MenuItem(menuReloadDomain, priority = 24)]
         static void ManualReload()
         {

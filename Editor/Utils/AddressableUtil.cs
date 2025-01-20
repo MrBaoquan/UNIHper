@@ -53,7 +53,7 @@ namespace UNIHper.Editor
                 .Any(_path => checkEntryExist(_path));
         }
 
-        [MenuItem("Assets/Add To Addressable System")]
+        [MenuItem("Assets/Add To Addressable System", priority = 1500)]
         static void Add2Addressable()
         {
             var settings = LoadOrCreateAddressableSettings();
@@ -103,7 +103,7 @@ namespace UNIHper.Editor
             return !checkEntryExist(_curDir) && !checkParentEntryExist(_curDir);
         }
 
-        [MenuItem("Assets/Remove From Addressable System")]
+        [MenuItem("Assets/Remove From Addressable System", priority = 1501)]
         static void RemoveFromAddressable()
         {
             var settings = LoadOrCreateAddressableSettings();

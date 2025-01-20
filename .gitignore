@@ -2,3 +2,5 @@
 *.tgz.meta
 *.tar.gz
 *.tar.gz.meta
+
+**/Odin Inspector/

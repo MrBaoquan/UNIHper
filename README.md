@@ -24,10 +24,13 @@
 
 
 ### 版本更新日志
-v1.25.0115
+v1.25.0120
 - 优化AVPro模块
 - 对模块配置程序集、UI、资源进行编辑器脚本拓展
-  
+- 增加Texture等功能性拓展及部分UGUI Image相关shader
+- DOTweenText 拓展
+- Animation 增加Seek/SeekToFrame/Play/Pause/Stop/Rewind等实用拓展接口
+- 域重载优化，运行时按需重载程序集
 
 v1.24.1117
  - 资源查找优先全字符匹配

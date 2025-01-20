@@ -7,7 +7,7 @@ using UNIHper;
 using UNIHper.UI;
 using DNHper;
 
-[UIPage(Asset = "##CLASSNAME##", Order = -1, Type = UIType.Normal)]
+[UIPage(Asset = "##CLASSNAME##", Type = UIType.Normal, Order = -1)]
 public class ##CLASSNAME## : UIBase
 {
     // Start is called before the first frame update

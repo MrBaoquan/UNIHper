@@ -18,6 +18,11 @@ namespace UNIHper.UI
         public string Asset;
 
         /// <summary>
+        /// The type of the ui to show.
+        /// </summary>
+        public UIType Type;
+
+        /// <summary>
         /// The order of the ui in the canvas.
         /// </summary>
         public int Order = -1;
@@ -26,11 +31,6 @@ namespace UNIHper.UI
         /// The name of the canvas to render the ui.
         /// </summary>
         public string Canvas;
-
-        /// <summary>
-        /// The type of the ui to show.
-        /// </summary>
-        public UIType Type;
 
         /// <summary>
         /// The name of the scene to load the ui, default is "Persistence".
