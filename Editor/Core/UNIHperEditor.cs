@@ -273,6 +273,8 @@ namespace UNIHper.Editor
 
             AddressableUtil.LoadOrCreateAddressableSettings();
             importTMPEssentialResourcesIfNotExists();
+
+            ScriptCompileReloadTools.ManualReload();
         }
 
         private static void importTMPEssentialResourcesIfNotExists()

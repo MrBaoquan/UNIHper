@@ -31,6 +31,14 @@ namespace UNIHper
         [XmlAttribute]
         public FullScreenMode Mode = FullScreenMode.FullScreenWindow;
 
+        [XmlIgnore]
+        public bool IsFullScreen
+        {
+            get =>
+                Mode == FullScreenMode.ExclusiveFullScreen
+                || Mode == FullScreenMode.FullScreenWindow;
+        }
+
         [XmlAttribute]
         public bool UseTitleBar = false;
 
@@ -78,8 +86,8 @@ namespace UNIHper
             PrimaryScreen.RefreshParameters();
 
 #if !UNITY_EDITOR && UNITY_STANDALONE_WIN
-            executeWindowSettings();
             activeAllDisplays();
+            executeWindowSettings();
 #endif
         }
 
@@ -90,32 +98,15 @@ namespace UNIHper
 
         public async void SetScreen(ScreenConfig screenConfig)
         {
-            bool _fullScreen =
-                (
-                    screenConfig.Mode == FullScreenMode.ExclusiveFullScreen
-                    || screenConfig.Mode == FullScreenMode.FullScreenWindow
-                )
-                    ? true
-                    : false;
-
-            Screen.SetResolution(screenConfig.Width, screenConfig.Height, _fullScreen);
-
-            await Observable.NextFrame();
-            WinAPI.SetWindowPos(
-                WinAPI.CurrentWindow(),
-                screenConfig.KeepTop
-                    ? (int)HWndInsertAfter.HWND_TOPMOST
-                    : (int)HWndInsertAfter.HWND_NOTOPMOST,
-                screenConfig.PosX,
-                screenConfig.PosY,
+            Screen.SetResolution(
                 screenConfig.Width,
                 screenConfig.Height,
-                SetWindowPosFlags.SWP_SHOWWINDOW
+                screenConfig.IsFullScreen
             );
 
-            await Observable.NextFrame();
-            if (!_fullScreen)
+            if (!screenConfig.IsFullScreen)
             {
+                await Observable.NextFrame();
                 var _currentWindow = WinAPI.CurrentWindow();
                 var _longStyle = WinAPI.GetWindowLong(
                     _currentWindow,
@@ -131,6 +122,19 @@ namespace UNIHper
                     (uint)_longStyle
                 );
             }
+
+            await Observable.NextFrame();
+            WinAPI.SetWindowPos(
+                WinAPI.CurrentWindow(),
+                screenConfig.KeepTop
+                    ? (int)HWndInsertAfter.HWND_TOPMOST
+                    : (int)HWndInsertAfter.HWND_NOTOPMOST,
+                screenConfig.PosX,
+                screenConfig.PosY,
+                screenConfig.Width,
+                screenConfig.Height,
+                SetWindowPosFlags.SWP_SHOWWINDOW
+            );
         }
 
         private void executeWindowSettings()

@@ -115,7 +115,6 @@ namespace UNIHper.Editor
             if (IsManualReload)
                 return;
 
-            Debug.Log(IsManualReload);
             switch (state)
             {
                 case PlayModeStateChange.EnteredEditMode:
@@ -208,14 +207,13 @@ namespace UNIHper.Editor
         [MenuItem(menuEnableManualReload, priority = 22)]
         static void EnableManualReloadDomain()
         {
-            Debug.Log("<color=cyan>开启手动 Reload Domain</color>");
+            Debug.Log("<color=green>开启手动 Reload Domain</color>");
 
             Menu.SetChecked(menuEnableManualReload, true);
             Menu.SetChecked(menuDisenableManualReload, false);
 
             EditorPrefs.SetInt(kManualReloadDomain, 1);
 
-            //编辑器设置 projectsetting->editor->enterPlayModeSetting
             EditorSettings.enterPlayModeOptionsEnabled = true;
             EditorSettings.enterPlayModeOptions = EnterPlayModeOptions.DisableDomainReload;
 
@@ -225,7 +223,7 @@ namespace UNIHper.Editor
         [MenuItem(menuDisenableManualReload, priority = 23)]
         static void DisableManualReloadDomain()
         {
-            Debug.Log("<color=cyan>关闭手动 Reload Domain </color>");
+            Debug.Log("<color=green>关闭手动 Reload Domain </color>");
 
             Menu.SetChecked(menuEnableManualReload, false);
             Menu.SetChecked(menuDisenableManualReload, true);
@@ -237,7 +235,7 @@ namespace UNIHper.Editor
         }
 
         [MenuItem(menuReloadDomain, priority = 24)]
-        static void ManualReload()
+        public static void ManualReload()
         {
             if (IsManualReload)
             {
