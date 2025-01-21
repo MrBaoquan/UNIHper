@@ -5,6 +5,8 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
+#pragma warning disable 0618
+
 namespace SRDebugger.Editor
 {
     public partial class SRDebugEditor
@@ -17,13 +19,22 @@ namespace SRDebugger.Editor
             foreach (BuildTargetGroup targetGroup in GetAllBuildTargetGroups())
             {
                 // Use hash set to remove duplicates.
-                List<string> defines = PlayerSettings.GetScriptingDefineSymbolsForGroup(targetGroup).Split(';').ToList();
+                List<string> defines = PlayerSettings
+                    .GetScriptingDefineSymbolsForGroup(targetGroup)
+                    .Split(';')
+                    .ToList();
 
                 bool alreadyExists = false;
 
                 for (var i = 0; i < defines.Count; i++)
                 {
-                    if (string.Equals(define, defines[i], StringComparison.InvariantCultureIgnoreCase))
+                    if (
+                        string.Equals(
+                            define,
+                            defines[i],
+                            StringComparison.InvariantCultureIgnoreCase
+                        )
+                    )
                     {
                         alreadyExists = true;
                         if (!enabled)
@@ -38,12 +49,19 @@ namespace SRDebugger.Editor
                     defines.Add(define);
                 }
 
-                PlayerSettings.SetScriptingDefineSymbolsForGroup(targetGroup, string.Join(";", defines.ToArray()));
+                PlayerSettings.SetScriptingDefineSymbolsForGroup(
+                    targetGroup,
+                    string.Join(";", defines.ToArray())
+                );
             }
         }
+
         static void ForceRecompile()
         {
-            AssetDatabase.ImportAsset(SRInternalEditorUtil.GetAssetPath("StompyRobot.SRDebugger.asmdef"), ImportAssetOptions.ForceUpdate);
+            AssetDatabase.ImportAsset(
+                SRInternalEditorUtil.GetAssetPath("StompyRobot.SRDebugger.asmdef"),
+                ImportAssetOptions.ForceUpdate
+            );
         }
 
         static IEnumerable<BuildTargetGroup> GetAllBuildTargetGroups()
@@ -57,7 +75,8 @@ namespace SRDebugger.Editor
                 string name = names[i];
                 BuildTargetGroup value = (BuildTargetGroup)values.GetValue(i);
 
-                if (value == BuildTargetGroup.Unknown) continue;
+                if (value == BuildTargetGroup.Unknown)
+                    continue;
 
                 MemberInfo[] member = enumType.GetMember(name);
                 MemberInfo entry = member.FirstOrDefault(p => p.DeclaringType == enumType);
@@ -66,7 +85,8 @@ namespace SRDebugger.Editor
                 {
                     Debug.LogErrorFormat(
                         "[SRDebugger] Unhandled build target: {0}. SRDebugger disabled state may not be applied correctly to this platform.",
-                        name);
+                        name
+                    );
                     continue;
                 }
 

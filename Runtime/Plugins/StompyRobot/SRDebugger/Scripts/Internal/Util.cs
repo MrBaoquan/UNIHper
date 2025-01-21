@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
 
+#pragma warning disable 0618
+
 namespace SRDebugger.Internal
 {
     using System.Collections.Generic;
@@ -27,9 +29,9 @@ namespace SRDebugger.Internal
                     case RuntimePlatform.WSAPlayerX64:
                     case RuntimePlatform.WSAPlayerX86:
 #else
-					case RuntimePlatform.MetroPlayerARM:
-					case RuntimePlatform.MetroPlayerX64:
-					case RuntimePlatform.MetroPlayerX86:
+                    case RuntimePlatform.MetroPlayerARM:
+                    case RuntimePlatform.MetroPlayerX64:
+                    case RuntimePlatform.MetroPlayerX86:
 #endif
                         return true;
 
@@ -63,7 +65,9 @@ namespace SRDebugger.Internal
                 return false;
             }
 
-            Debug.LogWarning("[SRDebugger] No EventSystem found in scene - creating a default one. Disable this behaviour in Window -> SRDebugger -> Settings Window -> Advanced)");
+            Debug.LogWarning(
+                "[SRDebugger] No EventSystem found in scene - creating a default one. Disable this behaviour in Window -> SRDebugger -> Settings Window -> Advanced)"
+            );
 
             CreateDefaultEventSystem();
             return true;
@@ -71,7 +75,9 @@ namespace SRDebugger.Internal
 
         public static void CreateDefaultEventSystem()
         {
-            var go = new GameObject("EventSystem (Created by SRDebugger, disable in Window -> SRDebugger -> Settings Window -> Advanced)");
+            var go = new GameObject(
+                "EventSystem (Created by SRDebugger, disable in Window -> SRDebugger -> Settings Window -> Advanced)"
+            );
             go.AddComponent<EventSystem>();
 
 #if ENABLE_INPUT_SYSTEM && ENABLE_LEGACY_INPUT_MANAGER
@@ -79,11 +85,15 @@ namespace SRDebugger.Internal
             {
                 case Settings.UIModes.NewInputSystem:
                     AddInputSystem(go);
-                    Debug.LogWarning("[SRDebugger] Automatically generated EventSystem is using Unity Input System (can be changed to use Legacy Input in Window -> SRDebugger -> Settings Window -> Advanced)");
+                    Debug.LogWarning(
+                        "[SRDebugger] Automatically generated EventSystem is using Unity Input System (can be changed to use Legacy Input in Window -> SRDebugger -> Settings Window -> Advanced)"
+                    );
                     break;
                 case Settings.UIModes.LegacyInputSystem:
                     AddLegacyInputSystem(go);
-                    Debug.LogWarning("[SRDebugger] Automatically generated EventSystem is using Legacy Input (can be changed to use Unity Input System in Window -> SRDebugger -> Settings Window -> Advanced)");
+                    Debug.LogWarning(
+                        "[SRDebugger] Automatically generated EventSystem is using Legacy Input (can be changed to use Unity Input System in Window -> SRDebugger -> Settings Window -> Advanced)"
+                    );
                     break;
             }
 #elif ENABLE_INPUT_SYSTEM
@@ -99,7 +109,7 @@ namespace SRDebugger.Internal
             go.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
 
             // Disable/re-enable to force some initialization.
-            // fix for input not being recognized until component is toggled off then on 
+            // fix for input not being recognized until component is toggled off then on
             go.SetActive(false);
             go.SetActive(true);
         }
@@ -122,12 +132,17 @@ namespace SRDebugger.Internal
             var options = new List<OptionDefinition>();
 
 #if NETFX_CORE
-			var members = obj.GetType().GetTypeInfo().DeclaredMembers;
+            var members = obj.GetType().GetTypeInfo().DeclaredMembers;
 #else
 
-            var members =
-                obj.GetType().GetMembers(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty |
-                                         BindingFlags.SetProperty | BindingFlags.InvokeMethod);
+            var members = obj.GetType()
+                .GetMembers(
+                    BindingFlags.Instance
+                        | BindingFlags.Public
+                        | BindingFlags.GetProperty
+                        | BindingFlags.SetProperty
+                        | BindingFlags.InvokeMethod
+                );
 
 #endif
 
@@ -136,7 +151,10 @@ namespace SRDebugger.Internal
             foreach (var memberInfo in members)
             {
                 // Skip any properties that are from built-in Unity types (e.g. Behaviour, MonoBehaviour)
-                if (memberInfo.DeclaringType != null && memberInfo.DeclaringType.Assembly == ignoreAssembly)
+                if (
+                    memberInfo.DeclaringType != null
+                    && memberInfo.DeclaringType.Assembly == ignoreAssembly
+                )
                 {
                     continue;
                 }
@@ -166,12 +184,12 @@ namespace SRDebugger.Internal
 
                     // Only allow properties with public read/write
 #if NETFX_CORE
-					if(propertyInfo.GetMethod == null)
-						continue;
-					
-					// Ignore static members
-					if (propertyInfo.GetMethod.IsStatic)
-						continue;
+                    if (propertyInfo.GetMethod == null)
+                        continue;
+
+                    // Ignore static members
+                    if (propertyInfo.GetMethod.IsStatic)
+                        continue;
 #else
                     if (propertyInfo.GetGetMethod() == null)
                     {
@@ -185,8 +203,14 @@ namespace SRDebugger.Internal
                     }
 #endif
 
-                    options.Add(new OptionDefinition(name, category, sortPriority,
-                        new SRF.Helpers.PropertyReference(obj, propertyInfo)));
+                    options.Add(
+                        new OptionDefinition(
+                            name,
+                            category,
+                            sortPriority,
+                            new SRF.Helpers.PropertyReference(obj, propertyInfo)
+                        )
+                    );
                 }
                 else if (memberInfo is MethodInfo)
                 {
@@ -198,13 +222,22 @@ namespace SRDebugger.Internal
                     }
 
                     // Skip methods with parameters or non-void return type
-                    if (methodInfo.ReturnType != typeof (void) || methodInfo.GetParameters().Length > 0)
+                    if (
+                        methodInfo.ReturnType != typeof(void)
+                        || methodInfo.GetParameters().Length > 0
+                    )
                     {
                         continue;
                     }
 
-                    options.Add(new OptionDefinition(name, category, sortPriority,
-                        new SRF.Helpers.MethodReference(obj, methodInfo)));
+                    options.Add(
+                        new OptionDefinition(
+                            name,
+                            category,
+                            sortPriority,
+                            new SRF.Helpers.MethodReference(obj, methodInfo)
+                        )
+                    );
                 }
             }
 

@@ -4,7 +4,7 @@
 // http://www.digitalruby.com
 // Source code may be used for personal or commercial projects.
 // Source code may NOT be redistributed or sold.
-// 
+//
 
 using System.Collections;
 using System.Collections.Generic;
@@ -12,6 +12,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+
+#pragma warning disable 0618
 
 namespace DigitalRubyShared
 {
@@ -58,32 +60,46 @@ namespace DigitalRubyShared
     public class FingersDPadScript : MonoBehaviour
     {
         /// <summary>The background image to use for the DPad. This should contain up, right, down, left and center in unselected state.</summary>
-        [Tooltip("The background image to use for the DPad. This should contain up, right, down, left and center in unselected state.")]
+        [Tooltip(
+            "The background image to use for the DPad. This should contain up, right, down, left and center in unselected state."
+        )]
         public UnityEngine.UI.Image DPadBackgroundImage;
 
         /// <summary>The up image to use for the DPad for selected state. Alpha pixel of less than MinAlphaForTouch will not be selectable.</summary>
-        [Tooltip("The up image to use for the DPad for selected state. Alpha pixel of less than MinAlphaForTouch will not be selectable.")]
+        [Tooltip(
+            "The up image to use for the DPad for selected state. Alpha pixel of less than MinAlphaForTouch will not be selectable."
+        )]
         public UnityEngine.UI.Image DPadUpImageSelected;
 
         /// <summary>The right image to use for the DPad for selected state. Alpha pixel of less than MinAlphaForTouch will not be selectable.</summary>
-        [Tooltip("The right image to use for the DPad for selected state. Alpha pixel of less than MinAlphaForTouch will not be selectable.")]
+        [Tooltip(
+            "The right image to use for the DPad for selected state. Alpha pixel of less than MinAlphaForTouch will not be selectable."
+        )]
         public UnityEngine.UI.Image DPadRightImageSelected;
 
         /// <summary>The down image to use for the DPad for selected state. Alpha pixel of less than MinAlphaForTouch will not be selectable.</summary>
-        [Tooltip("The down image to use for the DPad for selected state. Alpha pixel of less than MinAlphaForTouch will not be selectable.")]
+        [Tooltip(
+            "The down image to use for the DPad for selected state. Alpha pixel of less than MinAlphaForTouch will not be selectable."
+        )]
         public UnityEngine.UI.Image DPadDownImageSelected;
 
         /// <summary>The left image to use for the DPad for selected state. Alpha pixel of less than MinAlphaForTouch will not be selectable.</summary>
-        [Tooltip("The left image to use for the DPad for selected state. Alpha pixel of less than MinAlphaForTouch will not be selectable.")]
+        [Tooltip(
+            "The left image to use for the DPad for selected state. Alpha pixel of less than MinAlphaForTouch will not be selectable."
+        )]
         public UnityEngine.UI.Image DPadLeftImageSelected;
 
         /// <summary>The center image to use for the DPad for selected state. Alpha pixel of less than MinAlphaForTouch will not be selectable.</summary>
-        [Tooltip("The center image to use for the DPad for selected state. Alpha pixel of less than MinAlphaForTouch will not be selectable.")]
+        [Tooltip(
+            "The center image to use for the DPad for selected state. Alpha pixel of less than MinAlphaForTouch will not be selectable."
+        )]
         public UnityEngine.UI.Image DPadCenterImageSelected;
 
         /// <summary>Touch radius in units (usually inches). Set to lowest for single pixel accuracy, or larger if you want more than one dpad button interactable at once. You'll need to test this to make sure the DPad works how you expect for an average finger size and your screen size.</summary>
-        [Tooltip("Touch radius in units (usually inches). Set to lowest for single pixel accuracy, or larger if you want more than one dpad button interactable at once. " +
-            "You'll need to test this to make sure the DPad works how you expect for an average finger size and your screen size.")]
+        [Tooltip(
+            "Touch radius in units (usually inches). Set to lowest for single pixel accuracy, or larger if you want more than one dpad button interactable at once. "
+                + "You'll need to test this to make sure the DPad works how you expect for an average finger size and your screen size."
+        )]
         [Range(0.01f, 1.0f)]
         public float TouchRadiusInUnits = 0.125f;
 
@@ -109,14 +125,20 @@ namespace DigitalRubyShared
             {
                 if (image == null || image.canvas.renderMode == RenderMode.WorldSpace)
                 {
-                    Debug.LogError("Fingers dpad script requires that all images be set and that the Canvas be in ScreenSpace* mode.");
+                    Debug.LogError(
+                        "Fingers dpad script requires that all images be set and that the Canvas be in ScreenSpace* mode."
+                    );
                 }
             }
         }
-
 #endif
 
-        private void CheckForOverlap<T>(Vector2 point, T gesture, System.Action<FingersDPadScript, FingersDPadItem, T> action) where T : DigitalRubyShared.GestureRecognizer
+        private void CheckForOverlap<T>(
+            Vector2 point,
+            T gesture,
+            System.Action<FingersDPadScript, FingersDPadItem, T> action
+        )
+            where T : DigitalRubyShared.GestureRecognizer
         {
             if (action == null)
             {
@@ -124,7 +146,11 @@ namespace DigitalRubyShared
             }
 
             FingersDPadItem item = FingersDPadItem.None;
-            int count = Physics2D.OverlapCircleNonAlloc(point, DeviceInfo.UnitsToPixels(TouchRadiusInUnits), overlap);
+            int count = Physics2D.OverlapCircleNonAlloc(
+                point,
+                DeviceInfo.UnitsToPixels(TouchRadiusInUnits),
+                overlap
+            );
             float horizontal = 0.0f;
             float vertical = 0.0f;
             for (int i = 0; i < count; i++)
@@ -164,11 +190,17 @@ namespace DigitalRubyShared
                 action(this, item, gesture);
                 if (horizontal != 0.0f && crossPlatformInputHorizontalAxisObject != null)
                 {
-                    FingersCrossPlatformInputReflectionScript.UpdateVirtualAxis(crossPlatformInputHorizontalAxisObject, horizontal);
+                    FingersCrossPlatformInputReflectionScript.UpdateVirtualAxis(
+                        crossPlatformInputHorizontalAxisObject,
+                        horizontal
+                    );
                 }
                 if (vertical != 0.0f && crossPlatformInputVerticalAxisObject != null)
                 {
-                    FingersCrossPlatformInputReflectionScript.UpdateVirtualAxis(crossPlatformInputVerticalAxisObject, vertical);
+                    FingersCrossPlatformInputReflectionScript.UpdateVirtualAxis(
+                        crossPlatformInputVerticalAxisObject,
+                        vertical
+                    );
                 }
             }
         }
@@ -184,7 +216,10 @@ namespace DigitalRubyShared
 
         private void PanGestureUpdated(DigitalRubyShared.GestureRecognizer gesture)
         {
-            if (gesture.State == GestureRecognizerState.Began || gesture.State == GestureRecognizerState.Executing)
+            if (
+                gesture.State == GestureRecognizerState.Began
+                || gesture.State == GestureRecognizerState.Executing
+            )
             {
                 /*
                 if (gesture.State == GestureRecognizerState.Began && MoveDPadToGestureStartLocation)
@@ -193,9 +228,16 @@ namespace DigitalRubyShared
                 }
                 */
                 DisableButtons();
-                CheckForOverlap(new Vector2(gesture.FocusX, gesture.FocusY), PanGesture, DPadItemPanned);
+                CheckForOverlap(
+                    new Vector2(gesture.FocusX, gesture.FocusY),
+                    PanGesture,
+                    DPadItemPanned
+                );
             }
-            else if (gesture.State == GestureRecognizerState.Ended || gesture.State == GestureRecognizerState.Failed)
+            else if (
+                gesture.State == GestureRecognizerState.Ended
+                || gesture.State == GestureRecognizerState.Failed
+            )
             {
                 DisableButtons();
             }
@@ -205,17 +247,27 @@ namespace DigitalRubyShared
         {
             if (gesture.State == GestureRecognizerState.Ended)
             {
-                CheckForOverlap(new Vector2(gesture.FocusX, gesture.FocusY), TapGesture, DPadItemTapped);
+                CheckForOverlap(
+                    new Vector2(gesture.FocusX, gesture.FocusY),
+                    TapGesture,
+                    DPadItemTapped
+                );
                 DisableButtons();
             }
         }
 
         private void OnEnable()
         {
-
 #if UNITY_EDITOR
 
-            ValidateImages(DPadBackgroundImage, DPadUpImageSelected, DPadRightImageSelected, DPadDownImageSelected, DPadLeftImageSelected, DPadCenterImageSelected);
+            ValidateImages(
+                DPadBackgroundImage,
+                DPadUpImageSelected,
+                DPadRightImageSelected,
+                DPadDownImageSelected,
+                DPadLeftImageSelected,
+                DPadCenterImageSelected
+            );
 
 #endif
 
@@ -234,10 +286,21 @@ namespace DigitalRubyShared
             TapGesture.StateUpdated += TapGestureUpdated;
             TapGesture.AllowSimultaneousExecution(PanGesture);
 
-            if (!string.IsNullOrEmpty(CrossPlatformInputHorizontalAxisName) && !string.IsNullOrEmpty(CrossPlatformInputVerticalAxisName))
+            if (
+                !string.IsNullOrEmpty(CrossPlatformInputHorizontalAxisName)
+                && !string.IsNullOrEmpty(CrossPlatformInputVerticalAxisName)
+            )
             {
-                crossPlatformInputHorizontalAxisObject = FingersCrossPlatformInputReflectionScript.RegisterVirtualAxis(CrossPlatformInputHorizontalAxisName, out crossPlatformInputNewlyRegistered);
-                crossPlatformInputVerticalAxisObject = FingersCrossPlatformInputReflectionScript.RegisterVirtualAxis(CrossPlatformInputVerticalAxisName, out crossPlatformInputNewlyRegistered);
+                crossPlatformInputHorizontalAxisObject =
+                    FingersCrossPlatformInputReflectionScript.RegisterVirtualAxis(
+                        CrossPlatformInputHorizontalAxisName,
+                        out crossPlatformInputNewlyRegistered
+                    );
+                crossPlatformInputVerticalAxisObject =
+                    FingersCrossPlatformInputReflectionScript.RegisterVirtualAxis(
+                        CrossPlatformInputVerticalAxisName,
+                        out crossPlatformInputNewlyRegistered
+                    );
             }
 
             FingersScript.Instance.AddGesture(TapGesture);
@@ -250,22 +313,38 @@ namespace DigitalRubyShared
                 FingersScript.Instance.RemoveGesture(TapGesture);
             }
 
-            if (crossPlatformInputNewlyRegistered && !string.IsNullOrEmpty(CrossPlatformInputHorizontalAxisName) && !string.IsNullOrEmpty(CrossPlatformInputVerticalAxisName))
+            if (
+                crossPlatformInputNewlyRegistered
+                && !string.IsNullOrEmpty(CrossPlatformInputHorizontalAxisName)
+                && !string.IsNullOrEmpty(CrossPlatformInputVerticalAxisName)
+            )
             {
-                FingersCrossPlatformInputReflectionScript.UnRegisterVirtualAxis(CrossPlatformInputHorizontalAxisName);
-                FingersCrossPlatformInputReflectionScript.UnRegisterVirtualAxis(CrossPlatformInputVerticalAxisName);
+                FingersCrossPlatformInputReflectionScript.UnRegisterVirtualAxis(
+                    CrossPlatformInputHorizontalAxisName
+                );
+                FingersCrossPlatformInputReflectionScript.UnRegisterVirtualAxis(
+                    CrossPlatformInputVerticalAxisName
+                );
             }
         }
 
         /// <summary>
         /// Fires when a dpad item is tapped
         /// </summary>
-        public System.Action<FingersDPadScript, FingersDPadItem, TapGestureRecognizer> DPadItemTapped;
+        public System.Action<
+            FingersDPadScript,
+            FingersDPadItem,
+            TapGestureRecognizer
+        > DPadItemTapped;
 
         /// <summary>
         /// Fires when a dpad item is panned on
         /// </summary>
-        public System.Action<FingersDPadScript, FingersDPadItem, PanGestureRecognizer> DPadItemPanned;
+        public System.Action<
+            FingersDPadScript,
+            FingersDPadItem,
+            PanGestureRecognizer
+        > DPadItemPanned;
 
         /// <summary>
         /// Pan gesture

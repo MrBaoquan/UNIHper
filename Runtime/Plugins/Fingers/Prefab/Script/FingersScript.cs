@@ -14,6 +14,8 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
+#pragma warning disable 0618
+
 namespace DigitalRubyShared
 {
     /// <summary>
