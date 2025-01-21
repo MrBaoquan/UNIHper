@@ -3,6 +3,5 @@
 *.tar.gz
 *.tar.gz.meta
 
-**/Odin Inspector/
 **/Sirenix/Demos/
 **/Sirenix/Demos.meta
