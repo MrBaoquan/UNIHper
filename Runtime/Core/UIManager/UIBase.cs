@@ -4,6 +4,7 @@ using UniRx;
 using UnityEngine;
 using UnityEngine.Events;
 using System.Threading;
+using DNHper;
 
 namespace UNIHper.UI
 {
@@ -53,6 +54,9 @@ namespace UNIHper.UI
         internal UIType __Type = UIType.Normal;
         public UIType Type => __Type;
         public string Key => __UIKey;
+
+        // 控制animator是否自动复位
+        public bool RebindAnimator { get; set; } = true;
 
         /// <summary>
         /// 跟随UI显示/隐藏的Disposable集合
@@ -213,8 +217,14 @@ namespace UNIHper.UI
                 return;
             }
 
-            _status = UIStatus.Hidden;
+            if (RebindAnimator)
+            {
+                transform
+                    .GetComponentsInChildren<Animator>()
+                    .ForEach(_animator => _animator.Rebind());
+            }
 
+            _status = UIStatus.Hidden;
             this.gameObject.SetActive(false);
             this.OnHidden();
             onHiddenEvent.Invoke();

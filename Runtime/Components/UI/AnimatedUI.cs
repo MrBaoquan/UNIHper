@@ -268,31 +268,13 @@ namespace UNIHper.UI
 
         private Task getHideTask(CancellationToken cancellationToken)
         {
-            bool _isExpired = false;
             if (driver == UIAnimionDriver.Animator)
             {
                 if (UIHide is null)
                     return Task.CompletedTask;
-                return Observable
-                    .Create<Unit>(_observer =>
-                    {
-                        this.Get<Animator>()
-                            .Play(
-                                "UIHide",
-                                _animator =>
-                                {
-                                    if (_isExpired)
-                                        return;
-                                    _animator.Rebind();
-                                    _observer.OnNext(Unit.Default);
-                                    _observer.OnCompleted();
-                                }
-                            );
-                        return Disposable.Create(() =>
-                        {
-                            _isExpired = true;
-                        });
-                    })
+
+                return this.Get<Animator>()
+                    .PlayToEndAsObservable("UIHide")
                     .ToTask(cancellationToken);
             }
             else if (driver == UIAnimionDriver.Tweener)

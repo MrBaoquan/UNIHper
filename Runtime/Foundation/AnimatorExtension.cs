@@ -4,6 +4,8 @@ using UnityEngine;
 
 namespace UNIHper
 {
+    using System.Threading;
+
     using System.Threading.Tasks;
 
     using UniRx;
@@ -49,7 +51,7 @@ namespace UNIHper
             else
             {
                 animator
-                    .switchToState(stateName)
+                    .SwitchStateAsObservable(stateName)
                     .Subscribe(_ =>
                     {
                         animator.SeekToFrame(frame);
@@ -72,7 +74,7 @@ namespace UNIHper
             else
             {
                 animator
-                    .switchToState(stateName)
+                    .SwitchStateAsObservable(stateName)
                     .Subscribe(_ =>
                     {
                         animator.Seek(time);
@@ -122,7 +124,10 @@ namespace UNIHper
             animator.speed = 1;
         }
 
-        private static IObservable<Animator> switchToState(this Animator animator, string stateName)
+        public static IObservable<Animator> SwitchStateAsObservable(
+            this Animator animator,
+            string stateName
+        )
         {
             animator.Play(stateName, 0, 0);
             return Observable
@@ -132,31 +137,32 @@ namespace UNIHper
                 .Select(_ => animator);
         }
 
+        public static IObservable<Animator> PlayToEndAsObservable(
+            this Animator animator,
+            string stateName
+        )
+        {
+            return SwitchStateAsObservable(animator, stateName)
+                .SelectMany(
+                    _animator =>
+                        Observable
+                            .EveryUpdate()
+                            .Where(
+                                _ => _animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= 1
+                            )
+                            .First()
+                            .Select(_ => _animator)
+                );
+        }
+
         // csharpier-ignore
-        public static void Play(this Animator animator, string stateName, Action<Animator> onCallback = null)
+        public static IDisposable Play(this Animator animator, string stateName, Action<Animator> onCallback = null)
         {
             if(animator.gameObject.activeInHierarchy == false)
-                return;
+                return Disposable.Empty;
             
-            animator.Play(stateName, 0, 0);
-            
-            Observable
-                .NextFrame()
-                .Subscribe(_ =>
-                {
-                    float _duration = animator.GetCurrentAnimatorStateInfo(0).length;
-                    if(_duration <= 0){
-                        Debug.LogWarning("Animator duration is zero.");
-                        onCallback?.Invoke(animator);
-                        return;
-                    }
-                    Observable
-                        .Timer(TimeSpan.FromSeconds(_duration))
-                        .Subscribe(_1 =>
-                        {
-                            onCallback?.Invoke(animator);
-                        });
-                });
+            return PlayToEndAsObservable(animator, stateName)
+                .Subscribe(_ => onCallback?.Invoke(animator));
         }
 
         public static bool IsState(this Animator animator, string stateName, int layer = 0)
