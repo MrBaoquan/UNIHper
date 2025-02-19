@@ -2,8 +2,9 @@ Shader "UNIHper/Unlit/ImageBrightnessEnhancer"
 {
     Properties
     {
-        _MainTex ("Texture", 2D) = "white" {}             // 主纹理
-        _BrightnessMultiplier ("Brightness Multiplier", Range(1.0, 100.0)) = 1.0 // 亮度比例提升参数
+        _MainTex ("Texture", 2D) = "white" {}                 // 主纹理
+        _BrightnessMultiplier ("Brightness Multiplier", Range(1.0, 100.0)) = 1.0  // 亮度比例提升参数
+        _Color ("Tint", Color) = (1, 1, 1, 1)      // 新增 Tint 颜色参数（默认白色）
     }
 
     SubShader
@@ -33,6 +34,7 @@ Shader "UNIHper/Unlit/ImageBrightnessEnhancer"
 
             sampler2D _MainTex;
             float _BrightnessMultiplier;
+            float4 _Color;  // Tint 颜色参数
 
             v2f vert (appdata v)
             {
@@ -58,6 +60,9 @@ Shader "UNIHper/Unlit/ImageBrightnessEnhancer"
                 {
                     color.rgb *= newLuminance / luminance;
                 }
+
+                // 通过 Tint 色调对颜色进行调整
+                color.rgb *= _Color.rgb;
 
                 // 确保颜色值在合法范围
                 color.rgb = saturate(color.rgb);
