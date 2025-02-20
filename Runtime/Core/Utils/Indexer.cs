@@ -11,21 +11,12 @@ namespace UNIHper
     public class Indexer
     {
         public bool Loop { get; set; } = true;
-        private int maxIndex;
-        public int Max
-        {
-            get => maxIndex;
-        }
-        private int minIndex = 0;
-        public int Min
-        {
-            get => minIndex;
-        }
-        private int current = 0;
-        public int Current
-        {
-            get { return current; }
-        }
+
+        public int Max { get; private set; }
+
+        public int Min { get; private set; }
+
+        public int Current { get; private set; }
 
         private UnityEvent<int> onValueChanged = new UnityEvent<int>();
 
@@ -59,47 +50,71 @@ namespace UNIHper
 
         public Indexer(int Min, int Max)
         {
-            SetMin(Min);
-            SetMax(Max);
+            SetMinAndMax(Min, Max, false);
         }
 
         public Indexer(int Min, int Max, bool Loop)
         {
-            SetMin(Min);
-            SetMax(Max);
+            SetMinAndMax(Min, Max, false);
             this.Loop = Loop;
         }
 
         /// <summary>
         /// 设置索引最大值
         /// </summary>
-        /// <param name="Max">索引最大值</param>
-        public void SetMax(int Max)
+        /// <param name="MaxVal">索引最大值</param>
+        public void SetMax(int MaxVal)
         {
-            if (Max < minIndex)
+            if (MaxVal < Min)
             {
                 Debug.LogError("Max index must greater than Min index!");
                 return;
             }
-            maxIndex = Max;
-            if (Current > maxIndex)
-                Set(maxIndex);
+            Max = MaxVal;
+            if (Current > Max)
+                Set(MaxVal);
         }
 
         /// <summary>
         /// 设置索引最小值
         /// </summary>
-        /// <param name="Min">索引最小值</param>
-        public void SetMin(int Min)
+        /// <param name="MinVal">索引最小值</param>
+        public void SetMin(int MinVal)
         {
-            if (Min > maxIndex)
+            if (MinVal > Max)
             {
                 Debug.LogError("Min index must less than Max index!");
                 return;
             }
-            minIndex = Min;
-            if (Current < minIndex)
-                Set(minIndex);
+            this.Min = MinVal;
+            if (Current < Min)
+                Set(Min);
+        }
+
+        public bool SetMinAndMax(int MinVal, int MaxVal, bool NotifyIfChanged = true)
+        {
+            if (MaxVal < MinVal)
+            {
+                Debug.LogError("Max index must greater than Min index!");
+                return false;
+            }
+            this.Min = MinVal;
+            this.Max = MaxVal;
+            // if (Current < minIndex)
+            // {
+            //     if (NotifyIfChanged)
+            //         Set(minIndex);
+            //     else
+            //         SetValueWithoutNotify(minIndex);
+            // }
+            // else if (Current > maxIndex)
+            // {
+            //     if (NotifyIfChanged)
+            //         Set(maxIndex);
+            //     else
+            //         SetValueWithoutNotify(maxIndex);
+            // }
+            return true;
         }
 
         /// <summary>
@@ -115,47 +130,47 @@ namespace UNIHper
         public int Set(int newIndex)
         {
             var _newIndex = limitIndex(newIndex);
-            if (current != _newIndex)
+            if (Current != _newIndex)
             {
-                current = _newIndex;
-                LastSet = current;
-                onValueChanged.Invoke(current);
+                Current = _newIndex;
+                LastSet = Current;
+                onValueChanged.Invoke(Current);
             }
-            return current;
+            return Current;
         }
 
         public int SetValueWithoutNotify(int newIndex)
         {
             var _newIndex = limitIndex(newIndex);
-            if (current != _newIndex)
+            if (Current != _newIndex)
             {
-                current = _newIndex;
-                LastSet = current;
+                Current = _newIndex;
+                LastSet = Current;
             }
-            return current;
+            return Current;
         }
 
         public int SetValueAndForceNotify(int newIndex)
         {
             var _newIndex = limitIndex(newIndex);
-            if (current != _newIndex)
+            if (Current != _newIndex)
             {
-                current = _newIndex;
-                LastSet = current;
-                onValueChanged.Invoke(current);
+                Current = _newIndex;
+                LastSet = Current;
+                onValueChanged.Invoke(Current);
             }
             else
             {
-                onValueChanged.Invoke(current);
+                onValueChanged.Invoke(Current);
             }
 
-            return current;
+            return Current;
         }
 
         public int Next()
         {
             Set(NextValue());
-            return current;
+            return Current;
         }
 
         public int Next(int index)
@@ -167,7 +182,7 @@ namespace UNIHper
         public int Prev()
         {
             Set(PrevValue());
-            return current;
+            return Current;
         }
 
         public int Prev(int index)
@@ -183,7 +198,7 @@ namespace UNIHper
         public int SetToMin()
         {
             Set(Min);
-            return current;
+            return Current;
         }
 
         /// <summary>
@@ -193,7 +208,7 @@ namespace UNIHper
         public int SetToMax()
         {
             Set(Max);
-            return current;
+            return Current;
         }
 
         /// <summary>
@@ -202,14 +217,14 @@ namespace UNIHper
         /// <returns></returns>
         public int Notify()
         {
-            SetValueAndForceNotify(current);
-            return current;
+            SetValueAndForceNotify(Current);
+            return Current;
         }
 
         public int PrevValue()
         {
             if (Loop)
-                return (int)Mathf.Repeat(this.Current - 1, Max - Min + 1) + Min;
+                return (int)Mathf.Repeat(this.Current - 1 - Min, Max - Min + 1) + Min;
             else
                 return (int)Mathf.Clamp(this.Current - 1, Min, Max);
         }
@@ -221,7 +236,7 @@ namespace UNIHper
         public int NextValue()
         {
             if (Loop)
-                return (int)Mathf.Repeat(this.Current + 1, Max - Min + 1) + Min;
+                return (int)Mathf.Repeat(this.Current + 1 - Min, Max - Min + 1) + Min;
             else
                 return (int)Mathf.Clamp(this.Current + 1, Min, Max);
         }
@@ -233,13 +248,13 @@ namespace UNIHper
         public bool CheckNextOverflow()
         {
             var _next = this.Current + 1;
-            return _next > maxIndex;
+            return _next > Max;
         }
 
         public bool CheckPrevOverflow()
         {
             var _next = this.Current - 1;
-            return _next < minIndex;
+            return _next < Min;
         }
 
         public bool IsLast()
@@ -254,13 +269,14 @@ namespace UNIHper
 
         private int limitIndex(int newIndex)
         {
-            if (newIndex < minIndex || newIndex > maxIndex)
+            if (newIndex < Min || newIndex > Max)
             {
                 if (Loop)
-                    newIndex = (int)Mathf.Repeat(newIndex, maxIndex - minIndex + 1) + Min;
+                    newIndex = (int)Mathf.Repeat(newIndex - Min, Max - Min + 1) + Min;
                 else
-                    newIndex = Mathf.Clamp(newIndex, minIndex, maxIndex);
+                    newIndex = Mathf.Clamp(newIndex, Min, Max);
             }
+
             return newIndex;
         }
     }
