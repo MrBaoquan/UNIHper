@@ -2,8 +2,6 @@
 #define SupportCustomYieldInstruction
 #endif
 
-#pragma warning disable 0618
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -512,7 +510,7 @@ namespace UniRx
 
                 try
                 {
-                    dispatcher = GameObject.FindObjectOfType<MainThreadDispatcher>();
+                    dispatcher = GameObject.FindFirstObjectByType<MainThreadDispatcher>();
                 }
                 catch
                 {
@@ -645,7 +643,9 @@ namespace UniRx
 
         public static void CullAllExcessDispatchers()
         {
-            var dispatchers = GameObject.FindObjectsOfType<MainThreadDispatcher>();
+            var dispatchers = GameObject.FindObjectsByType<MainThreadDispatcher>(
+                FindObjectsSortMode.None
+            );
             for (int i = 0; i < dispatchers.Length; i++)
             {
                 DestroyDispatcher(dispatchers[i]);
@@ -656,7 +656,7 @@ namespace UniRx
         {
             if (instance == this)
             {
-                instance = GameObject.FindObjectOfType<MainThreadDispatcher>();
+                instance = GameObject.FindFirstObjectByType<MainThreadDispatcher>();
                 initialized = instance != null;
 
                 /*

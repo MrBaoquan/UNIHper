@@ -204,27 +204,7 @@ namespace UNIHper
                 return;
             }
 
-            // listPlayer.JumpToItem((int)videoIndex);
-            // this.videoIndex.Set((int)videoIndex);
-
             _playDisposables.Clear();
-            // OnItemChangedAsObservable()
-            //     .First()
-            //     .Subscribe(_player =>
-            //     {
-            //         Debug.LogWarning("OnItemChangedAsObservable");
-            //         _player.Play(
-            //             videoPaths[videoIndex],
-            //             OnCompleted,
-            //             Loop,
-            //             StartTime,
-            //             EndTime,
-            //             seek2StartAfterFinished
-            //         );
-            //     })
-            //     .AddTo(_playDisposables);
-
-            Switch(videoIndex, true);
 
             SwitchAsObservable(videoIndex, StartTime)
                 .Subscribe(_player =>
@@ -381,7 +361,6 @@ namespace UNIHper
             //mediaPlayer.JumpToItem(mediaIndex);
             if (bAutoPlay)
             {
-                Debug.Log("Play: " + _mediaItem.mediaPath.Path);
                 // Play(videoPaths[mediaIndex], null, Loop, 0, 0, false);
                 Play(_mediaItem.mediaPath.Path, null, _mediaItem.loop, StartTime, EndTime, false);
             }
@@ -404,12 +383,12 @@ namespace UNIHper
             }
         }
 
-        public IObservable<AVProPlayer> SwitchAsObservable(string videoPath, double startTime)
+        public IObservable<AVProPlayer> SwitchAsObservable(string videoPath, double startTime = -1)
         {
             return SwitchAsObservable(FindVideoIndex(videoPath), startTime);
         }
 
-        public IObservable<AVProPlayer> SwitchAsObservable(int mediaIndex, double startTime = 0f)
+        public IObservable<AVProPlayer> SwitchAsObservable(int mediaIndex, double startTime = -1f)
         {
             return Observable.Create<AVProPlayer>(_observer =>
             {
@@ -418,18 +397,16 @@ namespace UNIHper
                     .First()
                     .Do(_player =>
                     {
-                        // Debug.Log("[debug] 视频切换完成, 暂停...");
                         _player.Pause();
                     })
                     .SelectMany(
                         _player =>
-                            _player.CurrentTime != startTime
-                                ? _player.SeekAsObservable(startTime)
-                                : Observable.Return(_player)
+                            (startTime == -1 || _player.CurrentTime == startTime)
+                                ? Observable.Return(_player)
+                                : _player.SeekAsObservable(startTime)
                     )
                     .Subscribe(_ =>
                     {
-                        // Debug.Log("[debug] 视频Seek完成");
                         _observer.OnNext(CurrentPlayer);
                         _observer.OnCompleted();
                     })

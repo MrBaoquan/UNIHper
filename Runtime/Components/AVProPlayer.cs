@@ -387,13 +387,11 @@ namespace UNIHper
             ClearPlayHandlers();
             return Observable.Create<AVProPlayer>(_observer =>
             {
-                // Debug.Log("seek start");
                 var disposable = new CompositeDisposable();
                 OnFinishedSeekingAsObservable()
                     .First()
                     .Subscribe(_ =>
                     {
-                        // Debug.Log("Seek Finished");
                         _observer.OnNext(this);
                         _observer.OnCompleted();
                     })
