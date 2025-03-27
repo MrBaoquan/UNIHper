@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using DNHper;
+using UnityEngine;
 
 namespace UNIHper.Network
 {
@@ -100,7 +101,6 @@ namespace UNIHper.Network
                             RemotePort = _ipEP.Port;
 
                             var _validBuf = _buffer.Slice(0, _received);
-                            UnityEngine.Debug.Log(_received);
                             pushMessage(
                                 new NetStringMessage
                                 {

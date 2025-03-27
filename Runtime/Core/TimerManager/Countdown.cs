@@ -29,6 +29,11 @@ public class Countdown
     public UnityEvent OnTimerEnd = new UnityEvent();
     public UnityEvent<float> OnTimerUpdate = new UnityEvent<float>();
 
+    public IObservable<float> OnTimerUpdateAsObservable()
+    {
+        return OnTimerUpdate.AsObservable();
+    }
+
     public void SetDuration(float durationInSeconds)
     {
         duration = durationInSeconds;

@@ -187,7 +187,7 @@ namespace UNIHper.Network
 
         protected virtual void onRemoteEndPointChanged() { }
 
-        IDisposable messageDispatcherHandler = null;
+        CompositeDisposable messageDispatcherHandler = null;
 
         UnityEvent<(UMessage Message, USocket Socket)> onMessageReceived =
             new UnityEvent<(UMessage Message, USocket Socket)>();
@@ -199,9 +199,10 @@ namespace UNIHper.Network
 
         protected void dispatchMessages()
         {
-            if (messageDispatcherHandler != null)
-                messageDispatcherHandler.Dispose();
-            messageDispatcherHandler = Observable
+            messageDispatcherHandler?.Dispose();
+
+            messageDispatcherHandler = new CompositeDisposable();
+            Observable
                 .EveryUpdate()
                 .Subscribe(_ =>
                 {
@@ -212,7 +213,8 @@ namespace UNIHper.Network
                         Managements.Event.Fire(_message);
                         _message = messageDispatcher.PopMessage();
                     }
-                });
+                })
+                .AddTo(messageDispatcherHandler);
         }
 
         protected UNetMsgReceiver MsgReceiver = null;

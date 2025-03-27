@@ -6,6 +6,42 @@ namespace UNIHper
 {
     public static class TextureExtension
     {
+        //
+        // Summary:
+        //     Crops a Texture2D into a new Texture2D.
+        public static Texture2D CropTexture(this Texture texture, Rect source)
+        {
+            RenderTexture active = RenderTexture.active;
+            RenderTexture renderTexture = (
+                RenderTexture.active = RenderTexture.GetTemporary(
+                    texture.width,
+                    texture.height,
+                    0,
+                    RenderTextureFormat.ARGB32,
+                    RenderTextureReadWrite.Default,
+                    8
+                )
+            );
+            bool sRGBWrite = GL.sRGBWrite;
+            GL.sRGBWrite = false;
+            GL.Clear(clearDepth: false, clearColor: true, new Color(1f, 1f, 1f, 0f));
+            Graphics.Blit(texture, renderTexture);
+            Texture2D texture2D = new Texture2D(
+                (int)source.width,
+                (int)source.height,
+                TextureFormat.ARGB32,
+                mipChain: true,
+                linear: false
+            );
+            texture2D.filterMode = FilterMode.Point;
+            texture2D.ReadPixels(source, 0, 0);
+            texture2D.Apply();
+            GL.sRGBWrite = sRGBWrite;
+            RenderTexture.active = active;
+            RenderTexture.ReleaseTemporary(renderTexture);
+            return texture2D;
+        }
+
         /// <summary>
         /// note: dont use this method in Update(), it will cause memory increase fast
         /// </summary>
@@ -241,11 +277,11 @@ namespace UNIHper
             return Sprite.Create(texture2D, rect, pivot);
         }
 
-        public static bool SaveToFile(this Texture2D texture2D, string savePath, int quality = 90)
+        public static bool SaveToFile(this Texture2D texture2D, string savePath)
         {
             try
             {
-                var _bytes = texture2D.EncodeToJPG(90);
+                var _bytes = texture2D.EncodeToPNG();
                 var _saveDir = Path.GetDirectoryName(savePath);
                 if (!Directory.Exists(_saveDir))
                 {

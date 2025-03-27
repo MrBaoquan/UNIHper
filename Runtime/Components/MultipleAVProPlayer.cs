@@ -159,8 +159,9 @@ namespace UNIHper
         {
             get
             {
-                if (CurrentPlayer == null)
+                if (CurrentPlayer == null || !CurrentPlayer.Ready2Play)
                     return 0;
+
                 return CurrentPlayer.CurrentFrame;
             }
         }

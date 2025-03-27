@@ -281,7 +281,8 @@ namespace UNIHper
 
         public static IObservable<Animator> PlayToEndAsObservable(
             this Animator animator,
-            string stateName
+            string stateName,
+            Func<Animator, bool> condition = null
         )
         {
             return SwitchAsObservable(animator, stateName)
@@ -289,11 +290,19 @@ namespace UNIHper
                     _animator =>
                         Observable
                             .EveryUpdate()
-                            .Where(
-                                _ => _animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= 1
+                            .Where(_ => animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= 1)
+                            .TakeWhile(
+                                _ =>
+                                    _animator.IsState(stateName)
+                                    && (condition == null || condition(_animator))
                             )
                             .First()
                             .Select(_ => _animator)
+                            .Catch<Animator, Exception>(ex =>
+                            {
+                                return Observable.Return<Animator>(null);
+                            })
+                            .Where(_ => _ != null)
                 );
         }
 
