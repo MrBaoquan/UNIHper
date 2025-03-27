@@ -5,6 +5,9 @@ using UnityEngine;
 [Serializable]
 public struct SerializableVector2
 {
+    public static SerializableVector2 zero => new SerializableVector2(0, 0);
+    public static SerializableVector2 one => new SerializableVector2(1, 1);
+
     [XmlAttribute]
     public float x { get; set; }
 
@@ -17,8 +20,25 @@ public struct SerializableVector2
 
     public static implicit operator Vector2(SerializableVector2 v) => new Vector3(v.x, v.y);
 
+    public static implicit operator Vector3(SerializableVector2 v) => new Vector3(v.x, v.y);
+
     public static implicit operator SerializableVector2(Vector2 v) =>
         new SerializableVector2(v.x, v.y);
+
+    public static implicit operator SerializableVector2(Vector3 v) =>
+        new SerializableVector2(v.x, v.y);
+
+    public static SerializableVector2 operator +(SerializableVector2 a, SerializableVector2 b) =>
+        new SerializableVector2(a.x + b.x, a.y + b.y);
+
+    public static SerializableVector2 operator -(SerializableVector2 a, SerializableVector2 b) =>
+        new SerializableVector2(a.x - b.x, a.y - b.y);
+
+    public static SerializableVector2 operator *(SerializableVector2 a, float d) =>
+        new SerializableVector2(a.x * d, a.y * d);
+
+    public static SerializableVector2 operator /(SerializableVector2 a, float d) =>
+        new SerializableVector2(a.x / d, a.y / d);
 }
 
 [Serializable]
@@ -41,6 +61,18 @@ public struct SerializableVector3
 
     public static implicit operator SerializableVector3(Vector3 v) =>
         new SerializableVector3(v.x, v.y, v.z);
+
+    public static SerializableVector3 operator +(SerializableVector3 a, SerializableVector3 b) =>
+        new SerializableVector3(a.x + b.x, a.y + b.y, a.z + b.z);
+
+    public static SerializableVector3 operator -(SerializableVector3 a, SerializableVector3 b) =>
+        new SerializableVector3(a.x - b.x, a.y - b.y, a.z - b.z);
+
+    public static SerializableVector3 operator *(SerializableVector3 a, float d) =>
+        new SerializableVector3(a.x * d, a.y * d, a.z * d);
+
+    public static SerializableVector3 operator /(SerializableVector3 a, float d) =>
+        new SerializableVector3(a.x / d, a.y / d, a.z / d);
 }
 
 [Serializable]
