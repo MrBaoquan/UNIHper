@@ -75,6 +75,9 @@ namespace UNIHper
         [XmlAttribute]
         public float LongTimeNoOperationTimeout = 300;
 
+        [XmlAttribute]
+        public float ResetPrimaryScreenInterval = 0;
+
         public ScreenConfig PrimaryScreen = new ScreenConfig() { KeepTop = true };
 
         [XmlArray("Displays")]
@@ -88,6 +91,12 @@ namespace UNIHper
 #if !UNITY_EDITOR && UNITY_STANDALONE_WIN
             activeAllDisplays();
             executeWindowSettings();
+
+            if(ResetPrimaryScreenInterval > 0)
+            {
+                Observable.Interval(TimeSpan.FromSeconds(ResetPrimaryScreenInterval))
+                    .Subscribe(_ => ResetPrimaryScreen()).AddTo(UNIHperEntry.Instance);
+            }
 #endif
         }
 
