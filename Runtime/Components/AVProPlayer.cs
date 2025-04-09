@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using DG.Tweening;
 using RenderHeads.Media.AVProVideo;
 using UniRx;
 using UnityEngine;
@@ -128,10 +129,16 @@ namespace UNIHper
             );
         }
 
+        private void ExtractFrame() { }
+
         IDisposable _readyHandler = null;
 
-        //private List<IDisposable> playHandlers = new List<IDisposable>();
+        static Dictionary<string, Texture2D> cachedDefaultTexes = new();
 
+        public void CloseMedia()
+        {
+            MediaPlayer.CloseMedia();
+        }
 
         /// <summary>
         /// 播放指定地址的视频  可为网络地址 或者本地地址
@@ -160,8 +167,23 @@ namespace UNIHper
             this.StartTime = startTime;
             this.EndTime = endTime;
 
+            var displayer = this.Get<DisplayUGUI>();
+
+            if (displayer != null)
+            {
+                displayer.color = Color.black;
+                cachedDefaultTexes.TryGetValue(videoPath, out var _cacheTex);
+                displayer.DefaultTexture = _cacheTex;
+            }
+
             Action _playVideo = () =>
             {
+                if (displayer != null)
+                {
+                    DOTween.Kill(displayer);
+                    displayer.DOColor(Color.white, 0.35f);
+                }
+
                 MediaPlayer.Play();
                 bool _bFinished = false;
                 var _duration = MediaPlayer.Info.GetDuration();
@@ -245,6 +267,14 @@ namespace UNIHper
                 _readyHandler = OnFirstFrameReadyAsObservable()
                     .Subscribe(_ =>
                     {
+                        if (!cachedDefaultTexes.ContainsKey(videoPath))
+                        {
+                            var _texture = MediaPlayer.ExtractFrame(null, startTime).Clone();
+                            if (_texture != null)
+                            {
+                                cachedDefaultTexes[videoPath] = _texture;
+                            }
+                        }
                         _readyHandler.Dispose();
                         _readyHandler = null;
                         _startSeek();

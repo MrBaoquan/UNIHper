@@ -62,6 +62,22 @@ namespace UNIHper
             return _texture2D;
         }
 
+        public static Texture2D Clone(this Texture2D source)
+        {
+            // 创建一个新的Texture2D对象，它具有相同的宽度、高度和格式
+            Texture2D newTexture = new Texture2D(
+                source.width,
+                source.height,
+                source.format,
+                source.mipmapCount > 1
+            );
+            // 复制原始纹理的像素到新纹理
+            Graphics.CopyTexture(source, newTexture);
+            // 应用像素更改
+            newTexture.Apply();
+            return newTexture;
+        }
+
         public static Texture2D Resize(
             this Texture texture,
             int width,
