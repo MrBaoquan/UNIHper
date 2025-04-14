@@ -8,7 +8,7 @@ namespace UNIHper.Editor
     public static class CfgUtil<T>
         where T : new()
     {
-        public static T loadConfig(string filePath)
+        public static T loadJsonConfig(string filePath)
         {
             try
             {
@@ -20,9 +20,26 @@ namespace UNIHper.Editor
             }
         }
 
-        public static void saveConfig(string filePath, T config)
+        public static void saveJsonConfig(string filePath, T config)
         {
             File.WriteAllText(filePath, JsonConvert.SerializeObject(config, Formatting.Indented));
+        }
+
+        public static T LoadXmlConfig(string filePath)
+        {
+            try
+            {
+                return DNHper.USerialization.DeserializeXML<T>(filePath);
+            }
+            catch
+            {
+                return new T();
+            }
+        }
+
+        public static void SaveXmlConfig(string filePath, T config)
+        {
+            DNHper.USerialization.SerializeXML(config, filePath);
         }
     }
 
@@ -37,25 +54,25 @@ namespace UNIHper.Editor
         public static void AddAssembly(string assemblyName)
         {
             string filePath = ConfigFilePath;
-            var config = CfgUtil<ConfigData>.loadConfig(filePath);
+            var config = CfgUtil<ConfigData>.loadJsonConfig(filePath);
 
             if (config.Contains(assemblyName))
                 return;
 
             config.Add(assemblyName);
-            CfgUtil<ConfigData>.saveConfig(filePath, config);
+            CfgUtil<ConfigData>.saveJsonConfig(filePath, config);
         }
 
         public static void RemoveAssembly(string assemblyName)
         {
             string filePath = ConfigFilePath;
-            var config = CfgUtil<ConfigData>.loadConfig(filePath);
+            var config = CfgUtil<ConfigData>.loadJsonConfig(filePath);
 
             if (!config.Contains(assemblyName))
                 return;
 
             config.Remove(assemblyName);
-            CfgUtil<ConfigData>.saveConfig(filePath, config);
+            CfgUtil<ConfigData>.saveJsonConfig(filePath, config);
         }
     }
 
@@ -112,7 +129,7 @@ namespace UNIHper.Editor
         public static void AddItem(string sceneName, ResourceItem newItem)
         {
             string filePath = ConfigFilePath;
-            var config = CfgUtil<ConfigData>.loadConfig(filePath);
+            var config = CfgUtil<ConfigData>.loadJsonConfig(filePath);
 
             if (!config.ContainsKey(sceneName))
             {
@@ -122,14 +139,14 @@ namespace UNIHper.Editor
             if (!config[sceneName].Exists(item => item.Equals(newItem)))
             {
                 config[sceneName].Add(newItem);
-                CfgUtil<ConfigData>.saveConfig(filePath, config);
+                CfgUtil<ConfigData>.saveJsonConfig(filePath, config);
             }
         }
 
         public static void RemoveItem(string sceneName, System.Predicate<ResourceItem> predicate)
         {
             string filePath = ConfigFilePath;
-            var config = CfgUtil<ConfigData>.loadConfig(filePath);
+            var config = CfgUtil<ConfigData>.loadJsonConfig(filePath);
 
             if (config.ContainsKey(sceneName))
             {
@@ -140,7 +157,7 @@ namespace UNIHper.Editor
                     config.Remove(sceneName);
                 }
 
-                CfgUtil<ConfigData>.saveConfig(filePath, config);
+                CfgUtil<ConfigData>.saveJsonConfig(filePath, config);
             }
             else
             {
