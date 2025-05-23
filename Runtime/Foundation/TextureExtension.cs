@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using UniRx;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace UNIHper
 {
@@ -328,6 +331,345 @@ namespace UNIHper
             }
 
             return true; // 如果所有像素都是黑色或透明，返回 true
+        }
+
+        public static void Clear(this Texture2D texture, Color color)
+        {
+            for (int x = 0; x < texture.width; x++)
+            {
+                for (int y = 0; y < texture.height; y++)
+                {
+                    texture.SetPixel(x, y, color);
+                }
+            }
+            texture.Apply();
+        }
+
+        /// <summary>
+        /// 在目标纹理的指定像素坐标处绘制一个指定的画笔纹理。
+        /// 画笔纹理将以给定的缩放比例进行缩放，并以画笔中心与目标坐标对齐。
+        /// 此方法内部做了边界判断，避免因绘制区域超出目标纹理边界而报错。
+        /// 其中使用简单的 Alpha 混合，若画笔像素 alpha 值低 (<0.01) 则不进行绘制。
+        /// </summary>
+        /// <param name="canvas">目标纹理（必须是可读写的）</param>
+        /// <param name="brush">需要绘制的画笔纹理</param>
+        /// <param name="centerX">目标纹理中绘制中心点 X 坐标</param>
+        /// <param name="centerY">目标纹理中绘制中心点 Y 坐标</param>
+        /// <param name="scale">画笔纹理的缩放比例（1 表示原始大小，大于 1 放大，小于 1 缩小）</param>
+        public static void DrawTexture2D(
+            this Texture2D canvas,
+            Texture2D brush,
+            int centerX,
+            int centerY,
+            float scale
+        )
+        {
+            // 计算按缩放后画笔纹理的尺寸（四舍五入取整像素）
+            int brushScaledWidth = Mathf.RoundToInt(brush.width * scale);
+            int brushScaledHeight = Mathf.RoundToInt(brush.height * scale);
+
+            // 计算绘制时在目标纹理上的起始像素（以画笔中心对齐目标中心点）
+            int startX = centerX - brushScaledWidth / 2;
+            int startY = centerY - brushScaledHeight / 2;
+
+            // 遍历缩放后的画笔纹理的每个像素
+            for (int x = 0; x < brushScaledWidth; x++)
+            {
+                for (int y = 0; y < brushScaledHeight; y++)
+                {
+                    // 目标纹理对应的像素坐标
+                    int canvasX = startX + x;
+                    int canvasY = startY + y;
+
+                    // 检查是否在目标纹理范围内（防止越界）
+                    if (
+                        canvasX < 0
+                        || canvasY < 0
+                        || canvasX >= canvas.width
+                        || canvasY >= canvas.height
+                    )
+                        continue;
+
+                    // 计算在画笔纹理中的归一化坐标（使用 GetPixelBilinear 可实现缩放后平滑采样）
+                    float u = (float)x / (float)brushScaledWidth;
+                    float v = (float)y / (float)brushScaledHeight;
+
+                    // 从画笔纹理采样颜色
+                    Color brushColor = brush.GetPixelBilinear(u, v);
+
+                    // 如果画笔像素几乎全透明，则跳过绘制
+                    if (brushColor.a < 0.01f)
+                        continue;
+
+                    // 从目标纹理获取原始颜色
+                    Color canvasColor = canvas.GetPixel(canvasX, canvasY);
+                    // 简单使用 blend 方式进行混合：根据画笔像素的 alpha 值进行线性插值
+                    Color finalColor = Color.Lerp(canvasColor, brushColor, brushColor.a);
+                    canvas.SetPixel(canvasX, canvasY, finalColor);
+                }
+            }
+            // 将所有 SetPixel 调用应用到纹理上
+            canvas.Apply();
+        }
+
+        /// <summary>
+        /// 在Texture2D上绘制一个圆点
+        /// </summary>
+        /// <param name="texture">目标纹理，需要是可读写的Texture2D</param>
+        /// <param name="centerX">圆心X（像素坐标）</param>
+        /// <param name="centerY">圆心Y（像素坐标）</param>
+        /// <param name="radius">圆半径（像素）</param>
+        /// <param name="color">绘制颜色</param>
+        public static void DrawCircle(
+            this Texture2D texture,
+            int centerX,
+            int centerY,
+            int radius,
+            Color color
+        )
+        {
+            if (texture == null)
+            {
+                Debug.LogError("DrawCircle: texture is null");
+                return;
+            }
+
+            int texWidth = texture.width;
+            int texHeight = texture.height;
+
+            // 遍历圆心附近的矩形区域，以减少计算量
+            int xStart = Mathf.Max(centerX - radius, 0);
+            int xEnd = Mathf.Min(centerX + radius, texWidth - 1);
+            int yStart = Mathf.Max(centerY - radius, 0);
+            int yEnd = Mathf.Min(centerY + radius, texHeight - 1);
+
+            int radiusSquared = radius * radius;
+
+            // 遍历目标区域的像素
+            for (int y = yStart; y <= yEnd; y++)
+            {
+                for (int x = xStart; x <= xEnd; x++)
+                {
+                    // 计算当前像素和圆心的距离平方
+                    int dx = x - centerX;
+                    int dy = y - centerY;
+                    int distSquared = dx * dx + dy * dy;
+
+                    if (distSquared <= radiusSquared)
+                    {
+                        // 该像素在圆内，绘制颜色
+                        texture.SetPixel(x, y, color);
+                    }
+                }
+            }
+
+            texture.Apply();
+        }
+
+        /// <summary>
+        /// 镜像Texture2D，支持水平和垂直镜像，可同时进行
+        /// </summary>
+        /// <param name="texture">目标纹理，必须是可读写的</param>
+        /// <param name="bHorizontal">是否水平镜像（左右翻转）</param>
+        /// <param name="bVertical">是否垂直镜像（上下翻转）</param>
+        /// <returns>返回镜像后的纹理自身</returns>
+        public static Texture2D Mirror(this Texture2D texture, bool bHorizontal, bool bVertical)
+        {
+            if (texture == null)
+            {
+                Debug.LogError("Mirror: texture is null");
+                return null;
+            }
+
+            int width = texture.width;
+            int height = texture.height;
+            Color[] pixels = texture.GetPixels();
+            Color[] mirroredPixels = new Color[pixels.Length];
+
+            for (int y = 0; y < height; y++)
+            {
+                int newY = bVertical ? (height - 1 - y) : y;
+
+                for (int x = 0; x < width; x++)
+                {
+                    int newX = bHorizontal ? (width - 1 - x) : x;
+
+                    mirroredPixels[newY * width + newX] = pixels[y * width + x];
+                }
+            }
+
+            texture.SetPixels(mirroredPixels);
+            texture.Apply();
+
+            return texture;
+        }
+
+        /// <summary>
+        /// 在Texture2D上绘制矩形，支持边框和填充，绘制完成返回该纹理自身
+        /// </summary>
+        /// <param name="texture">目标纹理，要求可读写</param>
+        /// <param name="x">矩形左下角X坐标（像素）</param>
+        /// <param name="y">矩形左下角Y坐标（像素）</param>
+        /// <param name="width">矩形宽度（像素）</param>
+        /// <param name="height">矩形高度（像素）</param>
+        /// <param name="color">绘制颜色</param>
+        /// <param name="lineWidth">线宽（像素），用于绘制边框时，默认为1</param>
+        /// <param name="filled">是否填充矩形，true为填充，false为只绘制边框</param>
+        /// <returns>返回绘制后的Texture2D本身</returns>
+        public static Texture2D DrawRect(
+            this Texture2D texture,
+            int x,
+            int y,
+            int width,
+            int height,
+            Color color,
+            int lineWidth = 1,
+            bool filled = false
+        )
+        {
+            if (texture == null)
+            {
+                Debug.LogError("DrawRect: texture is null");
+                return null;
+            }
+
+            int texWidth = texture.width;
+            int texHeight = texture.height;
+
+            if (width <= 0 || height <= 0)
+            {
+                Debug.LogWarning("DrawRect: width and height must be positive");
+                return texture;
+            }
+
+            if (lineWidth < 1)
+                lineWidth = 1;
+
+            int xMin = Mathf.Clamp(x, 0, texWidth - 1);
+            int yMin = Mathf.Clamp(y, 0, texHeight - 1);
+            int xMax = Mathf.Clamp(x + width, 0, texWidth);
+            int yMax = Mathf.Clamp(y + height, 0, texHeight);
+
+            if (filled)
+            {
+                for (int py = yMin; py < yMax; py++)
+                {
+                    for (int px = xMin; px < xMax; px++)
+                    {
+                        texture.SetPixel(px, py, color);
+                    }
+                }
+            }
+            else
+            {
+                for (int lw = 0; lw < lineWidth; lw++)
+                {
+                    int yTop = yMax - 1 - lw;
+                    int yBottom = yMin + lw;
+
+                    if (yTop >= 0 && yTop < texHeight)
+                    {
+                        for (int px = xMin; px < xMax; px++)
+                        {
+                            texture.SetPixel(px, yTop, color);
+                        }
+                    }
+
+                    if (yBottom >= 0 && yBottom < texHeight)
+                    {
+                        for (int px = xMin; px < xMax; px++)
+                        {
+                            texture.SetPixel(px, yBottom, color);
+                        }
+                    }
+                }
+
+                for (int lw = 0; lw < lineWidth; lw++)
+                {
+                    int xLeft = xMin + lw;
+                    int xRight = xMax - 1 - lw;
+
+                    if (xLeft >= 0 && xLeft < texWidth)
+                    {
+                        for (int py = yMin; py < yMax; py++)
+                        {
+                            texture.SetPixel(xLeft, py, color);
+                        }
+                    }
+
+                    if (xRight >= 0 && xRight < texWidth)
+                    {
+                        for (int py = yMin; py < yMax; py++)
+                        {
+                            texture.SetPixel(xRight, py, color);
+                        }
+                    }
+                }
+            }
+
+            texture.Apply();
+
+            return texture;
+        }
+
+        /// <summary>
+        /// 异步将RenderTexture转换为Texture2D，采用AsyncGPUReadback无阻塞读取，返回IObservable
+        /// </summary>
+        /// <param name="rt">待转换的RenderTexture</param>
+        /// <returns>转换成功返回Texture2D</returns>
+        public static IObservable<Texture2D> ToTexture2DAsync(
+            this RenderTexture rt,
+            Texture2D texture2D
+        )
+        {
+            return Observable.Create<Texture2D>(observer =>
+            {
+                if (rt == null)
+                {
+                    observer.OnError(new ArgumentNullException(nameof(rt), "RenderTexture不能为空"));
+                    return Disposable.Empty;
+                }
+
+                // 对格式做简单限制，后续可扩展多格式支持
+                if (
+                    rt.format != RenderTextureFormat.ARGB32
+                    && rt.format != RenderTextureFormat.Default
+                    && rt.format != RenderTextureFormat.DefaultHDR
+                )
+                {
+                    observer.OnError(
+                        new NotSupportedException($"当前RenderTexture格式{rt.format}可能不支持直接读回")
+                    );
+                    return Disposable.Empty;
+                }
+
+                // 发起异步GPU读回请求
+                AsyncGPUReadback.Request(
+                    rt,
+                    0,
+                    request =>
+                    {
+                        if (request.hasError)
+                        {
+                            observer.OnError(new Exception("AsyncGPUReadback读取出现错误"));
+                            return;
+                        }
+
+                        var data = request.GetData<byte>();
+
+                        // 创建Texture2D，格式固定用RGBA32，可能根据RenderTexture格式调整
+                        // texture2D = new Texture2D(rt.width, rt.height, TextureFormat.RGBA32, false);
+                        texture2D.LoadRawTextureData(data);
+                        texture2D.Apply();
+
+                        observer.OnNext(texture2D);
+                        observer.OnCompleted();
+                    }
+                );
+
+                // 无需特别清理动作，返回空Disposable
+                return Disposable.Empty;
+            });
         }
     }
 }
