@@ -21,6 +21,11 @@ namespace UNIHper
         ProjectDir,
 
         /// <summary>
+        /// Save the config file in the project [Application.dataPath] directory
+        /// </summary>
+        DataDir,
+
+        /// <summary>
         /// Save the config file in the project [streaming assets] directory
         /// </summary>
         StreamingDir,
@@ -43,11 +48,21 @@ namespace UNIHper
         // 序列化优先级
         public int Priority = 0;
 
+        public string FileName = string.Empty;
+
         public SerializedAt(AppPath RootDir, string SubDir = "Configs", int Priority = 0)
         {
             this.RootDir = RootDir;
             this.SubDir = SubDir;
             this.Priority = Priority;
+        }
+
+        public SerializedAt(AppPath RootDir, string SubDir, string FileName, int Priority = 0)
+        {
+            this.RootDir = RootDir;
+            this.SubDir = SubDir;
+            this.Priority = Priority;
+            this.FileName = FileName;
         }
     }
 
@@ -127,6 +142,15 @@ namespace UNIHper
         {
             OnSerialized();
         }
+
+        internal void Deserialized()
+        {
+            OnDeserialized();
+        }
+
+        // This method is called after the object has been deserialized.
+        // You can override this method to perform any additional initialization.
+        protected virtual void OnDeserialized() { }
 
         /// <summary>
         /// Called once when config data is loaded

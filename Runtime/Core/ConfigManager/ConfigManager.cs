@@ -11,6 +11,41 @@ namespace UNIHper
 {
     public class ConfigManager : Singleton<ConfigManager>
     {
+        private Dictionary<string, SerializedAt> CachedSerializedAtDict =
+            new Dictionary<string, SerializedAt>();
+
+        public void SetSerializedAt<T>(AppPath RootFolder)
+            where T : UConfig
+        {
+            Managements.Config.SetSerializedAt<T>(new SerializedAt(RootFolder));
+        }
+
+        public void SetSerializedAt<T>(AppPath RootFolder, string SubDir)
+            where T : UConfig
+        {
+            Managements.Config.SetSerializedAt<T>(new SerializedAt(RootFolder, SubDir));
+        }
+
+        public void SetSerializedAt<T>(AppPath RootFolder, string SubDir, string FileName)
+            where T : UConfig
+        {
+            Managements.Config.SetSerializedAt<T>(new SerializedAt(RootFolder, SubDir, FileName));
+        }
+
+        public void SetSerializedAt<T>(SerializedAt serializedAt)
+            where T : UConfig
+        {
+            var _configName = typeof(T).Name;
+            if (this.CachedSerializedAtDict.ContainsKey(_configName))
+            {
+                this.CachedSerializedAtDict[_configName] = serializedAt;
+            }
+            else
+            {
+                this.CachedSerializedAtDict.Add(_configName, serializedAt);
+            }
+        }
+
         private Dictionary<string, UConfig> configs = new Dictionary<string, UConfig>();
         private string backupDir => Path.Combine(Application.persistentDataPath, "Backup/Configs");
         private string errorDir => Path.Combine(Application.persistentDataPath, "Error/Configs");
@@ -69,16 +104,23 @@ namespace UNIHper
                 var _serializeAtAttr = _attributes
                     .Where(_attr => _attr is SerializedAt)
                     .FirstOrDefault();
+                if (CachedSerializedAtDict.ContainsKey(_configClass.Name))
+                {
+                    _serializeAtAttr = CachedSerializedAtDict[_configClass.Name];
+                }
+
                 var _serializeWithAttr = _attributes
                     .Where(_attr => _attr is SerializeWith)
                     .FirstOrDefault();
 
                 string _configDir = Path.Combine(Application.persistentDataPath, configDir);
+                string _fileName = string.Empty;
 
                 // 计算配置文件保存目录
                 if (_serializeAtAttr != null)
                 {
-                    var _serializedAttr = (_serializeAtAttr as SerializedAt);
+                    var _serializedAttr = _serializeAtAttr as SerializedAt;
+                    _fileName = _serializedAttr.FileName;
                     if (_serializedAttr.RootDir == AppPath.StreamingDir)
                     {
                         _configDir = Path.Combine(
@@ -92,6 +134,15 @@ namespace UNIHper
                             Application.persistentDataPath,
                             _serializedAttr.SubDir
                         );
+                    }
+                    else if (_serializedAttr.RootDir == AppPath.DataDir)
+                    {
+                        _configDir = Path.Combine(Application.dataPath, _serializedAttr.SubDir);
+                    }
+                    else if (_serializedAttr.RootDir == AppPath.ProjectDir)
+                    {
+                        var _projectDir = Directory.GetParent(Application.dataPath).FullName;
+                        _configDir = Path.Combine(_projectDir, _serializedAttr.SubDir);
                     }
                 }
 
@@ -111,10 +162,11 @@ namespace UNIHper
                     Directory.CreateDirectory(_configDir);
                 }
 
-                string _path = Path.Combine(
-                    _configDir,
-                    _configClass.Name + this.suffix(_driverMode)
-                );
+                _fileName = string.IsNullOrEmpty(_fileName)
+                    ? _configClass.Name + this.suffix(_driverMode)
+                    : _fileName;
+
+                string _path = Path.Combine(_configDir, _fileName);
 
                 UNIHperLogger.Log($"Create config file {_path}");
                 if (!File.Exists(_path))
@@ -131,6 +183,7 @@ namespace UNIHper
                 }
 
                 this.configs.Add(_configClass.Name, _configInstance);
+                _configInstance.Deserialized();
             }
 
             this.configs.Values
@@ -181,6 +234,7 @@ namespace UNIHper
             }
 
             this.configs[_configKey] = _configInstance;
+            _configInstance.Deserialized();
             _configInstance.Loaded();
 
             return _configInstance as T;
