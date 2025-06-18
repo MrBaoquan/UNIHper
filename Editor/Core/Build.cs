@@ -17,15 +17,7 @@ namespace UNIHper.Editor
             var _projectDir = Directory.GetParent(Application.dataPath);
             var _buildDir = Path.GetDirectoryName(pathToBuildProject);
 
-            new List<string>
-            {
-                "README.md",
-                "Readme.md",
-                "README.txt",
-                "Readme.txt",
-                "README.pdf",
-                "Readme.pdf"
-            }
+            new List<string> { "README.txt", "README.pdf", "README.html" }
                 .Select(_readmeFile => Path.Combine(_projectDir.FullName, _readmeFile))
                 .ToList()
                 .ForEach(_readme =>
