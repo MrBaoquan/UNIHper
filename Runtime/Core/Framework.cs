@@ -132,7 +132,7 @@ namespace UNIHper
 #else
             if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.S))
             {
-                Managements.Config.SerializeAll();
+                Managements.Config.SaveAll();
                 Debug.Log("Save config successfully.");
             }
             if (Input.GetKeyDown(KeyCode.F12))

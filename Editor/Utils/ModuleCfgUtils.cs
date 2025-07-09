@@ -29,6 +29,10 @@ namespace UNIHper.Editor
         {
             try
             {
+                if (!File.Exists(filePath))
+                {
+                    return new T();
+                }
                 return DNHper.USerialization.DeserializeXML<T>(filePath);
             }
             catch
