@@ -210,7 +210,7 @@ namespace UNIHper
             SwitchAsObservable(videoIndex, StartTime)
                 .Subscribe(_player =>
                 {
-                    // Debug.Log("[debug] 视频切换完成, 开始播放...");
+                    Debug.Log("[debug] 视频切换完成, 开始播放...");
                     _player.Play(
                         videoPaths[videoIndex],
                         OnCompleted,
@@ -329,6 +329,11 @@ namespace UNIHper
             return true;
         }
 
+        public void SetDefaultMediaTransition(PlaylistMediaPlayer.Transition transition)
+        {
+            ListPlayer.DefaultTransition = transition;
+        }
+
         public bool SetMediaTransition(string videoPath, PlaylistMediaPlayer.Transition transition)
         {
             var _mediaItem = GetMediaItem(videoPath);
@@ -391,6 +396,7 @@ namespace UNIHper
 
         public IObservable<AVProPlayer> SwitchAsObservable(int mediaIndex, double startTime = -1f)
         {
+            startTime = Math.Round(startTime, 3);
             return Observable.Create<AVProPlayer>(_observer =>
             {
                 _playDisposables.Clear();
@@ -398,6 +404,7 @@ namespace UNIHper
                     .First()
                     .Do(_player =>
                     {
+                        Debug.Log("OnItemChangedAsObservable: " + _player.name);
                         _player.Pause();
                     })
                     .SelectMany(
@@ -408,6 +415,7 @@ namespace UNIHper
                     )
                     .Subscribe(_ =>
                     {
+                        Debug.Log($"[debug] 视频切换完成, 当前视频: {_.name}, 开始时间: {startTime}");
                         _observer.OnNext(CurrentPlayer);
                         _observer.OnCompleted();
                     })

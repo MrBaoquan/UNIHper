@@ -211,6 +211,22 @@ namespace UNIHper.UI
         private void onUIAttached()
         {
             RecordTweenerOriginTransform();
+            if (driver == UIAnimionDriver.Animator)
+            {
+                if (UIShow != null)
+                {
+                    ShowDuration = UIShow.length;
+                }
+                if (UIHide != null)
+                {
+                    HideDuration = UIHide.length;
+                }
+            }
+            else if (driver == UIAnimionDriver.Tweener)
+            {
+                ShowDuration = enterDuration + enterDelay;
+                HideDuration = exitDuration + exitDelay;
+            }
         }
 
         private Task getShowTask(CancellationToken cancellationToken)

@@ -135,6 +135,13 @@ namespace UNIHper
 
         static Dictionary<string, Texture2D> cachedDefaultTexes = new();
 
+        public bool FadeWhenChange { get; private set; } = true;
+
+        public void EnableFade(bool Fade)
+        {
+            FadeWhenChange = Fade;
+        }
+
         public void CloseMedia()
         {
             MediaPlayer.CloseMedia();
@@ -164,12 +171,23 @@ namespace UNIHper
                 _readyHandler = null;
             }
 
+            // 将startTime 精确的小数点3位
+            startTime = Math.Round(startTime, 3);
+            endTime = Math.Round(endTime, 3);
+
             this.StartTime = startTime;
             this.EndTime = endTime;
 
+            bool _notSameSource =
+                MediaPlayer.MediaPath.Path != videoPath
+                || MediaPlayer.Control == null
+                || !MediaPlayer.Control.HasMetaData();
+
             var displayer = this.Get<DisplayUGUI>();
 
-            if (displayer != null)
+            var _useFade = _notSameSource && FadeWhenChange;
+
+            if (_useFade && displayer != null)
             {
                 displayer.color = Color.black;
                 cachedDefaultTexes.TryGetValue(videoPath, out var _cacheTex);
@@ -178,7 +196,7 @@ namespace UNIHper
 
             Action _playVideo = () =>
             {
-                if (displayer != null)
+                if (_useFade && displayer != null)
                 {
                     DOTween.Kill(displayer);
                     displayer.DOColor(Color.white, 0.35f);
@@ -258,11 +276,7 @@ namespace UNIHper
                 }
             }
 
-            if (
-                MediaPlayer.MediaPath.Path != videoPath
-                || MediaPlayer.Control == null
-                || !MediaPlayer.Control.HasMetaData()
-            )
+            if (_notSameSource)
             {
                 _readyHandler = OnFirstFrameReadyAsObservable()
                     .Subscribe(_ =>
@@ -377,6 +391,12 @@ namespace UNIHper
 
         private void __seek(double time)
         {
+            if (CurrentTime == time)
+            {
+                OnFinishedSeeking.Invoke(MediaPlayer);
+                return;
+            }
+
             MediaPlayer.Control.Seek(time);
 #if (UNITY_EDITOR_WIN) || (!UNITY_EDITOR && UNITY_STANDALONE_WIN)
             // TODO: DirectShow 驱动下，没有seek相关事件 seek 好像是同步的，需要后续验证
@@ -418,6 +438,7 @@ namespace UNIHper
             return Observable.Create<AVProPlayer>(_observer =>
             {
                 var disposable = new CompositeDisposable();
+
                 OnFinishedSeekingAsObservable()
                     .First()
                     .Subscribe(_ =>

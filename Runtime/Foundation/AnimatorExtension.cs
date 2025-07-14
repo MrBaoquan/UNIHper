@@ -279,6 +279,23 @@ namespace UNIHper
                 .AddTo(UNIHperEntry.Instance);
         }
 
+        public static IDisposable PlayThenNext(
+            this Animator animator,
+            string stateName,
+            string nextStateName
+        )
+        {
+            return PlayToEnd(
+                    animator,
+                    stateName,
+                    _ =>
+                    {
+                        animator.Play(nextStateName, 0, 0);
+                    }
+                )
+                .AddTo(UNIHperEntry.Instance);
+        }
+
         public static IObservable<Animator> PlayToEndAsObservable(
             this Animator animator,
             string stateName,

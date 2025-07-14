@@ -26,6 +26,9 @@
 ### 版本更新日志
 v1.25.xxx
 - 修复Linker文件不存在时的错误
+- 动画拓展PlayThenNext功能
+- 修复MultipleAVProPlayer 博放视频时 startTime精度问题导致的bug
+- 增加动画隐藏播放时的等待任务逻辑
 
 v1.25.617
 - 拓展Texture相关接口

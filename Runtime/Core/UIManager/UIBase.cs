@@ -55,6 +55,28 @@ namespace UNIHper.UI
         public UIType Type => __Type;
         public string Key => __UIKey;
 
+        public float ShowDuration { get; protected set; } = 0.0f;
+
+        public Task<float> ShowTask(float offset = -0.1f)
+        {
+            if (_status == UIStatus.Shown)
+            {
+                return Task.FromResult(0.0f);
+            }
+            return Task.FromResult(ShowDuration + offset);
+        }
+
+        public Task<float> HideTask(float offset = -0.1f)
+        {
+            if (_status == UIStatus.Hidden)
+            {
+                return Task.FromResult(0.0f);
+            }
+            return Task.FromResult(HideDuration + offset);
+        }
+
+        public float HideDuration { get; protected set; } = 0.0f;
+
         // 控制animator是否自动复位
         public bool RebindAnimator { get; set; } = true;
 
@@ -235,10 +257,12 @@ namespace UNIHper.UI
         {
             if (uiAnimComponent != null)
             {
+                ShowDuration = uiAnimComponent.ShowDuration;
                 await uiAnimComponent.BuildShowTask(cancellationToken);
             }
             else
             {
+                ShowDuration = 0.0f;
                 await Task.CompletedTask;
             }
         }
@@ -247,10 +271,12 @@ namespace UNIHper.UI
         {
             if (uiAnimComponent != null)
             {
+                HideDuration = uiAnimComponent.HideDuration;
                 await uiAnimComponent.BuildHideTask(cancellationToken);
             }
             else
             {
+                HideDuration = 0.0f;
                 await Task.CompletedTask;
             }
         }
