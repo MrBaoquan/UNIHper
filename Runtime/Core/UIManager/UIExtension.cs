@@ -24,9 +24,7 @@ namespace UNIHper.UI
                 .OnBeginDragAsObservable()
                 .Subscribe(_event =>
                 {
-                    _delta =
-                        _event.position
-                        - new Vector2(transform.localPosition.x, transform.localPosition.y);
+                    _delta = _event.position - new Vector2(transform.localPosition.x, transform.localPosition.y);
                 });
 
             this.GetComponent<ObservableDragTrigger>()
