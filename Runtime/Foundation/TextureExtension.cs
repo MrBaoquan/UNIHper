@@ -293,7 +293,9 @@ namespace UNIHper
 
         public static Sprite ToSprite(this Texture2D texture2D, Rect rect, Vector2 pivot)
         {
-            return Sprite.Create(texture2D, rect, pivot);
+            var _newSp = Sprite.Create(texture2D, rect, pivot);
+            _newSp.name = texture2D.name;
+            return _newSp;
         }
 
         public static bool SaveToFile(this Texture2D texture2D, string savePath)

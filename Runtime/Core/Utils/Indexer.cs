@@ -167,6 +167,35 @@ namespace UNIHper
             return Current;
         }
 
+        public static (int MinStep, int Direction) GetMinStepsAndDirection(
+            int x,
+            int y,
+            int A,
+            int T
+        )
+        {
+            int N = y - x + 1;
+            int idxA = A - x;
+            int idxT = T - x;
+
+            int distForward = (idxT - idxA + N) % N;
+            int distBackward = (idxA - idxT + N) % N;
+
+            if (distForward <= distBackward)
+            {
+                return (distForward, +1);
+            }
+            else
+            {
+                return (distBackward, -1);
+            }
+        }
+
+        public (int MinStep, int Direction) MinStepForValue(int value)
+        {
+            return GetMinStepsAndDirection(Min, Max, Current, value);
+        }
+
         public int Next()
         {
             Set(NextValue());

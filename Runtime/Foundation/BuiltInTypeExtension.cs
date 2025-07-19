@@ -75,4 +75,41 @@ namespace UNIHper
             return UnityEngine.Random.Range(0, 2) == 0;
         }
     }
+
+    public static class RectTransformExtensions
+    {
+        /// <summary>
+        /// 使RectTransform的左边缘到指定原点的连线的垂直方向，保持RectTransform的旋转。
+        /// 适用于UI元素，绕Z轴旋转调整。
+        /// </summary>
+        /// <param name="rectTransform">目标RectTransform</param>
+        /// <param name="originWorldPos">参考原点的世界坐标</param>
+        public static void AlignLeftEdgePerpendicularToOrigin(
+            this RectTransform rectTransform,
+            Vector3 originWorldPos
+        )
+        {
+            if (rectTransform == null)
+                return;
+
+            Vector3[] corners = new Vector3[4];
+            rectTransform.GetWorldCorners(corners);
+            // corners顺序：左下（0）、左上（1）、右上（2）、右下（3）
+            Vector3 leftTop = corners[2];
+            Vector3 leftBottom = corners[3];
+
+            Vector3 leftEdgeCenter = (leftTop + leftBottom) * 0.5f;
+
+            Vector3 dir = leftEdgeCenter - originWorldPos;
+            if (dir.sqrMagnitude < 0.0001f)
+                return;
+            dir.Normalize();
+
+            // 计算垂直方向（假设Canvas为XY平面，Z轴为正前方向）
+            Vector3 perpendicularDir = Vector3.Cross(dir, Vector3.forward);
+
+            float angle = Mathf.Atan2(perpendicularDir.y, perpendicularDir.x) * Mathf.Rad2Deg;
+            rectTransform.rotation = Quaternion.Euler(0, 0, angle);
+        }
+    }
 }

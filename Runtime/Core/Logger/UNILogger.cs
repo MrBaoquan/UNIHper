@@ -19,7 +19,7 @@ namespace UNIHper
 
         public static void Debug(object InMessage)
         {
-            NLogger.Debug(InMessage);
+            NLogger.Debug(InMessage.ToString());
         }
 
         public static void Debug(string InFormat, params object[] InParams)
@@ -49,7 +49,7 @@ namespace UNIHper
 
         public static void Error(Exception InEx, string InMessage = "")
         {
-            NLogger.Error(InEx, InMessage);
+            NLogger.Error(InEx.Message, InMessage);
         }
 
         public static void Initialize()

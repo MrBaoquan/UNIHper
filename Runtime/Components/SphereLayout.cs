@@ -4,6 +4,10 @@ using DG.Tweening;
 using UNIHper;
 using DigitalRubyShared;
 using Sirenix.OdinInspector;
+using UnityEngine.UI;
+using UniRx;
+using UnityEngine.Events;
+using System.Net.Http.Headers;
 
 public class SphereLayout : MonoBehaviour
 {
@@ -31,10 +35,7 @@ public class SphereLayout : MonoBehaviour
     public float angleOffset = 0;
 
     [Title("Display Settings")]
-    [SerializeField]
-    private Vector2 displayRange = new Vector2(0, 360);
-
-    Indexer indexer = new Indexer();
+    Indexer angleIndexer = new Indexer();
 
     private void OnEnable()
     {
@@ -47,24 +48,109 @@ public class SphereLayout : MonoBehaviour
         RegenerateLayout();
     }
 
+    int offsetIdx = 0;
+
+    public int MaxItemsCount = 5;
+    public GameObject ItemTemplate;
+    private Transform _itemTemplate
+    {
+        get
+        {
+            if (ItemTemplate != null)
+                return ItemTemplate.transform;
+            if (transform.GetChild(0) != null)
+                return transform.GetChild(0);
+
+            Debug.LogError("ItemTemplate is not set and no child found in SphereLayout.");
+            return null;
+        }
+    }
+
+    private UnityEvent<Transform, int> onCreatingItem = new UnityEvent<Transform, int>();
+
+    // 在前面追加一个
+    public void InsertBefore()
+    {
+        var _newItem = GameObject.Instantiate(_itemTemplate, transform);
+        var _itemID = leftBorderIndexer.PrevValue();
+        _newItem.name = $"Item_{_itemID}";
+
+        onCreatingItem.Invoke(_newItem, _itemID);
+
+        offsetIdx--;
+        _newItem.SetAsFirstSibling();
+        alignToCurrent();
+        if (transform.childCount > MaxItemsCount)
+        {
+            DestroyImmediate(transform.GetChild(transform.childCount - 1).gameObject);
+        }
+    }
+
+    // 在后面追加一个
+    public void InsertAfter()
+    {
+        var _newItem = GameObject.Instantiate(_itemTemplate, transform);
+        var _itemID = rightBorderIndexer.NextValue();
+
+        _newItem.name = $"Item_{_itemID}";
+        onCreatingItem.Invoke(_newItem, _itemID);
+
+        offsetIdx++;
+        _newItem.SetAsLastSibling();
+        alignToCurrent();
+        if (transform.childCount > MaxItemsCount)
+        {
+            DestroyImmediate(transform.GetChild(0).gameObject);
+        }
+    }
+
     public int SelectNext()
     {
-        indexer.Next();
+        InsertBefore();
+        angleIndexer.Next();
+
+        leftBorderIndexer.Prev();
+        rightBorderIndexer.Prev();
+
+        ItemIndexer.Prev();
+
         alignToCurrent();
-        return indexer.Current;
+        return angleIndexer.Current;
     }
 
     public int SelectPrev()
     {
-        indexer.Prev();
+        InsertAfter();
+        angleIndexer.Prev();
+
+        leftBorderIndexer.Next();
+        rightBorderIndexer.Next();
+
+        ItemIndexer.Next();
+        // Debug.Log($"Range: {leftBorderIndexer.Current} - {rightBorderIndexer.Current}");
+
         alignToCurrent();
-        return indexer.Current;
+        return angleIndexer.Current;
     }
 
     public void Select(int ChildIndex)
     {
-        indexer.Set(ChildIndex);
-        alignToCurrent();
+        var (step, dir) = ItemIndexer.MinStepForValue(ChildIndex);
+
+        if (dir > 0)
+        {
+            for (var i = 0; i < step; i++)
+            {
+                SelectPrev();
+            }
+        }
+        else if (dir < 0)
+        {
+            for (var i = 0; i < step; i++)
+            {
+                SelectNext();
+            }
+        }
     }
 
     public void Collapse(bool forceCollapse = false)
@@ -126,7 +212,7 @@ public class SphereLayout : MonoBehaviour
                 break;
         }
         // transform.position + transform.right * -distance;
-        int _index = 0;
+        int _index = 0 + offsetIdx;
         var _children = gameObject.Children();
         _children.ForEach(_transform =>
         {
@@ -156,8 +242,12 @@ public class SphereLayout : MonoBehaviour
                     break;
             }
 
-            var _euler = transform.eulerAngles;
-            _transform.eulerAngles = Vector3.zero;
+            _transform.localEulerAngles = new Vector3(
+                0,
+                0,
+                angleInterval * _index + angleOffset - 90
+            );
+            // _transform.Get<RectTransform>().AlignLeftEdgePerpendicularToOrigin(transform.position);
             ++_index;
         });
     }
@@ -177,13 +267,17 @@ public class SphereLayout : MonoBehaviour
         }
     }
 
+    public float fadeDuration = 1.0f;
+    public Ease fadeEase = Ease.InOutCubic;
+
     void alignToCurrent()
     {
         transform
             .DOLocalRotateQuaternion(
-                Quaternion.Euler(eulerAngle(indexer.Current * angleInterval)),
-                0.35f
+                Quaternion.Euler(eulerAngle(angleIndexer.Current * angleInterval)),
+                fadeDuration
             )
+            .SetEase(fadeEase)
             .OnUpdate(() =>
             {
                 RegenerateLayout();
@@ -213,11 +307,53 @@ public class SphereLayout : MonoBehaviour
     [SerializeField]
     private bool enableDragRotation = true;
 
+    public Indexer ItemIndexer { get; private set; } = new Indexer();
+
+    public IObservable<Transform> OnItemSelectedAsObservable()
+    {
+        return ItemIndexer
+            .OnValueChangedAsObservable()
+            .Select(_ => transform.GetChild(transform.childCount - 1));
+    }
+
+    public IObservable<(Transform Item, int ID)> OnCreatingNewItemAsObservable()
+    {
+        return onCreatingItem.AsObservable().Select(_ => (_.Item1, _.Item2));
+    }
+
+    Indexer leftBorderIndexer = new Indexer();
+
+    Indexer rightBorderIndexer = new Indexer();
+
     private void Start()
     {
-        indexer.Loop = false;
-        indexer.SetMin((int)displayRange.x);
-        indexer.SetMax((int)displayRange.y);
+        angleIndexer.Loop = false;
+        angleIndexer.SetMin(int.MinValue);
+        angleIndexer.SetMax(int.MaxValue);
+
+        ItemIndexer.Loop = true;
+        ItemIndexer.SetMax(MaxItemsCount - 1);
+        leftBorderIndexer.Loop = true;
+        leftBorderIndexer.SetMax(MaxItemsCount - 1);
+        rightBorderIndexer.Loop = true;
+        rightBorderIndexer.SetMax(MaxItemsCount - 1);
+
+        ItemIndexer.SetValueWithoutNotify(2);
+        leftBorderIndexer.SetValueWithoutNotify(0);
+        rightBorderIndexer.SetValueWithoutNotify(MaxItemsCount - 1);
+
+        ItemIndexer
+            .OnValueChangedAsObservable()
+            .Subscribe(_idx =>
+            {
+                // Debug.Log(_idx);
+                // leftBorderIndexer.Set(_idx - 2);
+                // rightBorderIndexer.Set(_idx + 2);
+                // Debug.Log(
+                //     $"left: {leftBorderIndexer.Current}, right: {rightBorderIndexer.Current}"
+                // );
+            });
+
         startRotation = transform.rotation;
         RegenerateLayout();
         var _moveGesture = new PanGestureRecognizer();
@@ -260,7 +396,7 @@ public class SphereLayout : MonoBehaviour
                     _deltaAngle = -_deltaAngle;
                 }
                 var _deltaIndex = Mathf.RoundToInt(_deltaAngle / angleInterval);
-                indexer.Set(indexer.Current + _deltaIndex);
+                angleIndexer.Set(angleIndexer.Current + _deltaIndex);
                 alignToCurrent();
             }
         };
