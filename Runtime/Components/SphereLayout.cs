@@ -30,6 +30,10 @@ public class SphereLayout : MonoBehaviour
 
     [SerializeField, HideInInspector]
     private float _defaultAngleInterval = 0;
+    public GameObject ItemTemplate;
+    public int MaxItemsCount = 5;
+
+    public int ActiveItemIndex = 0;
 
     [SerializeField]
     public float angleOffset = 0;
@@ -50,8 +54,6 @@ public class SphereLayout : MonoBehaviour
 
     int offsetIdx = 0;
 
-    public int MaxItemsCount = 5;
-    public GameObject ItemTemplate;
     private Transform _itemTemplate
     {
         get
@@ -109,10 +111,9 @@ public class SphereLayout : MonoBehaviour
         InsertBefore();
         angleIndexer.Next();
 
-        leftBorderIndexer.Prev();
-        rightBorderIndexer.Prev();
-
         ItemIndexer.Prev();
+
+        // Debug.Log($"Range: {leftBorderIndexer.Current} - {rightBorderIndexer.Current}");
 
         alignToCurrent();
         return angleIndexer.Current;
@@ -123,10 +124,8 @@ public class SphereLayout : MonoBehaviour
         InsertAfter();
         angleIndexer.Prev();
 
-        leftBorderIndexer.Next();
-        rightBorderIndexer.Next();
-
         ItemIndexer.Next();
+
         // Debug.Log($"Range: {leftBorderIndexer.Current} - {rightBorderIndexer.Current}");
 
         alignToCurrent();
@@ -338,20 +337,24 @@ public class SphereLayout : MonoBehaviour
         rightBorderIndexer.Loop = true;
         rightBorderIndexer.SetMax(MaxItemsCount - 1);
 
-        ItemIndexer.SetValueWithoutNotify(2);
+        ItemIndexer.SetValueWithoutNotify(ActiveItemIndex);
         leftBorderIndexer.SetValueWithoutNotify(0);
         rightBorderIndexer.SetValueWithoutNotify(MaxItemsCount - 1);
 
         ItemIndexer
-            .OnValueChangedAsObservable()
-            .Subscribe(_idx =>
+            .OnPrevAsObservable()
+            .Subscribe(_ =>
             {
-                // Debug.Log(_idx);
-                // leftBorderIndexer.Set(_idx - 2);
-                // rightBorderIndexer.Set(_idx + 2);
-                // Debug.Log(
-                //     $"left: {leftBorderIndexer.Current}, right: {rightBorderIndexer.Current}"
-                // );
+                leftBorderIndexer.Prev();
+                rightBorderIndexer.Prev();
+            });
+
+        ItemIndexer
+            .OnNextAsObservable()
+            .Subscribe(_ =>
+            {
+                leftBorderIndexer.Next();
+                rightBorderIndexer.Next();
             });
 
         startRotation = transform.rotation;

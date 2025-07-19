@@ -14,16 +14,22 @@
 8. 编辑器拓展
 
 ### 核心插件集成
-
 -   DOTween
--   Unirx
+-   UniRx
 -   Rx.net
 -   Google.Protobuf
 -   gRPC
 -   AVPro
-
+-   Newtonsoft.Json
+-   MessagePack
 
 ### 版本更新日志
+v1.25.xxx
+- 二进制序列化改用messagepack包
+- SphereLayout优化
+- Indexer优化，增加MinStepForValue接口
+- AppConfig增加鼠标控制
+
 v1.25.715
 - 修复Linker文件不存在时的错误
 - 动画拓展PlayThenNext功能

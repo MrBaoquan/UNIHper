@@ -65,11 +65,40 @@ namespace UNIHper
         }
     }
 
+    public class MouseSettings
+    {
+        [XmlAttribute]
+        public bool Enable = false;
+
+        [XmlAttribute]
+        public bool ShowCursor = true;
+
+        [XmlAttribute]
+        public bool ClickAfterMove = true;
+
+        public SerializableVector2 Position = new SerializableVector2(-1, -1);
+
+        [XmlAttribute]
+        public float ResetInterval = 0;
+    }
+
     public class AppConfig : UConfig
     {
         protected override string Comment()
         {
-            return @"";
+            return @"
+            LongTimeNoOperationTimeout: 长时间无操作超时时间
+            ResetPrimaryScreenInterval: 重新应用屏幕设置间隔时间
+            MouseControl: 鼠标控制
+                Enable: 启用鼠标控制
+                ShowCursor: 是否显示鼠标
+                Position: 要设置的鼠标位置
+                ResetInterval: 鼠标位置重置间隔时间(s) 0 仅在程序启动时设置一次
+                ClickAfterMove: 鼠标移动后是否模拟鼠标左键点击事件
+
+            PrimaryScreen: 单屏幕时，程序的分辨率设置
+            Displays: 屏幕设置 (启用多屏幕时的分辨率设置)
+            ";
         }
 
         [XmlAttribute]
@@ -77,6 +106,8 @@ namespace UNIHper
 
         [XmlAttribute]
         public float ResetPrimaryScreenInterval = 0;
+
+        public MouseSettings MouseControl = new MouseSettings();
 
         public ScreenConfig PrimaryScreen = new ScreenConfig() { KeepTop = true };
 
@@ -89,8 +120,12 @@ namespace UNIHper
             PrimaryScreen.RefreshParameters();
 
 #if !UNITY_EDITOR && UNITY_STANDALONE_WIN
+
+
             activeAllDisplays();
             executeWindowSettings();
+
+            applyMouseSettings();
 
             if(ResetPrimaryScreenInterval > 0)
             {
@@ -149,6 +184,33 @@ namespace UNIHper
         private void executeWindowSettings()
         {
             ResetPrimaryScreen();
+        }
+
+        private void applyMouseSettings()
+        {
+            if (MouseControl.Enable)
+            {
+                WinAPI.SetCursorPos((int)MouseControl.Position.x, (int)MouseControl.Position.y);
+
+                if (MouseControl.ResetInterval > 0)
+                {
+                    Observable
+                        .Interval(TimeSpan.FromSeconds(MouseControl.ResetInterval))
+                        .Subscribe(_ =>
+                        {
+                            WinAPI.SetCursorPos(
+                                (int)MouseControl.Position.x,
+                                (int)MouseControl.Position.y
+                            );
+                            WinAPI.ShowCursor(MouseControl.ShowCursor);
+                            if (MouseControl.ClickAfterMove)
+                            {
+                                WinAPI.ClickLeftMouseButton();
+                            }
+                        })
+                        .AddTo(UNIHperEntry.Instance);
+                }
+            }
         }
 
         private void activeAllDisplays()

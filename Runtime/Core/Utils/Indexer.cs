@@ -35,6 +35,16 @@ namespace UNIHper
             return OnValueChangedAsObservable().Where(_ => _ == Min);
         }
 
+        public IObservable<int> OnPrevAsObservable()
+        {
+            return OnValueChangedAsObservable().Where(_ => LastSet == NextValue());
+        }
+
+        public IObservable<int> OnNextAsObservable()
+        {
+            return OnValueChangedAsObservable().Where(_ => LastSet == PrevValue());
+        }
+
         public Indexer() { }
 
         public Indexer(int Max)
@@ -132,8 +142,9 @@ namespace UNIHper
             var _newIndex = limitIndex(newIndex);
             if (Current != _newIndex)
             {
-                Current = _newIndex;
                 LastSet = Current;
+
+                Current = _newIndex;
                 onValueChanged.Invoke(Current);
             }
             return Current;
@@ -144,8 +155,9 @@ namespace UNIHper
             var _newIndex = limitIndex(newIndex);
             if (Current != _newIndex)
             {
-                Current = _newIndex;
                 LastSet = Current;
+
+                Current = _newIndex;
             }
             return Current;
         }
@@ -155,8 +167,9 @@ namespace UNIHper
             var _newIndex = limitIndex(newIndex);
             if (Current != _newIndex)
             {
-                Current = _newIndex;
                 LastSet = Current;
+
+                Current = _newIndex;
                 onValueChanged.Invoke(Current);
             }
             else
