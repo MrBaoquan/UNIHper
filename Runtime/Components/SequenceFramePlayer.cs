@@ -13,24 +13,16 @@ namespace UNIHper
     [RequireComponent(typeof(RawImage))]
     public class SequenceFramePlayer : MonoBehaviour
     {
-        public void SetSequenceDirectory(
-            string sequenceDir,
-            bool matchTextureSize = true,
-            int fps = 25
-        )
+        public void SetSequenceDirectory(string sequenceDir, bool matchTextureSize = true, int fps = 25)
         {
             this.fps = fps;
             bMatchTextureSize = matchTextureSize;
             sequencePath.Value = sequenceDir;
         }
 
-        private string sequenceDirectory =>
-            Path.Combine(Application.streamingAssetsPath, sequencePath.Value);
+        private string sequenceDirectory => Path.Combine(Application.streamingAssetsPath, sequencePath.Value);
 
-        private bool sequenceDirectoryExists =>
-            Path.IsPathRooted(sequencePath.Value)
-                ? Directory.Exists(sequencePath.Value)
-                : Directory.Exists(sequenceDirectory);
+        private bool sequenceDirectoryExists => Path.IsPathRooted(sequencePath.Value) ? Directory.Exists(sequencePath.Value) : Directory.Exists(sequenceDirectory);
 
         private ReactiveProperty<string> sequencePath = new ReactiveProperty<string>();
         private int fps = 25;
@@ -119,9 +111,7 @@ namespace UNIHper
                         return;
                     }
 
-                    var _textures = (await Managements.Resource.LoadTexture2Ds(sequenceDirectory))
-                        .Where(_ => _ != null)
-                        .ToList();
+                    var _textures = (await Managements.Resource.LoadTexture2Ds(sequenceDirectory)).Where(_ => _ != null).ToList();
                     SetTextures(_textures);
                 })
                 .AddTo(this);

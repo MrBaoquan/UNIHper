@@ -21,9 +21,7 @@ namespace UNIHper
 #if (UNITY_EDITOR_WIN) || (!UNITY_EDITOR && UNITY_STANDALONE_WIN)
         public AVProBase SetWindowsVideoAPI(RenderHeads.Media.AVProVideo.Windows.VideoApi videoApi)
         {
-            var _platformOptions =
-                MediaPlayer.GetCurrentPlatformOptions()
-                as RenderHeads.Media.AVProVideo.MediaPlayer.OptionsWindows;
+            var _platformOptions = MediaPlayer.GetCurrentPlatformOptions() as RenderHeads.Media.AVProVideo.MediaPlayer.OptionsWindows;
             _platformOptions.videoApi = videoApi;
             return this;
         }
@@ -122,11 +120,7 @@ namespace UNIHper
 
         public bool Switch(string path)
         {
-            return MediaPlayer.OpenMedia(
-                MediaPathType.RelativeToStreamingAssetsFolder,
-                path,
-                false
-            );
+            return MediaPlayer.OpenMedia(MediaPathType.RelativeToStreamingAssetsFolder, path, false);
         }
 
         private void ExtractFrame() { }
@@ -155,14 +149,7 @@ namespace UNIHper
         /// <param name="bLoop">是否循环</param>
         /// <param name="startTime">开始时间</param>
         /// <param name="endTime">结束时间</param>
-        public void Play(
-            string videoPath,
-            Action<AVProPlayer> onFinished,
-            bool bLoop,
-            double startTime = 0,
-            double endTime = 0,
-            bool seek2StartAfterFinished = true
-        )
+        public void Play(string videoPath, Action<AVProPlayer> onFinished, bool bLoop, double startTime = 0, double endTime = 0, bool seek2StartAfterFinished = true)
         {
             ClearPlayHandlers();
             if (_readyHandler != null)
@@ -178,10 +165,7 @@ namespace UNIHper
             this.StartTime = startTime;
             this.EndTime = endTime;
 
-            bool _notSameSource =
-                MediaPlayer.MediaPath.Path != videoPath
-                || MediaPlayer.Control == null
-                || !MediaPlayer.Control.HasMetaData();
+            bool _notSameSource = MediaPlayer.MediaPath.Path != videoPath || MediaPlayer.Control == null || !MediaPlayer.Control.HasMetaData();
 
             var displayer = this.Get<DisplayUGUI>();
 
@@ -400,9 +384,7 @@ namespace UNIHper
             MediaPlayer.Control.Seek(time);
 #if (UNITY_EDITOR_WIN) || (!UNITY_EDITOR && UNITY_STANDALONE_WIN)
             // TODO: DirectShow 驱动下，没有seek相关事件 seek 好像是同步的，需要后续验证
-            var optionsWindows =
-                MediaPlayer.GetCurrentPlatformOptions()
-                as RenderHeads.Media.AVProVideo.MediaPlayer.OptionsWindows;
+            var optionsWindows = MediaPlayer.GetCurrentPlatformOptions() as RenderHeads.Media.AVProVideo.MediaPlayer.OptionsWindows;
             if (optionsWindows.videoApi == RenderHeads.Media.AVProVideo.Windows.VideoApi.DirectShow)
             {
                 OnFinishedSeeking.Invoke(MediaPlayer);
