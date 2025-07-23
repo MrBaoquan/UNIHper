@@ -1,4 +1,4 @@
-Shader "UNIHper/UGUI/TextureTransition"
+Shader "UNIHper/Unlit/TextureTransition"
 {
     Properties
     {

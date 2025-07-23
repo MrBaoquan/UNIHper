@@ -27,8 +27,9 @@
 v1.25.xxx
 - 二进制序列化改用messagepack包
 - SphereLayout优化
-- Indexer优化，增加MinStepForValue接口
+- Indexer优化，增加MinStepForValue接口, OnPrev & OnNext接口, 修复LastSet的bug
 - AppConfig增加鼠标控制
+- 增加TextureTransition过渡组件, 拓展出FadeTo接口
 
 v1.25.715
 - 修复Linker文件不存在时的错误
