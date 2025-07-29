@@ -15,7 +15,7 @@
     "overrideReferences": true,
     "precompiledReferences": [
         "Google.Protobuf.dll",
-        "System.Runtime.CompilerServices.Unsafe.dll"
+        "System.Runtime.CompilerServices.Unsafe-4.5.2.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],
