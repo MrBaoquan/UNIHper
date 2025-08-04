@@ -75,10 +75,15 @@ namespace UniRx
     /// Lightweight property broker.
     /// </summary>
     [Serializable]
-    public class ReactiveProperty<T> : IReactiveProperty<T>, IDisposable, IOptimizedObservable<T>, IObserverLinkedList<T>
+    public class ReactiveProperty<T>
+        : IReactiveProperty<T>,
+            IDisposable,
+            IOptimizedObservable<T>,
+            IObserverLinkedList<T>
     {
 #if !UniRxLibrary
-        static readonly IEqualityComparer<T> defaultEqualityComparer = UnityEqualityComparer.GetDefault<T>();
+        static readonly IEqualityComparer<T> defaultEqualityComparer =
+            UnityEqualityComparer.GetDefault<T>();
 #else
         static readonly IEqualityComparer<T> defaultEqualityComparer = EqualityComparer<T>.Default;
 #endif
@@ -99,18 +104,12 @@ namespace UniRx
 
         protected virtual IEqualityComparer<T> EqualityComparer
         {
-            get
-            {
-                return defaultEqualityComparer;
-            }
+            get { return defaultEqualityComparer; }
         }
 
         public T Value
         {
-            get
-            {
-                return value;
-            }
+            get { return value; }
             set
             {
                 if (!EqualityComparer.Equals(this.value, value))
@@ -128,16 +127,11 @@ namespace UniRx
         // because sometimes value is deserialized from UnityEngine.
         public bool HasValue
         {
-            get
-            {
-                return true;
-            }
+            get { return true; }
         }
 
         public ReactiveProperty()
-            : this(default(T))
-        {
-        }
+            : this(default(T)) { }
 
         public ReactiveProperty(T initialValue)
         {
@@ -223,7 +217,8 @@ namespace UniRx
 
         protected virtual void Dispose(bool disposing)
         {
-            if (isDisposed) return;
+            if (isDisposed)
+                return;
 
             var node = root;
             root = last = null;
@@ -250,10 +245,16 @@ namespace UniRx
     /// <summary>
     /// Lightweight property broker.
     /// </summary>
-    public class ReadOnlyReactiveProperty<T> : IReadOnlyReactiveProperty<T>, IDisposable, IOptimizedObservable<T>, IObserverLinkedList<T>, IObserver<T>
+    public class ReadOnlyReactiveProperty<T>
+        : IReadOnlyReactiveProperty<T>,
+            IDisposable,
+            IOptimizedObservable<T>,
+            IObserverLinkedList<T>,
+            IObserver<T>
     {
 #if !UniRxLibrary
-        static readonly IEqualityComparer<T> defaultEqualityComparer = UnityEqualityComparer.GetDefault<T>();
+        static readonly IEqualityComparer<T> defaultEqualityComparer =
+            UnityEqualityComparer.GetDefault<T>();
 #else
         static readonly IEqualityComparer<T> defaultEqualityComparer = EqualityComparer<T>.Default;
 #endif
@@ -272,26 +273,17 @@ namespace UniRx
 
         public T Value
         {
-            get
-            {
-                return latestValue;
-            }
+            get { return latestValue; }
         }
 
         public bool HasValue
         {
-            get
-            {
-                return canPublishValueOnSubscribe;
-            }
+            get { return canPublishValueOnSubscribe; }
         }
 
         protected virtual IEqualityComparer<T> EqualityComparer
         {
-            get
-            {
-                return defaultEqualityComparer;
-            }
+            get { return defaultEqualityComparer; }
         }
 
         public ReadOnlyReactiveProperty(IObservable<T> source)
@@ -312,7 +304,11 @@ namespace UniRx
             this.sourceConnection = source.Subscribe(this);
         }
 
-        public ReadOnlyReactiveProperty(IObservable<T> source, T initialValue, bool distinctUntilChanged)
+        public ReadOnlyReactiveProperty(
+            IObservable<T> source,
+            T initialValue,
+            bool distinctUntilChanged
+        )
         {
             this.distinctUntilChanged = distinctUntilChanged;
             this.latestValue = initialValue;
@@ -378,7 +374,8 @@ namespace UniRx
 
         protected virtual void Dispose(bool disposing)
         {
-            if (isDisposed) return;
+            if (isDisposed)
+                return;
             sourceConnection.Dispose();
 
             var node = root;
@@ -415,7 +412,8 @@ namespace UniRx
 
         void IObserver<T>.OnNext(T value)
         {
-            if (isDisposed) return;
+            if (isDisposed)
+                return;
 
             if (canPublishValueOnSubscribe)
             {
@@ -481,12 +479,17 @@ namespace UniRx
             return new ReadOnlyReactiveProperty<T>(source);
         }
 
-        public static IReadOnlyReactiveProperty<T> ToReactiveProperty<T>(this IObservable<T> source, T initialValue)
+        public static IReadOnlyReactiveProperty<T> ToReactiveProperty<T>(
+            this IObservable<T> source,
+            T initialValue
+        )
         {
             return new ReadOnlyReactiveProperty<T>(source, initialValue);
         }
 
-        public static ReadOnlyReactiveProperty<T> ToReadOnlyReactiveProperty<T>(this IObservable<T> source)
+        public static ReadOnlyReactiveProperty<T> ToReadOnlyReactiveProperty<T>(
+            this IObservable<T> source
+        )
         {
             return new ReadOnlyReactiveProperty<T>(source);
         }
@@ -502,7 +505,10 @@ namespace UniRx
             tuple.Item1.TrySetCanceled();
         }
 
-        public static Task<T> WaitUntilValueChangedAsync<T>(this IReadOnlyReactiveProperty<T> source, CancellationToken cancellationToken = default(CancellationToken))
+        public static Task<T> WaitUntilValueChangedAsync<T>(
+            this IReadOnlyReactiveProperty<T> source,
+            CancellationToken cancellationToken = default(CancellationToken)
+        )
         {
             var tcs = new CancellableTaskCompletionSource<T>();
 
@@ -511,27 +517,35 @@ namespace UniRx
             {
                 // Skip first value
                 var isFirstValue = true;
-                disposable.Disposable = source.Subscribe(x =>
-                {
-                    if (isFirstValue)
+                disposable.Disposable = source.Subscribe(
+                    x =>
                     {
-                        isFirstValue = false;
-                        return;
-                    }
-                    else
-                    {
-                        disposable.Dispose(); // finish subscription.
-                        tcs.TrySetResult(x);
-                    }
-                }, ex => tcs.TrySetException(ex), () => tcs.TrySetCanceled());
+                        if (isFirstValue)
+                        {
+                            isFirstValue = false;
+                            return;
+                        }
+                        else
+                        {
+                            disposable.Dispose(); // finish subscription.
+                            tcs.TrySetResult(x);
+                        }
+                    },
+                    ex => tcs.TrySetException(ex),
+                    () => tcs.TrySetCanceled()
+                );
             }
             else
             {
-                disposable.Disposable = source.Subscribe(x =>
-                {
-                    disposable.Dispose(); // finish subscription.
-                    tcs.TrySetResult(x);
-                }, ex => tcs.TrySetException(ex), () => tcs.TrySetCanceled());
+                disposable.Disposable = source.Subscribe(
+                    x =>
+                    {
+                        disposable.Dispose(); // finish subscription.
+                        tcs.TrySetResult(x);
+                    },
+                    ex => tcs.TrySetException(ex),
+                    () => tcs.TrySetCanceled()
+                );
             }
 
             cancellationToken.Register(Callback, Tuple.Create(tcs, disposable.Disposable), false);
@@ -539,22 +553,28 @@ namespace UniRx
             return tcs.Task;
         }
 
-        public static System.Runtime.CompilerServices.TaskAwaiter<T> GetAwaiter<T>(this IReadOnlyReactiveProperty<T> source)
+        public static System.Runtime.CompilerServices.TaskAwaiter<T> GetAwaiter<T>(
+            this IReadOnlyReactiveProperty<T> source
+        )
         {
             return source.WaitUntilValueChangedAsync(CancellationToken.None).GetAwaiter();
         }
-
 #endif
 
         /// <summary>
         /// Create ReadOnlyReactiveProperty with distinctUntilChanged: false.
         /// </summary>
-        public static ReadOnlyReactiveProperty<T> ToSequentialReadOnlyReactiveProperty<T>(this IObservable<T> source)
+        public static ReadOnlyReactiveProperty<T> ToSequentialReadOnlyReactiveProperty<T>(
+            this IObservable<T> source
+        )
         {
             return new ReadOnlyReactiveProperty<T>(source, distinctUntilChanged: false);
         }
 
-        public static ReadOnlyReactiveProperty<T> ToReadOnlyReactiveProperty<T>(this IObservable<T> source, T initialValue)
+        public static ReadOnlyReactiveProperty<T> ToReadOnlyReactiveProperty<T>(
+            this IObservable<T> source,
+            T initialValue
+        )
         {
             return new ReadOnlyReactiveProperty<T>(source, initialValue);
         }
@@ -562,12 +582,21 @@ namespace UniRx
         /// <summary>
         /// Create ReadOnlyReactiveProperty with distinctUntilChanged: false.
         /// </summary>
-        public static ReadOnlyReactiveProperty<T> ToSequentialReadOnlyReactiveProperty<T>(this IObservable<T> source, T initialValue)
+        public static ReadOnlyReactiveProperty<T> ToSequentialReadOnlyReactiveProperty<T>(
+            this IObservable<T> source,
+            T initialValue
+        )
         {
-            return new ReadOnlyReactiveProperty<T>(source, initialValue, distinctUntilChanged: false);
+            return new ReadOnlyReactiveProperty<T>(
+                source,
+                initialValue,
+                distinctUntilChanged: false
+            );
         }
 
-        public static IObservable<T> SkipLatestValueOnSubscribe<T>(this IReadOnlyReactiveProperty<T> source)
+        public static IObservable<T> SkipLatestValueOnSubscribe<T>(
+            this IReadOnlyReactiveProperty<T> source
+        )
         {
             return source.HasValue ? source.Skip(1) : source;
         }
@@ -577,34 +606,41 @@ namespace UniRx
         /// <summary>
         /// Lastest values of each sequence are all true.
         /// </summary>
-        public static IObservable<bool> CombineLatestValuesAreAllTrue(this IEnumerable<IObservable<bool>> sources)
+        public static IObservable<bool> CombineLatestValuesAreAllTrue(
+            this IEnumerable<IObservable<bool>> sources
+        )
         {
-            return sources.CombineLatest().Select(xs =>
-            {
-                foreach (var item in xs)
+            return sources
+                .CombineLatest()
+                .Select(xs =>
                 {
-                    if (item == false)
-                        return false;
-                }
-                return true;
-            });
+                    foreach (var item in xs)
+                    {
+                        if (item == false)
+                            return false;
+                    }
+                    return true;
+                });
         }
-
 
         /// <summary>
         /// Lastest values of each sequence are all false.
         /// </summary>
-        public static IObservable<bool> CombineLatestValuesAreAllFalse(this IEnumerable<IObservable<bool>> sources)
+        public static IObservable<bool> CombineLatestValuesAreAllFalse(
+            this IEnumerable<IObservable<bool>> sources
+        )
         {
-            return sources.CombineLatest().Select(xs =>
-            {
-                foreach (var item in xs)
+            return sources
+                .CombineLatest()
+                .Select(xs =>
                 {
-                    if (item == true)
-                        return false;
-                }
-                return true;
-            });
+                    foreach (var item in xs)
+                    {
+                        if (item == true)
+                            return false;
+                    }
+                    return true;
+                });
         }
     }
 }

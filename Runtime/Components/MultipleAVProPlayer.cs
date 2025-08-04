@@ -49,16 +49,28 @@ namespace UNIHper
         // TODO: 此路径应由PlayList的Items决定， 不应另外维护一份
         private List<string> videoPaths = new();
 
-        public void PrepareVideos(string videoDir, string searchPattern = "*.mp4", SearchOption searchOption = SearchOption.TopDirectoryOnly, Action<AVProPlayer> settingCallback = null)
+        public void PrepareVideos(
+            string videoDir,
+            string searchPattern = "*.mp4",
+            SearchOption searchOption = SearchOption.TopDirectoryOnly,
+            Action<AVProPlayer> settingCallback = null
+        )
         {
             if (!Path.IsPathRooted(videoDir))
             {
                 videoDir = Path.Combine(Application.streamingAssetsPath, videoDir);
             }
             var _patterns = searchPattern.Replace("*", "").Split('|').ToList();
-            var _videoPaths = Directory.GetFiles(videoDir, "*.*", searchOption).Where(_path => _patterns.Exists(_pattern => _path.EndsWith(_pattern)));
+            var _videoPaths = Directory
+                .GetFiles(videoDir, "*.*", searchOption)
+                .Where(_path => _patterns.Exists(_pattern => _path.EndsWith(_pattern)));
             _videoPaths = _videoPaths
-                .Select(_path => _path.StartsWith(Application.streamingAssetsPath + "\\") ? _path.Replace(Application.streamingAssetsPath + "\\", "") : _path)
+                .Select(
+                    _path =>
+                        _path.StartsWith(Application.streamingAssetsPath + "\\")
+                            ? _path.Replace(Application.streamingAssetsPath + "\\", "")
+                            : _path
+                )
                 .Select(_path => _path.ToForwardSlash())
                 .ToList();
             PrepareVideos(_videoPaths, settingCallback);
@@ -77,7 +89,10 @@ namespace UNIHper
             }
         }
 
-        public void PrepareVideos(IEnumerable<string> VideoPaths, Action<AVProPlayer> settingCallback = null)
+        public void PrepareVideos(
+            IEnumerable<string> VideoPaths,
+            Action<AVProPlayer> settingCallback = null
+        )
         {
             if (VideoPaths.Count() <= 0)
             {
@@ -101,7 +116,10 @@ namespace UNIHper
             videoPaths.ForEach(_videoPath =>
             {
                 MediaPlaylist.MediaItem _mediaItem = new MediaPlaylist.MediaItem();
-                _mediaItem.mediaPath = new MediaPath(_videoPath, MediaPathType.RelativeToStreamingAssetsFolder);
+                _mediaItem.mediaPath = new MediaPath(
+                    _videoPath,
+                    MediaPathType.RelativeToStreamingAssetsFolder
+                );
                 _mediaItem.startMode = PlaylistMediaPlayer.StartMode.Manual;
                 _mediaItem.progressMode = PlaylistMediaPlayer.ProgressMode.OnFinish;
                 // item.isOverrideTransition = false;
@@ -172,7 +190,14 @@ namespace UNIHper
             ListPlayer.Play();
         }
 
-        public void Play(int videoIndex, Action<AVProPlayer> OnCompleted, bool Loop = false, double StartTime = 0f, double EndTime = 0f, bool seek2StartAfterFinished = true)
+        public void Play(
+            int videoIndex,
+            Action<AVProPlayer> OnCompleted,
+            bool Loop = false,
+            double StartTime = 0f,
+            double EndTime = 0f,
+            bool seek2StartAfterFinished = true
+        )
         {
             if (videoIndex < 0 || videoIndex >= videoPaths.Count)
             {
@@ -185,8 +210,15 @@ namespace UNIHper
             SwitchAsObservable(videoIndex, StartTime)
                 .Subscribe(_player =>
                 {
-                    Debug.Log("[debug] 视频切换完成, 开始播放...");
-                    _player.Play(videoPaths[videoIndex], OnCompleted, Loop, StartTime, EndTime, seek2StartAfterFinished);
+                    // Debug.Log("[debug] 视频切换完成, 开始播放...");
+                    _player.Play(
+                        videoPaths[videoIndex],
+                        OnCompleted,
+                        Loop,
+                        StartTime,
+                        EndTime,
+                        seek2StartAfterFinished
+                    );
                 });
         }
 
@@ -199,7 +231,14 @@ namespace UNIHper
         /// <param name="StartTime">开始时间</param>
         /// <param name="EndTime">结束时间</param>
         /// <param name="seek2StartAfterFinished">播放完成后是否跳到首帧</param>
-        public void Play(string Path, Action<AVProPlayer> OnCompleted, bool Loop = false, double StartTime = 0f, double EndTime = 0f, bool seek2StartAfterFinished = true)
+        public void Play(
+            string Path,
+            Action<AVProPlayer> OnCompleted,
+            bool Loop = false,
+            double StartTime = 0f,
+            double EndTime = 0f,
+            bool seek2StartAfterFinished = true
+        )
         {
             var _idx = FindVideoIndex(Path);
             if (_idx == -1)
@@ -243,7 +282,13 @@ namespace UNIHper
             CurrentPlayer.SeekToFrame(Frame);
         }
 
-        public void Switch(string videoName, bool bRewind = false, bool bAutoPlay = false, float StartTime = 0, float EndTime = 0)
+        public void Switch(
+            string videoName,
+            bool bRewind = false,
+            bool bAutoPlay = false,
+            float StartTime = 0,
+            float EndTime = 0
+        )
         {
             var _idx = FindVideoIndex(videoName);
             if (_idx == -1)
@@ -303,7 +348,13 @@ namespace UNIHper
             return true;
         }
 
-        public void Switch(int mediaIndex, bool bRewind = false, bool bAutoPlay = false, float StartTime = 0, float EndTime = 0)
+        public void Switch(
+            int mediaIndex,
+            bool bRewind = false,
+            bool bAutoPlay = false,
+            float StartTime = 0,
+            float EndTime = 0
+        )
         {
             var _mediaItem = GetMediaItem(mediaIndex);
 
@@ -353,13 +404,17 @@ namespace UNIHper
                     .First()
                     .Do(_player =>
                     {
-                        Debug.Log("OnItemChangedAsObservable: " + _player.name);
                         _player.Pause();
                     })
-                    .SelectMany(_player => (startTime == -1 || _player.CurrentTime == startTime) ? Observable.Return(_player) : _player.SeekAsObservable(startTime))
+                    .SelectMany(
+                        _player =>
+                            (startTime == -1 || _player.CurrentTime == startTime)
+                                ? Observable.Return(_player)
+                                : _player.SeekAsObservable(startTime)
+                    )
                     .Subscribe(_ =>
                     {
-                        Debug.Log($"[debug] 视频切换完成, 当前视频: {_.name}, 开始时间: {startTime}");
+                        // Debug.Log($"[debug] 视频切换完成, 当前视频: {_.name}, 开始时间: {startTime}");
                         _observer.OnNext(CurrentPlayer);
                         _observer.OnCompleted();
                     })
@@ -408,7 +463,8 @@ namespace UNIHper
 
         public IObservable<AVProPlayer> OnItemChangedAsObservable()
         {
-            return this.OnPlaylistItemChangedAsObservable().SelectMany(_ => Observable.NextFrame().Select(_1 => CurrentPlayer));
+            return this.OnPlaylistItemChangedAsObservable()
+                .SelectMany(_ => Observable.NextFrame().Select(_1 => CurrentPlayer));
         }
 
         public AVProPlayer CurrentPlayer => ListPlayer.CurrentPlayer.Get<AVProPlayer>();
