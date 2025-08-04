@@ -1,18 +1,10 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
-using DG.Tweening;
-using PathologicalGames;
 using RenderHeads.Media.AVProVideo;
 using UniRx;
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.Events;
-using Sirenix.OdinInspector;
-using System.ComponentModel;
 using DNHper;
 
 namespace UNIHper
@@ -210,7 +202,6 @@ namespace UNIHper
             SwitchAsObservable(videoIndex, StartTime)
                 .Subscribe(_player =>
                 {
-                    // Debug.Log("[debug] 视频切换完成, 开始播放...");
                     _player.Play(
                         videoPaths[videoIndex],
                         OnCompleted,
@@ -414,7 +405,6 @@ namespace UNIHper
                     )
                     .Subscribe(_ =>
                     {
-                        // Debug.Log($"[debug] 视频切换完成, 当前视频: {_.name}, 开始时间: {startTime}");
                         _observer.OnNext(CurrentPlayer);
                         _observer.OnCompleted();
                     })

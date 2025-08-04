@@ -465,5 +465,30 @@ namespace UNIHper
             Debug.Log(_centerPosition);
             return _centerPosition;
         }
+
+        public static T GetOrAdd<T>(this GameObject gameObject)
+            where T : Component
+        {
+            var component = gameObject.GetComponent<T>();
+            if (component == null)
+            {
+                component = gameObject.AddComponent<T>();
+            }
+
+            return component;
+        }
+
+        public static T GetOrAdd<T>(this Component component)
+            where T : Component
+        {
+            var gameObject = component.gameObject;
+            return gameObject.GetOrAdd<T>();
+        }
+
+        public static T GetOrAdd<T>(this Transform transform)
+            where T : Component
+        {
+            return transform.gameObject.GetOrAdd<T>();
+        }
     }
 }

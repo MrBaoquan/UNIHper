@@ -480,7 +480,14 @@ namespace AVProUI
                 null
             );
 
-            return _rCenter == _lCenter && _rSize == _lSize;
+            bool _isFullScreen =
+                Mathf.RoundToInt(_rCenter.x) == Mathf.RoundToInt(_lCenter.x)
+                && Mathf.RoundToInt(_rCenter.y) == Mathf.RoundToInt(_lCenter.y)
+                && Mathf.RoundToInt(_rSize.x) == Mathf.RoundToInt(_lSize.x)
+                && Mathf.RoundToInt(_rSize.y) == Mathf.RoundToInt(_lSize.y);
+
+            Debug.Log(_isFullScreen);
+            return _isFullScreen;
         }
 
         private void ToggleFullScreen()
@@ -496,8 +503,10 @@ namespace AVProUI
             }
         }
 
-        private void EnterFullScreen()
+        public void EnterFullScreen()
         {
+            if (isFullScreen())
+                return;
             var _videoUIRect = this.Get<RectTransform>();
 
             _videoUIRect.anchorMin = Vector2.one * 0.5f;
@@ -521,8 +530,10 @@ namespace AVProUI
             _isFullScreen.Value = true;
         }
 
-        private void ExitFullScreen()
+        public void ExitFullScreen()
         {
+            if (!isFullScreen())
+                return;
             var _videoUIRect = this.Get<RectTransform>();
             _videoUIRect.anchorMin = Vector2.one * 0.5f;
             _videoUIRect.anchorMax = Vector2.one * 0.5f;
