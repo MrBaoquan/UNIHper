@@ -62,8 +62,8 @@ namespace UNIHper
         /// <typeparam name="T"></typeparam>
         /// <param name="InCallback"></param>
         /// <returns></returns>
-        public static T Show<T>(Action<T> InCallback = null)
-            where T : UIBase => Instance.Show<T>(InCallback);
+        public static T Show<T>()
+            where T : UIBase => Instance.Show<T>();
 
         /// <summary>
         /// Hide the UI of the specified type. If it is not showing, do nothing.

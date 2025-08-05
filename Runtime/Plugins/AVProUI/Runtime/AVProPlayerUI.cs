@@ -486,7 +486,7 @@ namespace AVProUI
                 && Mathf.RoundToInt(_rSize.x) == Mathf.RoundToInt(_lSize.x)
                 && Mathf.RoundToInt(_rSize.y) == Mathf.RoundToInt(_lSize.y);
 
-            Debug.Log(_isFullScreen);
+            // Debug.Log(_isFullScreen);
             return _isFullScreen;
         }
 

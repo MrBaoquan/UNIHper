@@ -30,6 +30,7 @@ v1.25.xxx
 - Indexer优化，增加MinStepForValue接口, OnPrev & OnNext接口, 修复LastSet的bug
 - AppConfig增加鼠标控制
 - 增加TextureTransition过渡组件, 拓展出FadeTo接口
+- UIManager 增加单个脚本多个实例功能
 
 v1.25.715
 - 修复Linker文件不存在时的错误

@@ -30,6 +30,9 @@ namespace UNIHper.UI
         [JsonProperty("order"), DefaultValue(-1)]
         public int Order = -1;
 
+        [JsonProperty("id"), DefaultValue(0)]
+        public int InstID = 0;
+
         [JsonIgnore]
         internal string __UIKey = string.Empty;
 
@@ -136,24 +139,29 @@ namespace UNIHper.UI
             SpawnUIS(_uis);
         }
 
-        public UIBase Show(string uiKey, Action<UIBase> callback = null, bool bForceNotify = false)
+        public UIBase Show(string uiKey, bool bForceNotify = false)
         {
-            return Show<UIBase>(uiKey, callback, bForceNotify);
+            return Show<UIBase>(uiKey, bForceNotify);
         }
 
-        public T Show<T>(Action<T> callback = null, bool bForceNotify = false)
+        public T Show<T>(bool bForceNotify = false)
             where T : UIBase
         {
             var _uiKey = AssemblyConfig.GetTypeUniqueID(typeof(T));
-            return Show<T>(_uiKey, callback);
+            return Show<T>(_uiKey, bForceNotify);
         }
 
-        private T Show<T>(string uiKey, Action<T> callback = null, bool bForceNotify = false)
+        public T Show<T>(int instanceID, bool bForceNotify = false)
             where T : UIBase
         {
-            UIBase _uiComponent = null;
+            var _uiKey = AssemblyConfig.GetTypeUniqueID(typeof(T), instanceID);
+            return Show<T>(_uiKey, bForceNotify);
+        }
 
-            if (!allSpawnedUICaches.TryGetValue(uiKey, out _uiComponent))
+        private T Show<T>(string uiKey, bool bForceNotify = false)
+            where T : UIBase
+        {
+            if (!allSpawnedUICaches.TryGetValue(uiKey, out UIBase _uiComponent))
             {
                 Debug.LogWarningFormat($"Show ui {uiKey} failed. UI {uiKey} not exits.");
                 return null;
@@ -168,44 +176,134 @@ namespace UNIHper.UI
             }
 
             Show(uiKey, _uiComponent);
-            callback?.Invoke(_uiComponent as T);
             return _uiComponent as T;
         }
 
-        public T Get<T>(Action<T> callback = null)
+        public T Create<T>(int instanceID = 0)
             where T : UIBase
         {
-            string uiKey = AssemblyConfig.GetTypeUniqueID(typeof(T));
-            UIBase _uiComponent = null;
-            if (!allSpawnedUICaches.TryGetValue(uiKey, out _uiComponent))
+            var _uiKey = AssemblyConfig.GetTypeUniqueID(typeof(T), instanceID);
+
+            if (Exists<T>(instanceID))
+            {
+                Debug.LogWarning($"UI {_uiKey} is already exists.");
+                return Get<T>(instanceID);
+            }
+
+            var _config = findUIConfigs<T>().Where(x => x.__UIKey.Contains("#")).FirstOrDefault();
+            if (_config == null)
+            {
+                _config = new UIConfig { };
+            }
+            _config.__UIKey = _uiKey;
+
+            return Create<T>(instanceID, _config);
+        }
+
+        public T Create<T>(string assetName, int instanceID = 0)
+            where T : UIBase
+        {
+            var _uiKey = AssemblyConfig.GetTypeUniqueID(typeof(T), instanceID);
+
+            if (Exists<T>(instanceID))
+            {
+                Debug.LogWarning($"UI {_uiKey} is already exists.");
+                return Get<T>(instanceID);
+            }
+
+            var _config = findUIConfigs<T>().Where(x => x.__UIKey.Contains("#")).FirstOrDefault();
+            if (_config == null)
+            {
+                _config = new UIConfig { };
+            }
+            _config.__UIKey = _uiKey;
+            _config.Asset = assetName;
+
+            return Create<T>(instanceID, _config);
+        }
+
+        public T Create<T>(int instanceID, UIConfig uiConfig)
+            where T : UIBase
+        {
+            var _uiKey = $"{AssemblyConfig.GetTypeUniqueID(typeof(T), instanceID)}";
+            SpawnUI(_uiKey, uiConfig);
+            return Get<T>(instanceID);
+        }
+
+        public async void Destroy<T>(int instanceID = 0, bool immediate = false)
+            where T : UIBase
+        {
+            if (!Exists<T>(instanceID))
+            {
+                Debug.LogWarning($"{typeof(T)} with instanceID {instanceID} does not exist");
+                return;
+            }
+            var _uiKey = AssemblyConfig.GetTypeUniqueID(typeof(T), instanceID);
+            var _uiComponent = Hide<T>(instanceID);
+            allSpawnedUICaches.Remove(_uiKey);
+            if (!immediate)
+            {
+                await _uiComponent.HideTask(0);
+            }
+
+            GameObject.Destroy(_uiComponent.gameObject);
+        }
+
+        public T Get<T>(int instanceID = 0)
+            where T : UIBase
+        {
+            string uiKey = AssemblyConfig.GetTypeUniqueID(typeof(T), instanceID);
+            if (!allSpawnedUICaches.TryGetValue(uiKey, out UIBase _uiComponent))
             {
                 return null;
             }
 
-            callback?.Invoke(_uiComponent as T);
             return _uiComponent as T;
         }
 
         public UIBase Get(string uiKey)
         {
-            UIBase _uiComponent = null;
-            if (!allSpawnedUICaches.TryGetValue(uiKey, out _uiComponent))
+            if (!allSpawnedUICaches.TryGetValue(uiKey, out UIBase _uiComponent))
             {
                 return null;
             }
             return _uiComponent;
         }
 
-        public T Hide<T>(Action<T> uiKey = null, bool bForceNotify = false)
+        public List<T> GetAll<T>()
+            where T : UIBase
+        {
+            return allSpawnedUICaches.Values.Where(x => x is T).Cast<T>().ToList();
+        }
+
+        public bool Exists<T>(int instanceID = 0)
+            where T : UIBase
+        {
+            return Get<T>(instanceID) != null;
+        }
+
+        public T Hide<T>(int instanceID, bool bForceNotify = false)
+            where T : UIBase
+        {
+            if (!Exists<T>(instanceID))
+            {
+                Debug.LogError($"{typeof(T)} is not exist.");
+                return null;
+            }
+            var _uiKey = AssemblyConfig.GetTypeUniqueID(typeof(T), instanceID);
+            return Hide<T>(_uiKey, bForceNotify);
+        }
+
+        public T Hide<T>(bool bForceNotify = false)
             where T : UIBase
         {
             var _key = AssemblyConfig.GetTypeUniqueID(typeof(T));
-            return Hide<T>(_key, uiKey, bForceNotify);
+            return Hide<T>(_key, bForceNotify);
         }
 
-        public UIBase Hide(string uiKey, Action<UIBase> callback = null, bool bForceNotify = false)
+        public UIBase Hide(string uiKey, bool bForceNotify = false)
         {
-            return Hide<UIBase>(uiKey, callback, bForceNotify);
+            return Hide<UIBase>(uiKey, bForceNotify);
         }
 
         public bool IsShowing<T>()
@@ -214,16 +312,15 @@ namespace UNIHper.UI
             return Get<T>() != null && Get<T>().isShowing;
         }
 
-        private T Hide<T>(string uiKey, Action<T> callback = null, bool bForceNotify = false)
+        private T Hide<T>(string uiKey, bool bForceNotify = false)
             where T : UIBase
         {
             if (uiKey == "")
             {
                 uiKey = typeof(T).Name;
             }
-            UIBase _uiComponent;
 
-            if (!allSpawnedUICaches.TryGetValue(uiKey, out _uiComponent))
+            if (!allSpawnedUICaches.TryGetValue(uiKey, out UIBase _uiComponent))
             {
                 Debug.LogWarningFormat("Hide ui {0} failed. UI {0} not exits.", uiKey);
                 return null;
@@ -250,9 +347,14 @@ namespace UNIHper.UI
                     hidePopupUI(uiKey);
                     break;
             }
-            if (callback != null)
-                callback(_uiComponent as T);
+
             return _uiComponent as T;
+        }
+
+        public void HideAll<T>()
+            where T : UIBase
+        {
+            GetAll<T>().ForEach(x => x.Hide());
         }
 
         public void HideAll()
@@ -261,6 +363,20 @@ namespace UNIHper.UI
                 .Where(_ui => _ui.Value.isShowing)
                 .ToList()
                 .ForEach(_ui => Hide(_ui.Key));
+        }
+
+        public void ShowAll<T>()
+            where T : UIBase
+        {
+            GetAll<T>().ForEach(x => x.Show());
+        }
+
+        public void ShowAll()
+        {
+            allSpawnedUICaches
+                .Where(_ui => !_ui.Value.isShowing)
+                .ToList()
+                .ForEach(_ui => Show(_ui.Key));
         }
 
         private bool isStashing = false;
@@ -317,19 +433,19 @@ namespace UNIHper.UI
         // 对话框类
         public void ShowAlert(string InContent, Action OnConfirm = null)
         {
-            Show<DialogUI>(InUI =>
-            {
-                InUI.SetContent(InContent).ShowDialog();
-                IDisposable _clear = null;
-                _clear = InUI.OnConfirmAsObservable()
-                    .Subscribe(_ =>
-                    {
-                        Utility.Dispose(ref _clear);
+            var _uiComponent = Show<DialogUI>();
 
-                        Utility.CallFunction(OnConfirm);
-                        Hide<DialogUI>();
-                    });
-            });
+            _uiComponent.SetContent(InContent).ShowDialog();
+            IDisposable _clear = null;
+            _clear = _uiComponent
+                .OnConfirmAsObservable()
+                .Subscribe(_ =>
+                {
+                    Utility.Dispose(ref _clear);
+
+                    Utility.CallFunction(OnConfirm);
+                    Hide<DialogUI>();
+                });
         }
 
         public void ShowConfirmPanel(
@@ -338,31 +454,31 @@ namespace UNIHper.UI
             Action OnCancel = null
         )
         {
-            Show<DialogUI>(InUI =>
-            {
-                InUI.SetContent(InContent).ShowConfirm();
-                IDisposable _clearConfirm = null;
-                IDisposable _clearCancel = null;
-                _clearConfirm = InUI.OnConfirmAsObservable()
-                    .Subscribe(_ =>
-                    {
-                        Utility.Dispose(ref _clearConfirm);
-                        Utility.Dispose(ref _clearCancel);
+            var _uiComponent = Show<DialogUI>();
+            _uiComponent.SetContent(InContent).ShowConfirm();
+            IDisposable _clearConfirm = null;
+            IDisposable _clearCancel = null;
+            _clearConfirm = _uiComponent
+                .OnConfirmAsObservable()
+                .Subscribe(_ =>
+                {
+                    Utility.Dispose(ref _clearConfirm);
+                    Utility.Dispose(ref _clearCancel);
 
-                        Utility.CallFunction(OnConfirm);
-                        Hide<DialogUI>();
-                    });
+                    Utility.CallFunction(OnConfirm);
+                    Hide<DialogUI>();
+                });
 
-                _clearCancel = InUI.OnCancelAsObservable()
-                    .Subscribe(_ =>
-                    {
-                        Utility.Dispose(ref _clearConfirm);
-                        Utility.Dispose(ref _clearCancel);
+            _clearCancel = _uiComponent
+                .OnCancelAsObservable()
+                .Subscribe(_ =>
+                {
+                    Utility.Dispose(ref _clearConfirm);
+                    Utility.Dispose(ref _clearCancel);
 
-                        Utility.CallFunction(OnCancel);
-                        Hide<DialogUI>();
-                    });
-            });
+                    Utility.CallFunction(OnCancel);
+                    Hide<DialogUI>();
+                });
         }
 
         public void HideConfirmPanel()
@@ -381,19 +497,19 @@ namespace UNIHper.UI
             Func<string, bool> OnSaved
         )
         {
-            Show<FileDialog>(InUI =>
-            {
-                IDisposable _clear = null;
-                _clear = InUI.SaveFile(BaseDir, SearchPattern)
-                    .Subscribe(_value =>
+            var _uiComponent = Show<FileDialog>();
+
+            IDisposable _clear = null;
+            _clear = _uiComponent
+                .SaveFile(BaseDir, SearchPattern)
+                .Subscribe(_value =>
+                {
+                    if (OnSaved(Path.Combine(BaseDir, _value)))
                     {
-                        if (OnSaved(Path.Combine(BaseDir, _value)))
-                        {
-                            Utility.Dispose(ref _clear);
-                            Hide<FileDialog>();
-                        }
-                    });
-            });
+                        Utility.Dispose(ref _clear);
+                        Hide<FileDialog>();
+                    }
+                });
         }
 
         public void HideSaveFileDialog()
@@ -412,20 +528,18 @@ namespace UNIHper.UI
             Func<string, bool> OnOpened
         )
         {
-            Show<FileDialog>(InUI =>
-            {
-                IDisposable _clear = null;
-                _clear = InUI.ReadFile(FileDir, InSearchPattern)
-                    .Subscribe(_value =>
+            var InUI = Show<FileDialog>();
+            IDisposable _clear = null;
+            _clear = InUI.ReadFile(FileDir, InSearchPattern)
+                .Subscribe(_value =>
+                {
+                    Utility.Dispose(ref _clear);
+                    if (OnOpened(Path.Combine(FileDir, _value)))
                     {
-                        Utility.Dispose(ref _clear);
-                        if (OnOpened(Path.Combine(FileDir, _value)))
-                        {
-                            Hide<FileDialog>();
-                        }
-                        ;
-                    });
-            });
+                        Hide<FileDialog>();
+                    }
+                    ;
+                });
         }
 
         public void AddConfig(string configPath)
@@ -503,19 +617,29 @@ namespace UNIHper.UI
                 });
         }
 
+        private List<UIConfig> findUIConfigs<T>()
+            where T : UIBase
+        {
+            return customUIConfigData.Values
+                .SelectMany(x => x.Values)
+                .Where(x => x.classType == typeof(T))
+                .ToList();
+        }
+
         // 加载代码注册UI
         private Dictionary<string, Dictionary<string, UIConfig>> loadCodeRegisterUI()
         {
             var _uis = AssemblyConfig.GetSubClasses(typeof(UIBase));
             return _uis.Select(_uiType =>
                 {
-                    var _attr = _uiType.GetCustomAttribute<UIPage>();
-                    if (_attr != null)
+                    var _attrs = _uiType.GetCustomAttributes<UIPage>(inherit: true);
+                    return _attrs.Select(_attr =>
                     {
-                        _attr.UIKey = AssemblyConfig.GetTypeUniqueID(_uiType);
-                    }
-                    return _attr;
+                        _attr.UIKey = AssemblyConfig.GetTypeUniqueID(_uiType, _attr.InstID);
+                        return _attr;
+                    });
                 })
+                .SelectMany(_attrs => _attrs)
                 .Where(_uiAttr => _uiAttr != null)
                 .GroupBy(_ => _.Scene)
                 .ToDictionary(
@@ -529,7 +653,8 @@ namespace UNIHper.UI
                                         ShowType = _uiAttr.Type,
                                         Asset = _uiAttr.Asset,
                                         RenderCanvasName = _uiAttr.Canvas,
-                                        Order = _uiAttr.Order
+                                        Order = _uiAttr.Order,
+                                        InstID = _uiAttr.InstID
                                     }
                             )
                             .ToDictionary(_uiConfig => _uiConfig.__UIKey, _uiConfig => _uiConfig)
@@ -665,7 +790,7 @@ namespace UNIHper.UI
             _uiComponent.__CanvasKey = uiConfig.RenderCanvasName;
             _uiComponent.__UIKey = uiKey;
             _uiComponent.__Type = uiConfig.ShowType;
-
+            _uiComponent.__InstanceID = uiConfig.InstID;
             _newUI.transform.SetParent(
                 getParentUIAttachTo(_uiComponent.Type, uiConfig.RenderCanvasName)
             );

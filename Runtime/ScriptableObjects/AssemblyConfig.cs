@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using DNHper;
 using Newtonsoft.Json;
 using UNIHper.UI;
@@ -36,7 +37,8 @@ namespace UNIHper
 
         public static Type GetUNIType(string InTypeName)
         {
-            return Self().getUNIType(InTypeName);
+            var _typeName = Regex.Replace(InTypeName, @"#[^#]+$", string.Empty);
+            return Self().getUNIType(_typeName);
         }
 
         public static List<Type> GetSubClasses(Type InBaseType)
@@ -124,9 +126,10 @@ namespace UNIHper
             return allTypesMap[InBaseType.AssemblyQualifiedName];
         }
 
-        public static string GetTypeUniqueID(Type InType)
+        public static string GetTypeUniqueID(Type InType, int instanceID = 0)
         {
-            return $"{InType.Assembly.GetName().Name}.{InType.Name}";
+            var _instanceID = instanceID > 0 ? $"#{instanceID}" : "";
+            return $"{InType.Assembly.GetName().Name}.{InType.Name}{_instanceID}";
         }
 
         /// <summary>

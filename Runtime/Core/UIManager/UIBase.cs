@@ -8,7 +8,7 @@ using DNHper;
 
 namespace UNIHper.UI
 {
-    [AttributeUsage(AttributeTargets.Class, Inherited = true, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Class, Inherited = true, AllowMultiple = true)]
     public class UIPage : Attribute
     {
         internal string UIKey;
@@ -27,6 +27,11 @@ namespace UNIHper.UI
         /// The order of the ui in the canvas.
         /// </summary>
         public int Order = -1;
+
+        /// <summary>
+        /// Instance ID of the ui.
+        /// </summary>
+        public int InstID = 0;
 
         /// <summary>
         /// The name of the canvas to render the ui.
@@ -52,9 +57,11 @@ namespace UNIHper.UI
         internal string __CanvasKey = string.Empty;
         internal string __UIKey = string.Empty;
         internal UIType __Type = UIType.Normal;
+        internal int __InstanceID = -1;
+
         public UIType Type => __Type;
         public string Key => __UIKey;
-
+        public int InstID => __InstanceID;
         public float ShowDuration { get; protected set; } = 0.0f;
 
         public Task<float> ShowTask(float offset = -0.1f)
