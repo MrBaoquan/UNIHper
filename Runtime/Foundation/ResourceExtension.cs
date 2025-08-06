@@ -11,10 +11,7 @@ namespace UNIHper
 {
     public static class ResourceExtension
     {
-        public static IObservable<Texture2D> LoadTexture2D(
-            this ResourceManager resourceManager,
-            string filePath
-        )
+        public static IObservable<Texture2D> LoadTexture2D(this ResourceManager resourceManager, string filePath)
         {
             if (!Path.IsPathRooted(filePath))
             {
@@ -26,10 +23,7 @@ namespace UNIHper
 #endif
 
             return Observable
-                .FromCoroutine<Texture2D>(
-                    (_observer, _cancellationToken) =>
-                        LoadTexture2D(filePath, _observer, _cancellationToken)
-                )
+                .FromCoroutine<Texture2D>((_observer, _cancellationToken) => LoadTexture2D(filePath, _observer, _cancellationToken))
                 .Catch<Texture2D, Exception>(
                     (_ex) =>
                     {
@@ -51,8 +45,7 @@ namespace UNIHper
             }
             return Observable
                 .FromCoroutine<AudioClip>(
-                    (_observer, _cancellationToken) =>
-                        LoadAudioClip(filePath, _observer, _cancellationToken, InAudioType)
+                    (_observer, _cancellationToken) => LoadAudioClip(filePath, _observer, _cancellationToken, InAudioType)
                 )
                 .Catch<AudioClip, Exception>(
                     (_ex) =>
@@ -84,9 +77,7 @@ namespace UNIHper
                 }
             }
 
-            using (
-                UnityWebRequest _www = UnityWebRequestMultimedia.GetAudioClip(InPath, InAudioType)
-            )
+            using (UnityWebRequest _www = UnityWebRequestMultimedia.GetAudioClip(InPath, InAudioType))
             {
                 yield return _www.SendWebRequest();
 #if UNITY_2021_1_OR_NEWER
@@ -118,13 +109,9 @@ namespace UNIHper
         }
 
         // 加载外部图片资源
-        private static IEnumerator LoadTexture2D(
-            string InPath,
-            IObserver<Texture2D> observer,
-            CancellationToken cancellationToken
-        )
+        private static IEnumerator LoadTexture2D(string filePath, IObserver<Texture2D> observer, CancellationToken cancellationToken)
         {
-            using (UnityWebRequest _wwwRequest = UnityWebRequestTexture.GetTexture(InPath))
+            using (UnityWebRequest _wwwRequest = UnityWebRequestTexture.GetTexture(filePath))
             {
                 yield return _wwwRequest.SendWebRequest();
 #if UNITY_2021_1_OR_NEWER
@@ -143,7 +130,7 @@ namespace UNIHper
                     try
                     {
                         var _texture = DownloadHandlerTexture.GetContent(_wwwRequest);
-                        _texture.name = Path.GetFileNameWithoutExtension(InPath);
+                        _texture.name = filePath.ToForwardSlash();
                         observer.OnNext(_texture);
                         observer.OnCompleted();
                     }

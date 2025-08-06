@@ -32,19 +32,16 @@ namespace UNIHper
         private Dictionary<string, List<ResourceItem>> resourcesConfigData;
 
         // 资源 AB包配置项
-        private Dictionary<string, List<ResourceItem>> assetBundlesConfigData =
-            new Dictionary<string, List<ResourceItem>>();
+        private Dictionary<string, List<ResourceItem>> assetBundlesConfigData = new Dictionary<string, List<ResourceItem>>();
 
         // 可寻址资源配置项
-        private Dictionary<string, List<ResourceItem>> addressableConfigData =
-            new Dictionary<string, List<ResourceItem>>();
+        private Dictionary<string, List<ResourceItem>> addressableConfigData = new Dictionary<string, List<ResourceItem>>();
 
         // 框架层持久性资源配置项
         private List<ResourceItem> persistConfigData;
 
         // 额外附加的资源配置项
-        private Dictionary<string, List<ResourceItem>> additionalConfigData =
-            new Dictionary<string, List<ResourceItem>>();
+        private Dictionary<string, List<ResourceItem>> additionalConfigData = new Dictionary<string, List<ResourceItem>>();
 
         /// <summary>
         ///  所有已加载资源实例 [Persistence,CUSTOM_RES_KEY,SCENE_NAME]
@@ -62,13 +59,7 @@ namespace UNIHper
             registerEvents();
 
             resources = resourcesConfigData.Keys
-                .Select(
-                    _key =>
-                        new KeyValuePair<string, Dictionary<string, AssetItem>>(
-                            _key,
-                            new Dictionary<string, AssetItem>()
-                        )
-                )
+                .Select(_key => new KeyValuePair<string, Dictionary<string, AssetItem>>(_key, new Dictionary<string, AssetItem>()))
                 .ToDictionary(_ => _.Key, _ => _.Value);
 
             // 框架层持久性资源
@@ -126,15 +117,7 @@ namespace UNIHper
 
         internal Dictionary<string, AssetItem> allAssets =>
             resources.Keys
-                .Where(
-                    _key =>
-                        new List<string>
-                        {
-                            "Persistence",
-                            getCurrentSceneName(),
-                            CUSTOM_RES_KEY
-                        }.Contains(_key)
-                )
+                .Where(_key => new List<string> { "Persistence", getCurrentSceneName(), CUSTOM_RES_KEY }.Contains(_key))
                 .Select(_key => resources[_key])
                 .SelectMany(_kv => _kv)
                 .ToDictionary(_kv => _kv.Key, _kv => _kv.Value);
@@ -166,11 +149,7 @@ namespace UNIHper
             var _type = typeof(T).FullName;
             string escapedSearchFilter = Regex.Escape(searchFilter.ToForwardSlash());
             string pattern = @$".*{escapedSearchFilter}.*_{_type}";
-            return allAssets
-                .Where(_kv => Regex.IsMatch(_kv.Key, pattern))
-                .Select(_kv => _kv.Value.asset)
-                .OfType<T>()
-                .ToList();
+            return allAssets.Where(_kv => Regex.IsMatch(_kv.Key, pattern)).Select(_kv => _kv.Value.asset).OfType<T>().ToList();
         }
 
         // TODO: 编辑器下和打包后获取的资源路径列表不一致， 现在存在多个资源重复加载情况，后续考虑优化
@@ -220,9 +199,7 @@ namespace UNIHper
         /// <param name="labelName"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        private IObservable<IEnumerable<AssetItem>> LoadAddressableAssetsByLabel<T>(
-            string labelName
-        )
+        private IObservable<IEnumerable<AssetItem>> LoadAddressableAssetsByLabel<T>(string labelName)
         {
             return Addressables
                 .LoadResourceLocationsAsync(labelName, typeof(T))
@@ -234,8 +211,7 @@ namespace UNIHper
                         .ToObservable()
                         // 加载资源并返回资源和位置
                         .SelectMany(
-                            location =>
-                                Addressables.LoadAssetAsync<T>(location).Task.ToObservable(),
+                            location => Addressables.LoadAssetAsync<T>(location).Task.ToObservable(),
                             (location, asset) => new { location.PrimaryKey, asset }
                         )
                         .ToList()
@@ -291,10 +267,7 @@ namespace UNIHper
         public List<T> GetLabelAssets<T>(string labelName)
             where T : UnityEngine.Object
         {
-            return allAssets
-                .Where(_ => _.Value.label == labelName)
-                .Select(_ => _.Value.asset as T)
-                .ToList();
+            return allAssets.Where(_ => _.Value.label == labelName).Select(_ => _.Value.asset as T).ToList();
         }
 
         public async Task<IEnumerable<AudioClip>> AppendAudioClips(IEnumerable<string> AudioPaths)
@@ -337,9 +310,7 @@ namespace UNIHper
                 return null;
             }
 
-            var _searchPatterns = searchPattern
-                .Split('|')
-                .Select(_pattern => _pattern.Replace("*", ""));
+            var _searchPatterns = searchPattern.Split('|').Select(_pattern => _pattern.Replace("*", ""));
             ;
             return await AppendAudioClips(
                 Directory
@@ -358,20 +329,18 @@ namespace UNIHper
         /// <summary>
         /// 加载指定路径的图片
         /// </summary>
-        /// <param name="TexturePathes">资源路径列表</param>
+        /// <param name="TexturePaths">资源路径列表</param>
         /// <returns></returns>
-        public async Task<IEnumerable<Texture2D>> AppendTexture2Ds(
-            IEnumerable<string> TexturePathes
-        )
+        public async Task<IEnumerable<Texture2D>> AppendTexture2Ds(IEnumerable<string> TexturePaths)
         {
-            var _textures = await LoadTexture2Ds(TexturePathes);
+            var _textures = await LoadTexture2Ds(TexturePaths);
             appendResources(_textures.OfType<Texture2D>(), CUSTOM_RES_KEY);
             return _textures;
         }
 
-        public IObservable<IList<Texture2D>> LoadTexture2Ds(IEnumerable<string> TexturePathes)
+        public IObservable<IList<Texture2D>> LoadTexture2Ds(IEnumerable<string> TexturePaths)
         {
-            return Observable.Zip(TexturePathes.Select(_path => this.LoadTexture2D(_path))).First();
+            return Observable.Zip(TexturePaths.Select(_path => this.LoadTexture2D(_path))).First();
         }
 
         /// <summary>
@@ -397,9 +366,7 @@ namespace UNIHper
                 return null;
             }
 
-            var _searchPatterns = searchPattern
-                .Split('|')
-                .Select(_pattern => _pattern.Replace("*", ""));
+            var _searchPatterns = searchPattern.Split('|').Select(_pattern => _pattern.Replace("*", ""));
             return await AppendTexture2Ds(
                 Directory
                     .GetFiles(textureDir, "*.*", searchOption)
@@ -413,17 +380,13 @@ namespace UNIHper
             SearchOption searchOption = SearchOption.TopDirectoryOnly
         )
         {
-            var _searchPatterns = searchPattern
-                .Split('|')
-                .Select(_pattern => _pattern.Replace("*", ""));
+            var _searchPatterns = searchPattern.Split('|').Select(_pattern => _pattern.Replace("*", ""));
 
             return Observable
                 .Zip(
                     Directory
                         .GetFiles(textureDir, "*.*", searchOption)
-                        .Where(
-                            _path => _searchPatterns.Contains(Path.GetExtension(_path).ToLower())
-                        )
+                        .Where(_path => _searchPatterns.Contains(Path.GetExtension(_path).ToLower()))
                         .Select(_path => this.LoadTexture2D(_path))
                 )
                 .First();
@@ -509,16 +472,11 @@ namespace UNIHper
         public void AddConfig(string configPath)
         {
             var _resAsset = Resources.Load<TextAsset>(configPath);
-            var _additionalConfig = Newtonsoft.Json.JsonConvert.DeserializeObject<
-                Dictionary<string, List<ResourceItem>>
-            >(_resAsset.text);
+            var _additionalConfig = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, List<ResourceItem>>>(_resAsset.text);
             mergeResourceConfig(additionalConfigData, _additionalConfig);
         }
 
-        private void mergeResourceConfig(
-            Dictionary<string, List<ResourceItem>> dstConfig,
-            Dictionary<string, List<ResourceItem>> srcConfig
-        )
+        private void mergeResourceConfig(Dictionary<string, List<ResourceItem>> dstConfig, Dictionary<string, List<ResourceItem>> srcConfig)
         {
             foreach (var _configNode in srcConfig)
             {
@@ -537,9 +495,7 @@ namespace UNIHper
             TextAsset _resAsset = Resources.Load<TextAsset>(_resPath);
 
             // 应用层自定义资源加载配置项
-            var _appConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<
-                Dictionary<string, List<ResourceItem>>
-            >(_resAsset.text);
+            var _appConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, List<ResourceItem>>>(_resAsset.text);
 
             mergeResourceConfig(_appConfigData, additionalConfigData);
 
@@ -548,9 +504,7 @@ namespace UNIHper
                 {
                     return new KeyValuePair<string, List<ResourceItem>>(
                         _configNode.Key,
-                        _configNode.Value
-                            .Where(_resItem => _resItem.driver == RESOURCES_DRIVER)
-                            .ToList()
+                        _configNode.Value.Where(_resItem => _resItem.driver == RESOURCES_DRIVER).ToList()
                     );
                 })
                 .ToDictionary(_ => _.Key, _ => _.Value);
@@ -561,9 +515,7 @@ namespace UNIHper
                 {
                     return new KeyValuePair<string, List<ResourceItem>>(
                         _configNode.Key,
-                        _configNode.Value
-                            .Where(_resItem => _resItem.driver == ASSET_BUDDLE_DRIVER)
-                            .ToList()
+                        _configNode.Value.Where(_resItem => _resItem.driver == ASSET_BUDDLE_DRIVER).ToList()
                     );
                 })
                 .ToDictionary(_ => _.Key, _ => _.Value);
@@ -574,9 +526,7 @@ namespace UNIHper
                 {
                     return new KeyValuePair<string, List<ResourceItem>>(
                         _configNode.Key,
-                        _configNode.Value
-                            .Where(_resItem => _resItem.driver == ADDRESSABLE_DRIVER)
-                            .ToList()
+                        _configNode.Value.Where(_resItem => _resItem.driver == ADDRESSABLE_DRIVER).ToList()
                     );
                 })
                 .ToDictionary(_ => _.Key, _ => _.Value);
@@ -584,12 +534,8 @@ namespace UNIHper
             // 框架层资源加载配置项
             var _persistAsset = Resources.Load<TextAsset>("__Configs/Persistence/res");
 
-            var _persistConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<
-                List<ResourceItem>
-            >(_persistAsset.text);
-            persistConfigData = _persistConfigData
-                .Where(_ => _.driver == RESOURCES_DRIVER)
-                .ToList();
+            var _persistConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ResourceItem>>(_persistAsset.text);
+            persistConfigData = _persistConfigData.Where(_ => _.driver == RESOURCES_DRIVER).ToList();
 
             // 框架层AB包
             var _persistABList = _persistConfigData.Except(persistConfigData).ToList();
@@ -645,16 +591,12 @@ namespace UNIHper
                 var _T = Type.GetType("UnityEngine." + _item.type + ",UnityEngine");
                 try
                 {
-                    UnityEngine.Object[] _resources = await Task.FromResult(
-                        Resources.LoadAll(_item.path, _T)
-                    );
+                    UnityEngine.Object[] _resources = await Task.FromResult(Resources.LoadAll(_item.path, _T));
                     var _assetItems = _resources.Select(
                         _res =>
                             new AssetItem
                             {
-                                path = System.IO.Path
-                                    .Combine("Resources", _item.path, _res.name)
-                                    .ToForwardSlash(),
+                                path = System.IO.Path.Combine("Resources", _item.path, _res.name).ToForwardSlash(),
                                 asset = _res,
                                 asssetDriver = AsssetDriver.Resources
                             }
@@ -688,22 +630,16 @@ namespace UNIHper
 
                     var _assets = await (
                         GetType()
-                            .GetMethod(
-                                "LoadAddressableAssetsByLabel",
-                                BindingFlags.NonPublic | BindingFlags.Instance
-                            )
+                            .GetMethod("LoadAddressableAssetsByLabel", BindingFlags.NonPublic | BindingFlags.Instance)
                             .MakeGenericMethod(new Type[] { _T })
-                            .Invoke(this, new object[] { _resItem.label })
-                        as IObservable<IEnumerable<AssetItem>>
+                            .Invoke(this, new object[] { _resItem.label }) as IObservable<IEnumerable<AssetItem>>
                     );
                     appendResources(_assets, InResID);
                     UNIHperLogger.Log($"load with label [{_resItem.label}] completed");
                 }
                 catch (Exception _ex)
                 {
-                    Debug.LogWarning(
-                        $"try load addressable assets with label [{_resItem.label}] failed, {_ex.Message}"
-                    );
+                    Debug.LogWarning($"try load addressable assets with label [{_resItem.label}] failed, {_ex.Message}");
                     continue;
                 }
             }
@@ -754,10 +690,15 @@ namespace UNIHper
             public UnityEngine.Object asset;
         }
 
-        private void appendResources(IEnumerable<UnityEngine.Object> InResources, string InResID)
+        private void appendResources(IEnumerable<UnityEngine.Object> assets, string InResID)
         {
             appendResources(
-                InResources.Select(_ => new AssetItem { path = _.name, asset = _ }),
+                assets.Select(asset =>
+                {
+                    var _assetItem = new AssetItem { path = asset.name, asset = asset };
+                    asset.name = Path.GetFileNameWithoutExtension(asset.name);
+                    return _assetItem;
+                }),
                 InResID
             );
         }
@@ -776,6 +717,7 @@ namespace UNIHper
                     return;
                 }
                 UNIHperLogger.Log($"{InResID} add asset {_key}");
+
                 resources[InResID].Add(_key, _resItem);
             };
 

@@ -248,9 +248,7 @@ namespace UNIHper.UI
 
             if (RebindAnimator)
             {
-                transform
-                    .GetComponentsInChildren<Animator>()
-                    .ForEach(_animator => _animator.Rebind());
+                transform.GetComponentsInChildren<Animator>().ForEach(_animator => _animator.Rebind());
             }
 
             _status = UIStatus.Hidden;

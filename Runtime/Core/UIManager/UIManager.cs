@@ -56,8 +56,7 @@ namespace UNIHper.UI
         internal const string CANVAS_DEFAULT = "CanvasDefault";
 
         internal const string PERSISTENCE_SCENE = "Persistence";
-        private Dictionary<string, UIRootLayout> m_uiRootLayoutDic =
-            new Dictionary<string, UIRootLayout>();
+        private Dictionary<string, UIRootLayout> m_uiRootLayoutDic = new Dictionary<string, UIRootLayout>();
 
         // 自定义的UI配置
         private Dictionary<string, Dictionary<string, UIConfig>> customUIConfigData = null;
@@ -71,15 +70,13 @@ namespace UNIHper.UI
 
         // 所有已实例化的UI集合
         private Dictionary<string, UIBase> allSpawnedUICaches = new Dictionary<string, UIBase>();
-        private Dictionary<string, UIBase> allSpawnedPersistentUICaches =
-            new Dictionary<string, UIBase>();
+        private Dictionary<string, UIBase> allSpawnedPersistentUICaches = new Dictionary<string, UIBase>();
 
         // 当前管理中的normalUIs
         private Dictionary<string, UIBase> activatedNormalUIs = new Dictionary<string, UIBase>();
 
         // 当前管理中的standaloneUIs
-        private Dictionary<string, UIBase> activatedStandaloneUIs =
-            new Dictionary<string, UIBase>();
+        private Dictionary<string, UIBase> activatedStandaloneUIs = new Dictionary<string, UIBase>();
 
         // 当前管理中的popupUIs
         private List<UIBase> activatedPopupUIs = new List<UIBase>();
@@ -359,10 +356,7 @@ namespace UNIHper.UI
 
         public void HideAll()
         {
-            allSpawnedUICaches
-                .Where(_ui => _ui.Value.isShowing)
-                .ToList()
-                .ForEach(_ui => Hide(_ui.Key));
+            allSpawnedUICaches.Where(_ui => _ui.Value.isShowing).ToList().ForEach(_ui => Hide(_ui.Key));
         }
 
         public void ShowAll<T>()
@@ -373,10 +367,7 @@ namespace UNIHper.UI
 
         public void ShowAll()
         {
-            allSpawnedUICaches
-                .Where(_ui => !_ui.Value.isShowing)
-                .ToList()
-                .ForEach(_ui => Show(_ui.Key));
+            allSpawnedUICaches.Where(_ui => !_ui.Value.isShowing).ToList().ForEach(_ui => Show(_ui.Key));
         }
 
         private bool isStashing = false;
@@ -399,9 +390,7 @@ namespace UNIHper.UI
             get
             {
                 var _normalUIs = activatedNormalUIs.Values.Where(_ui => _ui.isShowing).ToList();
-                var _standaloneUIs = activatedStandaloneUIs.Values
-                    .Where(_ui => _ui.isShowing)
-                    .ToList();
+                var _standaloneUIs = activatedStandaloneUIs.Values.Where(_ui => _ui.isShowing).ToList();
                 var _popupUIs = activatedPopupUIs.Where(_ui => _ui.isShowing).ToList();
                 return _normalUIs.Concat(_standaloneUIs).Concat(_popupUIs).ToList();
             }
@@ -448,11 +437,7 @@ namespace UNIHper.UI
                 });
         }
 
-        public void ShowConfirmPanel(
-            string InContent,
-            Action OnConfirm = null,
-            Action OnCancel = null
-        )
+        public void ShowConfirmPanel(string InContent, Action OnConfirm = null, Action OnCancel = null)
         {
             var _uiComponent = Show<DialogUI>();
             _uiComponent.SetContent(InContent).ShowConfirm();
@@ -491,11 +476,7 @@ namespace UNIHper.UI
             ShowSaveFileDialog(BaseDir, "*.*", OnSaved);
         }
 
-        public void ShowSaveFileDialog(
-            string BaseDir,
-            string SearchPattern,
-            Func<string, bool> OnSaved
-        )
+        public void ShowSaveFileDialog(string BaseDir, string SearchPattern, Func<string, bool> OnSaved)
         {
             var _uiComponent = Show<FileDialog>();
 
@@ -522,11 +503,7 @@ namespace UNIHper.UI
             ShowOpenFileDialog(FileDir, "*.*", OnOpened);
         }
 
-        public void ShowOpenFileDialog(
-            string FileDir,
-            string InSearchPattern,
-            Func<string, bool> OnOpened
-        )
+        public void ShowOpenFileDialog(string FileDir, string InSearchPattern, Func<string, bool> OnOpened)
         {
             var InUI = Show<FileDialog>();
             IDisposable _clear = null;
@@ -547,15 +524,10 @@ namespace UNIHper.UI
             var _textAsset = Resources.Load<TextAsset>(configPath);
             if (_textAsset == null)
             {
-                Debug.LogErrorFormat(
-                    "Append config path {0} failed. Config file not exits.",
-                    configPath
-                );
+                Debug.LogErrorFormat("Append config path {0} failed. Config file not exits.", configPath);
                 return;
             }
-            var _configData = JsonConvert.DeserializeObject<
-                Dictionary<string, Dictionary<string, UIConfig>>
-            >(_textAsset.text);
+            var _configData = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, UIConfig>>>(_textAsset.text);
             mergeUIConfig(additionalConfigData, _configData);
         }
 
@@ -620,10 +592,7 @@ namespace UNIHper.UI
         private List<UIConfig> findUIConfigs<T>()
             where T : UIBase
         {
-            return customUIConfigData.Values
-                .SelectMany(x => x.Values)
-                .Where(x => x.classType == typeof(T))
-                .ToList();
+            return customUIConfigData.Values.SelectMany(x => x.Values).Where(x => x.classType == typeof(T)).ToList();
         }
 
         // 加载代码注册UI
@@ -665,19 +634,14 @@ namespace UNIHper.UI
         {
             string _uiPath = UNIHperSettings.UIConfigPath;
             TextAsset _uiAsset = Resources.Load<TextAsset>(_uiPath);
-            customUIConfigData = JsonConvert.DeserializeObject<
-                Dictionary<string, Dictionary<string, UIConfig>>
-            >(_uiAsset.text);
+            customUIConfigData = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, UIConfig>>>(_uiAsset.text);
 
             mergeUIConfig(customUIConfigData, additionalConfigData);
 
             customUIConfigData = customUIConfigData
                 .Select(_ =>
                 {
-                    return new KeyValuePair<string, Dictionary<string, UIConfig>>(
-                        _.Key,
-                        fillUIKeys(_.Value)
-                    );
+                    return new KeyValuePair<string, Dictionary<string, UIConfig>>(_.Key, fillUIKeys(_.Value));
                 })
                 .ToDictionary(_ => _.Key, _ => _.Value);
 
@@ -685,30 +649,22 @@ namespace UNIHper.UI
             mergeUIConfig(customUIConfigData, _codeRegisterUIs);
 
             var _persistUIAsset = Resources.Load<TextAsset>("__Configs/Persistence/ui");
-            builtInConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<
-                Dictionary<string, UIConfig>
-            >(_persistUIAsset.text);
+            builtInConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, UIConfig>>(_persistUIAsset.text);
             builtInConfigData = fillUIKeys(builtInConfigData);
 
             // 对UI进行默认排序
             customUIConfigData = orderUIConfig(customUIConfigData);
-            builtInConfigData = builtInConfigData.Values
-                .OrderBy(_ui => _ui.Order)
-                .ToDictionary(_ui => _ui.__UIKey, _ui => _ui);
+            builtInConfigData = builtInConfigData.Values.OrderBy(_ui => _ui.Order).ToDictionary(_ui => _ui.__UIKey, _ui => _ui);
         }
 
-        private Dictionary<string, Dictionary<string, UIConfig>> orderUIConfig(
-            Dictionary<string, Dictionary<string, UIConfig>> uiConfig
-        )
+        private Dictionary<string, Dictionary<string, UIConfig>> orderUIConfig(Dictionary<string, Dictionary<string, UIConfig>> uiConfig)
         {
             return uiConfig
                 .Select(_sceneKV =>
                 {
                     return new KeyValuePair<string, Dictionary<string, UIConfig>>(
                         _sceneKV.Key,
-                        _sceneKV.Value.Values
-                            .OrderBy(_ui => _ui.Order)
-                            .ToDictionary(_ui => _ui.__UIKey, _ui => _ui)
+                        _sceneKV.Value.Values.OrderBy(_ui => _ui.Order).ToDictionary(_ui => _ui.__UIKey, _ui => _ui)
                     );
                 })
                 .ToDictionary(_ => _.Key, _ => _.Value);
@@ -773,10 +729,7 @@ namespace UNIHper.UI
                 return;
             }
 
-            GameObject _newUI = GameObject.Instantiate(
-                _uiPrefab,
-                getUIRootLayout(uiConfig.RenderCanvasName).NormalUIRoot
-            );
+            GameObject _newUI = GameObject.Instantiate(_uiPrefab, getUIRootLayout(uiConfig.RenderCanvasName).NormalUIRoot);
 
             _newUI.name = $"{_uiPrefab.name} [{uiKey}]";
             _newUI.SetActive(false);
@@ -791,9 +744,7 @@ namespace UNIHper.UI
             _uiComponent.__UIKey = uiKey;
             _uiComponent.__Type = uiConfig.ShowType;
             _uiComponent.__InstanceID = uiConfig.InstID;
-            _newUI.transform.SetParent(
-                getParentUIAttachTo(_uiComponent.Type, uiConfig.RenderCanvasName)
-            );
+            _newUI.transform.SetParent(getParentUIAttachTo(_uiComponent.Type, uiConfig.RenderCanvasName));
 
             allSpawnedUICaches.Add(uiKey, _uiComponent);
             _uiComponent.OnLoad();
@@ -820,23 +771,15 @@ namespace UNIHper.UI
             {
 #if UNITY_2023_1_OR_NEWER
                 var _canvas = GameObject
-                    .FindObjectsByType<Canvas>(
-                        FindObjectsInactive.Include,
-                        FindObjectsSortMode.None
-                    )
+                    .FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None)
                     .Where(_ => _.gameObject.name == canvasKey)
                     .FirstOrDefault();
 #else
-                var _canvas = GameObject
-                    .FindObjectsOfType<Canvas>(true)
-                    .Where(_ => _.gameObject.name == canvasKey)
-                    .FirstOrDefault();
+                var _canvas = GameObject.FindObjectsOfType<Canvas>(true).Where(_ => _.gameObject.name == canvasKey).FirstOrDefault();
 #endif
                 if (_canvas == null)
                 {
-                    var _uiLayoutGO = GameObject.Instantiate(
-                        Resources.Load<GameObject>("__Prefabs/CanvasDefault")
-                    );
+                    var _uiLayoutGO = GameObject.Instantiate(Resources.Load<GameObject>("__Prefabs/CanvasDefault"));
                     _uiLayoutGO.name = canvasKey;
                     _canvas = _uiLayoutGO.GetComponent<Canvas>();
                 }
@@ -888,9 +831,7 @@ namespace UNIHper.UI
             UIBase _uiComponent = allSpawnedUICaches[InKey];
             foreach (
                 var _uiItem in activatedStandaloneUIs.Values
-                    .Where(
-                        _ui => _ui.__CanvasKey == _uiComponent.__CanvasKey && _ui != _uiComponent
-                    )
+                    .Where(_ui => _ui.__CanvasKey == _uiComponent.__CanvasKey && _ui != _uiComponent)
                     .ToList()
             )
             {

@@ -159,11 +159,7 @@ namespace UNIHper.Network
         {
             var _rep = InSocket.RemoteEndPoint as IPEndPoint;
             var _key = string.Format("{0}_{1}", _rep.Address.ToString(), _rep.Port);
-            var _connectEvent = new UNetConnectedEvent
-            {
-                RemoteIP = _rep.Address.ToString(),
-                RemotePort = _rep.Port
-            };
+            var _connectEvent = new UNetConnectedEvent { RemoteIP = _rep.Address.ToString(), RemotePort = _rep.Port };
             Managements.Event.Fire(_connectEvent);
             onConnected.Invoke(_connectEvent);
         }

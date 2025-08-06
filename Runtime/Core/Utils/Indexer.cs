@@ -17,6 +17,7 @@ namespace UNIHper
         public int Min { get; private set; }
 
         public int Current { get; private set; }
+        public int Value => Current;
 
         private UnityEvent<int> onValueChanged = new UnityEvent<int>();
 
@@ -140,6 +141,7 @@ namespace UNIHper
         public int Set(int newIndex)
         {
             var _newIndex = limitIndex(newIndex);
+            Debug.Log($"Indexer: Set {newIndex} to {_newIndex}");
             if (Current != _newIndex)
             {
                 LastSet = Current;
@@ -263,24 +265,24 @@ namespace UNIHper
             return Current;
         }
 
-        public int PrevValue()
+        public int PrevValue(int offset = 1)
         {
             if (Loop)
-                return (int)Mathf.Repeat(this.Current - 1 - Min, Max - Min + 1) + Min;
+                return (int)Mathf.Repeat(this.Current - offset - Min, Max - Min + 1) + Min;
             else
-                return (int)Mathf.Clamp(this.Current - 1, Min, Max);
+                return (int)Mathf.Clamp(this.Current - offset, Min, Max);
         }
 
         /// <summary>
         /// 获取下一个索引值,不改变当前索引值
         /// </summary>
         /// <returns></returns>
-        public int NextValue()
+        public int NextValue(int offset = 1)
         {
             if (Loop)
-                return (int)Mathf.Repeat(this.Current + 1 - Min, Max - Min + 1) + Min;
+                return (int)Mathf.Repeat(this.Current + offset - Min, Max - Min + 1) + Min;
             else
-                return (int)Mathf.Clamp(this.Current + 1, Min, Max);
+                return (int)Mathf.Clamp(this.Current + offset, Min, Max);
         }
 
         /// <summary>

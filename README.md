@@ -31,6 +31,8 @@ v1.25.xxx
 - AppConfig增加鼠标控制
 - 增加TextureTransition过渡组件, 拓展出FadeTo接口
 - UIManager 增加单个脚本多个实例功能
+- Resource GetMany接口增加对外部文件全路径的支持
+- 增加RangeIndexer索引器
 
 v1.25.715
 - 修复Linker文件不存在时的错误

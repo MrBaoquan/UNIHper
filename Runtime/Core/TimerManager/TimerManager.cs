@@ -16,9 +16,7 @@ namespace UNIHper
 
         public IDisposable Delay(float delayInSeconds, Action callback)
         {
-            return Observable
-                .Timer(TimeSpan.FromSeconds(delayInSeconds))
-                .Subscribe(_ => callback());
+            return Observable.Timer(TimeSpan.FromSeconds(delayInSeconds)).Subscribe(_ => callback());
         }
 
         public Task Delay(float delayInSeconds)
