@@ -6,12 +6,19 @@ using System.Threading.Tasks;
 
 public class Countdown
 {
+    public enum CountdownState
+    {
+        Running,
+        Paused,
+        Stopped
+    }
+
     private IDisposable _timerSubscription;
     private float duration;
     private float remainingTime;
     private float interval;
-    private bool isPaused;
-    public bool IsPaused => isPaused;
+
+    public CountdownState State { get; private set; } = CountdownState.Stopped;
 
     // 已用时间
     public float ElapsedTime => duration - remainingTime;
@@ -68,16 +75,22 @@ public class Countdown
         duration = durationInSeconds;
         remainingTime = durationInSeconds;
         interval = intervalInSeconds;
-        isPaused = false;
+        State = CountdownState.Stopped;
     }
 
     // 开始计时
     public Countdown Start()
     {
+        if (remainingTime <= 0)
+        {
+            Debug.LogWarning("Countdown already finished now.");
+            return this; // 如果剩余时间小于等于0，直接返回
+        }
+
         // 如果已有订阅，先停止它，避免重复订阅
         StopTimerSubscription();
 
-        isPaused = false;
+        State = CountdownState.Running;
 
         OnTimerUpdate?.Invoke(remainingTime); // 每次更新时调用回调
         _timerSubscription = Observable
@@ -101,17 +114,20 @@ public class Countdown
     // 暂停计时
     public void Pause()
     {
-        isPaused = true;
+        if (State != CountdownState.Running)
+            return;
+
+        State = CountdownState.Paused;
         StopTimerSubscription();
     }
 
     // 继续计时
     public void Resume()
     {
-        if (isPaused)
-        {
-            Start();
-        }
+        if (State != CountdownState.Paused)
+            return;
+
+        Start();
     }
 
     // 重新开始计时
@@ -129,6 +145,10 @@ public class Countdown
     // 停止计时并清理订阅
     public void Stop()
     {
+        if (State == CountdownState.Stopped)
+            return;
+
+        State = CountdownState.Stopped;
         remainingTime = 0;
         StopTimerSubscription();
         OnTimerUpdate?.Invoke(remainingTime); // 计时器停止时更新

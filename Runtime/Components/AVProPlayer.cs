@@ -141,6 +141,11 @@ namespace UNIHper
             MediaPlayer.CloseMedia();
         }
 
+        public void Play(string videoPath, bool bLoop = true, double startTime = 0, double endTime = 0, bool seek2StartAfterFinished = true)
+        {
+            Play(videoPath, null, bLoop, startTime, endTime, seek2StartAfterFinished);
+        }
+
         /// <summary>
         /// 播放指定地址的视频  可为网络地址 或者本地地址
         /// </summary>
@@ -149,7 +154,14 @@ namespace UNIHper
         /// <param name="bLoop">是否循环</param>
         /// <param name="startTime">开始时间</param>
         /// <param name="endTime">结束时间</param>
-        public void Play(string videoPath, Action<AVProPlayer> onFinished, bool bLoop, double startTime = 0, double endTime = 0, bool seek2StartAfterFinished = true)
+        public void Play(
+            string videoPath,
+            Action<AVProPlayer> onFinished,
+            bool bLoop = true,
+            double startTime = 0,
+            double endTime = 0,
+            bool seek2StartAfterFinished = true
+        )
         {
             ClearPlayHandlers();
             if (_readyHandler != null)
@@ -165,7 +177,8 @@ namespace UNIHper
             this.StartTime = startTime;
             this.EndTime = endTime;
 
-            bool _notSameSource = MediaPlayer.MediaPath.Path != videoPath || MediaPlayer.Control == null || !MediaPlayer.Control.HasMetaData();
+            bool _notSameSource =
+                MediaPlayer.MediaPath.Path != videoPath || MediaPlayer.Control == null || !MediaPlayer.Control.HasMetaData();
 
             var displayer = this.Get<DisplayUGUI>();
 

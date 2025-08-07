@@ -141,7 +141,6 @@ namespace UNIHper
         public int Set(int newIndex)
         {
             var _newIndex = limitIndex(newIndex);
-            Debug.Log($"Indexer: Set {newIndex} to {_newIndex}");
             if (Current != _newIndex)
             {
                 LastSet = Current;
@@ -182,12 +181,7 @@ namespace UNIHper
             return Current;
         }
 
-        public static (int MinStep, int Direction) GetMinStepsAndDirection(
-            int x,
-            int y,
-            int A,
-            int T
-        )
+        public static (int MinStep, int Direction) GetMinStepsAndDirection(int x, int y, int A, int T)
         {
             int N = y - x + 1;
             int idxA = A - x;

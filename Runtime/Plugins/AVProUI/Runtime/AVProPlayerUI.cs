@@ -26,9 +26,7 @@ namespace AVProUI
 
         [
             SerializeField,
-            Tooltip(
-                "Auto hide controls after a few seconds when video is playing, less than 0 to disable auto hide"
-            ),
+            Tooltip("Auto hide controls after a few seconds when video is playing, less than 0 to disable auto hide"),
             MaxValue(30),
             MinValue(-1)
         ]
@@ -36,11 +34,7 @@ namespace AVProUI
 
         bool AutoHide => _autoHideControls > 0;
 
-        [
-            SerializeField,
-            Tooltip("Forward/Backward time in seconds when tapping on buttons"),
-            MinValue(0.1)
-        ]
+        [SerializeField, Tooltip("Forward/Backward time in seconds when tapping on buttons"), MinValue(0.1)]
         private float _jumpDeltaTime = 5f;
 
         [Title("Controls Settings")]
@@ -104,9 +98,7 @@ namespace AVProUI
         private readonly LazyShaderProperty _propMute = new LazyShaderProperty("_Mute");
         private readonly LazyShaderProperty _propVolume = new LazyShaderProperty("_Volume");
         private readonly LazyShaderProperty _propSpectrum = new LazyShaderProperty("_Spectrum");
-        private readonly LazyShaderProperty _propSpectrumRange = new LazyShaderProperty(
-            "_SpectrumRange"
-        );
+        private readonly LazyShaderProperty _propSpectrumRange = new LazyShaderProperty("_SpectrumRange");
 
         EventTrigger _videoTouch = null;
         CanvasGroup _controlsGroup = null;
@@ -146,10 +138,7 @@ namespace AVProUI
 
         private void setupTapGestures()
         {
-            TapGestureRecognizer _tapGesture = new TapGestureRecognizer
-            {
-                MaximumNumberOfTouchesToTrack = 10
-            };
+            TapGestureRecognizer _tapGesture = new TapGestureRecognizer { MaximumNumberOfTouchesToTrack = 10 };
             _tapGesture.StateUpdated += (gesture) =>
             {
                 if (gesture.State == GestureRecognizerState.Ended)
@@ -167,10 +156,7 @@ namespace AVProUI
             _tapGesture.ThresholdSeconds = 0.15f;
 
             // double tap
-            TapGestureRecognizer _doubleTapGesture = new TapGestureRecognizer
-            {
-                NumberOfTapsRequired = 2,
-            };
+            TapGestureRecognizer _doubleTapGesture = new TapGestureRecognizer { NumberOfTapsRequired = 2, };
             _doubleTapGesture.ThresholdSeconds = 0.15f;
             _tapGesture.RequireGestureRecognizerToFail = _doubleTapGesture;
 
@@ -178,11 +164,7 @@ namespace AVProUI
             {
                 if (gesture.State == GestureRecognizerState.Ended)
                 {
-                    if (
-                        checkIfScreenPointInControlsArea(
-                            new Vector2(gesture.FocusX, gesture.FocusY)
-                        )
-                    )
+                    if (checkIfScreenPointInControlsArea(new Vector2(gesture.FocusX, gesture.FocusY)))
                     {
                         return;
                     }
@@ -201,12 +183,7 @@ namespace AVProUI
             if (_controlsGroup == null)
                 return false;
             RectTransform rect = _controlsGroup.GetComponent<RectTransform>();
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                rect,
-                screenPos,
-                null,
-                out Vector2 canvasPos
-            );
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(rect, screenPos, null, out Vector2 canvasPos);
 
             Rect rr = RectTransformUtility.PixelAdjustRect(rect, null);
             rr.height += 40;
@@ -225,17 +202,11 @@ namespace AVProUI
             _liveItem = this.Get("Controls/BottomRow/TextLive").gameObject;
             _sliderTime = this.Get<Slider>("Controls/Timeline");
             timelineTip = this.Get<RectTransform>("Controls/Timeline-Hovers");
-            _segmentsSeek = this.Get<HorizontalSegmentsPrimitive>(
-                "Controls/Timeline/Fill Area/Fill-Seek"
-            );
+            _segmentsSeek = this.Get<HorizontalSegmentsPrimitive>("Controls/Timeline/Fill Area/Fill-Seek");
             _sliderVolume = this.Get<Slider>("Controls/BottomRow/VolumeMask/SliderVolume");
-            _segmentsProgress = this.Get<HorizontalSegmentsPrimitive>(
-                "Controls/Timeline/Fill Area/Fill-Progress"
-            );
+            _segmentsProgress = this.Get<HorizontalSegmentsPrimitive>("Controls/Timeline/Fill Area/Fill-Progress");
             _textTimeDuration = this.Get<Text>("Controls/BottomRow/TextTimeDuration");
-            _volumeMaterial = DuplicateMaterialOnImage(
-                this.Get<Button>("Controls/BottomRow/ButtonVolume").image
-            );
+            _volumeMaterial = DuplicateMaterialOnImage(this.Get<Button>("Controls/BottomRow/ButtonVolume").image);
 
             // 音频频谱
             _imageAudioSpectrum = this.Get<RawImage>("Controls/BottomRow/AudioSpectrum");
@@ -336,20 +307,13 @@ namespace AVProUI
             var _videoUIRect = this.Get<RectTransform>();
 
             _defaultPosition = _videoUIRect.localPosition;
-            var _bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(
-                transform.parent,
-                transform
-            );
+            var _bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(transform.parent, transform);
 
             _videoUIRect.anchorMin = Vector2.one * 0.5f;
             _videoUIRect.anchorMax = Vector2.one * 0.5f;
             _videoUIRect.pivot = Vector2.one * 0.5f;
 
-            _defaultPosition = RectTransformUtility.PixelAdjustPoint(
-                _bounds.center,
-                transform,
-                null
-            );
+            _defaultPosition = RectTransformUtility.PixelAdjustPoint(_bounds.center, transform, null);
             _defaultSize = RectTransformUtility.PixelAdjustPoint(_bounds.size, transform, null);
             _videoUIRect.localPosition = _defaultPosition;
             _videoUIRect.sizeDelta = _defaultSize;
@@ -454,31 +418,12 @@ namespace AVProUI
         private bool isFullScreen()
         {
             var _videoUIRect = this.Get<RectTransform>();
-            var _playerBounds = RectTransformUtility.CalculateRelativeRectTransformBounds(
-                _videoUIRect.parent,
-                _videoUIRect
-            );
+            var _playerBounds = RectTransformUtility.CalculateRelativeRectTransformBounds(_videoUIRect.parent, _videoUIRect);
             var _screenBounds = FullScreenRect.TransformBoundsTo(_videoUIRect.parent);
-            var _rCenter = RectTransformUtility.PixelAdjustPoint(
-                _playerBounds.center,
-                _videoUIRect,
-                null
-            );
-            var _rSize = RectTransformUtility.PixelAdjustPoint(
-                _playerBounds.size,
-                _videoUIRect,
-                null
-            );
-            var _lCenter = RectTransformUtility.PixelAdjustPoint(
-                _screenBounds.center,
-                _videoUIRect,
-                null
-            );
-            var _lSize = RectTransformUtility.PixelAdjustPoint(
-                _screenBounds.size,
-                _videoUIRect,
-                null
-            );
+            var _rCenter = RectTransformUtility.PixelAdjustPoint(_playerBounds.center, _videoUIRect, null);
+            var _rSize = RectTransformUtility.PixelAdjustPoint(_playerBounds.size, _videoUIRect, null);
+            var _lCenter = RectTransformUtility.PixelAdjustPoint(_screenBounds.center, _videoUIRect, null);
+            var _lSize = RectTransformUtility.PixelAdjustPoint(_screenBounds.size, _videoUIRect, null);
 
             bool _isFullScreen =
                 Mathf.RoundToInt(_rCenter.x) == Mathf.RoundToInt(_lCenter.x)
@@ -486,7 +431,6 @@ namespace AVProUI
                 && Mathf.RoundToInt(_rSize.x) == Mathf.RoundToInt(_lSize.x)
                 && Mathf.RoundToInt(_rSize.y) == Mathf.RoundToInt(_lSize.y);
 
-            // Debug.Log(_isFullScreen);
             return _isFullScreen;
         }
 
@@ -577,15 +521,11 @@ namespace AVProUI
                 {
                     showAudioSpectrum = true;
 
-                    float maxFreq = (
-                        RenderHeads.Media.AVProVideo.Helper.GetUnityAudioSampleRate() / 2
-                    );
+                    float maxFreq = (RenderHeads.Media.AVProVideo.Helper.GetUnityAudioSampleRate() / 2);
 
                     // Frequencies over 18Khz generally aren't very interesting to visualise, so clamp the range
                     const float clampFreq = 18000f;
-                    int sampleRange = Mathf.FloorToInt(
-                        Mathf.Clamp01(clampFreq / maxFreq) * _spectrumSamples.Length
-                    );
+                    int sampleRange = Mathf.FloorToInt(Mathf.Clamp01(clampFreq / maxFreq) * _spectrumSamples.Length);
 
                     // Add new samples and smooth the samples over time
                     audioSource.GetSpectrumData(_spectrumSamples, 0, FFTWindow.BlackmanHarris);
@@ -614,11 +554,7 @@ namespace AVProUI
                     for (int i = 0; i < sampleRange; i++)
                     {
                         float newSample = _spectrumSamples[i] / _maxValue;
-                        _spectrumSamplesSmooth[i] = Mathf.Lerp(
-                            _spectrumSamplesSmooth[i],
-                            newSample,
-                            Mathf.Clamp01(15.0f * Time.deltaTime)
-                        );
+                        _spectrumSamplesSmooth[i] = Mathf.Lerp(_spectrumSamplesSmooth[i], newSample, Mathf.Clamp01(15.0f * Time.deltaTime));
                     }
 
                     // Update shader
@@ -713,9 +649,7 @@ namespace AVProUI
                 // Trigger the overlays
                 if (_overlayManager)
                 {
-                    _overlayManager.TriggerFeedback(
-                        mute ? OverlayManager.Feedback.VolumeMute : OverlayManager.Feedback.VolumeUp
-                    );
+                    _overlayManager.TriggerFeedback(mute ? OverlayManager.Feedback.VolumeMute : OverlayManager.Feedback.VolumeUp);
                 }
             }
         }
@@ -837,9 +771,7 @@ namespace AVProUI
                 if (_overlayManager)
                 {
                     _overlayManager.TriggerFeedback(
-                        deltaTime > 0f
-                            ? OverlayManager.Feedback.SeekForward
-                            : OverlayManager.Feedback.SeekBack
+                        deltaTime > 0f ? OverlayManager.Feedback.SeekForward : OverlayManager.Feedback.SeekBack
                     );
                 }
             }
@@ -865,8 +797,7 @@ namespace AVProUI
             if (_mediaPlayer && _mediaPlayer.Control != null)
             {
                 TimeRange timelineRange = GetTimelineRange();
-                double time =
-                    timelineRange.startTime + (_sliderTime.value * timelineRange.duration);
+                double time = timelineRange.startTime + (_sliderTime.value * timelineRange.duration);
                 _mediaPlayer.Control.Seek(time);
                 _isHoveringOverTimeline = true;
             }
@@ -900,9 +831,7 @@ namespace AVProUI
 
         private void OnVideoPointerUp()
         {
-            bool controlsMostlyVisible = (
-                _controlsGroup.alpha >= 0.5f && _controlsGroup.gameObject.activeSelf
-            );
+            bool controlsMostlyVisible = (_controlsGroup.alpha >= 0.5f && _controlsGroup.gameObject.activeSelf);
             if (controlsMostlyVisible)
             {
                 TogglePlayPause();
@@ -985,11 +914,7 @@ namespace AVProUI
             // Increment fade timer
             if (_audioFadeTime < AudioFadeDuration)
             {
-                _audioFadeTime = Mathf.Clamp(
-                    _audioFadeTime + Time.deltaTime,
-                    0f,
-                    AudioFadeDuration
-                );
+                _audioFadeTime = Mathf.Clamp(_audioFadeTime + Time.deltaTime, 0f, AudioFadeDuration);
             }
 
             // Trigger pause when audio faded down
@@ -1028,10 +953,7 @@ namespace AVProUI
             _controlsGroup.DOFade(1, 0.5f);
         }
 
-        private Camera renderCamera =>
-            renderCanvas.renderMode == RenderMode.ScreenSpaceOverlay
-                ? null
-                : renderCanvas.worldCamera;
+        private Camera renderCamera => renderCanvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : renderCanvas.worldCamera;
 
         // Update is called once per frame
         void Update()
@@ -1073,19 +995,14 @@ namespace AVProUI
                 Vector3 mousePos = _canvasTransform.TransformPoint(canvasPos);
 
                 // seek time position
-                Bounds bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(
-                    _sliderTime.GetComponent<RectTransform>()
-                );
+                Bounds bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(_sliderTime.GetComponent<RectTransform>());
                 var _timeLinePos = new Vector2(mousePos.x, timelineTip.position.y);
                 var _minPos = _sliderTime.Get<RectTransform>().TransformPoint(bounds.min);
                 var _maxPos = _sliderTime.Get<RectTransform>().TransformPoint(bounds.max);
                 _timeLinePos.x = Mathf.Clamp(_timeLinePos.x, _minPos.x, _maxPos.x);
                 timelineTip.position = _timeLinePos;
 
-                float x = Mathf.Clamp01(
-                    (canvasPos.x - bounds.min.x * _controlsScaler.scale)
-                        / (bounds.size.x * _controlsScaler.scale)
-                );
+                float x = Mathf.Clamp01((canvasPos.x - bounds.min.x * _controlsScaler.scale) / (bounds.size.x * _controlsScaler.scale));
                 double time = (double)x * timelineRange.Duration;
 
                 // Update time text
@@ -1101,10 +1018,7 @@ namespace AVProUI
                 float[] ranges = new float[2];
                 if (timelineRange.Duration > 0.0)
                 {
-                    double t = (
-                        (_mediaPlayer.Control.GetCurrentTime() - timelineRange.startTime)
-                        / timelineRange.duration
-                    );
+                    double t = ((_mediaPlayer.Control.GetCurrentTime() - timelineRange.startTime) / timelineRange.duration);
                     ranges[1] = x;
                     ranges[0] = (float)t;
                 }
@@ -1133,10 +1047,7 @@ namespace AVProUI
                 {
                     ranges = new float[2];
                     double x1 = (times.MinTime - timelineRange.startTime) / timelineRange.duration;
-                    double x2 = (
-                        (_mediaPlayer.Control.GetCurrentTime() - timelineRange.startTime)
-                        / timelineRange.duration
-                    );
+                    double x2 = ((_mediaPlayer.Control.GetCurrentTime() - timelineRange.startTime) / timelineRange.duration);
                     ranges[0] = Mathf.Max(0f, (float)x1);
                     ranges[1] = Mathf.Min(1f, (float)x2);
                 }
@@ -1150,10 +1061,7 @@ namespace AVProUI
                     (_mediaPlayer.Control.GetCurrentTime() - timelineRange.startTime),
                     false
                 );
-                string d1 = RenderHeads.Media.AVProVideo.Helper.GetTimeString(
-                    timelineRange.duration,
-                    false
-                );
+                string d1 = RenderHeads.Media.AVProVideo.Helper.GetTimeString(timelineRange.duration, false);
                 _textTimeDuration.text = string.Format("{0} / {1}", t1, d1);
             }
 

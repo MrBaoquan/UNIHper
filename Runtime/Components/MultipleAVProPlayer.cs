@@ -81,10 +81,7 @@ namespace UNIHper
             }
         }
 
-        public void PrepareVideos(
-            IEnumerable<string> VideoPaths,
-            Action<AVProPlayer> settingCallback = null
-        )
+        public void PrepareVideos(IEnumerable<string> VideoPaths, Action<AVProPlayer> settingCallback = null)
         {
             if (VideoPaths.Count() <= 0)
             {
@@ -108,10 +105,7 @@ namespace UNIHper
             videoPaths.ForEach(_videoPath =>
             {
                 MediaPlaylist.MediaItem _mediaItem = new MediaPlaylist.MediaItem();
-                _mediaItem.mediaPath = new MediaPath(
-                    _videoPath,
-                    MediaPathType.RelativeToStreamingAssetsFolder
-                );
+                _mediaItem.mediaPath = new MediaPath(_videoPath, MediaPathType.RelativeToStreamingAssetsFolder);
                 _mediaItem.startMode = PlaylistMediaPlayer.StartMode.Manual;
                 _mediaItem.progressMode = PlaylistMediaPlayer.ProgressMode.OnFinish;
                 // item.isOverrideTransition = false;
@@ -202,15 +196,13 @@ namespace UNIHper
             SwitchAsObservable(videoIndex, StartTime)
                 .Subscribe(_player =>
                 {
-                    _player.Play(
-                        videoPaths[videoIndex],
-                        OnCompleted,
-                        Loop,
-                        StartTime,
-                        EndTime,
-                        seek2StartAfterFinished
-                    );
+                    _player.Play(videoPaths[videoIndex], OnCompleted, Loop, StartTime, EndTime, seek2StartAfterFinished);
                 });
+        }
+
+        public void Play(string Path, bool Loop = false, double StartTime = 0f, double EndTime = 0f, bool seek2StartAfterFinished = true)
+        {
+            Play(Path, null, Loop, StartTime, EndTime, seek2StartAfterFinished);
         }
 
         /// <summary>
@@ -273,13 +265,7 @@ namespace UNIHper
             CurrentPlayer.SeekToFrame(Frame);
         }
 
-        public void Switch(
-            string videoName,
-            bool bRewind = false,
-            bool bAutoPlay = false,
-            float StartTime = 0,
-            float EndTime = 0
-        )
+        public void Switch(string videoName, bool bRewind = false, bool bAutoPlay = false, float StartTime = 0, float EndTime = 0)
         {
             var _idx = FindVideoIndex(videoName);
             if (_idx == -1)
@@ -339,13 +325,7 @@ namespace UNIHper
             return true;
         }
 
-        public void Switch(
-            int mediaIndex,
-            bool bRewind = false,
-            bool bAutoPlay = false,
-            float StartTime = 0,
-            float EndTime = 0
-        )
+        public void Switch(int mediaIndex, bool bRewind = false, bool bAutoPlay = false, float StartTime = 0, float EndTime = 0)
         {
             var _mediaItem = GetMediaItem(mediaIndex);
 
@@ -453,8 +433,7 @@ namespace UNIHper
 
         public IObservable<AVProPlayer> OnItemChangedAsObservable()
         {
-            return this.OnPlaylistItemChangedAsObservable()
-                .SelectMany(_ => Observable.NextFrame().Select(_1 => CurrentPlayer));
+            return this.OnPlaylistItemChangedAsObservable().SelectMany(_ => Observable.NextFrame().Select(_1 => CurrentPlayer));
         }
 
         public AVProPlayer CurrentPlayer => ListPlayer.CurrentPlayer.Get<AVProPlayer>();

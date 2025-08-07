@@ -35,14 +35,14 @@ namespace UNIHper.UI
                 });
         }
 
-        public void Show()
+        public UIBase Show()
         {
-            UIManager.Instance.Show(__UIKey);
+            return UIManager.Instance.Show(__UIKey);
         }
 
-        public void Hide()
+        public UIBase Hide()
         {
-            UIManager.Instance.Hide(__UIKey);
+            return UIManager.Instance.Hide(__UIKey);
         }
     }
 }

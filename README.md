@@ -25,6 +25,9 @@
 
 ### 版本更新日志
 v1.25.xxx
+- 优化UIManager,ResourceManager部分接口
+
+v1.25.806
 - 二进制序列化改用messagepack包
 - SphereLayout优化
 - Indexer优化，增加MinStepForValue接口, OnPrev & OnNext接口, 修复LastSet的bug

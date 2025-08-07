@@ -31,13 +31,11 @@ namespace UNIHper
         {
             startIndexer.Set(start);
             endIndexer.Set(end);
-            Debug.LogWarning($"Set RangeIndexer: {start} ~ {end}, real : {startIndexer.Current} ~ {endIndexer.Current}");
             return this;
         }
 
         public (int start, int end) Next()
         {
-            Debug.Log($"startIndexer Range: {startIndexer.Min} ~ {startIndexer.Max}, Current: {startIndexer.Current}");
             return (startIndexer.Next(), endIndexer.Next());
         }
 

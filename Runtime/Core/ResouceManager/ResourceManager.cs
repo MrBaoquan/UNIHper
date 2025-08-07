@@ -270,21 +270,23 @@ namespace UNIHper
             return allAssets.Where(_ => _.Value.label == labelName).Select(_ => _.Value.asset as T).ToList();
         }
 
-        public async Task<IEnumerable<AudioClip>> AppendAudioClips(IEnumerable<string> AudioPaths)
+        public IObservable<List<AudioClip>> AppendAudioClips(IEnumerable<string> AudioPaths)
         {
             if (AudioPaths.Count() <= 0)
             {
-                return new List<AudioClip>();
+                return Observable.Return(new List<AudioClip>());
             }
 
-            var _audioClips = await LoadAudioClips(AudioPaths);
-            appendResources(_audioClips.OfType<AudioClip>(), CUSTOM_RES_KEY);
-            return _audioClips;
+            return LoadAudioClips(AudioPaths)
+                .Do(_audioClips =>
+                {
+                    appendResources(_audioClips.OfType<AudioClip>(), CUSTOM_RES_KEY);
+                });
         }
 
-        public IObservable<IList<AudioClip>> LoadAudioClips(IEnumerable<string> AudioPaths)
+        public IObservable<List<AudioClip>> LoadAudioClips(IEnumerable<string> AudioPaths)
         {
-            return Observable.Zip(AudioPaths.Select(_path => this.LoadAudioClip(_path))).First();
+            return Observable.Zip(AudioPaths.Select(_path => this.LoadAudioClip(_path))).Select(x => x.ToList()).First();
         }
 
         /// <summary>
@@ -294,7 +296,7 @@ namespace UNIHper
         /// <param name="searchPattern">匹配模式</param>
         /// <param name="searchOption">搜索模式</param>
         /// <returns></returns>
-        public async Task<IEnumerable<AudioClip>> AppendAudioClips(
+        public IObservable<List<AudioClip>> AppendAudioClips(
             string audioDir,
             string searchPattern = "*.wav|*.mp3",
             SearchOption searchOption = SearchOption.AllDirectories
@@ -312,18 +314,20 @@ namespace UNIHper
 
             var _searchPatterns = searchPattern.Split('|').Select(_pattern => _pattern.Replace("*", ""));
             ;
-            return await AppendAudioClips(
+            return AppendAudioClips(
                 Directory
                     .GetFiles(audioDir, "*.*", searchOption)
                     .Where(_path => _searchPatterns.Contains(Path.GetExtension(_path).ToLower()))
             );
         }
 
-        public async Task<AudioClip> AppendAudioClip(string InPath)
+        public IObservable<AudioClip> AppendAudioClip(string InPath)
         {
-            var _audioClip = await this.LoadAudioClip(InPath);
-            appendResources(new List<AudioClip> { _audioClip }.OfType<AudioClip>(), CUSTOM_RES_KEY);
-            return _audioClip;
+            return this.LoadAudioClip(InPath)
+                .Do(_audioClip =>
+                {
+                    appendResources(new List<AudioClip> { _audioClip }.OfType<AudioClip>(), CUSTOM_RES_KEY);
+                });
         }
 
         /// <summary>
@@ -331,16 +335,18 @@ namespace UNIHper
         /// </summary>
         /// <param name="TexturePaths">资源路径列表</param>
         /// <returns></returns>
-        public async Task<IEnumerable<Texture2D>> AppendTexture2Ds(IEnumerable<string> TexturePaths)
+        public IObservable<List<Texture2D>> AppendTexture2Ds(IEnumerable<string> TexturePaths)
         {
-            var _textures = await LoadTexture2Ds(TexturePaths);
-            appendResources(_textures.OfType<Texture2D>(), CUSTOM_RES_KEY);
-            return _textures;
+            return LoadTexture2Ds(TexturePaths)
+                .Do(_textures =>
+                {
+                    appendResources(_textures.OfType<Texture2D>(), CUSTOM_RES_KEY);
+                });
         }
 
-        public IObservable<IList<Texture2D>> LoadTexture2Ds(IEnumerable<string> TexturePaths)
+        public IObservable<List<Texture2D>> LoadTexture2Ds(IEnumerable<string> TexturePaths)
         {
-            return Observable.Zip(TexturePaths.Select(_path => this.LoadTexture2D(_path))).First();
+            return Observable.Zip(TexturePaths.Select(_path => this.LoadTexture2D(_path))).Select(x => x.ToList()).First();
         }
 
         /// <summary>
@@ -350,7 +356,7 @@ namespace UNIHper
         /// <param name="searchPattern">匹配方式</param>
         /// <param name="searchOption">搜索模式</param>
         /// <returns></returns>
-        public async Task<IEnumerable<Texture2D>> AppendTexture2Ds(
+        public IObservable<List<Texture2D>> AppendTexture2Ds(
             string textureDir,
             string searchPattern = "*.png|*.jpg|*.jpeg",
             SearchOption searchOption = SearchOption.AllDirectories
@@ -367,7 +373,7 @@ namespace UNIHper
             }
 
             var _searchPatterns = searchPattern.Split('|').Select(_pattern => _pattern.Replace("*", ""));
-            return await AppendTexture2Ds(
+            return AppendTexture2Ds(
                 Directory
                     .GetFiles(textureDir, "*.*", searchOption)
                     .Where(_path => _searchPatterns.Contains(Path.GetExtension(_path).ToLower()))
@@ -392,18 +398,13 @@ namespace UNIHper
                 .First();
         }
 
-        public async Task<Texture2D> AppendTexture2D(string InPath)
+        public IObservable<Texture2D> AppendTexture2D(string InPath)
         {
-            try
-            {
-                var _texture = await this.LoadTexture2D(InPath);
-                appendResources(new List<Texture2D> { _texture }, CUSTOM_RES_KEY);
-                return _texture;
-            }
-            catch (System.Exception)
-            {
-                return null;
-            }
+            return this.LoadTexture2D(InPath)
+                .Do(_texture =>
+                {
+                    appendResources(new List<Texture2D> { _texture }, CUSTOM_RES_KEY);
+                });
         }
 
         /// <summary>

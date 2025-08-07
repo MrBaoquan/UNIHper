@@ -153,10 +153,7 @@ namespace UNIHper
 
             if (_target == null && log)
             {
-                Debug.LogWarningFormat(
-                    "Can not find gameobject with path or name: {0}",
-                    pathOrName
-                );
+                Debug.LogWarningFormat("Can not find gameobject with path or name: {0}", pathOrName);
             }
 
             return _target;
@@ -380,11 +377,7 @@ namespace UNIHper
         /// <param name="axis">Scroll axis, 0 = horizontal, 1 = vertical</param>
         /// <param name="distance">The distance in the scroll rect's view's coordiante space</param>
         /// <returns>The normalized scoll distance</returns>
-        public static float NormalizeScrollDistance(
-            this ScrollRect scrollRect,
-            int axis,
-            float distance
-        )
+        public static float NormalizeScrollDistance(this ScrollRect scrollRect, int axis, float distance)
         {
             // Based on code in ScrollRect's internal SetNormalizedPosition method
             var viewport = scrollRect.viewport;
@@ -392,8 +385,7 @@ namespace UNIHper
             var viewBounds = new Bounds(viewRect.rect.center, viewRect.rect.size);
 
             var content = scrollRect.content;
-            var contentBounds =
-                content != null ? content.TransformBoundsTo(viewRect) : new Bounds();
+            var contentBounds = content != null ? content.TransformBoundsTo(viewRect) : new Bounds();
 
             var hiddenLength = contentBounds.size[axis] - viewBounds.size[axis];
             return distance / hiddenLength;
@@ -447,18 +439,14 @@ namespace UNIHper
             if (axis == RectTransform.Axis.Vertical)
             {
                 var offset = viewRect.center.y - elementBounds.center.y;
-                var scrollPos =
-                    scrollRect.verticalNormalizedPosition
-                    - scrollRect.NormalizeScrollDistance(1, offset);
+                var scrollPos = scrollRect.verticalNormalizedPosition - scrollRect.NormalizeScrollDistance(1, offset);
                 _centerPosition = Mathf.Clamp(scrollPos, 0, 1);
                 //scrollRect.verticalNormalizedPosition = Mathf.Clamp(scrollPos, 0, 1);
             }
             else
             {
                 var offset = viewRect.center.x - elementBounds.center.x;
-                var scrollPos =
-                    scrollRect.horizontalNormalizedPosition
-                    - scrollRect.NormalizeScrollDistance(0, offset);
+                var scrollPos = scrollRect.horizontalNormalizedPosition - scrollRect.NormalizeScrollDistance(0, offset);
                 _centerPosition = Mathf.Clamp(scrollPos, 0, 1);
                 //scrollRect.horizontalNormalizedPosition = Mathf.Clamp(scrollPos, 0, 1);
             }
@@ -489,6 +477,12 @@ namespace UNIHper
             where T : Component
         {
             return transform.gameObject.GetOrAdd<T>();
+        }
+
+        public static T GetOrAdd<T>(this MonoBehaviour behaviour, string pathOrName)
+            where T : Component
+        {
+            return behaviour.transform.Get(pathOrName)?.GetOrAdd<T>();
         }
     }
 }

@@ -34,14 +34,10 @@ namespace UNIHper
         public static T SceneScript<T>()
             where T : SceneScriptBase => SceneScriptManager.Instance.GetSceneScript<T>();
 
-        public static IObservable<Scene> OnNewSceneLoadedAsObservable() =>
-            Instance.OnNewSceneLoadedAsObservable();
+        public static IObservable<Scene> OnNewSceneLoadedAsObservable() => Instance.OnNewSceneLoadedAsObservable();
 
-        public static void LoadSceneAsync(
-            string sceneName,
-            System.Action<float> progress = null,
-            System.Action completed = null
-        ) => Instance.LoadSceneAsync(sceneName, progress, completed);
+        public static void LoadSceneAsync(string sceneName, System.Action<float> progress = null, System.Action completed = null) =>
+            Instance.LoadSceneAsync(sceneName, progress, completed);
     }
 
     public static class UIMgr
@@ -94,10 +90,8 @@ namespace UNIHper
         /// </summary>
         public static void HideAll() => Instance.HideAll();
 
-        public static void SetRenderMode(
-            RenderMode renderMode,
-            string canvasKey = UIManager.CANVAS_DEFAULT
-        ) => Instance.SetRenderMode(renderMode, canvasKey);
+        public static void SetRenderMode(RenderMode renderMode, string canvasKey = UIManager.CANVAS_DEFAULT) =>
+            Instance.SetRenderMode(renderMode, canvasKey);
 
         /// <summary>
         /// Stash all active UI.
@@ -152,32 +146,27 @@ namespace UNIHper
         /// </summary>
         /// <param name="assetBundleName"></param>
         /// <returns></returns>
-        public static AssetBundle AppendAssetBundle(string assetBundleName) =>
-            Instance.AppendAssetBundle(assetBundleName);
+        public static AssetBundle AppendAssetBundle(string assetBundleName) => Instance.AppendAssetBundle(assetBundleName);
 
         public static List<T> GetLabelAssets<T>(string labelName)
             where T : UnityEngine.Object => Instance.GetLabelAssets<T>(labelName);
 
-        public static Task<IEnumerable<Texture2D>> AppendTexture2Ds(
-            IEnumerable<string> texturePaths
-        ) => Instance.AppendTexture2Ds(texturePaths);
+        public static IObservable<List<Texture2D>> AppendTexture2Ds(IEnumerable<string> texturePaths) =>
+            Instance.AppendTexture2Ds(texturePaths);
 
-        public static Task<IEnumerable<AudioClip>> AppendAudioClips(
-            IEnumerable<string> audioPaths
-        ) => Instance.AppendAudioClips(audioPaths);
+        public static IObservable<List<AudioClip>> AppendAudioClips(IEnumerable<string> audioPaths) =>
+            Instance.AppendAudioClips(audioPaths);
 
-        public static Task<IEnumerable<AudioClip>> AppendAudioClips(
+        public static IObservable<IEnumerable<AudioClip>> AppendAudioClips(
             string audioDir,
             string searchPattern = "*.wav|*.mp3",
             SearchOption searchOption = SearchOption.AllDirectories
         ) => Instance.AppendAudioClips(audioDir, searchPattern, searchOption);
 
-        public static Task<AudioClip> AppendAudioClip(string audioPath) =>
-            Instance.AppendAudioClip(audioPath);
+        public static IObservable<AudioClip> AppendAudioClip(string audioPath) => Instance.AppendAudioClip(audioPath);
 
-        public static IObservable<IEnumerable<Texture2D>> LoadTexture2Ds(
-            IEnumerable<string> texturePaths
-        ) => Instance.LoadTexture2Ds(texturePaths);
+        public static IObservable<IEnumerable<Texture2D>> LoadTexture2Ds(IEnumerable<string> texturePaths) =>
+            Instance.LoadTexture2Ds(texturePaths);
 
         public static IObservable<IList<Texture2D>> LoadTexture2Ds(
             string textureDir,
@@ -185,8 +174,7 @@ namespace UNIHper
             SearchOption searchOption = SearchOption.TopDirectoryOnly
         ) => Instance.LoadTexture2Ds(textureDir, searchPattern, searchOption);
 
-        public static Task<Texture2D> AppendTexture2D(string texturePath) =>
-            Instance.AppendTexture2D(texturePath);
+        public static IObservable<Texture2D> AppendTexture2D(string texturePath) => Instance.AppendTexture2D(texturePath);
     }
 
     public static class CfgMgr
@@ -212,19 +200,11 @@ namespace UNIHper
     {
         public static AudioManager Instance => AudioManager.Instance;
 
-        public static AudioSource PlayMusic(
-            AudioClip InMusic,
-            float InVolume = 1.0f,
-            bool bLoop = true,
-            int Index = 0
-        ) => Instance.PlayMusic(InMusic, InVolume, bLoop, Index);
+        public static AudioSource PlayMusic(AudioClip InMusic, float InVolume = 1.0f, bool bLoop = true, int Index = 0) =>
+            Instance.PlayMusic(InMusic, InVolume, bLoop, Index);
 
-        public static AudioSource PlayMusic(
-            string InMusic,
-            float InVolume = 1.0f,
-            bool bLoop = true,
-            int Index = 0
-        ) => Instance.PlayMusic(InMusic, InVolume, bLoop, Index);
+        public static AudioSource PlayMusic(string InMusic, float InVolume = 1.0f, bool bLoop = true, int Index = 0) =>
+            Instance.PlayMusic(InMusic, InVolume, bLoop, Index);
 
         public static void PlayMusic(int Index = 0) => Instance.PlayMusic(Index);
 
@@ -248,8 +228,7 @@ namespace UNIHper
     {
         public static TimerManager Instance => TimerManager.Instance;
 
-        public static IDisposable Delay(float delayInSeconds, Action callback) =>
-            Instance.Delay(delayInSeconds, callback);
+        public static IDisposable Delay(float delayInSeconds, Action callback) => Instance.Delay(delayInSeconds, callback);
 
         public static Task Delay(float delayInSeconds) => Instance.Delay(delayInSeconds);
 

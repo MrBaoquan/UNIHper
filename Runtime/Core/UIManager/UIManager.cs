@@ -404,9 +404,9 @@ namespace UNIHper.UI
             isStashing = false;
         }
 
-        public void Hide(string InKey)
+        public UIBase Hide(string InKey)
         {
-            Hide<UIBase>(InKey);
+            return Hide<UIBase>(InKey);
         }
 
         public T Toggle<T>()
