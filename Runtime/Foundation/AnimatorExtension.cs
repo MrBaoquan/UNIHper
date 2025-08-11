@@ -37,19 +37,10 @@ namespace UNIHper
 
         public static IObservable<Animator> OnReadyAsObservable(this Animator animator)
         {
-            return Observable
-                .EveryUpdate()
-                .Where(_ => animator.IsReady())
-                .First()
-                .Select(_ => animator);
+            return Observable.EveryUpdate().Where(_ => animator.IsReady()).First().Select(_ => animator);
         }
 
-        public static void SeekToFrame(
-            this Animator animator,
-            string stateName,
-            int frame,
-            Action onCompleted = null
-        )
+        public static void SeekToFrame(this Animator animator, string stateName, int frame, Action onCompleted = null)
         {
             if (animator.IsValid() == false)
                 return;
@@ -77,10 +68,7 @@ namespace UNIHper
                 .AddTo(UNIHperEntry.Instance);
         }
 
-        public static IObservable<Animator> SeekToFrameAsObservable(
-            this Animator animator,
-            int frame
-        )
+        public static IObservable<Animator> SeekToFrameAsObservable(this Animator animator, int frame)
         {
             if (animator.IsValid() == false)
             {
@@ -97,11 +85,7 @@ namespace UNIHper
                 });
         }
 
-        public static IObservable<Animator> SeekToFrameAsObservable(
-            this Animator animator,
-            string stateName,
-            int frame
-        )
+        public static IObservable<Animator> SeekToFrameAsObservable(this Animator animator, string stateName, int frame)
         {
             if (animator.IsValid() == false)
                 return Observable.Return(animator);
@@ -110,18 +94,11 @@ namespace UNIHper
                 .OnReadyAsObservable()
                 .SelectMany(_ =>
                 {
-                    return animator
-                        .SwitchAsObservable(stateName)
-                        .SelectMany(_ => animator.SeekToFrameAsObservable(frame));
+                    return animator.SwitchAsObservable(stateName).SelectMany(_ => animator.SeekToFrameAsObservable(frame));
                 });
         }
 
-        public static IDisposable Seek(
-            this Animator animator,
-            string stateName,
-            float time,
-            Action onCompleted = null
-        )
+        public static IDisposable Seek(this Animator animator, string stateName, float time, Action onCompleted = null)
         {
             if (animator.IsValid() == false)
                 return Disposable.Empty;
@@ -155,15 +132,10 @@ namespace UNIHper
 
         public static bool IsValid(this Animator animator)
         {
-            return animator.runtimeAnimatorController != null
-                && animator.runtimeAnimatorController.animationClips.Length > 0;
+            return animator.runtimeAnimatorController != null && animator.runtimeAnimatorController.animationClips.Length > 0;
         }
 
-        public static IDisposable SeekToFrame(
-            this Animator animator,
-            int frame,
-            Action onCompleted = null
-        )
+        public static IDisposable SeekToFrame(this Animator animator, int frame, Action onCompleted = null)
         {
             if (animator.IsValid() == false)
                 return Disposable.Empty;
@@ -174,11 +146,7 @@ namespace UNIHper
             return animator.Seek(_pasueTime, onCompleted);
         }
 
-        public static IDisposable Seek(
-            this Animator animator,
-            float time,
-            Action onCompleted = null
-        )
+        public static IDisposable Seek(this Animator animator, float time, Action onCompleted = null)
         {
             if (animator.IsValid() == false)
                 return Disposable.Empty;
@@ -199,8 +167,7 @@ namespace UNIHper
                     return Observable.Return(animator);
                 });
 
-        public static float CurrentTime(this Animator animator) =>
-            animator.GetCurrentAnimatorStateInfo(0).normalizedTime;
+        public static float CurrentTime(this Animator animator) => animator.GetCurrentAnimatorStateInfo(0).normalizedTime;
 
         public static void Pause(this Animator animator)
         {
@@ -218,20 +185,13 @@ namespace UNIHper
             animator.speed = 1;
         }
 
-        public static IDisposable Switch(
-            this Animator animator,
-            string stateName,
-            Action onCompleted = null
-        )
+        public static IDisposable Switch(this Animator animator, string stateName, Action onCompleted = null)
         {
             animator.speed = 1;
             return animator.SwitchAsObservable(stateName).Subscribe(_ => onCompleted?.Invoke());
         }
 
-        public static IObservable<Animator> SwitchAsObservable(
-            this Animator animator,
-            string stateName
-        )
+        public static IObservable<Animator> SwitchAsObservable(this Animator animator, string stateName)
         {
             if (animator.IsValid() == false)
                 return Observable.Return(animator);
@@ -239,32 +199,25 @@ namespace UNIHper
             if (animator.GetCurrentAnimatorStateInfo(0).IsName(stateName))
                 return Observable.Return(animator);
 
+            if (animator.gameObject.activeInHierarchy == false)
+            {
+                return Observable.Return(animator);
+            }
+
             animator.Play(stateName, 0, 0);
             return Observable
                 .EveryUpdate()
-                .Where(
-                    _ =>
-                        animator.IsReady()
-                        && animator.GetCurrentAnimatorStateInfo(0).IsName(stateName)
-                )
+                .Where(_ => animator.IsReady() && animator.GetCurrentAnimatorStateInfo(0).IsName(stateName))
                 .First()
                 .Select(_ => animator);
         }
 
-        public static IDisposable PlayToEnd(
-            this Animator animator,
-            string stateName,
-            Action<Animator> onCompleted = null
-        )
+        public static IDisposable PlayToEnd(this Animator animator, string stateName, Action<Animator> onCompleted = null)
         {
             return PlayToEndAsObservable(animator, stateName).Subscribe(onCompleted);
         }
 
-        public static IDisposable PlayThenHide(
-            this Animator animator,
-            string stateName,
-            Action<Animator> onCompleted = null
-        )
+        public static IDisposable PlayThenHide(this Animator animator, string stateName, Action<Animator> onCompleted = null)
         {
             return PlayToEnd(
                     animator,
@@ -279,11 +232,7 @@ namespace UNIHper
                 .AddTo(UNIHperEntry.Instance);
         }
 
-        public static IDisposable PlayThenNext(
-            this Animator animator,
-            string stateName,
-            string nextStateName
-        )
+        public static IDisposable PlayThenNext(this Animator animator, string stateName, string nextStateName)
         {
             return PlayToEnd(
                     animator,
@@ -308,11 +257,7 @@ namespace UNIHper
                         Observable
                             .EveryUpdate()
                             .Where(_ => animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= 1)
-                            .TakeWhile(
-                                _ =>
-                                    _animator.IsState(stateName)
-                                    && (condition == null || condition(_animator))
-                            )
+                            .TakeWhile(_ => (condition == null || condition(_animator)))
                             .First()
                             .Select(_ => _animator)
                             .Catch<Animator, Exception>(ex =>

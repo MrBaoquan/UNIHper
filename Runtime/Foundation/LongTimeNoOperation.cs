@@ -15,8 +15,7 @@ namespace UNIHper
 
     public class LongTimeNoOperation
     {
-        public IObservable<Unit> OnResetOperationAsObservable() =>
-            onResetOperationEvent.AsObservable();
+        public IObservable<Unit> OnResetOperationAsObservable() => onResetOperationEvent.AsObservable();
 
         public LongTimeNoOperation ResetOperation()
         {
@@ -101,10 +100,7 @@ namespace UNIHper
         private static bool hasAnyInput()
         {
 #if ENABLE_INPUT_SYSTEM
-            bool _hasAnyInput =
-                Keyboard.current.HasAnyInput()
-                || Mouse.current.HasAnyInput()
-                || Touchscreen.current.HasAnyInput();
+            bool _hasAnyInput = Keyboard.current.HasAnyInput() || Mouse.current.HasAnyInput() || Touchscreen.current.HasAnyInput();
 #elif ENABLE_LEGACY_INPUT_MANAGER
             bool _hasAnyInput = Input.touchCount > 0 || Input.anyKeyDown;
 #else
@@ -124,18 +120,31 @@ namespace UNIHper
 
         static LongTimeNoOperation()
         {
-            checkInputDisposable = Observable
-                .EveryUpdate()
+#if ENABLE_INPUT_SYSTEM
+            checkInputDisposable = InputSystem.onAnyButtonPress
+                .ThrottleFirst(TimeSpan.FromSeconds(1.0f))
                 .Subscribe(_ =>
                 {
-                    if (hasAnyInput())
+                    // 2021 2022 2023 测试通过
+                    foreach (var _longTimeNoOperation in _longTimeNoOperations)
                     {
-                        foreach (var _longTimeNoOperation in _longTimeNoOperations)
-                        {
-                            _longTimeNoOperation.ResetOperation();
-                        }
+                        _longTimeNoOperation.ResetOperation();
                     }
                 });
+#else
+
+            checkInputDisposable = Observable
+                .EveryUpdate()
+                .Where(_ => hasAnyInput())
+                .ThrottleFirst(TimeSpan.FromSeconds(1.0f))
+                .Subscribe(_ =>
+                {
+                    foreach (var _longTimeNoOperation in _longTimeNoOperations)
+                    {
+                        _longTimeNoOperation.ResetOperation();
+                    }
+                });
+#endif
         }
     }
 }

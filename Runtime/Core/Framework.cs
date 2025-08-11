@@ -38,9 +38,7 @@ namespace UNIHper
 
         internal void Initialize()
         {
-            longTimeNoOperation.SetTimeout(
-                Managements.Config.Get<AppConfig>().LongTimeNoOperationTimeout
-            );
+            longTimeNoOperation.SetTimeout(Managements.Config.Get<AppConfig>().LongTimeNoOperationTimeout);
             enableConsolePanel();
         }
 
@@ -56,10 +54,7 @@ namespace UNIHper
 
         private void enableConsolePanel()
         {
-            Observable
-                .EveryUpdate()
-                .Subscribe(_ => queryShortcutEvents())
-                .AddTo(UNIHperEntry.Instance);
+            Observable.EveryUpdate().Subscribe(_ => queryShortcutEvents()).AddTo(UNIHperEntry.Instance);
             SRDebug.Instance.IsTriggerEnabled = false;
             debugModeEnabled.Subscribe(_enable =>
             {
@@ -140,10 +135,7 @@ namespace UNIHper
                 Managements.UI.Get<UNIDebuggerPanel>().Toggle();
             }
 
-            if (
-                (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt))
-                && Input.GetKeyDown(KeyCode.F10)
-            )
+            if ((Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)) && Input.GetKeyDown(KeyCode.F10))
             {
                 SRDebug.Instance.DockConsole.IsVisible = !SRDebug.Instance.DockConsole.IsVisible;
                 if (SRDebug.Instance.DockConsole.IsVisible)

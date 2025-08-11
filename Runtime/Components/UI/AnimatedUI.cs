@@ -171,37 +171,22 @@ namespace UNIHper.UI
                     return;
                 }
                 animatorOverrideController.runtimeAnimatorController = overrideController;
-                List<KeyValuePair<AnimationClip, AnimationClip>> _clips =
-                    new List<KeyValuePair<AnimationClip, AnimationClip>>();
-                new AnimatorOverrideController(
-                    animatorOverrideController.runtimeAnimatorController
-                ).GetOverrides(_clips);
+                List<KeyValuePair<AnimationClip, AnimationClip>> _clips = new List<KeyValuePair<AnimationClip, AnimationClip>>();
+                new AnimatorOverrideController(animatorOverrideController.runtimeAnimatorController).GetOverrides(_clips);
 
                 animatorOverrideController.animationClipPairs = _clips
                     .Select(_clip =>
                     {
                         if (_clip.Key.name == "UIShow")
                         {
-                            return new AnimationClipPair
-                            {
-                                originalClip = _clip.Key,
-                                overrideClip = UIShow == null ? UINone : UIShow
-                            };
+                            return new AnimationClipPair { originalClip = _clip.Key, overrideClip = UIShow == null ? UINone : UIShow };
                         }
                         else if (_clip.Key.name == "UIHide")
                         {
-                            return new AnimationClipPair
-                            {
-                                originalClip = _clip.Key,
-                                overrideClip = UIHide == null ? UINone : UIHide
-                            };
+                            return new AnimationClipPair { originalClip = _clip.Key, overrideClip = UIHide == null ? UINone : UIHide };
                         }
 
-                        return new AnimationClipPair
-                        {
-                            originalClip = _clip.Key,
-                            overrideClip = _clip.Value
-                        };
+                        return new AnimationClipPair { originalClip = _clip.Key, overrideClip = _clip.Value };
                     })
                     .ToList();
                 animatorOverrideController.Apply();
@@ -289,9 +274,7 @@ namespace UNIHper.UI
                 if (UIHide is null)
                     return Task.CompletedTask;
 
-                return this.Get<Animator>()
-                    .PlayToEndAsObservable("UIHide")
-                    .ToTask(cancellationToken);
+                return this.Get<Animator>().PlayToEndAsObservable("UIHide").ToTask(cancellationToken);
             }
             else if (driver == UIAnimionDriver.Tweener)
             {
@@ -369,25 +352,13 @@ namespace UNIHper.UI
             switch (type)
             {
                 case UIAnimationType.Fly_Up:
-                    return new Vector2(
-                        m_originAnchoredPosition.x,
-                        _rectTransform.rect.height * (dir == 1 ? -1 : 1)
-                    );
+                    return new Vector2(m_originAnchoredPosition.x, _rectTransform.rect.height * (dir == 1 ? -1 : 1));
                 case UIAnimationType.Fly_Right:
-                    return new Vector2(
-                        _rectTransform.rect.width * (dir == 1 ? -1 : 1),
-                        m_originAnchoredPosition.y
-                    );
+                    return new Vector2(_rectTransform.rect.width * (dir == 1 ? -1 : 1), m_originAnchoredPosition.y);
                 case UIAnimationType.Fly_Down:
-                    return new Vector2(
-                        m_originAnchoredPosition.x,
-                        _rectTransform.rect.height * (dir == 1 ? 1 : -1)
-                    );
+                    return new Vector2(m_originAnchoredPosition.x, _rectTransform.rect.height * (dir == 1 ? 1 : -1));
                 case UIAnimationType.Fly_Left:
-                    return new Vector2(
-                        _rectTransform.rect.width * (dir == 1 ? 1 : -1),
-                        m_originAnchoredPosition.y
-                    );
+                    return new Vector2(_rectTransform.rect.width * (dir == 1 ? 1 : -1), m_originAnchoredPosition.y);
                 case UIAnimationType.Zoom:
                     return new Vector2(0, 0);
                 default:

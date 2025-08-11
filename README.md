@@ -24,8 +24,10 @@
 -   MessagePack
 
 ### 版本更新日志
-v1.25.xxx
+v1.25.811
 - 优化UIManager,ResourceManager部分接口
+- 优化LongTimeNoOperation组件
+- 公开UI状态接口
 
 v1.25.806
 - 二进制序列化改用messagepack包

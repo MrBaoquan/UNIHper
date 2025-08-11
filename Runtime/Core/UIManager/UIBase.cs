@@ -66,7 +66,7 @@ namespace UNIHper.UI
 
         public Task<float> ShowTask(float offset = -0.1f)
         {
-            if (_status == UIStatus.Shown)
+            if (_state == UIState.Shown)
             {
                 return Task.FromResult(0.0f);
             }
@@ -75,7 +75,7 @@ namespace UNIHper.UI
 
         public Task<float> HideTask(float offset = -0.1f)
         {
-            if (_status == UIStatus.Hidden)
+            if (_state == UIState.Hidden)
             {
                 return Task.FromResult(0.0f);
             }
@@ -98,7 +98,7 @@ namespace UNIHper.UI
 
         internal void ForceInvokeOnShownEvent()
         {
-            if (_status == UIStatus.Shown)
+            if (_state == UIState.Shown)
                 onShownEvent.Invoke();
         }
 
@@ -118,7 +118,7 @@ namespace UNIHper.UI
 
         internal void ForceInvokeOnHiddenEvent()
         {
-            if (_status == UIStatus.Hidden)
+            if (_state == UIState.Hidden)
                 onHiddenEvent.Invoke();
         }
 
@@ -132,7 +132,7 @@ namespace UNIHper.UI
             return onHiddenEvent.AsObservable();
         }
 
-        private enum UIStatus
+        public enum UIState
         {
             None,
             Loading,
@@ -143,8 +143,9 @@ namespace UNIHper.UI
             Hidden
         }
 
-        private UIStatus _status = UIStatus.None;
-        public bool isShowing => _status == UIStatus.Showing || _status == UIStatus.Shown;
+        private UIState _state = UIState.None;
+        public bool isShowing => _state == UIState.Showing || _state == UIState.Shown;
+        public UIState State => _state;
 
         public void Toggle()
         {
@@ -158,6 +159,21 @@ namespace UNIHper.UI
             }
         }
 
+        public bool CheckState(UIState state)
+        {
+            return _state == state;
+        }
+
+        public bool IsShown()
+        {
+            return _state == UIState.Shown;
+        }
+
+        public bool IsHidden()
+        {
+            return _state == UIState.Hidden;
+        }
+
         private UIAnimationBase uiAnimComponent
         {
             get => GetComponent<UIAnimationBase>();
@@ -167,7 +183,7 @@ namespace UNIHper.UI
         internal void OnLoad()
         {
             uiAnimComponent?.OnUIAttached();
-            _status = UIStatus.Loaded;
+            _state = UIState.Loaded;
             OnLoaded();
         }
 
@@ -201,7 +217,7 @@ namespace UNIHper.UI
             LifeCycleDisposables?.Dispose();
             LifeCycleDisposables = new CompositeDisposable();
 
-            _status = UIStatus.Showing;
+            _state = UIState.Showing;
             this.OnShowing();
             onShowingEvent.Invoke();
             try
@@ -216,7 +232,7 @@ namespace UNIHper.UI
                 return;
             }
 
-            _status = UIStatus.Shown;
+            _state = UIState.Shown;
             this.OnShown();
             onShownEvent.Invoke();
         }
@@ -231,7 +247,7 @@ namespace UNIHper.UI
         {
             clearShowOrHideCancellationTokenSource();
 
-            _status = UIStatus.Hiding;
+            _state = UIState.Hiding;
             this.OnHiding();
             onHidingEvent.Invoke();
             try
@@ -251,7 +267,7 @@ namespace UNIHper.UI
                 transform.GetComponentsInChildren<Animator>().ForEach(_animator => _animator.Rebind());
             }
 
-            _status = UIStatus.Hidden;
+            _state = UIState.Hidden;
             this.gameObject.SetActive(false);
             this.OnHidden();
             onHiddenEvent.Invoke();

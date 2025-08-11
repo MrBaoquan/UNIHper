@@ -18,9 +18,7 @@ namespace UNIHper
             if (mouse == null)
                 return false;
 
-            return mouse.leftButton.wasPressedThisFrame
-                || mouse.rightButton.wasPressedThisFrame
-                || mouse.middleButton.wasPressedThisFrame;
+            return mouse.leftButton.wasPressedThisFrame || mouse.rightButton.wasPressedThisFrame || mouse.middleButton.wasPressedThisFrame;
         }
 
         public static bool HasAnyInput(this UnityEngine.InputSystem.Touchscreen touchscreen)
