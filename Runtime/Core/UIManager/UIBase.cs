@@ -147,6 +147,8 @@ namespace UNIHper.UI
         public bool isShowing => _state == UIState.Showing || _state == UIState.Shown;
         public UIState State => _state;
 
+        public int LastShowFrame = int.MaxValue;
+
         public void Toggle()
         {
             if (isShowing)

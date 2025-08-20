@@ -127,13 +127,22 @@ namespace UNIHper
 
         IDisposable _readyHandler = null;
 
-        static Dictionary<string, Texture2D> cachedDefaultTexes = new();
+        public Dictionary<string, Texture> cachedDefaultTexes = new();
 
-        public bool FadeWhenChange { get; private set; } = true;
-
-        public void EnableFade(bool Fade)
+        public Texture GetCachedDefaultTexture(string videoPath)
         {
-            FadeWhenChange = Fade;
+            if (cachedDefaultTexes.TryGetValue(videoPath, out var cachedTex))
+            {
+                return cachedTex;
+            }
+            return null;
+        }
+
+        private float _fadeDuration = 0.25f;
+
+        public void EnableFade(float duration = 0.25f)
+        {
+            _fadeDuration = duration;
         }
 
         public void CloseMedia()
@@ -180,23 +189,24 @@ namespace UNIHper
             bool _notSameSource =
                 MediaPlayer.MediaPath.Path != videoPath || MediaPlayer.Control == null || !MediaPlayer.Control.HasMetaData();
 
-            var displayer = this.Get<DisplayUGUI>();
+            var displayUI = this.Get<DisplayUGUI>();
 
-            var _useFade = _notSameSource && FadeWhenChange;
+            var _useFade = _notSameSource;
 
-            if (_useFade && displayer != null)
+            if (_useFade && displayUI != null)
             {
-                displayer.color = Color.black;
-                cachedDefaultTexes.TryGetValue(videoPath, out var _cacheTex);
-                displayer.DefaultTexture = _cacheTex;
+                displayUI.color = Color.black;
             }
 
             Action _playVideo = () =>
             {
-                if (_useFade && displayer != null)
+                if (_useFade && displayUI != null)
                 {
-                    DOTween.Kill(displayer);
-                    displayer.DOColor(Color.white, 0.35f);
+                    DOTween.Kill(displayUI);
+                    if (_fadeDuration <= 0)
+                        displayUI.color = Color.white;
+                    else
+                        displayUI.DOColor(Color.white, _fadeDuration);
                 }
 
                 MediaPlayer.Play();
@@ -276,11 +286,13 @@ namespace UNIHper
             if (_notSameSource)
             {
                 _readyHandler = OnFirstFrameReadyAsObservable()
+                    .First()
                     .Subscribe(_ =>
                     {
                         if (!cachedDefaultTexes.ContainsKey(videoPath))
                         {
-                            var _texture = MediaPlayer.ExtractFrame(null, startTime).Clone();
+                            var _texture = MediaPlayer.ExtractFrame(null, startTime).ToRenderTexture();
+
                             if (_texture != null)
                             {
                                 cachedDefaultTexes[videoPath] = _texture;
@@ -312,10 +324,10 @@ namespace UNIHper
         readonly ReactiveProperty<bool> _isMute = new(false);
         readonly ReactiveProperty<float> _volume = new(1f);
 
-        public IObservable<AVProBase> OnPausedAsObservable()
-        {
-            return _isPlaying.Where(_ => !_isPlaying.Value).Select(_ => this);
-        }
+        // public IObservable<AVProBase> OnPausedAsObservable()
+        // {
+        //     return _isPlaying.Where(_ => !_isPlaying.Value).Select(_ => this);
+        // }
 
         public IObservable<AVProBase> OnMuteChangedAsObservable()
         {

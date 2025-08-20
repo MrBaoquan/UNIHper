@@ -32,6 +32,11 @@ namespace UNIHper
         protected readonly UnityEvent<MediaPlayer> OnPlaylistItemChanged = new(); // Triggered when the new item is played in the playlist
         protected readonly UnityEvent<MediaPlayer> OnPlaylistFinished = new(); // Triggered when the playlist reaches the end
         protected readonly UnityEvent<MediaPlayer> OnTextTracksChanged = new(); // Triggered when the text tracks are added or removed
+
+        // Paused && Unpaused
+        protected readonly UnityEvent<MediaPlayer> OnPaused = new();
+        protected readonly UnityEvent<MediaPlayer> OnUnpaused = new();
+
         #endregion
         protected CompositeDisposable _playDisposables = new CompositeDisposable();
         private MediaPlayer _mediaPlayer;
@@ -55,6 +60,16 @@ namespace UNIHper
         public IObservable<MediaPlayer> OnMetaDataReadyAsObservable()
         {
             return OnMetaDataReady.AsObservable();
+        }
+
+        public IObservable<MediaPlayer> OnPausedAsObservable()
+        {
+            return OnPaused.AsObservable();
+        }
+
+        public IObservable<MediaPlayer> OnUnpausedAsObservable()
+        {
+            return OnUnpaused.AsObservable();
         }
 
         public IObservable<MediaPlayer> OnReadyToPlayAsObservable()
@@ -154,7 +169,7 @@ namespace UNIHper
             MediaPlayer.Events.AddListener(
                 (_media, _type, err) =>
                 {
-                    // Debug.LogWarningFormat($"{gameObject.name} OnEvent: {_type}, {err}");
+                    Debug.LogWarningFormat($"{gameObject.name} OnEvent: {_type}, {err}");
                     switch (_type)
                     {
                         case MediaPlayerEvent.EventType.MetaDataReady: // Triggered when meta data(width, duration etc) is available
@@ -163,6 +178,15 @@ namespace UNIHper
                         case MediaPlayerEvent.EventType.ReadyToPlay: // Triggered when the video is loaded and ready to play
                             OnReadyToPlay.Invoke(_media);
                             break;
+
+                        // case MediaPlayerEvent.EventType.Unpaused:
+                        //     OnUnpaused.Invoke(_media);
+                        //     break;
+
+                        // case MediaPlayerEvent.EventType.Paused:
+                        //     OnPaused.Invoke(_media);
+                        //     break;
+
                         case MediaPlayerEvent.EventType.Started: // Triggered when the playback starts
                             OnStarted.Invoke(_media);
                             break;

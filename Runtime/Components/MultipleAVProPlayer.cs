@@ -107,20 +107,12 @@ namespace UNIHper
                 MediaPlaylist.MediaItem _mediaItem = new MediaPlaylist.MediaItem();
                 _mediaItem.mediaPath = new MediaPath(_videoPath, MediaPathType.RelativeToStreamingAssetsFolder);
                 _mediaItem.startMode = PlaylistMediaPlayer.StartMode.Manual;
-                _mediaItem.progressMode = PlaylistMediaPlayer.ProgressMode.OnFinish;
+                _mediaItem.progressMode = PlaylistMediaPlayer.ProgressMode.Manual;
                 // item.isOverrideTransition = false;
                 // item.overrideTransition = PlaylistMediaPlayer.Transition.Black;
                 // item.overrideTransitionDuration = 1.0f;
                 // item.overrideTransitionEasing = PlaylistMediaPlayer.Easing.Preset.Linear;
                 listPlayer.Playlist.Items.Add(_mediaItem);
-
-                //var _playerUI = new GameObject(_videoPath);
-                // var _rectTransform = _playerUI.AddComponent<RectTransform>();
-                // _rectTransform.anchorMin = Vector2.zero;
-                // _rectTransform.anchorMax = Vector2.one;
-                // _rectTransform.offsetMin = Vector2.zero;
-                // _rectTransform.offsetMax = Vector2.zero;
-                // _playerUI.transform.SetParent(transform);
             });
         }
 

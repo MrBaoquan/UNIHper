@@ -51,11 +51,7 @@ namespace UNIHper.Network
             return Task.CompletedTask;
         }
 
-        public UTcpClient BuildTcpClient(
-            string InRemoteIP,
-            int InRemotePort,
-            UNetMsgReceiver MessageReceiver = null
-        )
+        public UTcpClient BuildTcpClient(string InRemoteIP, int InRemotePort, UNetMsgReceiver MessageReceiver = null)
         {
             string _key = string.Format("{0}_{1}", InRemoteIP, InRemotePort);
             if (allTcpClients.ContainsKey(_key))
@@ -82,11 +78,7 @@ namespace UNIHper.Network
             allTcpServers.Remove(InKey);
         }
 
-        public UTcpServer BuildTcpListener(
-            string InLocalIP = "127.0.0.1",
-            int InLocalPort = 6666,
-            UNetMsgReceiver MessageReceiver = null
-        )
+        public UTcpServer BuildTcpListener(string InLocalIP = "127.0.0.1", int InLocalPort = 6666, UNetMsgReceiver MessageReceiver = null)
         {
             string _key = string.Format("{0}_{1}", InLocalIP, InLocalPort);
             if (allTcpServers.ContainsKey(_key))
@@ -97,11 +89,7 @@ namespace UNIHper.Network
             return _socket;
         }
 
-        public UUdpClient BuildUdpListener(
-            string InIP,
-            int InPort,
-            UNetMsgReceiver messageReceiver = null
-        )
+        public UUdpClient BuildUdpListener(string InIP, int InPort, UNetMsgReceiver messageReceiver = null)
         {
             string _key = string.Format("{0}_{1}", InIP, InPort);
             if (allUdpServers.ContainsKey(_key))
@@ -111,11 +99,7 @@ namespace UNIHper.Network
             return _udpServer;
         }
 
-        public UUdpClient BuildUdpClient(
-            string InRemoteIP,
-            int InRemotePort,
-            UNetMsgReceiver messageReceiver = null
-        )
+        public UUdpClient BuildUdpClient(string InRemoteIP, int InRemotePort, UNetMsgReceiver messageReceiver = null)
         {
             string _key = string.Format("{0}_{1}", InRemoteIP, InRemotePort);
             if (allUdpClients.ContainsKey(_key))

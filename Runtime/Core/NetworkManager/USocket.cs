@@ -46,8 +46,7 @@ namespace UNIHper.Network
             return onConnected.AsObservable();
         }
 
-        protected UnityEvent<UNetDisconnectedEvent> onDisconnected =
-            new UnityEvent<UNetDisconnectedEvent>();
+        protected UnityEvent<UNetDisconnectedEvent> onDisconnected = new UnityEvent<UNetDisconnectedEvent>();
         public UnityEvent<UNetDisconnectedEvent> OnDisconnected
         {
             get => onDisconnected;
@@ -134,11 +133,7 @@ namespace UNIHper.Network
             {
                 if (remoteEndPoint == null)
                     return string.Empty;
-                return string.Format(
-                    "{0}_{1}",
-                    remoteEndPoint.Address.ToString(),
-                    remoteEndPoint.Port
-                );
+                return string.Format("{0}_{1}", remoteEndPoint.Address.ToString(), remoteEndPoint.Port);
             }
         }
 
@@ -189,8 +184,7 @@ namespace UNIHper.Network
 
         CompositeDisposable messageDispatcherHandler = null;
 
-        UnityEvent<(UMessage Message, USocket Socket)> onMessageReceived =
-            new UnityEvent<(UMessage Message, USocket Socket)>();
+        UnityEvent<(UMessage Message, USocket Socket)> onMessageReceived = new UnityEvent<(UMessage Message, USocket Socket)>();
 
         public IObservable<(UMessage Message, USocket Socket)> OnReceivedAsObservable()
         {
@@ -226,9 +220,7 @@ namespace UNIHper.Network
                 return;
             UNetMsgReceiver _receiver = MsgReceiver.Clone(); //Activator.CreateInstance(MsgReceiver) as UMessageReceiver;
             messageReceivers.Add(_receiver);
-            _receiver
-                .Prepare(InSocket, messageDispatcher, this)
-                .OnDisconnect(onReceiverDisconnected);
+            _receiver.Prepare(InSocket, messageDispatcher, this).OnDisconnect(onReceiverDisconnected);
         }
 
         protected virtual void onReceiverDisconnected(string InKey, Socket InSocket)
@@ -238,11 +230,7 @@ namespace UNIHper.Network
             var _port = int.Parse(_infoArr[1]);
             // var _ip = (InSocket.RemoteEndPoint as IPEndPoint).Address.ToString ();
             // var _port = (InSocket.RemoteEndPoint as IPEndPoint).Port;
-            var _disconnectedEvent = new UNetDisconnectedEvent
-            {
-                RemoteIP = _ip,
-                RemotePort = _port
-            };
+            var _disconnectedEvent = new UNetDisconnectedEvent { RemoteIP = _ip, RemotePort = _port };
             Managements.Event.Fire(_disconnectedEvent);
             onDisconnected.Invoke(_disconnectedEvent);
         }

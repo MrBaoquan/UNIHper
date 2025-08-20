@@ -29,13 +29,7 @@ namespace UNIHper
             GL.sRGBWrite = false;
             GL.Clear(clearDepth: false, clearColor: true, new Color(1f, 1f, 1f, 0f));
             Graphics.Blit(texture, renderTexture);
-            Texture2D texture2D = new Texture2D(
-                (int)source.width,
-                (int)source.height,
-                TextureFormat.ARGB32,
-                mipChain: true,
-                linear: false
-            );
+            Texture2D texture2D = new Texture2D((int)source.width, (int)source.height, TextureFormat.ARGB32, mipChain: true, linear: false);
             texture2D.filterMode = FilterMode.Point;
             texture2D.ReadPixels(source, 0, 0);
             texture2D.Apply();
@@ -65,15 +59,32 @@ namespace UNIHper
             return _texture2D;
         }
 
+        // 将 Texture2D 拷贝到 RenderTexture，可以传入现有的 RenderTexture 或者自动创建一个新的
+        public static RenderTexture ToRenderTexture(this Texture2D source, RenderTexture target = null)
+        {
+            // 如果没有传入目标 RenderTexture，则自动创建一个新的
+            if (target == null)
+            {
+                target = new RenderTexture(source.width, source.height, 24);
+            }
+
+            // 确保 RenderTexture 是激活状态
+            RenderTexture.active = target;
+
+            // 使用 Graphics.Blit 将源纹理拷贝到目标 RenderTexture
+            Graphics.Blit(source, target);
+
+            // 恢复 RenderTexture.active 为 null
+            RenderTexture.active = null;
+
+            // 返回目标 RenderTexture
+            return target;
+        }
+
         public static Texture2D Clone(this Texture2D source)
         {
             // 创建一个新的Texture2D对象，它具有相同的宽度、高度和格式
-            Texture2D newTexture = new Texture2D(
-                source.width,
-                source.height,
-                source.format,
-                source.mipmapCount > 1
-            );
+            Texture2D newTexture = new Texture2D(source.width, source.height, source.format, source.mipmapCount > 1);
             // 复制原始纹理的像素到新纹理
             Graphics.CopyTexture(source, newTexture);
             // 应用像素更改
@@ -81,12 +92,7 @@ namespace UNIHper
             return newTexture;
         }
 
-        public static Texture2D Resize(
-            this Texture texture,
-            int width,
-            int height,
-            FilterMode filterMode = FilterMode.Bilinear
-        )
+        public static Texture2D Resize(this Texture texture, int width, int height, FilterMode filterMode = FilterMode.Bilinear)
         {
             RenderTexture active = RenderTexture.active;
             RenderTexture temporary = RenderTexture.GetTemporary(
@@ -103,13 +109,7 @@ namespace UNIHper
             bool sRGBWrite = GL.sRGBWrite;
             GL.sRGBWrite = false;
             Graphics.Blit(texture, temporary);
-            Texture2D texture2D = new Texture2D(
-                width,
-                height,
-                TextureFormat.ARGB32,
-                mipChain: true,
-                linear: false
-            );
+            Texture2D texture2D = new Texture2D(width, height, TextureFormat.ARGB32, mipChain: true, linear: false);
             texture2D.filterMode = filterMode;
             texture2D.ReadPixels(new Rect(0f, 0f, width, height), 0, 0);
             texture2D.Apply();
@@ -144,13 +144,7 @@ namespace UNIHper
             int yOffset = (squareSize - originalHeight) / 2;
 
             // 将原始图片的像素复制到正方形纹理的居中位置
-            squareTexture.SetPixels(
-                xOffset,
-                yOffset,
-                originalWidth,
-                originalHeight,
-                source.GetPixels()
-            );
+            squareTexture.SetPixels(xOffset, yOffset, originalWidth, originalHeight, source.GetPixels());
 
             // 应用更改
             squareTexture.Apply();
@@ -158,10 +152,7 @@ namespace UNIHper
             return squareTexture;
         }
 
-        public static List<Vector2Int> GetPixelsAboveBrightness(
-            this Texture2D texture,
-            float brightnessThreshold
-        )
+        public static List<Vector2Int> GetPixelsAboveBrightness(this Texture2D texture, float brightnessThreshold)
         {
             List<Vector2Int> pixels = new List<Vector2Int>();
 
@@ -204,12 +195,7 @@ namespace UNIHper
         /// <param name="y">像素的Y坐标</param>
         /// <param name="threshold">亮度阈值 (0到1之间)</param>
         /// <returns>如果亮度大于阈值，返回true；否则返回false</returns>
-        public static bool IsPixelBrightnessGreaterThan(
-            this Texture2D texture,
-            int x,
-            int y,
-            float threshold
-        )
+        public static bool IsPixelBrightnessGreaterThan(this Texture2D texture, int x, int y, float threshold)
         {
             // 确保坐标在纹理范围内
             if (x < 0 || x >= texture.width || y < 0 || y >= texture.height)
@@ -222,18 +208,13 @@ namespace UNIHper
             Color pixelColor = texture.GetPixel(x, y);
 
             // 计算亮度 (使用感知亮度公式)
-            float brightness =
-                pixelColor.r * 0.299f + pixelColor.g * 0.587f + pixelColor.b * 0.114f;
+            float brightness = pixelColor.r * 0.299f + pixelColor.g * 0.587f + pixelColor.b * 0.114f;
 
             // 比较亮度与阈值
             return brightness > threshold;
         }
 
-        public static Texture2D AddPadding(
-            this Texture2D source,
-            int padding,
-            Color fillColor = default(Color)
-        )
+        public static Texture2D AddPadding(this Texture2D source, int padding, Color fillColor = default(Color))
         {
             // 获取原始图片的宽度和高度
             int originalWidth = source.width;
@@ -259,13 +240,7 @@ namespace UNIHper
             int yOffset = padding;
 
             // 将源图片的像素复制到新纹理的居中区域
-            paddedTexture.SetPixels(
-                xOffset,
-                yOffset,
-                originalWidth,
-                originalHeight,
-                source.GetPixels()
-            );
+            paddedTexture.SetPixels(xOffset, yOffset, originalWidth, originalHeight, source.GetPixels());
 
             // 应用更改
             paddedTexture.Apply();
@@ -275,10 +250,7 @@ namespace UNIHper
 
         public static Sprite ToSprite(this Texture2D texture2D)
         {
-            return texture2D.ToSprite(
-                new Rect(0, 0, texture2D.width, texture2D.height),
-                Vector2.one * 0.5f
-            );
+            return texture2D.ToSprite(new Rect(0, 0, texture2D.width, texture2D.height), Vector2.one * 0.5f);
         }
 
         public static Sprite ToSprite(this Texture2D texture2D, Rect rect)
@@ -358,13 +330,7 @@ namespace UNIHper
         /// <param name="centerX">目标纹理中绘制中心点 X 坐标</param>
         /// <param name="centerY">目标纹理中绘制中心点 Y 坐标</param>
         /// <param name="scale">画笔纹理的缩放比例（1 表示原始大小，大于 1 放大，小于 1 缩小）</param>
-        public static void DrawTexture2D(
-            this Texture2D canvas,
-            Texture2D brush,
-            int centerX,
-            int centerY,
-            float scale
-        )
+        public static void DrawTexture2D(this Texture2D canvas, Texture2D brush, int centerX, int centerY, float scale)
         {
             // 计算按缩放后画笔纹理的尺寸（四舍五入取整像素）
             int brushScaledWidth = Mathf.RoundToInt(brush.width * scale);
@@ -384,12 +350,7 @@ namespace UNIHper
                     int canvasY = startY + y;
 
                     // 检查是否在目标纹理范围内（防止越界）
-                    if (
-                        canvasX < 0
-                        || canvasY < 0
-                        || canvasX >= canvas.width
-                        || canvasY >= canvas.height
-                    )
+                    if (canvasX < 0 || canvasY < 0 || canvasX >= canvas.width || canvasY >= canvas.height)
                         continue;
 
                     // 计算在画笔纹理中的归一化坐标（使用 GetPixelBilinear 可实现缩放后平滑采样）
@@ -422,13 +383,7 @@ namespace UNIHper
         /// <param name="centerY">圆心Y（像素坐标）</param>
         /// <param name="radius">圆半径（像素）</param>
         /// <param name="color">绘制颜色</param>
-        public static void DrawCircle(
-            this Texture2D texture,
-            int centerX,
-            int centerY,
-            int radius,
-            Color color
-        )
+        public static void DrawCircle(this Texture2D texture, int centerX, int centerY, int radius, Color color)
         {
             if (texture == null)
             {
@@ -619,10 +574,7 @@ namespace UNIHper
         /// </summary>
         /// <param name="rt">待转换的RenderTexture</param>
         /// <returns>转换成功返回Texture2D</returns>
-        public static IObservable<Texture2D> ToTexture2DAsync(
-            this RenderTexture rt,
-            Texture2D texture2D
-        )
+        public static IObservable<Texture2D> ToTexture2DAsync(this RenderTexture rt, Texture2D texture2D)
         {
             return Observable.Create<Texture2D>(observer =>
             {
@@ -639,9 +591,7 @@ namespace UNIHper
                     && rt.format != RenderTextureFormat.DefaultHDR
                 )
                 {
-                    observer.OnError(
-                        new NotSupportedException($"当前RenderTexture格式{rt.format}可能不支持直接读回")
-                    );
+                    observer.OnError(new NotSupportedException($"当前RenderTexture格式{rt.format}可能不支持直接读回"));
                     return Disposable.Empty;
                 }
 
