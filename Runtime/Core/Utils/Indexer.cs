@@ -78,7 +78,7 @@ namespace UNIHper
         {
             if (MaxVal < Min)
             {
-                Debug.LogError("Max index must greater than Min index!");
+                Debug.LogWarning("Max index must greater than Min index!");
                 return;
             }
             Max = MaxVal;

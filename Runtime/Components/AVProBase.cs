@@ -169,7 +169,7 @@ namespace UNIHper
             MediaPlayer.Events.AddListener(
                 (_media, _type, err) =>
                 {
-                    Debug.LogWarningFormat($"{gameObject.name} OnEvent: {_type}, {err}");
+                    // Debug.LogWarningFormat($"{gameObject.name} OnEvent: {_type}, {err}");
                     switch (_type)
                     {
                         case MediaPlayerEvent.EventType.MetaDataReady: // Triggered when meta data(width, duration etc) is available

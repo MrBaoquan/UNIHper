@@ -196,6 +196,7 @@ namespace UNIHper
             if (_useFade && displayUI != null)
             {
                 displayUI.color = Color.black;
+                displayUI.DefaultTexture = GetCachedDefaultTexture(videoPath);
             }
 
             Action _playVideo = () =>

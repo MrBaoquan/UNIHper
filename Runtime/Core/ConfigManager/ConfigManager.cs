@@ -11,8 +11,7 @@ namespace UNIHper
 {
     public class ConfigManager : Singleton<ConfigManager>
     {
-        private Dictionary<string, SerializedAt> CachedSerializedAtDict =
-            new Dictionary<string, SerializedAt>();
+        private Dictionary<string, SerializedAt> CachedSerializedAtDict = new Dictionary<string, SerializedAt>();
 
         public void SetSerializedAt<T>(AppPath RootFolder)
             where T : UConfig
@@ -77,14 +76,8 @@ namespace UNIHper
             _configClasses.Sort(
                 (a, b) =>
                 {
-                    var _aAttr = Attribute
-                        .GetCustomAttributes(a)
-                        .Where(_attr => _attr is SerializedAt)
-                        .FirstOrDefault();
-                    var _bAttr = Attribute
-                        .GetCustomAttributes(b)
-                        .Where(_attr => _attr is SerializedAt)
-                        .FirstOrDefault();
+                    var _aAttr = Attribute.GetCustomAttributes(a).Where(_attr => _attr is SerializedAt).FirstOrDefault();
+                    var _bAttr = Attribute.GetCustomAttributes(b).Where(_attr => _attr is SerializedAt).FirstOrDefault();
                     var _aPriority = (_aAttr as SerializedAt)?.Priority;
                     var _bPriority = (_bAttr as SerializedAt)?.Priority;
                     if (_aPriority == null || _bPriority == null)
@@ -101,17 +94,13 @@ namespace UNIHper
 
                 // 配置文件默认保存在 %userprofile%\AppData\LocalLow\<companyname>\<productname>
                 var _attributes = Attribute.GetCustomAttributes(_configClass);
-                var _serializeAtAttr = _attributes
-                    .Where(_attr => _attr is SerializedAt)
-                    .FirstOrDefault();
+                var _serializeAtAttr = _attributes.Where(_attr => _attr is SerializedAt).FirstOrDefault();
                 if (CachedSerializedAtDict.ContainsKey(_configClass.Name))
                 {
                     _serializeAtAttr = CachedSerializedAtDict[_configClass.Name];
                 }
 
-                var _serializeWithAttr = _attributes
-                    .Where(_attr => _attr is SerializeWith)
-                    .FirstOrDefault();
+                var _serializeWithAttr = _attributes.Where(_attr => _attr is SerializeWith).FirstOrDefault();
 
                 string _configDir = Path.Combine(Application.persistentDataPath, configDir);
                 string _fileName = string.Empty;
@@ -123,17 +112,11 @@ namespace UNIHper
                     _fileName = _serializedAttr.FileName;
                     if (_serializedAttr.RootDir == AppPath.StreamingDir)
                     {
-                        _configDir = Path.Combine(
-                            Application.streamingAssetsPath,
-                            _serializedAttr.SubDir
-                        );
+                        _configDir = Path.Combine(Application.streamingAssetsPath, _serializedAttr.SubDir);
                     }
                     else if (_serializedAttr.RootDir == AppPath.PersistentDir)
                     {
-                        _configDir = Path.Combine(
-                            Application.persistentDataPath,
-                            _serializedAttr.SubDir
-                        );
+                        _configDir = Path.Combine(Application.persistentDataPath, _serializedAttr.SubDir);
                     }
                     else if (_serializedAttr.RootDir == AppPath.DataDir)
                     {
@@ -156,15 +139,11 @@ namespace UNIHper
 
                 if (!Directory.Exists(_configDir))
                 {
-                    UNIHperLogger.Log(
-                        $"Create config dir {_configDir} for : {_configClass.FullName}"
-                    );
+                    UNIHperLogger.Log($"Create config dir {_configDir} for : {_configClass.FullName}");
                     Directory.CreateDirectory(_configDir);
                 }
 
-                _fileName = string.IsNullOrEmpty(_fileName)
-                    ? _configClass.Name + this.suffix(_driverMode)
-                    : _fileName;
+                _fileName = string.IsNullOrEmpty(_fileName) ? _configClass.Name + this.suffix(_driverMode) : _fileName;
 
                 string _path = Path.Combine(_configDir, _fileName);
 
@@ -252,17 +231,11 @@ namespace UNIHper
                 });
         }
 
-        private void serializeConfig(
-            UConfig target,
-            string path,
-            ConfigDriver driver = ConfigDriver.XML
-        )
+        private void serializeConfig(UConfig target, string path, ConfigDriver driver = ConfigDriver.XML)
         {
             if (string.IsNullOrEmpty(path))
             {
-                Debug.LogWarning(
-                    $"serialize {target.GetType().Name} failed, path is null or empty."
-                );
+                Debug.LogWarning($"serialize {target.GetType().Name} failed, path is null or empty.");
                 return;
             }
 
@@ -287,35 +260,25 @@ namespace UNIHper
             target.Serialized();
         }
 
-        private UConfig deserializeConfig(
-            Type configClass,
-            string path,
-            ConfigDriver driver = ConfigDriver.XML
-        )
+        private UConfig deserializeConfig(Type configClass, string path, ConfigDriver driver = ConfigDriver.XML)
         {
             restoreIfConfigError(path);
             if (driver == ConfigDriver.YAML)
             {
-                var _methodYAML = typeof(USerialization)
-                    .GetMethod("DeserializeYAML")
-                    .MakeGenericMethod(new Type[] { configClass });
+                var _methodYAML = typeof(USerialization).GetMethod("DeserializeYAML").MakeGenericMethod(new Type[] { configClass });
                 return _methodYAML.Invoke(null, new object[] { path }) as UConfig;
             }
             else if (driver == ConfigDriver.JSON)
             {
-                var _methodJSON = typeof(USerialization)
-                    .GetMethod("DeserializeJSON")
-                    .MakeGenericMethod(new Type[] { configClass });
+                var _methodJSON = typeof(USerialization).GetMethod("DeserializeJSON").MakeGenericMethod(new Type[] { configClass });
                 return _methodJSON.Invoke(null, new object[] { path }) as UConfig;
             }
-            MethodInfo _method = typeof(DNHper.USerialization)
-                .GetMethod("DeserializeXML")
-                .MakeGenericMethod(new Type[] { configClass });
+            MethodInfo _method = typeof(DNHper.USerialization).GetMethod("DeserializeXML").MakeGenericMethod(new Type[] { configClass });
             return _method.Invoke(null, new object[] { path }) as UConfig;
         }
 
         public T Get<T>()
-            where T : class
+            where T : UConfig
         {
             string _configName = typeof(T).Name;
             UConfig _config;
@@ -406,10 +369,7 @@ namespace UNIHper
             }
             var _errorFilePath = Path.Combine(
                 errorDir,
-                Path.GetFileNameWithoutExtension(_srcFilePath)
-                    + " "
-                    + DateTime.Now.ToString("yyyy-MM-dd-HHmmss")
-                    + ".xml"
+                Path.GetFileNameWithoutExtension(_srcFilePath) + " " + DateTime.Now.ToString("yyyy-MM-dd-HHmmss") + ".xml"
             );
             File.Copy(_srcFilePath, _errorFilePath, true);
 

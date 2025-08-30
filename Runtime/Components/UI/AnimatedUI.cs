@@ -190,14 +190,7 @@ namespace UNIHper.UI
                     })
                     .ToList();
                 animatorOverrideController.Apply();
-            }
-        }
 
-        private void onUIAttached()
-        {
-            RecordTweenerOriginTransform();
-            if (driver == UIAnimionDriver.Animator)
-            {
                 if (UIShow != null)
                 {
                     ShowDuration = UIShow.length;
@@ -207,7 +200,7 @@ namespace UNIHper.UI
                     HideDuration = UIHide.length;
                 }
             }
-            else if (driver == UIAnimionDriver.Tweener)
+            else
             {
                 ShowDuration = enterDuration + enterDelay;
                 HideDuration = exitDuration + exitDelay;

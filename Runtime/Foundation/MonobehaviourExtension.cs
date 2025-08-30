@@ -255,12 +255,16 @@ namespace UNIHper
         {
             int _endIndex =
                 EndIndex == int.MaxValue
-                    ? _self.transform.childCount
+                    ? _self.transform.childCount - 1
                     : EndIndex < 0
-                        ? _self.transform.childCount + EndIndex
+                        ? _self.transform.childCount + EndIndex - 1
                         : EndIndex;
             for (int _index = StartIndex; _index <= _endIndex; ++_index)
             {
+                if (_index < 0 || _index >= _self.transform.childCount)
+                {
+                    break;
+                }
                 var _go = _self.transform.GetChild(_index).gameObject;
                 if (_go.activeSelf != bActive)
                 {
@@ -483,6 +487,12 @@ namespace UNIHper
             where T : Component
         {
             return behaviour.transform.Get(pathOrName)?.GetOrAdd<T>();
+        }
+
+        public static T GetWorld<T>(this MonoBehaviour behaviour, string objName)
+            where T : Component
+        {
+            return GameObject.Find(objName)?.GetComponent<T>();
         }
     }
 }

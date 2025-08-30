@@ -344,11 +344,6 @@ namespace UNIHper
                 });
         }
 
-        public IObservable<List<Texture2D>> LoadTexture2Ds(IEnumerable<string> TexturePaths)
-        {
-            return Observable.Zip(TexturePaths.Select(_path => this.LoadTexture2D(_path))).Select(x => x.ToList()).First();
-        }
-
         /// <summary>
         /// 加载指定目录下的图片
         /// </summary>
@@ -380,12 +375,21 @@ namespace UNIHper
             );
         }
 
-        public IObservable<IList<Texture2D>> LoadTexture2Ds(
+        public IObservable<List<Texture2D>> LoadTexture2Ds(
             string textureDir,
             string searchPattern = "*.png|*.jpg|*.jpeg",
             SearchOption searchOption = SearchOption.TopDirectoryOnly
         )
         {
+            if (!Path.IsPathRooted(textureDir))
+            {
+                textureDir = PathUtils.GetExternalAbsolutePath(textureDir);
+            }
+            if (!Directory.Exists(textureDir))
+            {
+                Debug.LogWarning($"Directory not exists: {textureDir}");
+                return null;
+            }
             var _searchPatterns = searchPattern.Split('|').Select(_pattern => _pattern.Replace("*", ""));
 
             return Observable
@@ -395,7 +399,13 @@ namespace UNIHper
                         .Where(_path => _searchPatterns.Contains(Path.GetExtension(_path).ToLower()))
                         .Select(_path => this.LoadTexture2D(_path))
                 )
-                .First();
+                .First()
+                .Select(x => x.ToList());
+        }
+
+        public IObservable<List<Texture2D>> LoadTexture2Ds(IEnumerable<string> TexturePaths)
+        {
+            return Observable.Zip(TexturePaths.Select(_path => this.LoadTexture2D(_path))).Select(x => x.ToList()).First();
         }
 
         public IObservable<Texture2D> AppendTexture2D(string InPath)

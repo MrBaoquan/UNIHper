@@ -11,6 +11,48 @@ namespace UNIHper
 {
     public static class ResourceExtension
     {
+        // 加载外部图片资源
+        private static IEnumerator LoadTexture2D(string filePath, IObserver<Texture2D> observer, CancellationToken cancellationToken)
+        {
+            using (UnityWebRequest _wwwRequest = UnityWebRequestTexture.GetTexture(filePath))
+            {
+                var operation = _wwwRequest.SendWebRequest();
+
+                while (!operation.isDone)
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        _wwwRequest.Abort();
+                        yield break;
+                    }
+                    yield return null;
+                }
+#if UNITY_2020_1_OR_NEWER
+                if (_wwwRequest.result != UnityWebRequest.Result.Success)
+#else
+                if (_wwwRequest.isNetworkError || _wwwRequest.isHttpError)
+#endif
+                {
+                    Debug.LogError(_wwwRequest.error);
+                    observer.OnError(new Exception(_wwwRequest.error));
+                }
+                else
+                {
+                    try
+                    {
+                        var _texture = DownloadHandlerTexture.GetContent(_wwwRequest);
+                        _texture.name = filePath.ToForwardSlash();
+                        observer.OnNext(_texture);
+                        observer.OnCompleted();
+                    }
+                    catch (Exception _e)
+                    {
+                        observer.OnError(new Exception(_e.Message));
+                    }
+                }
+            }
+        }
+
         public static IObservable<Texture2D> LoadTexture2D(this ResourceManager resourceManager, string filePath)
         {
             if (!Path.IsPathRooted(filePath))
@@ -24,6 +66,7 @@ namespace UNIHper
 
             return Observable
                 .FromCoroutine<Texture2D>((_observer, _cancellationToken) => LoadTexture2D(filePath, _observer, _cancellationToken))
+                .Retry(3)
                 .Catch<Texture2D, Exception>(
                     (_ex) =>
                     {
@@ -103,40 +146,6 @@ namespace UNIHper
                     catch (System.Exception e)
                     {
                         observer.OnError(e);
-                    }
-                }
-            }
-        }
-
-        // 加载外部图片资源
-        private static IEnumerator LoadTexture2D(string filePath, IObserver<Texture2D> observer, CancellationToken cancellationToken)
-        {
-            using (UnityWebRequest _wwwRequest = UnityWebRequestTexture.GetTexture(filePath))
-            {
-                yield return _wwwRequest.SendWebRequest();
-#if UNITY_2021_1_OR_NEWER
-                if (_wwwRequest.result == UnityWebRequest.Result.ConnectionError)
-                {
-#else
-                if (_www.isNetworkError)
-                {
-#endif
-                    Debug.LogError(_wwwRequest.error);
-                    observer.OnError(new Exception(_wwwRequest.error));
-                }
-                else
-                {
-                    yield return new WaitForEndOfFrame();
-                    try
-                    {
-                        var _texture = DownloadHandlerTexture.GetContent(_wwwRequest);
-                        _texture.name = filePath.ToForwardSlash();
-                        observer.OnNext(_texture);
-                        observer.OnCompleted();
-                    }
-                    catch (Exception _e)
-                    {
-                        observer.OnError(new Exception(_e.Message));
                     }
                 }
             }

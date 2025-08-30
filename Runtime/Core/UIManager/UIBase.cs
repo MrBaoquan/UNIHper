@@ -64,22 +64,20 @@ namespace UNIHper.UI
         public int InstID => __InstanceID;
         public float ShowDuration { get; protected set; } = 0.0f;
 
-        public Task<float> ShowTask(float offset = -0.1f)
+        public IObservable<Unit> WaitForTransitionComplete(float offset = -0.1f)
         {
-            if (_state == UIState.Shown)
+            var _delay = 0f;
+            if (_state == UIState.Showing)
             {
-                return Task.FromResult(0.0f);
+                _delay = ShowDuration + offset;
             }
-            return Task.FromResult(ShowDuration + offset);
-        }
+            else if (_state == UIState.Hiding)
+            {
+                _delay = HideDuration + offset;
+            }
 
-        public Task<float> HideTask(float offset = -0.1f)
-        {
-            if (_state == UIState.Hidden)
-            {
-                return Task.FromResult(0.0f);
-            }
-            return Task.FromResult(HideDuration + offset);
+            _delay = Mathf.Max(0, _delay);
+            return Observable.Timer(TimeSpan.FromSeconds(_delay)).AsUnitObservable();
         }
 
         public float HideDuration { get; protected set; } = 0.0f;
@@ -147,7 +145,7 @@ namespace UNIHper.UI
         public bool isShowing => _state == UIState.Showing || _state == UIState.Shown;
         public UIState State => _state;
 
-        public int LastShowFrame = int.MaxValue;
+        public int LastShowFrame { get; private set; } = int.MaxValue;
 
         public void Toggle()
         {

@@ -240,7 +240,7 @@ namespace UNIHper.UI
             allSpawnedUICaches.Remove(_uiKey);
             if (!immediate)
             {
-                await _uiComponent.HideTask(0);
+                await _uiComponent.WaitForTransitionComplete(0);
             }
 
             GameObject.Destroy(_uiComponent.gameObject);
@@ -303,10 +303,10 @@ namespace UNIHper.UI
             return Hide<UIBase>(uiKey, bForceNotify);
         }
 
-        public bool IsShowing<T>()
+        public bool IsShowing<T>(int instanceID = 0)
             where T : UIBase
         {
-            return Get<T>() != null && Get<T>().isShowing;
+            return Get<T>(instanceID) != null && Get<T>(instanceID).isShowing;
         }
 
         private T Hide<T>(string uiKey, bool bForceNotify = false)
@@ -602,8 +602,10 @@ namespace UNIHper.UI
             return _uis.Select(_uiType =>
                 {
                     var _attrs = _uiType.GetCustomAttributes<UIPage>(inherit: true);
+                    var _uiAutoID = 0;
                     return _attrs.Select(_attr =>
                     {
+                        _attr.InstID = _attr.InstID <= 0 ? _uiAutoID++ : _attr.InstID;
                         _attr.UIKey = AssemblyConfig.GetTypeUniqueID(_uiType, _attr.InstID);
                         return _attr;
                     });

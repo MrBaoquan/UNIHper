@@ -84,10 +84,7 @@ namespace UNIHper
         /// </summary>
         /// <param name="rectTransform">目标RectTransform</param>
         /// <param name="originWorldPos">参考原点的世界坐标</param>
-        public static void AlignLeftEdgePerpendicularToOrigin(
-            this RectTransform rectTransform,
-            Vector3 originWorldPos
-        )
+        public static void AlignLeftEdgePerpendicularToOrigin(this RectTransform rectTransform, Vector3 originWorldPos)
         {
             if (rectTransform == null)
                 return;

@@ -22,6 +22,37 @@ public class DOTweenCache : MonoBehaviour
 
 public static class DOTweenExtension
 {
+    // 图标点一次动一次效果 触摸反馈 (缩放+透明度)
+    public static T ClickFeedback<T>(
+        this T graphic,
+        float inDuration = 0.25f,
+        float outDuration = 0.35f,
+        float targetScale = 1.2f,
+        float targetAlpha = 0.75f
+    )
+        where T : Graphic
+    {
+        if (graphic == null)
+            return null;
+
+        var rectTransform = graphic.rectTransform;
+        rectTransform.DOKill();
+
+        var canvasGroup = graphic.GetOrAdd<CanvasGroup>();
+        canvasGroup.DOKill();
+
+        Sequence seq = DOTween.Sequence();
+
+        seq.Append(rectTransform.DOScale(targetScale, inDuration).SetEase(Ease.OutQuad));
+        seq.Join(canvasGroup.DOFade(targetAlpha, inDuration));
+
+        seq.Append(rectTransform.DOScale(1f, outDuration).SetEase(Ease.OutQuad));
+        seq.Join(canvasGroup.DOFade(1f, outDuration));
+
+        seq.Play();
+        return graphic;
+    }
+
     /// <summary>
     /// 移动方向枚举
     /// </summary>
@@ -87,11 +118,7 @@ public static class DOTweenExtension
             rawImage.SetNativeSize();
         });
 
-        seq.Append(
-            rectTransform
-                .DOLocalMove(cache.OriginalLocalPosition, outDuration)
-                .SetEase(Ease.InOutQuad)
-        );
+        seq.Append(rectTransform.DOLocalMove(cache.OriginalLocalPosition, outDuration).SetEase(Ease.InOutQuad));
         seq.Join(canvasGroup.DOFade(1f, outDuration));
 
         seq.OnComplete(() => onComplete?.Invoke());
@@ -104,12 +131,7 @@ public static class DOTweenExtension
         return text.DOText(endText, duration);
     }
 
-    public static void FadeTo(
-        this Graphic graphic,
-        UnityEngine.Object newAsset,
-        float duration = 0.5f,
-        Action onComplete = null
-    )
+    public static void FadeTo(this Graphic graphic, UnityEngine.Object newAsset, float duration = 0.5f, Action onComplete = null)
     {
         if (graphic == null || newAsset == null)
         {
