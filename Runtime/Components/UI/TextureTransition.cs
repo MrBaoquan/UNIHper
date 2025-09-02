@@ -71,7 +71,7 @@ namespace UNIHper
         public TextureTransition SetTransitionType(TransitionType type)
         {
             transitionType = type;
-            material.SetInt(TransitionTypeID, (int)transitionType);
+            material?.SetInt(TransitionTypeID, (int)transitionType);
             return this;
         }
 

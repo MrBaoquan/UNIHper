@@ -1,6 +1,7 @@
 using System;
 using DG.Tweening;
 using UNIHper;
+using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -51,6 +52,44 @@ public static class DOTweenExtension
 
         seq.Play();
         return graphic;
+    }
+
+    /// <summary>
+    /// 将 Tween 封装成 IObservable<Unit>，当 Tween 完成时发出 OnNext 并 OnCompleted，
+    /// 如 Tween 被 Kill，则只发出 OnCompleted。
+    /// 订阅返回的 IDisposable 可以自动 Kill Tween。
+    /// </summary>
+    public static IObservable<Unit> ToObservable(this Tween tween)
+    {
+        return Observable.Create<Unit>(observer =>
+        {
+            // tween.OnUpdate(() => {
+            // 可以在这里发出 OnNext 来表示 Tween 的每一帧更新
+            // observer.OnNext(Unit.Default);
+            // });
+            // Tween 完成时回调
+            tween.OnComplete(() =>
+            {
+                observer.OnNext(Unit.Default);
+                observer.OnCompleted();
+            });
+
+            // Tween 被 Kill 时回调（未完成也会触发此回调）
+            tween.OnKill(() =>
+            {
+                // 如果是正常完成，OnComplete 会先调用，不会重复
+                observer.OnCompleted();
+            });
+
+            // 返回 Disposable，取消订阅时 Kill Tween
+            return Disposable.Create(() =>
+            {
+                if (tween.IsActive() && tween.IsPlaying())
+                {
+                    tween.Kill();
+                }
+            });
+        });
     }
 
     /// <summary>

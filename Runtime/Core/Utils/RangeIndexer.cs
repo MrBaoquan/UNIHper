@@ -15,7 +15,7 @@ namespace UNIHper
         {
             get
             {
-                var _length = endIndexer.Current - startIndexer.Current;
+                var _length = endIndexer.Current - startIndexer.Current + 1;
                 return Enumerable.Range(0, _length).Select(_idx => startIndexer.NextValue(_idx)).ToList();
             }
         }

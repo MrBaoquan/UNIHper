@@ -34,6 +34,7 @@ Shader "UNIHper/Unlit/TextureTransition"
             #pragma vertex vert
             #pragma fragment frag
             #include "UnityCG.cginc"
+            #include "UnityUI.cginc" // 引入UI相关的定义
 			
             sampler2D _FromTex;
             sampler2D _ToTex;
@@ -44,12 +45,14 @@ Shader "UNIHper/Unlit/TextureTransition"
             {
                 float4 vertex : POSITION;
                 float2 uv : TEXCOORD0;
+                float4 color : COLOR; // 添加颜色属性，接收UI元素的颜色
             };
 
             struct v2f
             {
                 float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION;
+                float4 color : COLOR; // 传递颜色到片元着色器
             };
 
             v2f vert(appdata v)
@@ -57,6 +60,7 @@ Shader "UNIHper/Unlit/TextureTransition"
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.uv = v.uv;
+                o.color = v.color; // 传递颜色，CanvasGroup的透明度会影响这个值
                 return o;
             }
 
@@ -66,47 +70,55 @@ Shader "UNIHper/Unlit/TextureTransition"
                 fixed4 colTo = tex2D(_ToTex, i.uv);
                 float t = _Fade;
 
+                fixed4 result;
+
                 switch(_TransitionType)
                 {
                     case 0: // 无过渡(直接显示目标)
-                        return colTo;
+                        result = colTo;
+                        break;
 
                     case 1: // 淡入淡出
-                        return lerp(colFrom, colTo, t);
+                        result = lerp(colFrom, colTo, t);
+                        break;
 
                     case 2: // 黑色过渡
                         if(t < 0.5)
                         {
-                            return lerp(colFrom, fixed4(0,0,0,1), t * 2.0);
+                            result = lerp(colFrom, fixed4(0,0,0,1), t * 2.0);
                         }
                         else
                         {
-                            return lerp(fixed4(0,0,0,1), colTo, 2.0 * (t - 0.5));
+                            result = lerp(fixed4(0,0,0,1), colTo, 2.0 * (t - 0.5));
                         }
+                        break;
 
                     case 3: // 白色过渡
                         if(t < 0.5)
                         {
-                            return lerp(colFrom, fixed4(1,1,1,1), t * 2.0);
+                            result = lerp(colFrom, fixed4(1,1,1,1), t * 2.0);
                         }
                         else
                         {
-                            return lerp(fixed4(1,1,1,1), colTo, 2.0 * (t - 0.5));
+                            result = lerp(fixed4(1,1,1,1), colTo, 2.0 * (t - 0.5));
                         }
+                        break;
 
                     case 4: // 水平切换
                         {
                             float threshold = t;
                             float blendT = step(i.uv.x, threshold);
-                            return lerp(colFrom, colTo, blendT);
+                            result = lerp(colFrom, colTo, blendT);
                         }
+                        break;
 
                     case 5: // 垂直切换
                         {
                             float threshold = t;
                             float blendT = step(i.uv.y, threshold);
-                            return lerp(colFrom, colTo, blendT);
+                            result = lerp(colFrom, colTo, blendT);
                         }
+                        break;
 
                     case 6: // 圆形扩展
                         {
@@ -114,8 +126,9 @@ Shader "UNIHper/Unlit/TextureTransition"
                             float dist = distance(i.uv, center);
                             float radius = t * 0.7; // 调节最大半径
                             float blendT = step(dist, radius);
-                            return lerp(colFrom, colTo, blendT);
+                            result = lerp(colFrom, colTo, blendT);
                         }
+                        break;
 
                     case 7: // 缩放渐变
                         {
@@ -128,12 +141,18 @@ Shader "UNIHper/Unlit/TextureTransition"
                             fixed4 cTo = (uvTo.x <0 || uvTo.x >1 || uvTo.y <0 || uvTo.y >1) ? fixed4(0,0,0,0) : tex2D(_ToTex, uvTo);
                             
                             float blendT = smoothstep(0.4, 1.0, t);
-                            return lerp(cFrom, cTo, blendT);
+                            result = lerp(cFrom, cTo, blendT);
                         }
+                        break;
 
                     default: // 默认淡入淡出
-                        return lerp(colFrom, colTo, t);
+                        result = lerp(colFrom, colTo, t);
+                        break;
                 }
+
+                // 应用CanvasGroup的透明度影响
+                result.a *= i.color.a;
+                return result;
             }
             ENDCG
         }

@@ -20,6 +20,10 @@ namespace UNIHper
         public static Image SetSprite(this Image image, string spritePath, bool setNativeSize = true)
         {
             var sprite = Managements.Resource.Get<Sprite>(spritePath);
+            if (sprite == null)
+            {
+                sprite = Managements.Resource.Get<Texture2D>(spritePath)?.ToSprite();
+            }
             return image.SetSprite(sprite, setNativeSize);
         }
     }
