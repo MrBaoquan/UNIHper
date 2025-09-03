@@ -171,6 +171,7 @@ namespace UNIHper
                 {
                     _config.Loaded();
                 });
+            BackupAll();
             await Task.CompletedTask;
         }
 
@@ -229,6 +230,22 @@ namespace UNIHper
                 {
                     this.serializeConfig(_config, _config.FilePath);
                 });
+        }
+
+        public void BackupAll(bool force = false)
+        {
+            this.configs.Values
+                .Where(_config => force || !this.hasBackup(_config))
+                .ForEach(_config =>
+                {
+                    this.Backup(_config);
+                });
+        }
+
+        private bool hasBackup(UConfig config)
+        {
+            var _backupFilePath = this.getBackupFilePath(config.FilePath);
+            return File.Exists(_backupFilePath);
         }
 
         private void serializeConfig(UConfig target, string path, ConfigDriver driver = ConfigDriver.XML)
@@ -389,7 +406,6 @@ namespace UNIHper
                 return;
             }
 
-            Debug.Log($"Config file {filePath} is invalid, try restore from backup.");
             this.restoreConfig(filePath);
         }
 

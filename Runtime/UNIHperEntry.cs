@@ -31,9 +31,7 @@ namespace UNIHper
 
             if (_unihperEntry is null)
             {
-                Debug.LogWarning(
-                    "UNIHperEntry not found, Please click UNIHper/Initialize menu to create UNIHperEntry."
-                );
+                Debug.LogWarning("UNIHperEntry not found, Please click UNIHper/Initialize menu to create UNIHperEntry.");
                 return;
             }
             var _unihperEntryGO = GameObject.Instantiate(_unihperEntry);
@@ -42,9 +40,7 @@ namespace UNIHper
 
         internal IObservable<Unit> OnInitializedAsObservable()
         {
-            return isInitialized.Value
-                ? Observable.Return(Unit.Default)
-                : isInitialized.Where(_isInit => _isInit).AsUnitObservable();
+            return isInitialized.Value ? Observable.Return(Unit.Default) : isInitialized.Where(_isInit => _isInit).AsUnitObservable();
         }
 
         ReactiveProperty<bool> isInitialized = new ReactiveProperty<bool>(false);
@@ -53,9 +49,9 @@ namespace UNIHper
         {
             if (isInitialized.Value)
                 return;
-            if (UNIHperEntry.Instance != this)
+            if (Instance != this)
             {
-                GameObject.Destroy(this.gameObject);
+                DestroyImmediate(this.gameObject);
                 return;
             }
             UNILogger.Initialize();
@@ -74,9 +70,7 @@ namespace UNIHper
 #else
             var _eventSystem = UnityEngine.Object.FindObjectOfType<EventSystem>();
 #endif
-            if (
-                _eventSystem is null || !_eventSystem.gameObject.activeSelf || !_eventSystem.enabled
-            )
+            if (_eventSystem is null || !_eventSystem.gameObject.activeSelf || !_eventSystem.enabled)
             {
                 CreateDefaultEventSystem();
             }
@@ -114,13 +108,8 @@ namespace UNIHper
 #if ENABLE_INPUT_SYSTEM
         private void AddInputSystem(GameObject go)
         {
-            var _inputModule =
-                go.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
-            _inputModule.pointerBehavior = UnityEngine
-                .InputSystem
-                .UI
-                .UIPointerBehavior
-                .AllPointersAsIs;
+            var _inputModule = go.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+            _inputModule.pointerBehavior = UnityEngine.InputSystem.UI.UIPointerBehavior.AllPointersAsIs;
             // Disable/re-enable to force some initialization.
             // fix for input not being recognized until component is toggled off then on
             go.SetActive(false);

@@ -12,6 +12,16 @@ namespace UNIHper
     [RequireComponent(typeof(MediaPlayer))]
     public class AVProPlayer : AVProBase
     {
+        private static bool _enableLog = false;
+
+        private static void Log(string msg)
+        {
+            if (!_enableLog)
+                return;
+
+            Debug.LogWarning($"[AVProPlayer]: {msg}");
+        }
+
         void Reset()
         {
             MediaPlayer.AutoOpen = false;
@@ -138,12 +148,7 @@ namespace UNIHper
             return null;
         }
 
-        private float _fadeDuration = 0.25f;
-
-        public void EnableFade(float duration = 0.25f)
-        {
-            _fadeDuration = duration;
-        }
+        public bool AutoSwitchCachedFirstFrame { get; set; } = true;
 
         public void CloseMedia()
         {
@@ -178,8 +183,9 @@ namespace UNIHper
                 _readyHandler.Dispose();
                 _readyHandler = null;
             }
+            var _videoName = Path.GetFileName(videoPath);
+            Log($"request play: {_videoName}, loop: {bLoop}, startTime: {startTime}, endTime: {endTime}");
 
-            // 将startTime 精确的小数点3位
             startTime = Math.Round(startTime, 3);
             endTime = Math.Round(endTime, 3);
 
@@ -191,23 +197,22 @@ namespace UNIHper
 
             var displayUI = this.Get<DisplayUGUI>();
 
-            var _useFade = _notSameSource;
+            var _useFade = _notSameSource && AutoSwitchCachedFirstFrame;
 
             if (_useFade && displayUI != null)
             {
-                displayUI.color = Color.black;
                 displayUI.DefaultTexture = GetCachedDefaultTexture(videoPath);
+                displayUI.color = displayUI.DefaultTexture == null ? Color.black : Color.white;
+                displayUI.CurrentMediaPlayer = null;
             }
 
             Action _playVideo = () =>
             {
+                Log($"do play video: {_videoName} at {startTime}");
                 if (_useFade && displayUI != null)
                 {
-                    DOTween.Kill(displayUI);
-                    if (_fadeDuration <= 0)
-                        displayUI.color = Color.white;
-                    else
-                        displayUI.DOColor(Color.white, _fadeDuration);
+                    displayUI.color = Color.white;
+                    displayUI.CurrentMediaPlayer = MediaPlayer;
                 }
 
                 MediaPlayer.Play();
@@ -218,6 +223,7 @@ namespace UNIHper
                 // 播放结束回调
                 Action _onFinished = () =>
                 {
+                    Log($"[avplayer]: Video Finished: {videoPath}");
                     if (_bFinished)
                         return;
 
@@ -265,6 +271,7 @@ namespace UNIHper
                 OnFinishedSeekingAsObservable()
                     .Subscribe(_ =>
                     {
+                        Log($"[avplayer] seek completed to {startTime}");
                         _playVideo();
                     })
                     .AddTo(_playDisposables);
@@ -276,10 +283,12 @@ namespace UNIHper
                 var _currentTime = MediaPlayer.Control.GetCurrentTime();
                 if (_currentTime != startTime)
                 {
+                    Log($"request seek to {startTime} from {_currentTime}");
                     __seek(startTime);
                 }
                 else
                 {
+                    Log($"request play directly at {startTime}");
                     _playVideo();
                 }
             }
@@ -313,6 +322,7 @@ namespace UNIHper
                 {
                     _mediaPathType = MediaPathType.AbsolutePathOrURL;
                 }
+                Log($"open media: {_mediaPathType} : {videoPath}");
                 MediaPlayer.OpenMedia(_mediaPathType, videoPath, false);
             }
             else
@@ -356,7 +366,8 @@ namespace UNIHper
 
         public void Rewind(bool pause = false, Action<AVProBase> onCompleted = null)
         {
-            ClearPlayHandlers();
+            Log($"rewind to {this.StartTime}, pause: {pause}");
+            // ClearPlayHandlers();
             if (pause)
                 this.Pause();
             Seek(this.StartTime, onCompleted);
@@ -385,7 +396,7 @@ namespace UNIHper
             {
                 return;
             }
-            ClearPlayHandlers();
+            // ClearPlayHandlers();
             MediaPlayer.Control.Play();
         }
 
@@ -395,14 +406,16 @@ namespace UNIHper
             {
                 return;
             }
-            ClearPlayHandlers();
+            // ClearPlayHandlers();
             MediaPlayer.Control.Pause();
         }
 
         private void __seek(double time)
         {
+            Log($"[avplayer] seek to {time}");
             if (CurrentTime == time)
             {
+                Log($"[avplayer] seek skipped to {time}");
                 OnFinishedSeeking.Invoke(MediaPlayer);
                 return;
             }
@@ -413,6 +426,7 @@ namespace UNIHper
             var optionsWindows = MediaPlayer.GetCurrentPlatformOptions() as RenderHeads.Media.AVProVideo.MediaPlayer.OptionsWindows;
             if (optionsWindows.videoApi == RenderHeads.Media.AVProVideo.Windows.VideoApi.DirectShow)
             {
+                Log($"[avplayer] DirectShow seek completed to {time}");
                 OnFinishedSeeking.Invoke(MediaPlayer);
             }
 #endif
@@ -430,19 +444,20 @@ namespace UNIHper
             {
                 return;
             }
-            ClearPlayHandlers();
+            // ClearPlayHandlers();
             OnFinishedSeekingAsObservable()
                 .First()
                 .Subscribe(_ =>
                 {
                     onCompleted?.Invoke(this);
                 });
-            MediaPlayer.Control.Seek(InTime);
+            // MediaPlayer.Control.Seek(InTime);
+            __seek(InTime);
         }
 
         public IObservable<AVProPlayer> SeekAsObservable(double InTime)
         {
-            ClearPlayHandlers();
+            // ClearPlayHandlers();
             return Observable.Create<AVProPlayer>(_observer =>
             {
                 var disposable = new CompositeDisposable();
