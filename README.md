@@ -28,6 +28,7 @@ v1.25.xxxx
 - 资源加载优化，修复编辑器模式下加载外部图片偶发的异常
 - UI单脚本多实例功能优化
 - AnimatedUI相关功能优化
+- LongTimeNoOperation增加禁用自动重置功能
 
 v1.25.811
 - 优化UIManager,ResourceManager部分接口

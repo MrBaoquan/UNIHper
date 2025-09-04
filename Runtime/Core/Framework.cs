@@ -170,6 +170,11 @@ namespace UNIHper
             return longTimeNoOperation.ResetOperation();
         }
 
+        public LongTimeNoOperation DisableLongTimeNoOperationAutoReset()
+        {
+            return longTimeNoOperation.DisableAutoReset();
+        }
+
         public IObservable<Unit> OnLongTimeNoOperationAsObservable()
         {
             return longTimeNoOperation.OnLongTimeNoOperationAsObservable();

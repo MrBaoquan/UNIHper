@@ -73,6 +73,13 @@ namespace UNIHper
             _disposables.Clear();
         }
 
+        public LongTimeNoOperation DisableAutoReset()
+        {
+            if (_longTimeNoOperations.Contains(this))
+                _longTimeNoOperations.Remove(this);
+            return this;
+        }
+
         private float timeout = 60f;
         private readonly List<IDisposable> _disposables = new();
         private readonly UnityEvent onResetOperationEvent = new();
