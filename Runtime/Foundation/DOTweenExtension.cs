@@ -170,7 +170,13 @@ public static class DOTweenExtension
         return text.DOText(endText, duration);
     }
 
-    public static void FadeTo(this Graphic graphic, UnityEngine.Object newAsset, float duration = 0.5f, Action onComplete = null)
+    public static void FadeTo(
+        this Graphic graphic,
+        UnityEngine.Object newAsset,
+        float duration = 0.5f,
+        Action onComplete = null,
+        bool setNativeSize = true
+    )
     {
         if (graphic == null || newAsset == null)
         {
@@ -217,12 +223,14 @@ public static class DOTweenExtension
             if (image != null)
             {
                 image.sprite = (Sprite)newAsset;
-                image.SetNativeSize();
+                if (setNativeSize)
+                    image.SetNativeSize();
             }
             else if (rawImage != null)
             {
                 rawImage.texture = (Texture)newAsset;
-                rawImage.SetNativeSize();
+                if (setNativeSize)
+                    rawImage.SetNativeSize();
             }
         });
 
