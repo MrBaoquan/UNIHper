@@ -33,6 +33,11 @@ namespace UNIHper.UI
     {
         [SerializeField]
         private UIAnimionDriver driver = UIAnimionDriver.Animator;
+        public UIAnimionDriver Driver
+        {
+            get { return driver; }
+            set { driver = value; }
+        }
 
         [Title("UI Override Controller"), OnValueChanged("OnControllerChanged")]
         [SerializeField, Required, AssetsOnly, ShowIf("driver", UIAnimionDriver.Animator)]
@@ -51,26 +56,74 @@ namespace UNIHper.UI
         [SerializeField]
         [Title("UI Animation Settings"), ShowInInspector, ShowIf("driver", UIAnimionDriver.Tweener)]
         private UIAnimationType enterAnimType = UIAnimationType.Fly_Left;
+        public UIAnimationType EnterAnimType
+        {
+            get { return enterAnimType; }
+            set { enterAnimType = value; }
+        }
 
         [SerializeField]
         [ShowInInspector, PropertyRange(0, 1), ShowIf("driver", UIAnimionDriver.Tweener)]
         private float enterDelay = 0.0f;
+        public float EnterDelay
+        {
+            get { return enterDelay; }
+            set { enterDelay = value; }
+        }
 
         [SerializeField]
         [ShowInInspector, PropertyRange(0, 1), ShowIf("driver", UIAnimionDriver.Tweener)]
         private float enterDuration = 0.40f;
+        public float EnterDuration
+        {
+            get { return enterDuration; }
+            set { enterDuration = value; }
+        }
+
+        [SerializeField]
+        [ShowInInspector, ShowIf("driver", UIAnimionDriver.Tweener)]
+        private Ease enterEase = Ease.Linear;
+        public Ease EnterEase
+        {
+            get { return enterEase; }
+            set { enterEase = value; }
+        }
 
         [SerializeField]
         [ShowInInspector, ShowIf("driver", UIAnimionDriver.Tweener)]
         private UIAnimationType exitAnimType = UIAnimationType.Fly_Right;
+        public UIAnimationType ExitAnimType
+        {
+            get { return exitAnimType; }
+            set { exitAnimType = value; }
+        }
 
         [SerializeField]
         [ShowInInspector, PropertyRange(0, 1), ShowIf("driver", UIAnimionDriver.Tweener)]
         private float exitDelay = 0.0f;
+        public float ExitDelay
+        {
+            get { return exitDelay; }
+            set { exitDelay = value; }
+        }
 
         [SerializeField]
         [ShowInInspector, PropertyRange(0, 1), ShowIf("driver", UIAnimionDriver.Tweener)]
         private float exitDuration = 0.40f;
+        public float ExitDuration
+        {
+            get { return exitDuration; }
+            set { exitDuration = value; }
+        }
+
+        [SerializeField]
+        [ShowInInspector, ShowIf("driver", UIAnimionDriver.Tweener)]
+        private Ease exitEase = Ease.Linear;
+        public Ease ExitEase
+        {
+            get { return exitEase; }
+            set { exitEase = value; }
+        }
 
         private void OnControllerChanged()
         {
@@ -243,7 +296,7 @@ namespace UNIHper.UI
                     .Create<Unit>(_observer =>
                     {
                         var _tweener = newFadeTween(enterAnimType, 1, enterDuration)
-                            .SetEase(Ease.Linear)
+                            .SetEase(enterEase)
                             .SetDelay(enterDelay)
                             .OnComplete(() =>
                             {
@@ -275,7 +328,7 @@ namespace UNIHper.UI
                     .Create<Unit>(_observer =>
                     {
                         var _tweener = newFadeTween(exitAnimType, 2, exitDuration)
-                            .SetEase(Ease.Linear)
+                            .SetEase(exitEase)
                             .SetDelay(exitDelay)
                             .OnComplete(() =>
                             {

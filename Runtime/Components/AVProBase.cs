@@ -37,8 +37,23 @@ namespace UNIHper
         protected readonly UnityEvent<MediaPlayer> OnPaused = new();
         protected readonly UnityEvent<MediaPlayer> OnUnpaused = new();
 
+        // Seek Event With Target Time
+        protected readonly UnityEvent<MediaPlayer, float> OnRequestSeek = new();
+
+        public IObservable<(MediaPlayer mediaPlayer, float targetTime)> OnRequestSeekAsObservable()
+        {
+            return OnRequestSeek.AsObservable().Select(x => (x.Item1, x.Item2));
+        }
+
         #endregion
         protected CompositeDisposable _playDisposables = new CompositeDisposable();
+
+        public void ClearPlayHandlers()
+        {
+            Log($"dispose play handlers");
+            _playDisposables.Clear();
+        }
+
         private MediaPlayer _mediaPlayer;
         public MediaPlayer MediaPlayer
         {
@@ -161,6 +176,63 @@ namespace UNIHper
         {
             return OnTextTracksChanged.AsObservable();
         }
+
+        #endregion
+
+        #region 公共接口
+        private static bool _enableLog = false;
+
+        public bool IsPlaying
+        {
+            get { return MediaPlayer.Control.IsPlaying(); }
+        }
+
+        protected void Log(string msg)
+        {
+            if (!_enableLog)
+                return;
+
+            Debug.LogWarning($"[AVProPlayer]: {name} {msg}");
+        }
+
+        public virtual void TogglePlay()
+        {
+            if (this.IsPlaying)
+            {
+                this.Pause();
+            }
+            else
+            {
+                this.Play();
+            }
+        }
+
+        public virtual void Play()
+        {
+            MediaPlayer.Play();
+        }
+
+        public virtual void Pause()
+        {
+            MediaPlayer.Pause();
+        }
+
+        public virtual void Stop()
+        {
+            ClearPlayHandlers();
+            MediaPlayer.Stop();
+        }
+
+        public virtual void Rewind(bool pause)
+        {
+            MediaPlayer.Rewind(pause);
+        }
+
+        public virtual void Seek(double time)
+        {
+            // __seek(time);
+        }
+
         #endregion
 
         // 注册所有播放器相关事件

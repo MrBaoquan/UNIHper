@@ -95,9 +95,14 @@ namespace UNIHper
                 // 配置文件默认保存在 %userprofile%\AppData\LocalLow\<companyname>\<productname>
                 var _attributes = Attribute.GetCustomAttributes(_configClass);
                 var _serializeAtAttr = _attributes.Where(_attr => _attr is SerializedAt).FirstOrDefault();
+
                 if (CachedSerializedAtDict.ContainsKey(_configClass.Name))
                 {
                     _serializeAtAttr = CachedSerializedAtDict[_configClass.Name];
+                }
+                else if (_serializeAtAttr != null)
+                {
+                    CachedSerializedAtDict.Add(_configClass.Name, _serializeAtAttr as SerializedAt);
                 }
 
                 var _serializeWithAttr = _attributes.Where(_attr => _attr is SerializeWith).FirstOrDefault();
@@ -109,6 +114,12 @@ namespace UNIHper
                 if (_serializeAtAttr != null)
                 {
                     var _serializedAttr = _serializeAtAttr as SerializedAt;
+                    if (_serializedAttr.RootDir == AppPath.None)
+                    {
+                        UNIHperLogger.LogWarning($"Config {_configClass.FullName} skipped, because RootDir is None.");
+                        continue;
+                    }
+
                     _fileName = _serializedAttr.FileName;
                     if (_serializedAttr.RootDir == AppPath.StreamingDir)
                     {
@@ -279,7 +290,12 @@ namespace UNIHper
 
         private UConfig deserializeConfig(Type configClass, string path, ConfigDriver driver = ConfigDriver.XML)
         {
-            restoreIfConfigError(path);
+            var _cachedAttr = CachedSerializedAtDict.GetValueOrDefault(configClass.Name);
+            if (_cachedAttr != null && _cachedAttr.RecoverOnError)
+            {
+                restoreIfConfigError(path);
+            }
+
             if (driver == ConfigDriver.YAML)
             {
                 var _methodYAML = typeof(USerialization).GetMethod("DeserializeYAML").MakeGenericMethod(new Type[] { configClass });
@@ -291,7 +307,7 @@ namespace UNIHper
                 return _methodJSON.Invoke(null, new object[] { path }) as UConfig;
             }
             MethodInfo _method = typeof(DNHper.USerialization).GetMethod("DeserializeXML").MakeGenericMethod(new Type[] { configClass });
-            return _method.Invoke(null, new object[] { path }) as UConfig;
+            return _method.Invoke(null, new object[] { path, null }) as UConfig;
         }
 
         public T Get<T>()

@@ -12,16 +12,6 @@ namespace UNIHper
     [RequireComponent(typeof(MediaPlayer))]
     public class AVProPlayer : AVProBase
     {
-        private static bool _enableLog = false;
-
-        private static void Log(string msg)
-        {
-            if (!_enableLog)
-                return;
-
-            Debug.LogWarning($"[AVProPlayer]: {msg}");
-        }
-
         void Reset()
         {
             MediaPlayer.AutoOpen = false;
@@ -44,11 +34,6 @@ namespace UNIHper
         public bool Ready2Play
         {
             get { return MediaPlayer.Control != null && MediaPlayer.Control.HasMetaData(); }
-        }
-
-        public bool IsPlaying
-        {
-            get { return MediaPlayer.Control.IsPlaying(); }
         }
 
         /// <summary>
@@ -133,8 +118,6 @@ namespace UNIHper
             return MediaPlayer.OpenMedia(MediaPathType.RelativeToStreamingAssetsFolder, path, false);
         }
 
-        private void ExtractFrame() { }
-
         IDisposable _readyHandler = null;
 
         public Dictionary<string, Texture> cachedDefaultTexes = new();
@@ -184,7 +167,9 @@ namespace UNIHper
                 _readyHandler = null;
             }
             var _videoName = Path.GetFileName(videoPath);
-            Log($"request play: {_videoName}, loop: {bLoop}, startTime: {startTime}, endTime: {endTime}");
+            Log(
+                $"request play: {_videoName}, loop: {bLoop}, startTime: {startTime}, endTime: {endTime}, seek2StartAfterFinished: {seek2StartAfterFinished}"
+            );
 
             startTime = Math.Round(startTime, 3);
             endTime = Math.Round(endTime, 3);
@@ -206,8 +191,12 @@ namespace UNIHper
                 displayUI.CurrentMediaPlayer = null;
             }
 
+            CompositeDisposable tempPlayDisposables = null;
             Action _playVideo = () =>
             {
+                tempPlayDisposables?.Dispose();
+                tempPlayDisposables = new CompositeDisposable();
+
                 Log($"do play video: {_videoName} at {startTime}");
                 if (_useFade && displayUI != null)
                 {
@@ -223,7 +212,7 @@ namespace UNIHper
                 // 播放结束回调
                 Action _onFinished = () =>
                 {
-                    Log($"[avplayer]: Video Finished: {videoPath}");
+                    Log($"Video Finished: {videoPath}");
                     if (_bFinished)
                         return;
 
@@ -234,7 +223,7 @@ namespace UNIHper
                     if (!bLoop)
                     {
                         // 不循环 直接释放seek回调
-                        _playDisposables.Clear();
+                        // _playDisposables.Clear();
                     }
 
                     // 播放结束，是否跳到开始时间
@@ -251,9 +240,11 @@ namespace UNIHper
                     .First()
                     .Subscribe(_1 =>
                     {
+                        Log($"reach specified end time: {endTime} >= {_duration}");
                         OnFinishedPlaying.Invoke(MediaPlayer);
                     })
-                    .AddTo(_playDisposables);
+                    .AddTo(_playDisposables)
+                    .AddTo(tempPlayDisposables);
 
                 // 视频到达结尾
                 OnFinishedPlayingAsObservable()
@@ -261,9 +252,11 @@ namespace UNIHper
                     .First()
                     .Subscribe(_1 =>
                     {
+                        Log($"reach video end: {_duration}");
                         _onFinished();
                     })
-                    .AddTo(_playDisposables);
+                    .AddTo(_playDisposables)
+                    .AddTo(tempPlayDisposables);
             };
 
             void _registerFinishedSeekingEvent()
@@ -271,7 +264,7 @@ namespace UNIHper
                 OnFinishedSeekingAsObservable()
                     .Subscribe(_ =>
                     {
-                        Log($"[avplayer] seek completed to {startTime}");
+                        Log($"seek completed to {startTime}");
                         _playVideo();
                     })
                     .AddTo(_playDisposables);
@@ -359,11 +352,6 @@ namespace UNIHper
             _volume.Value = MediaPlayer.Control.GetVolume();
         }
 
-        public void ClearPlayHandlers()
-        {
-            _playDisposables.Clear();
-        }
-
         public void Rewind(bool pause = false, Action<AVProBase> onCompleted = null)
         {
             Log($"rewind to {this.StartTime}, pause: {pause}");
@@ -378,44 +366,33 @@ namespace UNIHper
             Rewind(false, onCompleted);
         }
 
-        public void TogglePlay()
-        {
-            if (this.IsPlaying)
-            {
-                this.Pause();
-            }
-            else
-            {
-                this.Play();
-            }
-        }
+        // public void Play()
+        // {
+        //     if (!Ready2Play)
+        //     {
+        //         return;
+        //     }
+        //     // ClearPlayHandlers();
+        //     MediaPlayer.Control.Play();
+        // }
 
-        public void Play()
-        {
-            if (!Ready2Play)
-            {
-                return;
-            }
-            // ClearPlayHandlers();
-            MediaPlayer.Control.Play();
-        }
-
-        public void Pause()
-        {
-            if (!Ready2Play)
-            {
-                return;
-            }
-            // ClearPlayHandlers();
-            MediaPlayer.Control.Pause();
-        }
+        // public void Pause()
+        // {
+        //     if (!Ready2Play)
+        //     {
+        //         return;
+        //     }
+        //     // ClearPlayHandlers();
+        //     MediaPlayer.Control.Pause();
+        // }
 
         private void __seek(double time)
         {
-            Log($"[avplayer] seek to {time}");
+            Log($" seek to {time}");
+            OnRequestSeek.Invoke(MediaPlayer, (float)time);
             if (CurrentTime == time)
             {
-                Log($"[avplayer] seek skipped to {time}");
+                Log($"seek skipped to {time}");
                 OnFinishedSeeking.Invoke(MediaPlayer);
                 return;
             }
@@ -426,16 +403,23 @@ namespace UNIHper
             var optionsWindows = MediaPlayer.GetCurrentPlatformOptions() as RenderHeads.Media.AVProVideo.MediaPlayer.OptionsWindows;
             if (optionsWindows.videoApi == RenderHeads.Media.AVProVideo.Windows.VideoApi.DirectShow)
             {
-                Log($"[avplayer] DirectShow seek completed to {time}");
+                Log($" DirectShow seek completed to {time}");
                 OnFinishedSeeking.Invoke(MediaPlayer);
             }
 #endif
         }
 
-        public void Stop()
+        // public void Stop()
+        // {
+        //     Log($" {this.name} Stop");
+        //     ClearPlayHandlers();
+        //     MediaPlayer.Control?.Stop();
+        // }
+
+
+        public override void Seek(double time)
         {
-            ClearPlayHandlers();
-            MediaPlayer.Control?.Stop();
+            __seek(time);
         }
 
         public void Seek(double InTime, Action<AVProBase> onCompleted = null)
@@ -451,13 +435,11 @@ namespace UNIHper
                 {
                     onCompleted?.Invoke(this);
                 });
-            // MediaPlayer.Control.Seek(InTime);
             __seek(InTime);
         }
 
         public IObservable<AVProPlayer> SeekAsObservable(double InTime)
         {
-            // ClearPlayHandlers();
             return Observable.Create<AVProPlayer>(_observer =>
             {
                 var disposable = new CompositeDisposable();

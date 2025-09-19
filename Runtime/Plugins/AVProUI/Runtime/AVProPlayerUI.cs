@@ -32,6 +32,11 @@ namespace AVProUI
         ]
         float _autoHideControls = 3f;
 
+        public void SetAutoHideControls(float seconds)
+        {
+            _autoHideControls = seconds;
+        }
+
         bool AutoHide => _autoHideControls > 0;
 
         [SerializeField, Tooltip("Forward/Backward time in seconds when tapping on buttons"), MinValue(0.1)]

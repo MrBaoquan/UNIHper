@@ -33,7 +33,8 @@ namespace UNIHper
         /// <summary>
         /// Save the config file in the project [%userprofile%\AppData\LocalLow\companyname\productname] directory
         /// </summary>
-        PersistentDir
+        PersistentDir,
+        None
     }
 
     [AttributeUsage(AttributeTargets.Class, Inherited = true, AllowMultiple = false)]
@@ -50,19 +51,23 @@ namespace UNIHper
 
         public string FileName = string.Empty;
 
+        public bool RecoverOnError = true;
+
         public SerializedAt(AppPath RootDir, string SubDir = "Configs", int Priority = 0)
         {
             this.RootDir = RootDir;
             this.SubDir = SubDir;
             this.Priority = Priority;
+            this.RecoverOnError = true;
         }
 
-        public SerializedAt(AppPath RootDir, string SubDir, string FileName, int Priority = 0)
+        public SerializedAt(AppPath RootDir, string SubDir, string FileName, int Priority = 0, bool RecoverOnError = true)
         {
             this.RootDir = RootDir;
             this.SubDir = SubDir;
             this.Priority = Priority;
             this.FileName = FileName;
+            this.RecoverOnError = RecoverOnError;
         }
     }
 

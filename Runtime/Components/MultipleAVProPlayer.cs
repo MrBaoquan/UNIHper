@@ -75,7 +75,8 @@ namespace UNIHper
             {
                 if (listPlayer == null)
                 {
-                    listPlayer = this.Get<PlaylistMediaPlayer>();
+                    // listPlayer = this.Get<PlaylistMediaPlayer>();
+                    listPlayer = MediaPlayer as PlaylistMediaPlayer;
                 }
                 return listPlayer;
             }
@@ -93,15 +94,15 @@ namespace UNIHper
             videoIndex.SetMax(VideoPaths.Count() - 1);
             this.videoPaths = VideoPaths.ToList();
 
-            listPlayer = this.Get<PlaylistMediaPlayer>();
-            listPlayer.LoopMode = PlaylistMediaPlayer.PlaylistLoopMode.None;
-            listPlayer.AutoCloseVideo = false;
+            // listPlayer = this.Get<PlaylistMediaPlayer>();
+            ListPlayer.LoopMode = PlaylistMediaPlayer.PlaylistLoopMode.None;
+            ListPlayer.AutoCloseVideo = false;
 
             // 播放到视频结尾是否自动跳到下一个视频
-            listPlayer.AutoProgress = false;
+            ListPlayer.AutoProgress = false;
 
             // Build the playlist
-            listPlayer.Playlist.Items.Clear();
+            ListPlayer.Playlist.Items.Clear();
             videoPaths.ForEach(_videoPath =>
             {
                 MediaPlaylist.MediaItem _mediaItem = new MediaPlaylist.MediaItem();
@@ -112,13 +113,8 @@ namespace UNIHper
                 // item.overrideTransition = PlaylistMediaPlayer.Transition.Black;
                 // item.overrideTransitionDuration = 1.0f;
                 // item.overrideTransitionEasing = PlaylistMediaPlayer.Easing.Preset.Linear;
-                listPlayer.Playlist.Items.Add(_mediaItem);
+                ListPlayer.Playlist.Items.Add(_mediaItem);
             });
-        }
-
-        public void Pause()
-        {
-            listPlayer.Pause();
         }
 
         public bool IsPaused => listPlayer.IsPaused();
@@ -161,11 +157,6 @@ namespace UNIHper
                     return 0;
                 return CurrentPlayer.MaxFrameNumber;
             }
-        }
-
-        public void Play()
-        {
-            ListPlayer.Play();
         }
 
         public void Play(
@@ -223,33 +214,6 @@ namespace UNIHper
             }
 
             Play(_idx, OnCompleted, Loop, StartTime, EndTime, seek2StartAfterFinished);
-        }
-
-        public void TogglePlay()
-        {
-            if (listPlayer.IsPaused())
-            {
-                listPlayer.Play();
-            }
-            else
-            {
-                listPlayer.Pause();
-            }
-        }
-
-        public void Stop()
-        {
-            listPlayer.Stop();
-        }
-
-        public void Rewind(bool pause = true)
-        {
-            CurrentPlayer.Rewind(pause);
-        }
-
-        public void Seek(double NewTime)
-        {
-            CurrentPlayer.Seek(NewTime);
         }
 
         public void SeekToFrame(int Frame)
