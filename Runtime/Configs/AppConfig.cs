@@ -34,9 +34,7 @@ namespace UNIHper
         [XmlIgnore]
         public bool IsFullScreen
         {
-            get =>
-                Mode == FullScreenMode.ExclusiveFullScreen
-                || Mode == FullScreenMode.FullScreenWindow;
+            get => Mode == FullScreenMode.ExclusiveFullScreen || Mode == FullScreenMode.FullScreenWindow;
         }
 
         [XmlAttribute]
@@ -142,37 +140,24 @@ namespace UNIHper
 
         public async void SetScreen(ScreenConfig screenConfig)
         {
-            Screen.SetResolution(
-                screenConfig.Width,
-                screenConfig.Height,
-                screenConfig.IsFullScreen
-            );
+            Screen.SetResolution(screenConfig.Width, screenConfig.Height, screenConfig.IsFullScreen);
 
             if (!screenConfig.IsFullScreen)
             {
                 await Observable.NextFrame();
                 var _currentWindow = WinAPI.CurrentWindow();
-                var _longStyle = WinAPI.GetWindowLong(
-                    _currentWindow,
-                    (int)SetWindowLongIndex.GWL_STYLE
-                );
+                var _longStyle = WinAPI.GetWindowLong(_currentWindow, (int)SetWindowLongIndex.GWL_STYLE);
                 if (!screenConfig.UseTitleBar)
                     _longStyle &= ~(int)GWL_STYLE.WS_CAPTION;
                 else
                     _longStyle |= (int)GWL_STYLE.WS_CAPTION;
-                WinAPI.SetWindowLong(
-                    _currentWindow,
-                    (int)SetWindowLongIndex.GWL_STYLE,
-                    (uint)_longStyle
-                );
+                WinAPI.SetWindowLong(_currentWindow, (int)SetWindowLongIndex.GWL_STYLE, (uint)_longStyle);
             }
 
             await Observable.NextFrame();
             WinAPI.SetWindowPos(
                 WinAPI.CurrentWindow(),
-                screenConfig.KeepTop
-                    ? (int)HWndInsertAfter.HWND_TOPMOST
-                    : (int)HWndInsertAfter.HWND_NOTOPMOST,
+                screenConfig.KeepTop ? (int)HWndInsertAfter.HWND_TOPMOST : (int)HWndInsertAfter.HWND_NOTOPMOST,
                 screenConfig.PosX,
                 screenConfig.PosY,
                 screenConfig.Width,
@@ -198,10 +183,7 @@ namespace UNIHper
                         .Interval(TimeSpan.FromSeconds(MouseControl.ResetInterval))
                         .Subscribe(_ =>
                         {
-                            WinAPI.SetCursorPos(
-                                (int)MouseControl.Position.x,
-                                (int)MouseControl.Position.y
-                            );
+                            WinAPI.SetCursorPos((int)MouseControl.Position.x, (int)MouseControl.Position.y);
                             WinAPI.ShowCursor(MouseControl.ShowCursor);
                             if (MouseControl.ClickAfterMove)
                             {

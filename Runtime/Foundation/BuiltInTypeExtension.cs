@@ -23,6 +23,21 @@ namespace UNIHper
             return new Vector3(InVector2.x, InVector2.y, InZ);
         }
 
+        public static Vector4 ToVector4(this Vector2 InVector2)
+        {
+            return new Vector4(InVector2.x, InVector2.y, 0, 0);
+        }
+
+        public static Vector3 Reverse(this Vector3 InVector3)
+        {
+            return new Vector3(InVector3.z, InVector3.y, InVector3.x);
+        }
+
+        public static Vector4 Reverse(this Vector4 InVector4)
+        {
+            return new Vector4(InVector4.w, InVector4.z, InVector4.y, InVector4.x);
+        }
+
         public static DateTime GetClosestValidDate(this DateTime date)
         {
             int year = date.Year;

@@ -210,11 +210,13 @@ namespace UNIHper
         public virtual void Play()
         {
             MediaPlayer.Play();
+            OnUnpaused.Invoke(MediaPlayer);
         }
 
         public virtual void Pause()
         {
             MediaPlayer.Pause();
+            OnPaused.Invoke(MediaPlayer);
         }
 
         public virtual void Stop()

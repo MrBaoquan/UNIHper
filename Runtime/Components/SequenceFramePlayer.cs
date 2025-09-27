@@ -7,6 +7,7 @@ using UNIHper;
 using System.IO;
 using UnityEngine.UI;
 using System;
+using UnityEngine.Events;
 
 namespace UNIHper
 {
@@ -84,10 +85,29 @@ namespace UNIHper
             Pause();
         }
 
+        public void GotoAndStop(int frame)
+        {
+            sequenceIndexer.Set(frame);
+            Pause();
+        }
+
+        public void GotoAndPlay(int frame)
+        {
+            sequenceIndexer.Set(frame);
+            Play();
+        }
+
         public void Rewind()
         {
             sequenceIndexer.Set(0);
             Play();
+        }
+
+        UnityEvent<SequenceFramePlayer> onSourceLoaded = new();
+
+        public IObservable<SequenceFramePlayer> OnSourceLoadedAsObservable()
+        {
+            return onSourceLoaded.AsObservable();
         }
 
         // Start is called before the first frame update
@@ -98,8 +118,6 @@ namespace UNIHper
                 {
                     if (string.IsNullOrEmpty(_path))
                         return;
-                    // sequencePath = _path;
-
                     if (!sequenceDirectoryExists)
                     {
                         Debug.LogError($"Sequence directory not exists: {sequenceDirectory}");
@@ -114,7 +132,14 @@ namespace UNIHper
                     }
 
                     var _textures = (await Managements.Resource.LoadTexture2Ds(sequenceDirectory)).Where(_ => _ != null).ToList();
+                    if (_textures.Count == 0)
+                    {
+                        Debug.LogError($"No valid texture files in directory: {sequenceDirectory}");
+                        return;
+                    }
+
                     SetTextures(_textures);
+                    onSourceLoaded?.Invoke(this);
                 })
                 .AddTo(this);
 

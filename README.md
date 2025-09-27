@@ -29,6 +29,10 @@ v1.25.xxxx
 - UI单脚本多实例功能优化
 - AnimatedUI相关功能优化
 - LongTimeNoOperation增加禁用自动重置功能
+- 增加TextureTransition过渡组件
+- 增加RangeIndexer索引器
+- 优化配置管理器/UI管理器
+- 优化AVPro播放器
 
 v1.25.811
 - 优化UIManager,ResourceManager部分接口

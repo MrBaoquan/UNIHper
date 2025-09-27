@@ -98,11 +98,12 @@ namespace UNIHper
             {
                 var _disposable = new CompositeDisposable();
 
-                OnMetaDataReadyAsObservable()
+                OnFirstFrameReadyAsObservable()
                     .First()
                     .SelectMany(_ => SeekAsObservable(startTime))
                     .Subscribe(_ =>
                     {
+                        TryCacheDefaultTexture(path, startTime);
                         observer.OnNext(this);
                         observer.OnCompleted();
                     })
@@ -131,7 +132,21 @@ namespace UNIHper
             return null;
         }
 
-        public bool AutoSwitchCachedFirstFrame { get; set; } = true;
+        public void TryCacheDefaultTexture(string videoPath, double startTime = 0)
+        {
+            if (!cachedDefaultTexes.ContainsKey(videoPath))
+            {
+                var _texture = MediaPlayer.ExtractFrame(null, startTime).ToRenderTexture();
+                Log($"cache first frame texture: {videoPath} : {_texture}, rt: {_texture as RenderTexture}");
+                if (_texture != null)
+                {
+                    cachedDefaultTexes[videoPath] = _texture;
+                    Log($"cachedDefaultTexes count: {cachedDefaultTexes.Count}");
+                }
+            }
+        }
+
+        public bool AutoSetDefaultTexture { get; set; } = true;
 
         public void CloseMedia()
         {
@@ -182,13 +197,10 @@ namespace UNIHper
 
             var displayUI = this.Get<DisplayUGUI>();
 
-            var _useFade = _notSameSource && AutoSwitchCachedFirstFrame;
-
-            if (_useFade && displayUI != null)
+            if (AutoSetDefaultTexture && displayUI != null)
             {
                 displayUI.DefaultTexture = GetCachedDefaultTexture(videoPath);
-                displayUI.color = displayUI.DefaultTexture == null ? Color.black : Color.white;
-                displayUI.CurrentMediaPlayer = null;
+                // displayUI.DefaultTexture = MediaPlayer.ExtractFrame(null, CurrentTime);
             }
 
             CompositeDisposable tempPlayDisposables = null;
@@ -196,13 +208,6 @@ namespace UNIHper
             {
                 tempPlayDisposables?.Dispose();
                 tempPlayDisposables = new CompositeDisposable();
-
-                Log($"do play video: {_videoName} at {startTime}");
-                if (_useFade && displayUI != null)
-                {
-                    displayUI.color = Color.white;
-                    displayUI.CurrentMediaPlayer = MediaPlayer;
-                }
 
                 MediaPlayer.Play();
                 bool _bFinished = false;
@@ -219,12 +224,6 @@ namespace UNIHper
                     _bFinished = true;
                     onFinished?.Invoke(this);
                     MediaPlayer.Pause();
-
-                    if (!bLoop)
-                    {
-                        // 不循环 直接释放seek回调
-                        // _playDisposables.Clear();
-                    }
 
                     // 播放结束，是否跳到开始时间
                     if (seek2StartAfterFinished || bLoop)
@@ -288,19 +287,12 @@ namespace UNIHper
 
             if (_notSameSource)
             {
+                Log($"open new media: {videoPath}, cached tex count: {cachedDefaultTexes.Count}");
                 _readyHandler = OnFirstFrameReadyAsObservable()
                     .First()
                     .Subscribe(_ =>
                     {
-                        if (!cachedDefaultTexes.ContainsKey(videoPath))
-                        {
-                            var _texture = MediaPlayer.ExtractFrame(null, startTime).ToRenderTexture();
-
-                            if (_texture != null)
-                            {
-                                cachedDefaultTexes[videoPath] = _texture;
-                            }
-                        }
+                        TryCacheDefaultTexture(videoPath, startTime);
                         _readyHandler.Dispose();
                         _readyHandler = null;
                         _startSeek();
@@ -420,6 +412,16 @@ namespace UNIHper
         public override void Seek(double time)
         {
             __seek(time);
+        }
+
+        public void SeekRelative(double deltaTime)
+        {
+            if (!Ready2Play)
+            {
+                return;
+            }
+            var _targetTime = Math.Max(0, Math.Min(Duration, CurrentTime + deltaTime));
+            Seek(_targetTime);
         }
 
         public void Seek(double InTime, Action<AVProBase> onCompleted = null)

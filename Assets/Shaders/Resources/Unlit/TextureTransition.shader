@@ -20,11 +20,14 @@ Shader "UNIHper/Unlit/TextureTransition"
 
         Pass
         {
+            // 支持双面渲染
+            Cull Off
+            
             // 添加Stencil支持，使Shader支持UGUI Mask剪裁
             Stencil
             {
-                Ref 1              // Mask写入及比较的参考值
-                Comp Equal         // 仅渲染模板值==1的区域
+                Ref [unity_GUIZTestMode]
+                Comp [unity_GUIZTestMode]
                 Pass Keep
             }
 

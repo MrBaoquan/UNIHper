@@ -512,6 +512,8 @@ namespace AVProUI
 
         private void UpdateVolumeSlider()
         {
+            if (_sliderVolume == null)
+                return;
             _sliderVolume.value = _audioVolume;
         }
 
@@ -587,7 +589,8 @@ namespace AVProUI
                 {
                     _overlayManager.TriggerFeedback(OverlayManager.Feedback.Play);
                 }
-                _mediaPlayer.Play();
+                // _mediaPlayer.Play();
+                avPlayer.Play();
             }
         }
 
@@ -608,7 +611,8 @@ namespace AVProUI
                     else
                     {
                         _isAudioFadingUpToPlay = true;
-                        Play();
+                        // Play();
+                        avPlayer.Play();
                     }
                     _audioFadeTime = 0f;
                 }
@@ -616,11 +620,13 @@ namespace AVProUI
                 {
                     if (_mediaPlayer.Control.IsPlaying())
                     {
-                        Pause();
+                        // Pause();
+                        avPlayer.Pause();
                     }
                     else
                     {
-                        Play();
+                        // Play();
+                        avPlayer.Play();
                     }
                 }
             }
@@ -638,6 +644,28 @@ namespace AVProUI
                 {
                     MuteAudio(true);
                 }
+            }
+        }
+
+        // 增大10%音量
+        public void IncreaseVolume(float delta = 0.1f)
+        {
+            if (_mediaPlayer && _mediaPlayer.Control != null)
+            {
+                _audioVolume = Mathf.Clamp01(_audioVolume + delta);
+                ApplyAudioVolume();
+                UpdateVolumeSlider();
+            }
+        }
+
+        // 减小10%音量
+        public void DecreaseVolume(float delta = 0.1f)
+        {
+            if (_mediaPlayer && _mediaPlayer.Control != null)
+            {
+                _audioVolume = Mathf.Clamp01(_audioVolume - delta);
+                ApplyAudioVolume();
+                UpdateVolumeSlider();
             }
         }
 
@@ -771,7 +799,8 @@ namespace AVProUI
                 double time = _mediaPlayer.Control.GetCurrentTime() + deltaTime;
                 time = System.Math.Max(time, timelineRange.startTime);
                 time = System.Math.Min(time, timelineRange.startTime + timelineRange.duration);
-                _mediaPlayer.Control.Seek(time);
+                // _mediaPlayer.Control.Seek(time);
+                avPlayer.Seek(time);
 
                 if (_overlayManager)
                 {
@@ -791,7 +820,8 @@ namespace AVProUI
                 _wasPlayingBeforeTimelineDrag = _mediaPlayer.Control.IsPlaying();
                 if (_wasPlayingBeforeTimelineDrag)
                 {
-                    _mediaPlayer.Pause();
+                    // _mediaPlayer.Pause();
+                    avPlayer.Pause();
                 }
                 OnTimeSliderDrag();
             }
@@ -803,7 +833,8 @@ namespace AVProUI
             {
                 TimeRange timelineRange = GetTimelineRange();
                 double time = timelineRange.startTime + (_sliderTime.value * timelineRange.duration);
-                _mediaPlayer.Control.Seek(time);
+                // _mediaPlayer.Control.Seek(time);
+                avPlayer.Seek(time);
                 _isHoveringOverTimeline = true;
             }
         }
@@ -814,7 +845,8 @@ namespace AVProUI
             {
                 if (_wasPlayingBeforeTimelineDrag)
                 {
-                    _mediaPlayer.Play();
+                    // _mediaPlayer.Play();
+                    avPlayer.Play();
                     _wasPlayingBeforeTimelineDrag = false;
                 }
             }
@@ -908,7 +940,8 @@ namespace AVProUI
                         _overlayManager.TriggerFeedback(OverlayManager.Feedback.Pause);
                     }
                 }
-                _mediaPlayer.Pause();
+                // _mediaPlayer.Pause();
+                avPlayer.Pause();
             }
         }
 

@@ -197,7 +197,13 @@ namespace UNIHper.UI
             return Create<T>(instanceID, _config);
         }
 
-        public T Create<T>(string assetName, int instanceID = 0)
+        public T Create<T>(
+            string assetName,
+            int instanceID = 0,
+            UIType uiType = UIType.Normal,
+            int order = -1,
+            string canvasName = CANVAS_DEFAULT
+        )
             where T : UIBase
         {
             var _uiKey = AssemblyConfig.GetTypeUniqueID(typeof(T), instanceID);
@@ -211,7 +217,13 @@ namespace UNIHper.UI
             var _config = findUIConfigs<T>().Where(x => x.__UIKey.Contains("#")).FirstOrDefault();
             if (_config == null)
             {
-                _config = new UIConfig { };
+                _config = new UIConfig
+                {
+                    ShowType = uiType,
+                    InstID = instanceID,
+                    RenderCanvasName = canvasName,
+                    Order = order
+                };
             }
             _config.__UIKey = _uiKey;
             _config.Asset = assetName;
