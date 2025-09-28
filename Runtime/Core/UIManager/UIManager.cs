@@ -258,6 +258,12 @@ namespace UNIHper.UI
             GameObject.Destroy(_uiComponent.gameObject);
         }
 
+        public void DestroyAll<T>(bool immediate = false)
+            where T : UIBase
+        {
+            GetAll<T>().ToList().ForEach(_ui => Destroy<T>(_ui.InstID, immediate));
+        }
+
         public T Get<T>(int instanceID = 0)
             where T : UIBase
         {

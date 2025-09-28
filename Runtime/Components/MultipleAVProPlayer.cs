@@ -11,31 +11,6 @@ namespace UNIHper
 {
     public class MultipleAVProPlayer : AVProBase
     {
-        // private readonly UnityEvent<AVProPlayer> onPlayerBeforeChanged = new();
-        // private readonly UnityEvent<AVProPlayer> onPlayerAfterChanged = new();
-
-        // public IObservable<AVProPlayer> OnPlayerBeforeChangedAsObservable()
-        // {
-        //     return onPlayerBeforeChanged.AsObservable();
-        // }
-
-        // public IObservable<AVProPlayer> OnPlayerAfterChangedAsObservable()
-        // {
-        //     return onPlayerAfterChanged.AsObservable();
-        // }
-
-        public double CurrentTime
-        {
-            get
-            {
-                if (CurrentPlayer == null)
-                    return 0;
-                return this.CurrentPlayer.CurrentTime;
-            }
-        }
-
-        //public bool Loop { get; set; } = false;
-
         private readonly Indexer videoIndex = new(0);
 
         // TODO: 此路径应由PlayList的Items决定， 不应另外维护一份
@@ -115,48 +90,6 @@ namespace UNIHper
                 // item.overrideTransitionEasing = PlaylistMediaPlayer.Easing.Preset.Linear;
                 ListPlayer.Playlist.Items.Add(_mediaItem);
             });
-        }
-
-        public bool IsPaused => listPlayer.IsPaused();
-
-        public bool IsFinished
-        {
-            get
-            {
-                if (CurrentPlayer == null)
-                    return false;
-                return CurrentPlayer.IsFinished;
-            }
-        }
-
-        public int CurrentFrame
-        {
-            get
-            {
-                if (CurrentPlayer == null || !CurrentPlayer.Ready2Play)
-                    return 0;
-
-                return CurrentPlayer.CurrentFrame;
-            }
-        }
-
-        public double Duration
-        {
-            get
-            {
-                if (CurrentPlayer == null)
-                    return 0;
-                return CurrentPlayer.Duration;
-            }
-        }
-        public int MaxFrameNumber
-        {
-            get
-            {
-                if (CurrentPlayer == null)
-                    return 0;
-                return CurrentPlayer.MaxFrameNumber;
-            }
         }
 
         public void Play(
@@ -390,6 +323,30 @@ namespace UNIHper
         public IObservable<AVProPlayer> OnItemChangedAsObservable()
         {
             return this.OnPlaylistItemChangedAsObservable().SelectMany(_ => Observable.NextFrame().Select(_1 => CurrentPlayer));
+        }
+
+        public override IObservable<(MediaPlayer mediaPlayer, float targetTime)> OnRequestSeekAsObservable()
+        {
+            return Observable
+                .Merge(CurrentPlayer.OnRequestSeekAsObservable(), NextPlayer.OnRequestSeekAsObservable())
+                .Where(_ => IsCurrentPlayer(_.mediaPlayer));
+        }
+
+        public override IObservable<MediaPlayer> OnPausedAsObservable()
+        {
+            return Observable.Merge(CurrentPlayer.OnPausedAsObservable(), NextPlayer.OnPausedAsObservable()).Where(_ => IsCurrentPlayer(_));
+        }
+
+        public override IObservable<MediaPlayer> OnUnpausedAsObservable()
+        {
+            return Observable
+                .Merge(CurrentPlayer.OnUnpausedAsObservable(), NextPlayer.OnUnpausedAsObservable())
+                .Where(_ => IsCurrentPlayer(_));
+        }
+
+        public bool IsCurrentPlayer(MediaPlayer mp)
+        {
+            return mp == CurrentPlayer?.MediaPlayer;
         }
 
         public AVProPlayer CurrentPlayer => ListPlayer.CurrentPlayer.Get<AVProPlayer>();

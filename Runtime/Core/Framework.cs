@@ -50,6 +50,11 @@ namespace UNIHper
             return debugModeEnabled;
         }
 
+        public IObservable<Vector2> OnExtendedDesktopResolutionChangedAsObservable()
+        {
+            return Managements.Config.Get<AppConfig>().OnExtendedDesktopResolutionChangedAsObservable();
+        }
+
         private Image triggerImage = null;
 
         private void enableConsolePanel()

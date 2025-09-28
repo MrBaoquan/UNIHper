@@ -12,6 +12,56 @@ namespace UNIHper
 
     public class AVProBase : MonoBehaviour
     {
+        #region 成员变量
+        /// <summary>
+        /// 标识当前播放器是否准备就绪
+        /// </summary>
+        /// <value></value>
+        public bool Ready2Play
+        {
+            get { return MediaPlayer.Control != null && MediaPlayer.Control.HasMetaData(); }
+        }
+
+        /// <summary>
+        /// 标识当前视频是否处于暂停状态
+        /// </summary>
+        /// <value></value>
+        public bool IsPaused
+        {
+            get { return MediaPlayer.Control.IsPaused(); }
+        }
+
+        public bool IsFinished
+        {
+            get { return MediaPlayer.Control.IsFinished(); }
+        }
+
+        /// <summary>
+        /// 当前播放的视频的总时长 seconds
+        /// </summary>
+        /// <value></value>
+        public double Duration
+        {
+            get { return MediaPlayer.Info.GetDuration(); }
+        }
+
+        public int DurationFrames
+        {
+            get { return MediaPlayer.Info.GetDurationFrames(); }
+        }
+
+        public int MaxFrameNumber
+        {
+            get { return MediaPlayer.Info.GetMaxFrameNumber(); }
+        }
+
+        public float PlaybackRate
+        {
+            get { return MediaPlayer.Control.GetPlaybackRate(); }
+        }
+
+        #endregion
+
         #region 事件列表
         protected readonly UnityEvent<MediaPlayer> OnMetaDataReady = new(); // Triggered when meta data(width, duration etc) is available
         protected readonly UnityEvent<MediaPlayer> OnReadyToPlay = new(); // Triggered when the video is loaded and ready to play
@@ -39,11 +89,6 @@ namespace UNIHper
 
         // Seek Event With Target Time
         protected readonly UnityEvent<MediaPlayer, float> OnRequestSeek = new();
-
-        public IObservable<(MediaPlayer mediaPlayer, float targetTime)> OnRequestSeekAsObservable()
-        {
-            return OnRequestSeek.AsObservable().Select(x => (x.Item1, x.Item2));
-        }
 
         #endregion
         protected CompositeDisposable _playDisposables = new CompositeDisposable();
@@ -77,14 +122,19 @@ namespace UNIHper
             return OnMetaDataReady.AsObservable();
         }
 
-        public IObservable<MediaPlayer> OnPausedAsObservable()
+        public virtual IObservable<MediaPlayer> OnPausedAsObservable()
         {
             return OnPaused.AsObservable();
         }
 
-        public IObservable<MediaPlayer> OnUnpausedAsObservable()
+        public virtual IObservable<MediaPlayer> OnUnpausedAsObservable()
         {
             return OnUnpaused.AsObservable();
+        }
+
+        public virtual IObservable<(MediaPlayer mediaPlayer, float targetTime)> OnRequestSeekAsObservable()
+        {
+            return OnRequestSeek.AsObservable().Select(x => (x.Item1, x.Item2));
         }
 
         public IObservable<MediaPlayer> OnReadyToPlayAsObservable()
@@ -187,6 +237,16 @@ namespace UNIHper
             get { return MediaPlayer.Control.IsPlaying(); }
         }
 
+        public double CurrentTime
+        {
+            get { return MediaPlayer.Control.GetCurrentTime(); }
+        }
+
+        public int CurrentFrame
+        {
+            get { return MediaPlayer.Control.GetCurrentTimeFrames(); }
+        }
+
         protected void Log(string msg)
         {
             if (!_enableLog)
@@ -230,9 +290,38 @@ namespace UNIHper
             MediaPlayer.Rewind(pause);
         }
 
-        public virtual void Seek(double time)
+        protected void __seek(double time)
         {
-            // __seek(time);
+            Log($" seek to {time}");
+            OnRequestSeek.Invoke(MediaPlayer, (float)time);
+            if (CurrentTime == time)
+            {
+                Log($"seek skipped to {time}");
+                OnFinishedSeeking.Invoke(MediaPlayer);
+                return;
+            }
+
+            MediaPlayer.Control.Seek(time);
+#if (UNITY_EDITOR_WIN) || (!UNITY_EDITOR && UNITY_STANDALONE_WIN)
+            // TODO: DirectShow 驱动下，没有seek相关事件 seek 好像是同步的，需要后续验证
+            var optionsWindows = MediaPlayer.GetCurrentPlatformOptions() as RenderHeads.Media.AVProVideo.MediaPlayer.OptionsWindows;
+
+            if (optionsWindows.videoApi == RenderHeads.Media.AVProVideo.Windows.VideoApi.DirectShow)
+            {
+                Log($" DirectShow seek completed to {time}");
+                OnFinishedSeeking.Invoke(MediaPlayer);
+            }
+#endif
+        }
+
+        public void CloseMedia()
+        {
+            MediaPlayer.CloseMedia();
+        }
+
+        public void Seek(double time)
+        {
+            __seek(time);
         }
 
         #endregion

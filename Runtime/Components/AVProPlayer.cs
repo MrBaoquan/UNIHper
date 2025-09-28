@@ -27,65 +27,26 @@ namespace UNIHper
         }
 #endif
 
-        /// <summary>
-        /// 标识当前播放器是否准备就绪
-        /// </summary>
-        /// <value></value>
-        public bool Ready2Play
+        public AVProBase SetTransparency(AlphaPacking alphaPacking = AlphaPacking.LeftRight)
         {
-            get { return MediaPlayer.Control != null && MediaPlayer.Control.HasMetaData(); }
+            if (alphaPacking == AlphaPacking.None)
+            {
+                return SetOpaque();
+            }
+
+            MediaHints _hints = MediaPlayer.FallbackMediaHints;
+            _hints.transparency = TransparencyMode.Transparent;
+            _hints.alphaPacking = AlphaPacking.TopBottom;
+            MediaPlayer.FallbackMediaHints = _hints;
+            return this;
         }
 
-        /// <summary>
-        /// 标识当前视频是否处于暂停状态
-        /// </summary>
-        /// <value></value>
-        public bool IsPaused
+        public AVProBase SetOpaque()
         {
-            get { return MediaPlayer.Control.IsPaused(); }
-        }
-
-        public bool IsFinished
-        {
-            get { return MediaPlayer.Control.IsFinished(); }
-        }
-
-        /// <summary>
-        /// 当前播放的视频的总时长 seconds
-        /// </summary>
-        /// <value></value>
-        public double Duration
-        {
-            get { return MediaPlayer.Info.GetDuration(); }
-        }
-
-        public int DurationFrames
-        {
-            get { return MediaPlayer.Info.GetDurationFrames(); }
-        }
-
-        public int MaxFrameNumber
-        {
-            get { return MediaPlayer.Info.GetMaxFrameNumber(); }
-        }
-
-        public float PlaybackRate
-        {
-            get { return MediaPlayer.Control.GetPlaybackRate(); }
-        }
-
-        /// <summary>
-        /// Current video time in seconds
-        /// </summary>
-        /// <value></value>
-        public double CurrentTime
-        {
-            get { return MediaPlayer.Control.GetCurrentTime(); }
-        }
-
-        public int CurrentFrame
-        {
-            get { return MediaPlayer.Control.GetCurrentTimeFrames(); }
+            MediaHints _hints = MediaPlayer.FallbackMediaHints;
+            _hints.transparency = TransparencyMode.Opaque;
+            MediaPlayer.FallbackMediaHints = _hints;
+            return this;
         }
 
         public double StartTime { get; protected set; }
@@ -147,11 +108,6 @@ namespace UNIHper
         }
 
         public bool AutoSetDefaultTexture { get; set; } = true;
-
-        public void CloseMedia()
-        {
-            MediaPlayer.CloseMedia();
-        }
 
         public void Play(string videoPath, bool bLoop = true, double startTime = 0, double endTime = 0, bool seek2StartAfterFinished = true)
         {
@@ -378,41 +334,6 @@ namespace UNIHper
         //     MediaPlayer.Control.Pause();
         // }
 
-        private void __seek(double time)
-        {
-            Log($" seek to {time}");
-            OnRequestSeek.Invoke(MediaPlayer, (float)time);
-            if (CurrentTime == time)
-            {
-                Log($"seek skipped to {time}");
-                OnFinishedSeeking.Invoke(MediaPlayer);
-                return;
-            }
-
-            MediaPlayer.Control.Seek(time);
-#if (UNITY_EDITOR_WIN) || (!UNITY_EDITOR && UNITY_STANDALONE_WIN)
-            // TODO: DirectShow 驱动下，没有seek相关事件 seek 好像是同步的，需要后续验证
-            var optionsWindows = MediaPlayer.GetCurrentPlatformOptions() as RenderHeads.Media.AVProVideo.MediaPlayer.OptionsWindows;
-            if (optionsWindows.videoApi == RenderHeads.Media.AVProVideo.Windows.VideoApi.DirectShow)
-            {
-                Log($" DirectShow seek completed to {time}");
-                OnFinishedSeeking.Invoke(MediaPlayer);
-            }
-#endif
-        }
-
-        // public void Stop()
-        // {
-        //     Log($" {this.name} Stop");
-        //     ClearPlayHandlers();
-        //     MediaPlayer.Control?.Stop();
-        // }
-
-
-        public override void Seek(double time)
-        {
-            __seek(time);
-        }
 
         public void SeekRelative(double deltaTime)
         {

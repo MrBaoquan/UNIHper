@@ -598,10 +598,16 @@ namespace AVProUI
         {
             if (_mediaPlayer && _mediaPlayer.Control != null)
             {
+                Debug.Log($"TogglePlayPause on {_mediaPlayer.name}");
+
                 if (_useAudioFading && _mediaPlayer.Info.HasAudio())
                 {
+                    Debug.Log(
+                        $"Audio Fading is enabled, current audio volume: {_mediaPlayer.AudioVolume}, muted: {_mediaPlayer.AudioMuted}"
+                    );
                     if (_mediaPlayer.Control.IsPlaying())
                     {
+                        Debug.Log("Fading down audio to pause");
                         if (_overlayManager)
                         {
                             _overlayManager.TriggerFeedback(OverlayManager.Feedback.Pause);
@@ -868,7 +874,7 @@ namespace AVProUI
 
         private void OnVideoPointerUp()
         {
-            bool controlsMostlyVisible = (_controlsGroup.alpha >= 0.5f && _controlsGroup.gameObject.activeSelf);
+            bool controlsMostlyVisible = _controlsGroup.alpha >= 0.5f && _controlsGroup.gameObject.activeSelf;
             if (controlsMostlyVisible)
             {
                 TogglePlayPause();

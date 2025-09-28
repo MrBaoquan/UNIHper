@@ -86,6 +86,7 @@ namespace UNIHper
         {
             return @"
             LongTimeNoOperationTimeout: 长时间无操作超时时间
+            CheckDesktopResolutionInterval: 多久检测一次桌面分辨率 0 不检测
             ResetPrimaryScreenInterval: 重新应用屏幕设置间隔时间
             MouseControl: 鼠标控制
                 Enable: 启用鼠标控制
@@ -103,23 +104,65 @@ namespace UNIHper
         public float LongTimeNoOperationTimeout = 300;
 
         [XmlAttribute]
+        public float CheckDesktopResolutionInterval = 5;
+
+        [XmlAttribute]
         public float ResetPrimaryScreenInterval = 0;
 
         public MouseSettings MouseControl = new MouseSettings();
-
         public ScreenConfig PrimaryScreen = new ScreenConfig() { KeepTop = true };
 
-        [XmlArray("Displays")]
-        [XmlArrayItem("Display")]
+        [XmlElement("Display")]
         public List<ScreenConfig> Displays = new List<ScreenConfig>();
+
+        public bool ShouldSerializeDisplays()
+        {
+            return Displays != null && Displays.Count > 0;
+        }
+
+        // 桌面分辨率变化检测
+        private UniRx.Subject<Vector2> OnDisplayResolutionChanged = new Subject<Vector2>();
+
+        public IObservable<Vector2> OnExtendedDesktopResolutionChangedAsObservable() => OnDisplayResolutionChanged;
+
+        private void checkDisplayResolution()
+        {
+            var currentDesktopSize = WinAPI.GetExtendedDesktopSize();
+            Debug.Log($"Current Extended Desktop Size: {currentDesktopSize.TotalWidth} x {currentDesktopSize.TotalHeight}");
+            if (CheckDesktopResolutionInterval <= 0)
+            {
+                Debug.Log("Skip check display resolution.");
+                return;
+            }
+            Observable
+                .Interval(TimeSpan.FromSeconds(CheckDesktopResolutionInterval))
+                .Subscribe(_ =>
+                {
+                    var newDesktopSize = WinAPI.GetExtendedDesktopSize();
+                    if (newDesktopSize != currentDesktopSize)
+                    {
+                        Debug.LogWarning(
+                            $"Extended Desktop Resolution Changed: {newDesktopSize.TotalWidth} x {newDesktopSize.TotalHeight}"
+                        );
+
+                        var allMonitors = WinAPI.GetAllMonitorsResolution();
+                        allMonitors.ForEach(m =>
+                        {
+                            Debug.Log($"Monitor: {m.Width} x {m.Height} @ ({m.Left}, {m.Top})");
+                        });
+                        currentDesktopSize = newDesktopSize;
+                        OnDisplayResolutionChanged.OnNext(new Vector2(newDesktopSize.TotalWidth, newDesktopSize.TotalHeight));
+                        ResetPrimaryScreen();
+                    }
+                });
+        }
 
         protected override void OnLoaded()
         {
             PrimaryScreen.RefreshParameters();
 
 #if !UNITY_EDITOR && UNITY_STANDALONE_WIN
-
-
+            checkDisplayResolution();
             activeAllDisplays();
             executeWindowSettings();
 
