@@ -33,6 +33,8 @@ v1.25.0929
 - 增加RangeIndexer索引器
 - 优化配置管理器/UI管理器
 - 优化AVPro播放器
+- 配置管理增加功能，修复断电导致乱码的bug
+- 增加拓展桌面分辨率检测能力，并提供接口
 
 v1.25.811
 - 优化UIManager,ResourceManager部分接口
