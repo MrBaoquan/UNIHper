@@ -108,6 +108,12 @@ namespace UNIHper
         }
 
         public bool AutoSetDefaultTexture { get; set; } = true;
+        private bool Loop { get; set; } = true;
+
+        public void SetLoop(bool loop)
+        {
+            Loop = loop;
+        }
 
         public void Play(string videoPath, bool bLoop = true, double startTime = 0, double endTime = 0, bool seek2StartAfterFinished = true)
         {
@@ -138,6 +144,7 @@ namespace UNIHper
                 _readyHandler = null;
             }
             var _videoName = Path.GetFileName(videoPath);
+            SetLoop(bLoop);
             Log(
                 $"request play: {_videoName}, loop: {bLoop}, startTime: {startTime}, endTime: {endTime}, seek2StartAfterFinished: {seek2StartAfterFinished}"
             );
@@ -182,7 +189,7 @@ namespace UNIHper
                     MediaPlayer.Pause();
 
                     // 播放结束，是否跳到开始时间
-                    if (seek2StartAfterFinished || bLoop)
+                    if (seek2StartAfterFinished || Loop)
                     {
                         __seek(startTime);
                     }

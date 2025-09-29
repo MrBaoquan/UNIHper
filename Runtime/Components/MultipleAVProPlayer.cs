@@ -264,7 +264,7 @@ namespace UNIHper
                     .First()
                     .Do(_player =>
                     {
-                        _player.Pause();
+                        _player.Pause(false);
                     })
                     .SelectMany(
                         _player =>
@@ -347,6 +347,11 @@ namespace UNIHper
         public bool IsCurrentPlayer(MediaPlayer mp)
         {
             return mp == CurrentPlayer?.MediaPlayer;
+        }
+
+        public void SetLoop(bool loop)
+        {
+            CurrentPlayer?.SetLoop(loop);
         }
 
         public AVProPlayer CurrentPlayer => ListPlayer.CurrentPlayer.Get<AVProPlayer>();

@@ -273,10 +273,11 @@ namespace UNIHper
             OnUnpaused.Invoke(MediaPlayer);
         }
 
-        public virtual void Pause()
+        public virtual void Pause(bool withEvent = true)
         {
             MediaPlayer.Pause();
-            OnPaused.Invoke(MediaPlayer);
+            if (withEvent)
+                OnPaused.Invoke(MediaPlayer);
         }
 
         public virtual void Stop()
