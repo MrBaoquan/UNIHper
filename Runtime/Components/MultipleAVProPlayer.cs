@@ -108,12 +108,14 @@ namespace UNIHper
             }
 
             _playDisposables.Clear();
+            _playDisposables = new CompositeDisposable();
 
             SwitchAsObservable(videoIndex, StartTime)
                 .Subscribe(_player =>
                 {
                     _player.Play(videoPaths[videoIndex], OnCompleted, Loop, StartTime, EndTime, seek2StartAfterFinished);
-                });
+                })
+                .AddTo(_playDisposables);
         }
 
         public void Play(string Path, bool Loop = false, double StartTime = 0f, double EndTime = 0f, bool seek2StartAfterFinished = true)
@@ -259,7 +261,8 @@ namespace UNIHper
             startTime = Math.Round(startTime, 3);
             return Observable.Create<AVProPlayer>(_observer =>
             {
-                _playDisposables.Clear();
+                _playDisposables?.Dispose();
+                _playDisposables = new CompositeDisposable();
                 OnItemChangedAsObservable()
                     .First()
                     .Do(_player =>
@@ -308,6 +311,13 @@ namespace UNIHper
         public void MuteAudio(bool bMute)
         {
             listPlayer.AudioMuted = bMute;
+        }
+
+        public override void ClearPlayHandlers()
+        {
+            base.ClearPlayHandlers();
+            CurrentPlayer?.ClearPlayHandlers();
+            NextPlayer?.ClearPlayHandlers();
         }
 
         public int FindVideoIndex(string videoName)

@@ -115,7 +115,13 @@ namespace UNIHper
             Loop = loop;
         }
 
-        public void Play(string videoPath, bool bLoop = true, double startTime = 0, double endTime = 0, bool seek2StartAfterFinished = true)
+        public void Play(
+            string videoPath,
+            bool bLoop = false,
+            double startTime = 0,
+            double endTime = 0,
+            bool seek2StartAfterFinished = true
+        )
         {
             Play(videoPath, null, bLoop, startTime, endTime, seek2StartAfterFinished);
         }
@@ -131,10 +137,10 @@ namespace UNIHper
         public void Play(
             string videoPath,
             Action<AVProPlayer> onFinished,
-            bool bLoop = true,
+            bool bLoop = false,
             double startTime = 0,
             double endTime = 0,
-            bool seek2StartAfterFinished = true
+            bool seek2StartAfterFinished = false
         )
         {
             ClearPlayHandlers();

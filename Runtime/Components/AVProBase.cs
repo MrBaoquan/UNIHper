@@ -93,7 +93,7 @@ namespace UNIHper
         #endregion
         protected CompositeDisposable _playDisposables = new CompositeDisposable();
 
-        public void ClearPlayHandlers()
+        public virtual void ClearPlayHandlers()
         {
             Log($"dispose play handlers");
             _playDisposables.Clear();
@@ -282,8 +282,8 @@ namespace UNIHper
 
         public virtual void Stop()
         {
-            ClearPlayHandlers();
             MediaPlayer.Stop();
+            ClearPlayHandlers();
         }
 
         public virtual void Rewind(bool pause)
