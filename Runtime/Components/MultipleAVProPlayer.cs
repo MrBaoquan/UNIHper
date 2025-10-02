@@ -226,23 +226,23 @@ namespace UNIHper
                 return;
             }
 
-            //mediaPlayer.JumpToItem(mediaIndex);
             if (bAutoPlay)
             {
-                // Play(videoPaths[mediaIndex], null, Loop, 0, 0, false);
-                Play(_mediaItem.mediaPath.Path, null, _mediaItem.loop, StartTime, EndTime, false);
+                Play(_mediaItem.mediaPath.Path, _mediaItem.loop, StartTime, EndTime, false);
             }
             else
             {
                 _playDisposables.Clear();
+                _playDisposables = new CompositeDisposable();
 
                 OnItemChangedAsObservable()
                     .First()
                     .Subscribe(_ =>
                     {
+                        _.SetAutoPlay(false);
                         _.Pause();
                         if (bRewind)
-                            _.Rewind();
+                            _.Rewind(true);
                     })
                     .AddTo(_playDisposables);
 

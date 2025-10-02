@@ -200,6 +200,11 @@ namespace UNIHper.UI
 
         CancellationTokenSource showOrHideCancellationTokenSource = null;
 
+        public void StopTransition()
+        {
+            clearShowOrHideCancellationTokenSource();
+        }
+
         private void clearShowOrHideCancellationTokenSource()
         {
             if (showOrHideCancellationTokenSource != null)

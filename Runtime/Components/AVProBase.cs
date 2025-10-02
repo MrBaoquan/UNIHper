@@ -68,6 +68,7 @@ namespace UNIHper
         protected readonly UnityEvent<MediaPlayer> OnStarted = new(); // Triggered when the playback starts
         protected readonly UnityEvent<MediaPlayer> OnFirstFrameReady = new(); // Triggered when the first frame has been rendered
         protected readonly UnityEvent<MediaPlayer> OnFinishedPlaying = new(); // Triggered when a non-looping video has finished playing
+        protected readonly UnityEvent<MediaPlayer> OnReachedEnd = new(); // Triggered when the video reaches the end (only in loop mode)
         protected readonly UnityEvent<MediaPlayer> OnClosing = new(); // Triggered when the media is closed
         protected readonly UnityEvent<MediaPlayer> OnError = new(); // Triggered when an error occurs
         protected readonly UnityEvent<MediaPlayer> OnSubtitleChange = new(); // Triggered when the subtitles change
@@ -157,6 +158,11 @@ namespace UNIHper
             return OnFinishedPlaying.AsObservable();
         }
 
+        public IObservable<MediaPlayer> OnReachedEndAsObservable()
+        {
+            return OnReachedEnd.AsObservable();
+        }
+
         public IObservable<MediaPlayer> OnClosingAsObservable()
         {
             return OnClosing.AsObservable();
@@ -230,7 +236,7 @@ namespace UNIHper
         #endregion
 
         #region 公共接口
-        private static bool _enableLog = false;
+        public static bool EnableLog { get; set; } = false;
 
         public bool IsPlaying
         {
@@ -249,7 +255,7 @@ namespace UNIHper
 
         protected void Log(string msg)
         {
-            if (!_enableLog)
+            if (!EnableLog)
                 return;
 
             Debug.LogWarning($"[AVProPlayer]: {name} {msg}");
@@ -267,10 +273,11 @@ namespace UNIHper
             }
         }
 
-        public virtual void Play()
+        public virtual void Play(bool withEvent = true)
         {
             MediaPlayer.Play();
-            OnUnpaused.Invoke(MediaPlayer);
+            if (withEvent)
+                OnUnpaused.Invoke(MediaPlayer);
         }
 
         public virtual void Pause(bool withEvent = true)

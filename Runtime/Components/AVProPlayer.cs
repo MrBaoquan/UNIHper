@@ -80,6 +80,8 @@ namespace UNIHper
             return MediaPlayer.OpenMedia(MediaPathType.RelativeToStreamingAssetsFolder, path, false);
         }
 
+        public void Switch() { }
+
         IDisposable _readyHandler = null;
 
         public Dictionary<string, Texture> cachedDefaultTexes = new();
@@ -109,10 +111,16 @@ namespace UNIHper
 
         public bool AutoSetDefaultTexture { get; set; } = true;
         private bool Loop { get; set; } = true;
+        private bool AutoPlay { get; set; } = true;
 
         public void SetLoop(bool loop)
         {
             Loop = loop;
+        }
+
+        public void SetAutoPlay(bool autoPlay)
+        {
+            AutoPlay = autoPlay;
         }
 
         public void Play(
@@ -151,6 +159,7 @@ namespace UNIHper
             }
             var _videoName = Path.GetFileName(videoPath);
             SetLoop(bLoop);
+            SetAutoPlay(true);
             Log(
                 $"request play: {_videoName}, loop: {bLoop}, startTime: {startTime}, endTime: {endTime}, seek2StartAfterFinished: {seek2StartAfterFinished}"
             );
@@ -178,7 +187,7 @@ namespace UNIHper
                 tempPlayDisposables?.Dispose();
                 tempPlayDisposables = new CompositeDisposable();
 
-                MediaPlayer.Play();
+                Play(false);
                 bool _bFinished = false;
                 var _duration = MediaPlayer.Info.GetDuration();
                 endTime = endTime == 0 ? _duration : endTime;
@@ -192,7 +201,7 @@ namespace UNIHper
 
                     _bFinished = true;
                     onFinished?.Invoke(this);
-                    MediaPlayer.Pause();
+                    Pause(false);
 
                     // 播放结束，是否跳到开始时间
                     if (seek2StartAfterFinished || Loop)
@@ -221,6 +230,10 @@ namespace UNIHper
                     .Subscribe(_1 =>
                     {
                         Log($"reach video end: {_duration}");
+                        if (!Loop)
+                        {
+                            OnReachedEnd.Invoke(MediaPlayer);
+                        }
                         _onFinished();
                     })
                     .AddTo(_playDisposables)
@@ -233,7 +246,8 @@ namespace UNIHper
                     .Subscribe(_ =>
                     {
                         Log($"seek completed to {startTime}");
-                        _playVideo();
+                        if (AutoPlay)
+                            _playVideo();
                     })
                     .AddTo(_playDisposables);
             }
