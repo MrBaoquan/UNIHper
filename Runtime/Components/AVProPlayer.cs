@@ -209,10 +209,6 @@ namespace UNIHper
                 // 正常播放时间大于指定结束时间
                 Observable
                     .EveryUpdate()
-                    // .Do(_ =>
-                    // {
-                    //     Debug.Log($"playing {_videoName} at {MediaPlayer.Control.GetCurrentTime()} / {endTime}");
-                    // })
                     .Where(_1 => MediaPlayer.Control.GetCurrentTime() >= endTime && !_bFinished)
                     .First()
                     .Subscribe(_1 =>
@@ -231,7 +227,6 @@ namespace UNIHper
                 OnFinishedSeekingAsObservable()
                     .Subscribe(_ =>
                     {
-                        Log($"finished seek to {MediaPlayer.Control.GetCurrentTime()}");
                         if (AutoPlay)
                             _playVideo();
                     })
@@ -245,12 +240,10 @@ namespace UNIHper
                 var _currentTime = MediaPlayer.Control.GetCurrentTime();
                 if (_currentTime != startTime)
                 {
-                    Log($"request seek to {startTime} from {_currentTime}");
                     __seek(startTime);
                 }
                 else
                 {
-                    Log($"request play directly at {startTime}");
                     _playVideo();
                 }
             }
