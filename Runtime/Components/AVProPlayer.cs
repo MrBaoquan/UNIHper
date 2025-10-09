@@ -160,9 +160,6 @@ namespace UNIHper
             var _videoName = Path.GetFileName(videoPath);
             SetLoop(bLoop);
             SetAutoPlay(true);
-            Log(
-                $"request play: {_videoName}, loop: {bLoop}, startTime: {startTime}, endTime: {endTime}, seek2StartAfterFinished: {seek2StartAfterFinished}"
-            );
 
             startTime = Math.Round(startTime, 3);
             endTime = Math.Round(endTime, 3);
@@ -186,23 +183,22 @@ namespace UNIHper
             {
                 tempPlayDisposables?.Dispose();
                 tempPlayDisposables = new CompositeDisposable();
-
+                _builtSeekOperation = false;
                 Play(false);
                 bool _bFinished = false;
                 var _duration = MediaPlayer.Info.GetDuration();
-                endTime = endTime == 0 ? _duration : endTime;
+                endTime = endTime == 0 ? Mathf.FloorToInt((float)_duration * 100) / 100f - 0.033 : endTime;
 
                 // 播放结束回调
                 Action _onFinished = () =>
                 {
-                    Log($"Video Finished: {videoPath}");
                     if (_bFinished)
                         return;
 
                     _bFinished = true;
                     onFinished?.Invoke(this);
                     Pause(false);
-
+                    SetAutoPlay(Loop);
                     // 播放结束，是否跳到开始时间
                     if (seek2StartAfterFinished || Loop)
                     {
@@ -213,31 +209,21 @@ namespace UNIHper
                 // 正常播放时间大于指定结束时间
                 Observable
                     .EveryUpdate()
+                    // .Do(_ =>
+                    // {
+                    //     Debug.Log($"playing {_videoName} at {MediaPlayer.Control.GetCurrentTime()} / {endTime}");
+                    // })
                     .Where(_1 => MediaPlayer.Control.GetCurrentTime() >= endTime && !_bFinished)
                     .First()
                     .Subscribe(_1 =>
                     {
-                        Log($"reach specified end time: {endTime} >= {_duration}");
                         OnFinishedPlaying.Invoke(MediaPlayer);
                     })
                     .AddTo(_playDisposables)
                     .AddTo(tempPlayDisposables);
 
                 // 视频到达结尾
-                OnFinishedPlayingAsObservable()
-                    .Where(_mPlayer => _mPlayer == MediaPlayer)
-                    .First()
-                    .Subscribe(_1 =>
-                    {
-                        Log($"reach video end: {_duration}");
-                        if (!Loop)
-                        {
-                            OnReachedEnd.Invoke(MediaPlayer);
-                        }
-                        _onFinished();
-                    })
-                    .AddTo(_playDisposables)
-                    .AddTo(tempPlayDisposables);
+                OnFinishedPlayingAsObservable().First().Subscribe(_1 => _onFinished()).AddTo(_playDisposables).AddTo(tempPlayDisposables);
             };
 
             void _registerFinishedSeekingEvent()
@@ -245,7 +231,7 @@ namespace UNIHper
                 OnFinishedSeekingAsObservable()
                     .Subscribe(_ =>
                     {
-                        Log($"seek completed to {startTime}");
+                        Log($"finished seek to {MediaPlayer.Control.GetCurrentTime()}");
                         if (AutoPlay)
                             _playVideo();
                     })
@@ -254,6 +240,7 @@ namespace UNIHper
 
             void _startSeek()
             {
+                _builtSeekOperation = true;
                 _registerFinishedSeekingEvent();
                 var _currentTime = MediaPlayer.Control.GetCurrentTime();
                 if (_currentTime != startTime)
@@ -388,16 +375,20 @@ namespace UNIHper
             __seek(InTime);
         }
 
-        public IObservable<AVProPlayer> SeekAsObservable(double InTime)
+        public IObservable<AVProPlayer> SeekAsObservable(double InTime, float timeoutSeconds = 3f)
         {
             return Observable.Create<AVProPlayer>(_observer =>
             {
                 var disposable = new CompositeDisposable();
 
+                _builtSeekOperation = true;
                 OnFinishedSeekingAsObservable()
+                    .Timeout(TimeSpan.FromSeconds(timeoutSeconds))
+                    .Catch<MediaPlayer, Exception>(ex => Observable.Return(MediaPlayer))
                     .First()
                     .Subscribe(_ =>
                     {
+                        _builtSeekOperation = false;
                         _observer.OnNext(this);
                         _observer.OnCompleted();
                     })

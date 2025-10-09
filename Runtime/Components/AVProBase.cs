@@ -327,7 +327,12 @@ namespace UNIHper
             MediaPlayer.CloseMedia();
         }
 
-        public void Seek(double time)
+        // 组件内置操作标识, 启用该标识时，禁用外部api调用
+
+        protected bool _builtSeekOperation { get; set; } = false;
+        public bool BuiltInOperation => _builtSeekOperation;
+
+        public virtual void Seek(double time)
         {
             __seek(time);
         }

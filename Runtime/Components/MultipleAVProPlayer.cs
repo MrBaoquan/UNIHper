@@ -313,6 +313,11 @@ namespace UNIHper
             listPlayer.AudioMuted = bMute;
         }
 
+        public override void Seek(double time)
+        {
+            CurrentPlayer?.Seek(time);
+        }
+
         public override void ClearPlayHandlers()
         {
             base.ClearPlayHandlers();
@@ -333,6 +338,20 @@ namespace UNIHper
         public IObservable<AVProPlayer> OnItemChangedAsObservable()
         {
             return this.OnPlaylistItemChangedAsObservable().SelectMany(_ => Observable.NextFrame().Select(_1 => CurrentPlayer));
+        }
+
+        public new IObservable<MediaPlayer> OnReachedEndAsObservable()
+        {
+            return Observable
+                .Merge(CurrentPlayer.OnReachedEndAsObservable(), NextPlayer.OnReachedEndAsObservable())
+                .Where(_ => IsCurrentPlayer(_));
+        }
+
+        public new IObservable<MediaPlayer> OnFinishedPlayingAsObservable()
+        {
+            return Observable
+                .Merge(CurrentPlayer.OnFinishedPlayingAsObservable(), NextPlayer.OnFinishedPlayingAsObservable())
+                .Where(_ => IsCurrentPlayer(_));
         }
 
         public override IObservable<(MediaPlayer mediaPlayer, float targetTime)> OnRequestSeekAsObservable()
