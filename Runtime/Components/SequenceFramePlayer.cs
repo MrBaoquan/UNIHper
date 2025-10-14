@@ -39,9 +39,30 @@ namespace UNIHper
 
         public void SetTextures(List<Texture2D> textures)
         {
+            // 释放之前的纹理资源
+            ReleaseCurrentTextures();
+
             sequenceTextures = textures.OrderBy(_ => _.name).ToList();
             sequenceIndexer.SetMax(sequenceTextures.Count - 1);
             sequenceIndexer.SetValueAndForceNotify(sequenceIndexer.Current);
+        }
+
+        private void ReleaseCurrentTextures()
+        {
+            if (sequenceTextures != null && sequenceTextures.Count > 0)
+            {
+                foreach (var texture in sequenceTextures)
+                {
+                    if (texture != null)
+                    {
+                        UnityEngine.Object.Destroy(texture);
+                    }
+                }
+                sequenceTextures.Clear();
+
+                // 清理未使用的资源
+                Resources.UnloadUnusedAssets();
+            }
         }
 
         public IObservable<int> OnFrameChangedAsObservable()
@@ -138,6 +159,7 @@ namespace UNIHper
                         return;
                     }
 
+                    // SetTextures 会自动释放旧资源
                     SetTextures(_textures);
                     onSourceLoaded?.Invoke(this);
                 })
@@ -172,6 +194,12 @@ namespace UNIHper
                     sequenceIndexer.Next();
                 })
                 .AddTo(this);
+        }
+
+        void OnDestroy()
+        {
+            // 组件销毁时释放所有纹理资源
+            ReleaseCurrentTextures();
         }
     }
 }

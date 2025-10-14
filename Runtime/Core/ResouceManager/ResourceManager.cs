@@ -741,13 +741,55 @@ namespace UNIHper
 
         private void UnLoadAssetByKey(string sceneKey)
         {
-            if (resources.ContainsKey(sceneKey))
-                resources[sceneKey].Clear();
+            if (!resources.ContainsKey(sceneKey))
+            {
+                UNIHperLogger.LogWarning($"Scene key [{sceneKey}] not found in resources");
+                return;
+            }
+
+            // 1. 释放 Addressable 资源
+            var addressableAssets = resources[sceneKey].Where(kv => kv.Value.asssetDriver == AsssetDriver.Addressable).ToList();
+
+            foreach (var asset in addressableAssets)
+            {
+                try
+                {
+                    if (asset.Value.asset != null)
+                    {
+                        Addressables.Release(asset.Value.asset);
+                        UNIHperLogger.Log($"Released addressable asset: {asset.Key}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    UNIHperLogger.LogError($"Failed to release addressable asset {asset.Key}: {ex.Message}");
+                }
+            }
+
+            // 2. 清空资源字典
+            resources[sceneKey].Clear();
+
+            // 3. 卸载 AssetBundle
             if (bundles.ContainsKey(sceneKey))
             {
-                bundles[sceneKey].Values.ToList().ForEach(_ => _?.Unload(true));
+                foreach (var bundle in bundles[sceneKey].Values)
+                {
+                    if (bundle != null)
+                    {
+                        bundle.Unload(true);
+                        UNIHperLogger.Log($"Unloaded AssetBundle for scene: {sceneKey}");
+                    }
+                }
                 bundles[sceneKey].Clear();
             }
+
+            // 4. 卸载 Resources 加载的未使用资源
+            Resources.UnloadUnusedAssets();
+
+            // 5. 触发垃圾回收（可选，根据需要启用）
+            System.GC.Collect();
+
+            UNIHperLogger.Log($"Unloaded all assets for scene: {sceneKey}");
         }
 
         private static string removeFileExtension(string path)
