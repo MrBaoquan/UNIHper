@@ -55,6 +55,18 @@ namespace UNIHper
             return Managements.Config.Get<AppConfig>().OnExtendedDesktopResolutionChangedAsObservable();
         }
 
+        public void CreateRelativeShortcut(
+            string shortcutName,
+            string shortcutDir,
+            string targetPath,
+            string description = "",
+            string iconPath = ""
+        )
+        {
+            var appConfig = Managements.Config.Get<AppConfig>();
+            appConfig.CreateRelativeShortcut(shortcutName, shortcutDir, targetPath, description, iconPath);
+        }
+
         private Image triggerImage = null;
 
         private void enableConsolePanel()
