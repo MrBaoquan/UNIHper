@@ -178,9 +178,11 @@ namespace UNIHper
                 // displayUI.DefaultTexture = MediaPlayer.ExtractFrame(null, CurrentTime);
             }
 
+            Log($" requested play video: {videoPath}, startTime: {startTime}, endTime: {endTime}, notSameSource: {_notSameSource}");
             CompositeDisposable tempPlayDisposables = null;
             Action _playVideo = () =>
             {
+                Log($" start playing video: {videoPath} from {startTime}");
                 tempPlayDisposables?.Dispose();
                 tempPlayDisposables = new CompositeDisposable();
                 _builtSeekOperation = false;
@@ -227,6 +229,7 @@ namespace UNIHper
                 OnFinishedSeekingAsObservable()
                     .Subscribe(_ =>
                     {
+                        Log($"seek finished to {startTime}");
                         if (AutoPlay)
                             _playVideo();
                     })
@@ -238,6 +241,7 @@ namespace UNIHper
                 _builtSeekOperation = true;
                 _registerFinishedSeekingEvent();
                 var _currentTime = MediaPlayer.Control.GetCurrentTime();
+
                 if (_currentTime != startTime)
                 {
                     __seek(startTime);
@@ -370,6 +374,7 @@ namespace UNIHper
 
         public IObservable<AVProPlayer> SeekAsObservable(double InTime, float timeoutSeconds = 3f)
         {
+            Log($" seek requested to {InTime} ");
             return Observable.Create<AVProPlayer>(_observer =>
             {
                 var disposable = new CompositeDisposable();

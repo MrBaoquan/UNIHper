@@ -128,6 +128,11 @@ namespace UNIHper
             return JsonConvert.SerializeObject(this);
         }
 
+        public void Save()
+        {
+            Managements.Config.Save(GetType().Name);
+        }
+
         internal void Loaded()
         {
             OnLoaded();

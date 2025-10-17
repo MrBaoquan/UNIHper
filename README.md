@@ -27,6 +27,7 @@
 
 v1.25.xxxx
 - 增加常见文件夹的快捷方式
+- Config.Save 优化
 
 v1.25.1009
 - 优化AVProPlayer播放组件

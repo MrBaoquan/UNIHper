@@ -282,6 +282,7 @@ namespace UNIHper
 
         public virtual void Pause(bool withEvent = true)
         {
+            Log($" pause requested");
             MediaPlayer.Pause();
             if (withEvent)
                 OnPaused.Invoke(MediaPlayer);
@@ -302,7 +303,10 @@ namespace UNIHper
         {
             Log($" seek to {time}");
             OnRequestSeek.Invoke(MediaPlayer, (float)time);
-            if (CurrentTime == time)
+            // 计算时间容差（约1帧的时间）
+            double frameTolerance = Duration > 0 && DurationFrames > 0 ? Duration / DurationFrames : 0.033; // 默认按30fps计算，约0.033秒
+
+            if (Math.Abs(CurrentTime - time) <= frameTolerance)
             {
                 Log($"seek skipped to {time}");
                 OnFinishedSeeking.Invoke(MediaPlayer);

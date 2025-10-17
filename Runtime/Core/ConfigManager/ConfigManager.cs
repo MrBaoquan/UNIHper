@@ -324,7 +324,12 @@ namespace UNIHper
 
         public bool Save<T>()
         {
-            if (!this.configs.TryGetValue(typeof(T).Name, out UConfig _config))
+            return Save(typeof(T).Name);
+        }
+
+        public bool Save(string _configKey)
+        {
+            if (!this.configs.TryGetValue(_configKey, out UConfig _config))
                 return false;
 
             ConfigDriver _driver = _config.Driver;
