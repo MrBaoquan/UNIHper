@@ -59,12 +59,14 @@ namespace UNIHper
             string shortcutName,
             string shortcutDir,
             string targetPath,
+            string workingDirectory,
             string description = "",
             string iconPath = ""
         )
         {
-            var appConfig = Managements.Config.Get<AppConfig>();
-            appConfig.CreateRelativeShortcut(shortcutName, shortcutDir, targetPath, description, iconPath);
+            Managements.Config
+                .Get<AppConfig>()
+                .CreateRelativeShortcut(shortcutName, shortcutDir, targetPath, workingDirectory, description, iconPath);
         }
 
         private Image triggerImage = null;
