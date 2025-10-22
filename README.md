@@ -1,210 +1,459 @@
-# UNIHper 框架
+# UNIHper 框架文档
 
-## [点击查看文档](https://parful.gitbook.io/unihper-docs)
+UNIHper是一个基于Unity的游戏开发框架，提供了完整的管理系统，包括UI管理、资源管理、音频管理、事件管理等核心功能。
 
-### 核心功能模块
+## 快速开始
 
-1. 资源管理
-2. 场景管理
-3. UI 管理
-4. 事件管理
-5. 网络模块
-6. 串口模块
-7. 配置系统
-8. 编辑器拓展
+通过`Managements`类可以统一访问所有管理器：
 
-### 核心插件集成
--   DOTween
--   UniRx
--   Rx.net
--   Google.Protobuf
--   gRPC
--   AVPro
--   Newtonsoft.Json
--   MessagePack
+```csharp
+using UNIHper;
 
-### 版本更新日志
+// 所有管理器都通过 Managements 统一访问
+Managements.UI.Show<MyUI>();
+Managements.Resource.Get<GameObject>("MyPrefab");
+Managements.Audio.PlayMusic("BGM");
+```
 
-v1.25.xxxx
-- 增加常见文件夹的快捷方式
-- Config.Save 优化
+## 资源管理 (ResourceManager)
 
-v1.25.1009
-- 优化AVProPlayer播放组件
+### 概述
 
-v1.25.0929
-- 资源加载优化，修复编辑器模式下加载外部图片偶发的异常
-- UI单脚本多实例功能优化
-- AnimatedUI相关功能优化
-- LongTimeNoOperation增加禁用自动重置功能
-- 增加TextureTransition过渡组件
-- 增加RangeIndexer索引器
-- 优化配置管理器/UI管理器
-- 优化AVPro播放器
-- 配置管理增加功能，修复断电导致乱码的bug
-- 增加拓展桌面分辨率检测能力，并提供接口
+ResourceManager 负责管理游戏中的所有资源，支持 Resources、AssetBundle 和 Addressables 三种资源加载方式。
 
-v1.25.811
-- 优化UIManager,ResourceManager部分接口
-- 优化LongTimeNoOperation组件
-- 公开UI状态接口
+### 基础用法
 
-v1.25.806
-- 二进制序列化改用messagepack包
-- SphereLayout优化
-- Indexer优化，增加MinStepForValue接口, OnPrev & OnNext接口, 修复LastSet的bug
-- AppConfig增加鼠标控制
-- 增加TextureTransition过渡组件, 拓展出FadeTo接口
-- UIManager 增加单个脚本多个实例功能
-- Resource GetMany接口增加对外部文件全路径的支持
-- 增加RangeIndexer索引器
+#### 获取资源
 
-v1.25.715
-- 修复Linker文件不存在时的错误
-- 动画拓展PlayThenNext功能
-- 修复MultipleAVProPlayer 博放视频时 startTime精度问题导致的bug
-- 增加动画隐藏播放时的等待任务逻辑
+```csharp
+// 获取单个资源
+var gameObject = Managements.Resource.Get<GameObject>("MyPrefab");
+var texture = Managements.Resource.Get<Texture2D>("MyTexture");
+var audioClip = Managements.Resource.Get<AudioClip>("MyAudio");
 
-v1.25.617
-- 拓展Texture相关接口
-- 增加配置自定义文件名及其他优化项
+// 获取多个资源（支持模糊匹配）
+var textures = Managements.Resource.GetMany<Texture2D>("UI/Icons");
+var prefabs = Managements.Resource.GetMany<GameObject>("Characters");
+```
 
-v1.25.0414
-- 增加link编辑器管理类
-- 更新DNHper
-  
-v1.25.0409
-- 更新GRPC模块依赖
-- 优化AVPro且视频闪屏
+#### 检查资源是否存在
 
-v1.25.0327
-- 增加页面隐藏时的动画重置逻辑
-- 增加优化动画相关接口
-  - PlayThenHide        播放指定动画，结束后自动隐藏
-  - Seek/SeekToFrame    将动画跳转到指定帧/时间
-  - Switch              切换指定动画
-- 增加屏幕截图快捷脚本
-- 视频&网络&动画优化 Texture实用拓展
-  
-v1.25.0121
-- 优化AVPro模块
-- 对模块配置程序集、UI、资源进行编辑器脚本拓展
-- 增加Texture等功能性拓展及部分UGUI Image相关shader
-- DOTweenText 拓展
-- Animation 增加Seek/SeekToFrame/Play/Pause/Stop/Rewind等实用拓展接口
-- 域重载优化，运行时按需重载程序集
+```csharp
+bool exists = Managements.Resource.Exists<GameObject>("MyPrefab");
+if (exists)
+{
+    var prefab = Managements.Resource.Get<GameObject>("MyPrefab");
+}
+```
 
-v1.24.1117
- - 资源查找优先全字符匹配
- - 资源加载优化、修复编辑器下外部图片加载时的异常问题
- - 优化追加外部资源时，相对路径的转化问题
- - 优化网络模块
- - 优化调试触点的层级问题，低于调试窗口
-  
-v1.24.1010
- - Indexer 增加LastSet变量
- - 更新Odin Inspector
- - 消除新工程警告
+#### 通过标签获取资源
 
-v1.24.926
- - Resource增加GetMany接口
- - SequenceFramePlayer增加多个控制项及事件
- - Indexer优化部分接口名称
- - 提炼UIMgr、ResMgr、CfgMgr、TimerMgr、EventMgr、AudioMgr、SceneMgr等静态接口
- - 优化初始化流程
- - 优化分辨率设置逻辑
- - 优化调试模式按钮的点击穿透逻辑
-  
-v1.24.912
- - 修复TapEffect小白点bug
- - GhostManager与UNIArt同步更新
-  
-v1.24.909
- - Managements.Audio 增加获取AudioPlayer、AudioSource相关接口
- - string.ToHexString 拓展增加自定义分隔符
- - F12 调整分辨率 (调试界面分辩率与实际分辨率自动调整)
- - 修复 中文名.exe WINAPI 设置窗口样式无效bug
- - this.Get(path)  支持直接根据对象名称查找物体
+```csharp
+// 获取指定标签的所有资源
+var uiTextures = Managements.Resource.GetLabelAssets<Texture2D>("UITextures");
+var characterModels = Managements.Resource.GetLabelAssets<GameObject>("Characters");
+```
 
-v1.24.817
- - 优化UIPage，增加Order属性
- - 优化日志文件格式，日志归档启动时执行
- - 优化设置项默认选项
- - 优化Addressable右键菜单子目录验证
+### 资源配置管理
 
-v1.24.815
- - 将所有插件包含的示例移至框架示例文件夹中
- - 增加UI Particle插件
- - 增加滑动视觉反馈PanEffect
- - 增加UI页面代码注册机制
- - 工作流可以默认不使用GameMain程序集
- - Timer管理类增加Countdown功能
-  
-v1.24.809
- - 更新Fingers & MPUIKIT
- - 优化工程初始化工作流
- - 修复MPUIKIT导致的初始工程报错
- - 兼容Unity2023.1版本
+#### 添加配置文件
 
-v1.24.802
- - Unity日志调整输出至Logs文件夹
- - 优化Workflow,增加 Clean Excluded Files 菜单
-  
-v1.24.728
-- 增加SVN仓库实用选项
+```csharp
+// 动态添加资源配置文件
+Managements.Resource.AddConfig("Config/NewResourceConfig");
+```
 
-v1.24.726
-- ConfigManager增加调试日志
-- AssemblyConfig移除无用引用导致的打包问题
-- SerialPort独立出来，仅对Windows平台生效
-- 增加使用shader
-- Enable Odin Editor Only Mode
-- 移除System.Reactive&Linq自动引用
-- 增加Clean Temporary Files菜单
-- 修复Network消息空字符导致的字符串校验失败的问题
+#### AssetBundle 管理
 
-v1.24.719
-- 增加UNIHper/Documention菜单
-- 修复debugTrigger在非Overlay模式下的bug
-- Config脚本 各平台保存位置策略调整
+```csharp
+// 加载并添加 AssetBundle
+var bundle = Managements.Resource.AppendAssetBundle("mybundle");
+```
 
-v1.24.717
-- 更新默认选项
-- 兼容性测试
+### 异步资源加载
 
-v1.24.716
-- 兼容Unity .NET Framework
-- 消除2023.1版本API警告
+ResourceManager 支持异步加载，返回 IObservable 对象：
 
-v1.24.712
-- 修复配置文件系统bug
-- 更新dotween
+#### 异步加载纹理
 
-v1.24.621
-- UI增加LifeCycleDisposables变量, 跟随UI显示/隐藏自动释放
-- 修复与Sentis包Google.ProtoBuf包冲突问题
+```csharp
+// 加载单个纹理
+Managements.Resource.AppendTexture2D("path/to/texture.png")
+    .Subscribe(texture => {
+        // 使用加载的纹理
+        myImage.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.one * 0.5f);
+    });
 
-v1.24.614
-- 资源可通过路径获取，系统内资源可重名
-- 调试逻辑拓展到windows平台
-- UInput_Slider组件优化
+// 批量加载纹理
+var texturePaths = new[] { "tex1.png", "tex2.png", "tex3.png" };
+Managements.Resource.AppendTexture2Ds(texturePaths)
+    .Subscribe(textures => {
+        // 使用加载的纹理列表
+        for (int i = 0; i < textures.Count; i++)
+        {
+            // 处理每个纹理
+        }
+    });
 
-v1.24.607
-- 移除AVPro Player极少可能用到的IOS TV平台依赖库
-- 移除 Modern UI Pack 组件
-- 调整Plugins层次结构
+// 从目录加载所有纹理
+Managements.Resource.LoadTexture2Ds("Assets/UI/Textures", "*.png|*.jpg")
+    .Subscribe(textures => {
+        // 使用加载的纹理列表
+    });
+```
 
-v1.24.601
-- 修复LongTimeNoOperation安卓平台bug
-- 拓展Linq至DNHper
-- 增加Managements.Framework框架实用接口
-- 增加屏幕右上角三连击事件，启用/禁用调试模式
+#### 异步加载音频
 
-v1.24.529
-- 工作流默认自动重载域
-- 优化项目名自动化逻辑
+```csharp
+// 加载单个音频文件
+Managements.Resource.AppendAudioClip("Audio/BGM.wav")
+    .Subscribe(audioClip => {
+        Managements.Audio.PlayMusic(audioClip);
+    });
 
-v1.24.525
-- 修复GhostManager.cs文件NonBuiltInComponents接口bug
-- 兼容Unity2023
-  
+// 批量加载音频
+var audioPaths = new[] { "sfx1.wav", "sfx2.mp3", "bgm.wav" };
+Managements.Resource.AppendAudioClips(audioPaths)
+    .Subscribe(audioClips => {
+        // 使用加载的音频列表
+    });
+
+// 从目录加载音频文件
+Managements.Resource.AppendAudioClips("Assets/Audio/SFX", "*.wav|*.mp3")
+    .Subscribe(audioClips => {
+        // 处理加载的音频
+    });
+```
+
+## UI管理 (UIManager)
+
+### 概述
+
+UIManager 是框架的核心UI管理组件，负责UI的创建、显示、隐藏、销毁和生命周期管理。
+
+### UI 基类
+
+所有 UI 组件都需要继承自 `UIBase` 类：
+
+```csharp
+using UNIHper.UI;
+
+[UIPage(
+    Asset = "MainMenuUI",           // UI资源名称
+    Type = UIType.Normal,           // UI类型
+    Order = 100,                    // 显示层级
+    Canvas = "CanvasDefault",       // 渲染画布
+    Scene = "Persistence"           // 所属场景
+)]
+public class MainMenuUI : UIBase
+{
+    protected override void OnCreate()
+    {
+        // UI创建时调用
+    }
+
+    protected override void OnShow()
+    {
+        // UI显示时调用
+    }
+
+    protected override void OnHide()
+    {
+        // UI隐藏时调用
+    }
+
+    protected override void OnDestroy()
+    {
+        // UI销毁时调用
+    }
+}
+```
+
+### UI 类型
+
+框架支持三种UI类型：
+
+- **UIType.Normal**: 普通UI，在场景中正常显示
+- **UIType.Popup**: 弹窗UI，支持堆叠显示
+- **UIType.Standalone**: 独立UI，不受其他UI影响
+
+### 基础操作
+
+#### 显示 UI
+
+```csharp
+// 显示指定类型的UI
+var mainMenu = Managements.UI.Show<MainMenuUI>();
+var settingsPanel = Managements.UI.Show<SettingsPanelUI>();
+
+// 显示UI（如果已显示则不重复显示）
+Managements.UI.Show<InventoryUI>();
+```
+
+#### 隐藏 UI
+
+```csharp
+// 隐藏指定UI
+Managements.UI.Hide<MainMenuUI>();
+
+// 隐藏所有UI
+Managements.UI.HideAll();
+```
+
+#### 获取 UI 实例
+
+```csharp
+// 获取UI实例（不显示）
+var inventoryUI = Managements.UI.Get<InventoryUI>();
+if (inventoryUI != null)
+{
+    // 操作UI实例
+}
+```
+
+#### 检查 UI 状态
+
+```csharp
+// 检查UI是否正在显示
+bool isShowing = Managements.UI.IsShowing<MainMenuUI>();
+if (isShowing)
+{
+    Debug.Log("主菜单正在显示");
+}
+```
+
+#### 切换 UI 显示状态
+
+```csharp
+// 切换UI显示/隐藏状态
+Managements.UI.Toggle<SettingsPanelUI>();
+```
+
+### 高级功能
+
+#### Canvas 渲染模式设置
+
+```csharp
+// 设置默认Canvas的渲染模式
+Managements.UI.SetRenderMode(RenderMode.ScreenSpaceOverlay);
+
+// 设置指定Canvas的渲染模式
+Managements.UI.SetRenderMode(RenderMode.WorldSpace, "GameCanvas");
+```
+
+#### UI 堆栈管理
+
+```csharp
+// 暂存当前活跃的所有UI
+Managements.UI.StashActiveUI();
+
+// 恢复之前暂存的UI
+Managements.UI.PopStashedUI();
+```
+
+### UI 生命周期示例
+
+```csharp
+public class GameHUDUI : UIBase
+{
+    private IDisposable healthUpdateSubscription;
+    
+    protected override void OnCreate()
+    {
+        base.OnCreate();
+        // 初始化UI组件
+        InitializeComponents();
+    }
+
+    protected override void OnShow()
+    {
+        base.OnShow();
+        // 订阅游戏事件
+        healthUpdateSubscription = Managements.Event.OnHealthChanged
+            .Subscribe(health => UpdateHealthBar(health));
+    }
+
+    protected override void OnHide()
+    {
+        base.OnHide();
+        // 取消订阅
+        healthUpdateSubscription?.Dispose();
+    }
+
+    private void UpdateHealthBar(float health)
+    {
+        // 更新血条显示
+    }
+}
+```
+
+## 其他管理器
+
+### 音频管理 (AudioManager)
+
+```csharp
+// 播放背景音乐
+Managements.Audio.PlayMusic("MainTheme", volume: 0.8f, loop: true);
+
+// 播放音效
+Managements.Audio.PlayEffect("ButtonClick");
+
+// 暂停/停止音乐
+Managements.Audio.PauseMusic();
+Managements.Audio.StopMusic();
+```
+
+### 场景管理 (SceneManager)
+
+```csharp
+// 异步加载场景
+Managements.Scene.LoadSceneAsync("GameScene", 
+    progress => Debug.Log($"加载进度: {progress * 100}%"),
+    () => Debug.Log("场景加载完成"));
+
+// 获取当前场景
+var currentScene = Managements.Scene.Current;
+
+// 监听场景加载事件
+Managements.Scene.OnNewSceneLoadedAsObservable()
+    .Subscribe(scene => Debug.Log($"新场景已加载: {scene.name}"));
+```
+
+### 事件管理 (EventManager)
+
+```csharp
+// 定义事件类
+public class PlayerDeathEvent : UEvent
+{
+    public int PlayerId { get; set; }
+    public Vector3 Position { get; set; }
+}
+
+// 注册事件监听
+Managements.Event.Register<PlayerDeathEvent>(OnPlayerDeath);
+
+// 触发事件
+Managements.Event.Fire(new PlayerDeathEvent 
+{ 
+    PlayerId = 1, 
+    Position = transform.position 
+});
+
+// 取消注册
+Managements.Event.Unregister<PlayerDeathEvent>(OnPlayerDeath);
+
+private void OnPlayerDeath(PlayerDeathEvent eventData)
+{
+    Debug.Log($"玩家 {eventData.PlayerId} 在位置 {eventData.Position} 死亡");
+}
+```
+
+### 定时器管理 (TimerManager)
+
+```csharp
+// 延迟执行
+Managements.Timer.Delay(2.0f, () => {
+    Debug.Log("2秒后执行");
+});
+
+// 异步延迟
+await Managements.Timer.Delay(1.5f);
+
+// 倒计时
+var countdown = Managements.Timer.Countdown(10.0f, 1.0f);
+countdown.OnTick += (remaining) => Debug.Log($"剩余时间: {remaining}");
+countdown.OnComplete += () => Debug.Log("倒计时结束");
+
+// 下一帧执行
+Managements.Timer.NextFrame(() => {
+    Debug.Log("下一帧执行");
+});
+```
+
+### 配置管理 (ConfigManager)
+
+```csharp
+// 获取配置
+var gameConfig = Managements.Config.Get<GameConfig>();
+
+// 保存配置
+Managements.Config.Save<UserSettings>();
+
+// 重新加载配置
+var reloadedConfig = Managements.Config.Reload<GameConfig>();
+
+// 保存所有配置
+Managements.Config.SaveAll();
+```
+
+## 最佳实践
+
+### 1. 统一使用 Managements 访问
+
+```csharp
+// 推荐：使用 Managements 统一访问
+Managements.UI.Show<MyUI>();
+Managements.Resource.Get<GameObject>("MyPrefab");
+
+// 不推荐：直接访问单例
+UIManager.Instance.Show<MyUI>();
+```
+
+### 2. 合理使用生命周期
+
+```csharp
+public class MyUI : UIBase
+{
+    private IDisposable subscription;
+
+    protected override void OnShow()
+    {
+        base.OnShow();
+        // 在显示时订阅事件
+        subscription = Managements.Event.OnSomeEvent
+            .Subscribe(HandleEvent);
+    }
+
+    protected override void OnHide()
+    {
+        base.OnHide();
+        // 在隐藏时取消订阅
+        subscription?.Dispose();
+    }
+}
+```
+
+### 3. 异步资源加载
+
+```csharp
+// 推荐：使用异步加载避免卡顿
+Managements.Resource.AppendTexture2D("LargeTexture.png")
+    .Subscribe(texture => {
+        // 加载完成后使用
+        ApplyTexture(texture);
+    });
+
+// 不推荐：同步加载大资源
+var texture = Managements.Resource.Get<Texture2D>("LargeTexture");
+```
+
+### 4. 错误处理
+
+```csharp
+// 安全的资源获取
+var prefab = Managements.Resource.Get<GameObject>("MyPrefab");
+if (prefab != null)
+{
+    var instance = Instantiate(prefab);
+}
+else
+{
+    Debug.LogWarning("预制体加载失败，使用默认预制体");
+    var defaultPrefab = Managements.Resource.Get<GameObject>("DefaultPrefab");
+    var instance = Instantiate(defaultPrefab);
+}
+```
+
+## 总结
+
+UNIHper 框架通过 `Managements` 类提供了统一、简洁的API接口，让开发者能够轻松管理游戏中的各种资源和组件。合理使用这些管理器可以大大提高开发效率，让代码更加清晰和易于维护。
