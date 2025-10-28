@@ -106,7 +106,7 @@ namespace UNIHper
         protected override void OnLoaded()
         {
             PrimaryScreen.RefreshParameters();
-#if !UNITY_EDITOR && UNITY_STANDALONE_WIN
+#if  UNITY_STANDALONE_WIN && !UNITY_EDITOR
             checkDisplayResolution();
             activeAllDisplays();
             executeWindowSettings();
@@ -114,7 +114,8 @@ namespace UNIHper
             createUtilShortcuts();
 
             if (ResetPrimaryScreenInterval > 0)
-                Observable.Interval(TimeSpan.FromSeconds(ResetPrimaryScreenInterval))
+                Observable
+                    .Interval(TimeSpan.FromSeconds(ResetPrimaryScreenInterval))
                     .Subscribe(_ => ResetPrimaryScreen())
                     .AddTo(UNIHperEntry.Instance);
 #endif
@@ -122,27 +123,41 @@ namespace UNIHper
 
         private void createUtilShortcuts()
         {
-            string projectPath = PathUtils.GetProjectPath();
-            string streamingAssetsPath = Application.streamingAssetsPath;
-            string exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
+            try
+            {
+                string projectPath = PathUtils.GetProjectPath();
+                string streamingAssetsPath = Application.streamingAssetsPath;
+                string exePath = PathUtils.GetExecutablePath();
 
-            // 创建 Configs 快捷方式（项目根目录 → StreamingAssets/Configs）
-            CreateRelativeShortcut(
-                shortcutName: "Configs",
-                shortcutDir: projectPath,
-                targetPath: PathUtils.GetStreamingAssetsPath("Configs"),
-                description: "StreamingAssets/Configs 目录快速访问"
-            );
+                // 创建 Configs 快捷方式（项目根目录 → StreamingAssets/Configs）
+                CreateRelativeShortcut(
+                    shortcutName: "Configs",
+                    shortcutDir: projectPath,
+                    targetPath: PathUtils.GetStreamingAssetsPath("Configs"),
+                    description: "StreamingAssets/Configs 目录快速访问"
+                );
 
-            // 创建 Exe 快捷方式（StreamingAssets → Exe）
-            CreateRelativeShortcut(
-                shortcutName: Application.productName,
-                shortcutDir: streamingAssetsPath,
-                targetPath: exePath,
-                workingDirectory: Path.GetDirectoryName(exePath),
-                description: $"启动 {Application.productName}",
-                iconPath: exePath
-            );
+                // 创建 Exe 快捷方式（StreamingAssets → Exe）
+                if (!string.IsNullOrEmpty(exePath) && File.Exists(exePath))
+                {
+                    CreateRelativeShortcut(
+                        shortcutName: Application.productName,
+                        shortcutDir: streamingAssetsPath,
+                        targetPath: exePath,
+                        workingDirectory: Path.GetDirectoryName(exePath),
+                        description: $"启动 {Application.productName}",
+                        iconPath: exePath
+                    );
+                }
+                else
+                {
+                    Debug.LogWarning($"未找到可执行文件: {exePath}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"创建快捷方式失败: {ex.Message}");
+            }
         }
 
         /// <summary>

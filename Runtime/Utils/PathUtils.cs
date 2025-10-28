@@ -68,9 +68,10 @@ namespace UNIHper
 #else
             // 运行时：返回可执行文件所在目录
 #if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX
-            // 获取可执行文件路径
-            string exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
-            projectPath = Path.GetDirectoryName(exePath);
+            // 使用 Application.dataPath 推导可执行文件所在目录
+            // Unity Standalone 构建后，dataPath 指向 *_Data 文件夹
+            // 其父目录就是可执行文件所在目录
+            projectPath = Directory.GetParent(Application.dataPath).FullName;
 #elif UNITY_ANDROID
             // Android 使用 persistentDataPath
             projectPath = Application.persistentDataPath;
@@ -93,35 +94,14 @@ namespace UNIHper
 
         /// <summary>
         /// 获取项目Data目录路径（运行时的Data文件夹）
-        /// 仅在Standalone构建后有效
+        /// 编辑器下：Assets目录
+        /// 运行时：*_Data 文件夹
         /// </summary>
         /// <param name="relativePath">相对路径（可选）</param>
         /// <returns>Data目录的绝对路径</returns>
         public static string GetDataPath(string relativePath = "")
         {
-            string dataPath;
-
-#if UNITY_EDITOR
-            // 编辑器模式：返回Assets目录
-            dataPath = Application.dataPath;
-#else
-#if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX
-            // Standalone平台：exe所在目录下的 *_Data 文件夹
-            string exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
-            string exeDir = Path.GetDirectoryName(exePath);
-            string exeName = Path.GetFileNameWithoutExtension(exePath);
-
-#if UNITY_STANDALONE_OSX
-            // macOS: MyApp.app/Contents
-            dataPath = Path.Combine(exeDir, "Data");
-#else
-                    // Windows/Linux: MyApp_Data
-                    dataPath = Path.Combine(exeDir, exeName + "_Data");
-#endif
-#else
-            dataPath = Application.dataPath;
-#endif
-#endif
+            string dataPath = Application.dataPath;
 
             if (!string.IsNullOrEmpty(relativePath))
             {
@@ -129,6 +109,52 @@ namespace UNIHper
             }
 
             return dataPath.ToForwardSlash();
+        }
+
+        /// <summary>
+        /// 获取可执行文件路径
+        /// 编辑器下：返回空字符串
+        /// 运行时：返回 .exe 文件的完整路径
+        /// </summary>
+        /// <returns>可执行文件的绝对路径</returns>
+        public static string GetExecutablePath()
+        {
+#if UNITY_EDITOR
+            // 编辑器模式：返回空字符串
+            return string.Empty;
+#else
+#if UNITY_STANDALONE_WIN
+            // Windows Standalone: 通过 dataPath 推导
+            // 例如: MyGame_Data -> MyGame.exe
+            string dataPath = Application.dataPath;
+            string exeDir = Directory.GetParent(dataPath).FullName;
+            string exeName = new DirectoryInfo(dataPath).Name.Replace("_Data", "");
+            return Path.Combine(exeDir, exeName + ".exe").ToForwardSlash();
+#elif UNITY_STANDALONE_OSX
+            // macOS: 从 .app 包中获取
+            string dataPath = Application.dataPath;
+            // dataPath 通常是: MyApp.app/Contents/Data
+            // 可执行文件在: MyApp.app/Contents/MacOS/MyApp
+            string contentsDir = Directory.GetParent(dataPath).FullName;
+            string appDir = Directory.GetParent(contentsDir).FullName;
+            string appName = new DirectoryInfo(appDir).Name.Replace(".app", "");
+            return Path.Combine(contentsDir, "MacOS", appName).ToForwardSlash();
+#elif UNITY_STANDALONE_LINUX
+            // Linux: 类似 Windows
+            string dataPath = Application.dataPath;
+            string exeDir = Directory.GetParent(dataPath).FullName;
+            string exeName = new DirectoryInfo(dataPath).Name.Replace("_Data", "");
+            // Linux 可执行文件通常是 .x86_64 或无扩展名
+            string exePath = Path.Combine(exeDir, exeName + ".x86_64");
+            if (!File.Exists(exePath))
+            {
+                exePath = Path.Combine(exeDir, exeName); // 无扩展名
+            }
+            return exePath.ToForwardSlash();
+#else
+            return string.Empty;
+#endif
+#endif
         }
 
         /// <summary>
