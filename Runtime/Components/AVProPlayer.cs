@@ -36,7 +36,7 @@ namespace UNIHper
 
             MediaHints _hints = MediaPlayer.FallbackMediaHints;
             _hints.transparency = TransparencyMode.Transparent;
-            _hints.alphaPacking = AlphaPacking.TopBottom;
+            _hints.alphaPacking = alphaPacking;
             MediaPlayer.FallbackMediaHints = _hints;
             return this;
         }
@@ -86,13 +86,39 @@ namespace UNIHper
 
         public Dictionary<string, Texture> cachedDefaultTexes = new();
 
+        // 共享的透明贴图（静态，避免重复创建）
+        private static Texture2D _sharedTransparentTexture;
+        private static Texture2D SharedTransparentTexture
+        {
+            get
+            {
+                if (_sharedTransparentTexture == null)
+                {
+                    // 使用 2x2 尺寸避免 AABB 计算错误
+                    _sharedTransparentTexture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+
+                    // 创建透明色数组并一次性填充
+                    var pixels = new Color32[4];
+                    for (int i = 0; i < pixels.Length; i++)
+                        pixels[i] = new Color32(0, 0, 0, 0);
+
+                    _sharedTransparentTexture.SetPixels32(pixels);
+                    _sharedTransparentTexture.Apply();
+                    _sharedTransparentTexture.name = "SharedTransparentTexture";
+                }
+                return _sharedTransparentTexture;
+            }
+        }
+
         public Texture GetCachedDefaultTexture(string videoPath)
         {
             if (cachedDefaultTexes.TryGetValue(videoPath, out var cachedTex))
             {
                 return cachedTex;
             }
-            return null;
+
+            // 返回共享的透明贴图
+            return SharedTransparentTexture;
         }
 
         public void TryCacheDefaultTexture(string videoPath, double startTime = 0)
