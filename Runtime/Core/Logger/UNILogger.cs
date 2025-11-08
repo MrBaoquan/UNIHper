@@ -74,6 +74,7 @@ namespace UNIHper
                     NLogger.Error(stackTrace);
                     break;
                 case LogType.Warning:
+                    NLogger.Warn(message);
                     break;
             }
         }
