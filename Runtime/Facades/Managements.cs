@@ -7,6 +7,7 @@ using System;
 using System.Threading.Tasks;
 using System.IO;
 using UnityEngine.SceneManagement;
+using UniRx;
 
 namespace UNIHper
 {
@@ -21,6 +22,7 @@ namespace UNIHper
         public static AudioManager Audio => AudioManager.Instance;
         public static readonly EventManager Event = EventManager.Instance;
         public static readonly TimerManager Timer = TimerManager.Instance;
+        public static readonly DisposableManager Disposable = DisposableManager.Instance;
 
         public static T SceneScript<T>()
             where T : SceneScriptBase => SceneScriptManager.Instance.GetSceneScript<T>();
@@ -228,16 +230,138 @@ namespace UNIHper
     {
         public static TimerManager Instance => TimerManager.Instance;
 
+        #region Delay - 延时操作
+
+        /// <summary>
+        /// 创建延时 Observable（Rx 风格）
+        /// </summary>
+        public static IObservable<long> Delay(float delayInSeconds) => Instance.Delay(delayInSeconds);
+
+        /// <summary>
+        /// 延时执行回调
+        /// </summary>
         public static IDisposable Delay(float delayInSeconds, Action callback) => Instance.Delay(delayInSeconds, callback);
 
-        public static Task Delay(float delayInSeconds) => Instance.Delay(delayInSeconds);
+        /// <summary>
+        /// 延时执行回调，可通过 key 取消（替换模式）
+        /// </summary>
+        public static IDisposable Delay(float delayInSeconds, Action callback, string key) => Instance.Delay(delayInSeconds, callback, key);
 
-        public static Countdown Countdown(float durationInSecons, float tickInterval = 1) =>
-            Instance.Countdown(durationInSecons, tickInterval);
+        /// <summary>
+        /// 延时（异步等待）
+        /// </summary>
+        public static Task DelayAsync(float delayInSeconds) => Instance.DelayAsync(delayInSeconds);
 
-        public static Task NextFrame() => Instance.NextFrame();
+        #endregion
 
+        #region Interval - 间隔重复操作
+
+        /// <summary>
+        /// 创建间隔重复 Observable（Rx 风格）
+        /// </summary>
+        public static IObservable<long> Interval(float intervalInSeconds) => Instance.Interval(intervalInSeconds);
+
+        /// <summary>
+        /// 间隔重复执行回调
+        /// </summary>
+        public static IDisposable Interval(float intervalInSeconds, Action callback) => Instance.Interval(intervalInSeconds, callback);
+
+        /// <summary>
+        /// 间隔重复执行回调（带计数）
+        /// </summary>
+        public static IDisposable Interval(float intervalInSeconds, Action<long> callback) =>
+            Instance.Interval(intervalInSeconds, callback);
+
+        /// <summary>
+        /// 间隔重复执行回调，可通过 key 取消
+        /// </summary>
+        public static IDisposable Interval(float intervalInSeconds, Action callback, string key) =>
+            Instance.Interval(intervalInSeconds, callback, key);
+
+        #endregion
+
+        #region Timeout - 超时操作
+
+        /// <summary>
+        /// 创建超时 Observable，持续触发进度更新
+        /// </summary>
+        public static IObservable<float> Timeout(float durationInSeconds, float updateInterval = 0.05f) =>
+            Instance.Timeout(durationInSeconds, updateInterval);
+
+        /// <summary>
+        /// 超时执行，带进度更新和完成回调
+        /// </summary>
+        public static IDisposable Timeout(
+            float durationInSeconds,
+            Action<float> onUpdate,
+            Action onCompleted,
+            float updateInterval = 0.05f
+        ) => Instance.Timeout(durationInSeconds, onUpdate, onCompleted, updateInterval);
+
+        #endregion
+
+        #region Cancel - 取消操作
+
+        /// <summary>
+        /// 取消指定 key 的定时操作
+        /// </summary>
+        public static void Cancel(string key) => Instance.Cancel(key);
+
+        /// <summary>
+        /// 检查指定 key 的定时是否正在进行
+        /// </summary>
+        public static bool IsPending(string key) => Instance.IsPending(key);
+
+        #endregion
+
+        #region Countdown - 倒计时
+
+        /// <summary>
+        /// 创建倒计时 Observable
+        /// </summary>
+        public static IObservable<float> CountdownObservable(float durationInSeconds, float tickInterval = 1f) =>
+            Instance.CountdownObservable(durationInSeconds, tickInterval);
+
+        /// <summary>
+        /// 创建 Countdown 对象
+        /// </summary>
+        public static Countdown Countdown(float durationInSeconds, float tickInterval = 1) =>
+            Instance.Countdown(durationInSeconds, tickInterval);
+
+        #endregion
+
+        #region NextFrame - 下一帧操作
+
+        /// <summary>
+        /// 创建下一帧 Observable
+        /// </summary>
+        public static IObservable<Unit> NextFrameObservable() => Instance.NextFrameObservable();
+
+        /// <summary>
+        /// 下一帧执行回调
+        /// </summary>
         public static IDisposable NextFrame(Action callback) => Instance.NextFrame(callback);
+
+        /// <summary>
+        /// 下一帧（异步等待）
+        /// </summary>
+        public static Task NextFrameAsync() => Instance.NextFrameAsync();
+
+        #endregion
+
+        #region Throttle & Debounce - 节流与防抖
+
+        /// <summary>
+        /// 创建节流函数
+        /// </summary>
+        public static Action Throttle(float intervalInSeconds, Action callback) => Instance.Throttle(intervalInSeconds, callback);
+
+        /// <summary>
+        /// 创建防抖函数
+        /// </summary>
+        public static Action Debounce(float delayInSeconds, Action callback) => Instance.Debounce(delayInSeconds, callback);
+
+        #endregion
     }
 
     public static class EventMgr

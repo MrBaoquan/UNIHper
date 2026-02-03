@@ -14,6 +14,7 @@ public class Countdown
     }
 
     private IDisposable _timerSubscription;
+    private CompositeDisposable _eventSubscriptions = new CompositeDisposable();
     private float duration;
     private float remainingTime;
     private float interval;
@@ -34,12 +35,12 @@ public class Countdown
     public string SecondText => TimeSpan.FromSeconds(remainingTime).ToString(@"ss");
 
     // 私有事件，不对外暴露
-    private UnityEvent _onStart = new UnityEvent();
-    private UnityEvent _onPause = new UnityEvent();
-    private UnityEvent _onResume = new UnityEvent();
-    private UnityEvent _onStop = new UnityEvent();
-    private UnityEvent _onComplete = new UnityEvent();
-    private UnityEvent<float> _onTick = new UnityEvent<float>();
+    private readonly Subject<Unit> _onStart = new Subject<Unit>();
+    private readonly Subject<Unit> _onPause = new Subject<Unit>();
+    private readonly Subject<Unit> _onResume = new Subject<Unit>();
+    private readonly Subject<Unit> _onStop = new Subject<Unit>();
+    private readonly Subject<Unit> _onComplete = new Subject<Unit>();
+    private readonly Subject<float> _onTick = new Subject<float>();
 
     // 只提供 Observable 接口供外部订阅
     public IObservable<Unit> OnStartAsObservable() => _onStart.AsObservable();
@@ -65,46 +66,46 @@ public class Countdown
         interval = intervalInSeconds;
     }
 
-    // 简洁的链式调用方法
+    // 简洁的链式调用方法 - 订阅会被自动管理
     public Countdown OnStart(Action onStart)
     {
-        _onStart.AsObservable().Subscribe(_ => onStart());
+        _onStart.Subscribe(_ => onStart()).AddTo(_eventSubscriptions);
         return this;
     }
 
     public Countdown OnUpdate(Action<float> onTick)
     {
-        _onTick.AsObservable().Subscribe(onTick);
+        _onTick.Subscribe(onTick).AddTo(_eventSubscriptions);
         return this;
     }
 
     public Countdown OnComplete(Action onComplete)
     {
-        _onComplete.AsObservable().Subscribe(_ => onComplete());
+        _onComplete.Subscribe(_ => onComplete()).AddTo(_eventSubscriptions);
         return this;
     }
 
     public Countdown OnPause(Action onPause)
     {
-        _onPause.AsObservable().Subscribe(_ => onPause());
+        _onPause.Subscribe(_ => onPause()).AddTo(_eventSubscriptions);
         return this;
     }
 
     public Countdown OnResume(Action onResume)
     {
-        _onResume.AsObservable().Subscribe(_ => onResume());
+        _onResume.Subscribe(_ => onResume()).AddTo(_eventSubscriptions);
         return this;
     }
 
     public Countdown OnStop(Action onStop)
     {
-        _onStop.AsObservable().Subscribe(_ => onStop());
+        _onStop.Subscribe(_ => onStop()).AddTo(_eventSubscriptions);
         return this;
     }
 
     public Task GetAwaiter()
     {
-        return _onComplete.AsObservable().First().ToTask();
+        return _onComplete.First().ToTask();
     }
 
     // 构造函数
@@ -128,25 +129,31 @@ public class Countdown
         // 如果已有订阅，先停止它，避免重复订阅
         StopTimerSubscription();
 
+        var wasRunning = State == CountdownState.Running;
         State = CountdownState.Running;
-        _onStart?.Invoke(); // 触发开始事件
 
-        _onTick?.Invoke(remainingTime); // 每次更新时调用回调
+        // 只有首次启动才触发 onStart（Resume不触发）
+        if (!wasRunning)
+        {
+            _onStart.OnNext(Unit.Default);
+        }
+
+        _onTick.OnNext(remainingTime); // 每次更新时调用回调
         _timerSubscription = Observable
             .Interval(TimeSpan.FromSeconds(interval))
             .TakeWhile(_ => remainingTime > 0)
             .Subscribe(
                 _ =>
                 {
-                    remainingTime -= interval;
-                    _onTick?.Invoke(remainingTime); // 每次更新时调用回调
+                    remainingTime = Mathf.Max(0, remainingTime - interval);
+                    _onTick.OnNext(remainingTime);
                 },
                 () =>
                 {
                     State = CountdownState.Stopped;
                     remainingTime = 0;
-                    _onTick?.Invoke(remainingTime); // 最后一次更新
-                    _onComplete?.Invoke(); // 触发完成回调
+                    _onTick.OnNext(remainingTime);
+                    _onComplete.OnNext(Unit.Default);
                 }
             );
         return this;
@@ -160,7 +167,7 @@ public class Countdown
 
         State = CountdownState.Paused;
         StopTimerSubscription();
-        _onPause?.Invoke(); // 触发暂停事件
+        _onPause.OnNext(Unit.Default);
     }
 
     // 继续计时
@@ -169,13 +176,36 @@ public class Countdown
         if (State != CountdownState.Paused)
             return;
 
-        _onResume?.Invoke(); // 触发恢复事件
-        Start();
+        State = CountdownState.Running; // 先设置状态，避免Start()触发onStart
+        _onResume.OnNext(Unit.Default);
+
+        // 直接启动计时器，不触发onStart
+        StopTimerSubscription();
+        _onTick.OnNext(remainingTime);
+        _timerSubscription = Observable
+            .Interval(TimeSpan.FromSeconds(interval))
+            .TakeWhile(_ => remainingTime > 0)
+            .Subscribe(
+                _ =>
+                {
+                    remainingTime = Mathf.Max(0, remainingTime - interval);
+                    _onTick.OnNext(remainingTime);
+                },
+                () =>
+                {
+                    State = CountdownState.Stopped;
+                    remainingTime = 0;
+                    _onTick.OnNext(remainingTime);
+                    _onComplete.OnNext(Unit.Default);
+                }
+            );
     }
 
     // 重新开始计时
     public void Restart(float durationInSeconds)
     {
+        Stop(); // 先完全停止
+        duration = durationInSeconds;
         remainingTime = durationInSeconds;
         Start();
     }
@@ -185,17 +215,23 @@ public class Countdown
         Restart(duration);
     }
 
-    // 停止计时并清理订阅
+    public void Reset()
+    {
+        remainingTime = duration;
+        State = CountdownState.Stopped;
+        StopTimerSubscription();
+        _onTick.OnNext(remainingTime);
+    }
+
+    // 停止计时（保留剩余时间）
     public void Stop()
     {
         if (State == CountdownState.Stopped)
             return;
 
         State = CountdownState.Stopped;
-        remainingTime = 0;
         StopTimerSubscription();
-        _onTick?.Invoke(remainingTime); // 计时器停止时更新
-        _onStop?.Invoke(); // 触发停止事件
+        _onStop.OnNext(Unit.Default);
     }
 
     // 停止计时器订阅
@@ -206,5 +242,18 @@ public class Countdown
             _timerSubscription.Dispose();
             _timerSubscription = null;
         }
+    }
+
+    // 清理所有订阅（在不再使用时调用）
+    public void Dispose()
+    {
+        StopTimerSubscription();
+        _eventSubscriptions.Dispose();
+        _onStart.Dispose();
+        _onPause.Dispose();
+        _onResume.Dispose();
+        _onStop.Dispose();
+        _onComplete.Dispose();
+        _onTick.Dispose();
     }
 }
