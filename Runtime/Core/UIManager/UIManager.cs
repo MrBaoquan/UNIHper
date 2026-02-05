@@ -735,7 +735,7 @@ namespace UNIHper.UI
             var _codeRegisterUIs = loadCodeRegisterUI();
             mergeUIConfig(customUIConfigData, _codeRegisterUIs);
 
-            var _persistUIAsset = Resources.Load<TextAsset>("#Configs/Persistence/ui");
+            var _persistUIAsset = Resources.Load<TextAsset>("Configs/Persistence/ui");
             builtInConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, UIConfig>>(_persistUIAsset.text);
             builtInConfigData = fillUIKeys(builtInConfigData);
 
@@ -866,7 +866,7 @@ namespace UNIHper.UI
 #endif
                 if (_canvas == null)
                 {
-                    var _uiLayoutGO = GameObject.Instantiate(ResourceManager.Instance.Get<GameObject>("#UI Prefabs/CanvasDefault"));
+                    var _uiLayoutGO = GameObject.Instantiate(ResourceManager.Instance.Get<GameObject>("UI Prefabs/CanvasDefault"));
                     _uiLayoutGO.name = canvasKey;
                     _canvas = _uiLayoutGO.GetComponent<Canvas>();
                 }

@@ -1,5 +1,5 @@
 {
-    "name": "AVProLiveCamera",
+    "name": "AVProLiveCamera.Runtime",
     "rootNamespace": "RenderHeads.Media.AVProLiveCamera",
     "references": [],
     "includePlatforms": [],

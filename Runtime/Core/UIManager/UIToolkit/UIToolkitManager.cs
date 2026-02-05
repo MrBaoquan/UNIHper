@@ -412,31 +412,33 @@ namespace UNIHper.UI
                 return _defaultPanelSettings;
             }
 
-            // 尝试从资源加载
-            _defaultPanelSettings = ResourceManager.Instance.Get<PanelSettings>("DefaultPanelSettings");
-
-            if (_defaultPanelSettings == null)
+            // 1. 优先从 UIToolkitConfig（UNIHperSettings）获取
+            _defaultPanelSettings = UIToolkitConfig.GetDefaultPanelSettings();
+            if (_defaultPanelSettings != null)
             {
-                Debug.LogWarning("[UIToolkitManager] 未找到 DefaultPanelSettings 资源，UI Toolkit 可能无法正确显示。请在 Resources 目录创建 PanelSettings 资源。");
-
-                // 运行时创建（功能受限）
-                _defaultPanelSettings = ScriptableObject.CreateInstance<PanelSettings>();
-                _defaultPanelSettings.scaleMode = PanelScaleMode.ScaleWithScreenSize;
-                _defaultPanelSettings.referenceResolution = new Vector2Int(1920, 1080);
-                _defaultPanelSettings.match = 0.5f; // Width/Height 平衡
-
-                // 尝试加载默认 Theme（Unity 内置）
-                var defaultTheme = Resources.Load<ThemeStyleSheet>("UIPackageResources/UnityThemes/UnityDefaultRuntimeTheme");
-                if (defaultTheme != null)
+                if (UNIHperSettings.ShowDebugLog)
                 {
-                    _defaultPanelSettings.themeStyleSheet = defaultTheme;
-                    Debug.Log("[UIToolkitManager] 已加载 Unity 默认主题");
+                    Debug.Log("[UIToolkitManager] 使用 UNIHperSettings 中的默认 PanelSettings");
                 }
-                else
-                {
-                    Debug.LogError("[UIToolkitManager] 无法加载默认主题，UI 可能显示异常");
-                }
+                return _defaultPanelSettings;
             }
+
+            // 2. 尝试从 ResourceManager 加载
+            _defaultPanelSettings = ResourceManager.Instance.Get<PanelSettings>("DefaultPanelSettings");
+            if (_defaultPanelSettings != null)
+            {
+                return _defaultPanelSettings;
+            }
+
+            Debug.LogWarning("[UIToolkitManager] 未找到默认 PanelSettings，请运行 UNIHper/Initialize 初始化框架资源。");
+
+            // 3. 运行时创建（功能受限）
+            _defaultPanelSettings = ScriptableObject.CreateInstance<PanelSettings>();
+            _defaultPanelSettings.scaleMode = PanelScaleMode.ScaleWithScreenSize;
+            _defaultPanelSettings.referenceResolution = new Vector2Int(1920, 1080);
+            _defaultPanelSettings.screenMatchMode = PanelScreenMatchMode.MatchWidthOrHeight;
+            _defaultPanelSettings.match = 0.5f;
+            _defaultPanelSettings.sortingOrder = 1000;
 
             return _defaultPanelSettings;
         }

@@ -7,8 +7,8 @@ namespace UNIHper.Editor
 {
     public class AVProEditor
     {
-        const string avproPrefabPath = "Packages/com.parful.unihper/Assets/#UI Prefabs/Components/AVPro Player.prefab";
-        const string multipleAVProPrefabPath = "Packages/com.parful.unihper/Assets/#UI Prefabs/Components/Multiple AVPro Player.prefab";
+        const string avproPrefabPath = "Packages/com.parful.unihper/Assets/UI Prefabs/Components/AVPro Player.prefab";
+        const string multipleAVProPrefabPath = "Packages/com.parful.unihper/Assets/UI Prefabs/Components/Multiple AVPro Player.prefab";
 
         [MenuItem("GameObject/UI/AVPro Player", false, 20)]
         static void InstallAVPro()

@@ -10,55 +10,120 @@ namespace UNIHper.UI
 {
     /// <summary>
     /// UI Toolkit 全局配置
+    /// 优先从 UNIHperSettings 读取配置，也支持运行时动态设置
     /// </summary>
     public static class UIToolkitConfig
     {
+        // 运行时覆盖配置（优先级高于 UNIHperSettings）
+        private static Font _runtimeFont;
+        private static StyleSheet _runtimeStyleSheet;
+        private static PanelSettings _runtimePanelSettings;
+        private static bool? _runtimeAutoApplyFont;
+
         /// <summary>
-        /// 默认字体资源名称（留空表示不设置默认字体）
+        /// 默认字体（优先使用运行时设置，否则从 UNIHperSettings 读取）
         /// </summary>
-        public static string DefaultFontName { get; set; } = string.Empty;
+        public static Font DefaultFont
+        {
+            get => _runtimeFont ?? UNIHperSettings.UIToolkitDefaultFont;
+            set => _runtimeFont = value;
+        }
+
+        /// <summary>
+        /// 默认样式表（优先使用运行时设置，否则从 UNIHperSettings 读取）
+        /// </summary>
+        public static StyleSheet DefaultStyleSheet
+        {
+            get => _runtimeStyleSheet ?? UNIHperSettings.UIToolkitDefaultStyleSheet;
+            set => _runtimeStyleSheet = value;
+        }
+
+        /// <summary>
+        /// 默认 PanelSettings（优先使用运行时设置，否则从 UNIHperSettings 读取）
+        /// </summary>
+        public static PanelSettings DefaultPanelSettings
+        {
+            get => _runtimePanelSettings ?? UNIHperSettings.UIToolkitPanelSettings;
+            set => _runtimePanelSettings = value;
+        }
 
         /// <summary>
         /// 是否自动应用默认字体到所有文本元素
         /// </summary>
-        public static bool AutoApplyDefaultFont { get; set; } = true;
-
-        private static Font _cachedDefaultFont;
-        private static bool _fontLoaded = false;
+        public static bool AutoApplyDefaultFont
+        {
+            get => _runtimeAutoApplyFont ?? UNIHperSettings.UIToolkitAutoApplyFont;
+            set => _runtimeAutoApplyFont = value;
+        }
 
         /// <summary>
-        /// 获取默认字体（带缓存）
+        /// [已废弃] 使用 DefaultFont 属性代替
+        /// </summary>
+        [Obsolete("使用 DefaultFont 属性代替")]
+        public static string DefaultFontName { get; set; } = string.Empty;
+
+        // 自动加载的备用字体缓存
+        private static Font _fallbackFont;
+
+        /// <summary>
+        /// 获取默认字体（带自动备用加载）
         /// </summary>
         public static Font GetDefaultFont()
         {
-            if (_fontLoaded)
-                return _cachedDefaultFont;
+            var font = DefaultFont;
 
-            if (string.IsNullOrEmpty(DefaultFontName))
+            // 如果 UNIHperSettings 中没有配置，尝试从 Resources 加载
+            if (font == null)
             {
-                _fontLoaded = true;
-                return null;
+                if (_fallbackFont == null)
+                {
+                    // 尝试多个可能的字体路径
+                    _fallbackFont = Managements.Resource.Get<Font>("Fonts/AlibabaPuHuiTi-2-55-Regular");
+                }
+                font = _fallbackFont;
             }
 
-            _cachedDefaultFont = Managements.Resource.Get<Font>(DefaultFontName);
-            _fontLoaded = true;
-
-            if (_cachedDefaultFont == null)
+            if (font == null)
             {
-                Debug.LogWarning($"[UIToolkitConfig] 无法加载默认字体: {DefaultFontName}");
+                Debug.LogWarning("[UIToolkitConfig] 未找到默认字体，中文可能无法显示。请将字体放入 Resources/Fonts/ 目录或在 UNIHperSettings 中配置");
             }
 
-            return _cachedDefaultFont;
+            return font;
         }
 
         /// <summary>
-        /// 清除字体缓存（场景切换时调用）
+        /// 获取默认样式表
         /// </summary>
-        public static void ClearFontCache()
+        public static StyleSheet GetDefaultStyleSheet()
         {
-            _cachedDefaultFont = null;
-            _fontLoaded = false;
+            return DefaultStyleSheet;
         }
+
+        /// <summary>
+        /// 获取默认 PanelSettings
+        /// </summary>
+        public static PanelSettings GetDefaultPanelSettings()
+        {
+            return DefaultPanelSettings;
+        }
+
+        /// <summary>
+        /// 清除运行时缓存（场景切换时调用）
+        /// </summary>
+        public static void ClearRuntimeCache()
+        {
+            _runtimeFont = null;
+            _runtimeStyleSheet = null;
+            _runtimePanelSettings = null;
+            _runtimeAutoApplyFont = null;
+            _fallbackFont = null;
+        }
+
+        /// <summary>
+        /// [已废弃] 使用 ClearRuntimeCache 代替
+        /// </summary>
+        [Obsolete("使用 ClearRuntimeCache 代替")]
+        public static void ClearFontCache() => ClearRuntimeCache();
     }
 
     /// <summary>
@@ -210,22 +275,61 @@ namespace UNIHper.UI
 
         #endregion
 
-        #region Font Methods
+        #region Font & Style Methods
 
         private bool _fontApplied = false;
+        private bool _styleSheetApplied = false;
+
+        /// <summary>
+        /// 应用默认样式表（包含字体设置）
+        /// </summary>
+        protected virtual void ApplyDefaultStyleSheet()
+        {
+            if (_styleSheetApplied || Root == null)
+                return;
+
+            var styleSheet = UIToolkitConfig.GetDefaultStyleSheet();
+            if (styleSheet != null)
+            {
+                Root.styleSheets.Add(styleSheet);
+                _styleSheetApplied = true;
+                if (UNIHperSettings.ShowDebugLog)
+                {
+                    Debug.Log($"[UIToolkitBase] {GetType().Name}: 应用默认样式表");
+                }
+            }
+        }
 
         /// <summary>
         /// 应用默认字体到所有文本元素
         /// </summary>
         protected virtual void ApplyDefaultFont()
         {
-            if (_fontApplied || !UIToolkitConfig.AutoApplyDefaultFont)
+            if (_fontApplied)
+            {
                 return;
+            }
+
+            if (!UIToolkitConfig.AutoApplyDefaultFont)
+            {
+                Debug.Log($"[UIToolkitBase] {GetType().Name}: AutoApplyDefaultFont 已禁用");
+                return;
+            }
 
             var font = UIToolkitConfig.GetDefaultFont();
             if (font == null)
-                return;
+            {
+                // 尝试从 Resources 加载字体作为备选
+                font = Resources.Load<Font>("Fonts/AlibabaPuHuiTi-2-55-Regular");
+                if (font == null)
+                {
+                    Debug.LogWarning($"[UIToolkitBase] {GetType().Name}: 未找到默认字体，请在 UNIHperSettings 中配置或将字体放入 Resources/Fonts/ 目录");
+                    return;
+                }
+                Debug.Log($"[UIToolkitBase] {GetType().Name}: 从 Resources 加载备用字体");
+            }
 
+            Debug.Log($"[UIToolkitBase] {GetType().Name}: 应用默认字体 {font.name}");
             ApplyFontToElement(Root, font);
             _fontApplied = true;
         }
@@ -238,20 +342,12 @@ namespace UNIHper.UI
             if (element == null || font == null)
                 return;
 
-            var styleFont = new StyleFont(font);
+            // UI Toolkit 推荐使用 FontDefinition 来设置字体
+            var fontDefinition = FontDefinition.FromFont(font);
 
-            // 为包含文本的元素设置字体
-            if (
-                element is TextElement
-                || element is Label
-                || element is Button
-                || element is TextField
-                || element is DropdownField
-                || element is Toggle
-            )
-            {
-                element.style.unityFont = styleFont;
-            }
+            // 同时设置 unityFont 和 unityFontDefinition 以确保兼容性
+            element.style.unityFont = new StyleFont(font);
+            element.style.unityFontDefinition = new StyleFontDefinition(fontDefinition);
 
             // 递归处理子元素
             foreach (var child in element.Children())
@@ -408,13 +504,35 @@ namespace UNIHper.UI
         internal void HandleShow()
         {
             if (Root == null)
+            {
+                Debug.LogWarning($"[UIToolkitBase] {GetType().Name}: Root is null in HandleShow");
                 return;
+            }
 
-            // 自动应用默认字体
+            // 应用默认样式表（包含字体设置）
+            ApplyDefaultStyleSheet();
+
+            // 应用默认字体（作为备选方案）
             ApplyDefaultFont();
 
             // 确保可见
             Root.style.display = DisplayStyle.Flex;
+
+            // 延迟再次应用字体，确保所有动态元素都已构建
+            Root.schedule
+                .Execute(() =>
+                {
+                    if (_fontApplied)
+                    {
+                        // 重新应用一次，确保所有元素都被覆盖
+                        var font = UIToolkitConfig.GetDefaultFont() ?? Resources.Load<Font>("Fonts/AlibabaPuHuiTi-2-55-Regular");
+                        if (font != null)
+                        {
+                            ApplyFontToElement(Root, font);
+                        }
+                    }
+                })
+                .ExecuteLater(50); // 延迟 50ms 确保 UI 完全构建
 
             handleShowEvents();
         }

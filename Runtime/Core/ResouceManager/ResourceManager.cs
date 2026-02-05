@@ -543,7 +543,7 @@ namespace UNIHper
                 .ToDictionary(_ => _.Key, _ => _.Value);
 
             // 框架层资源加载配置项
-            var _persistAsset = Resources.Load<TextAsset>("#Configs/Persistence/res");
+            var _persistAsset = Resources.Load<TextAsset>("Configs/Persistence/res");
 
             var _persistConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ResourceItem>>(_persistAsset.text);
             persistConfigData = _persistConfigData.Where(_ => _.driver == RESOURCES_DRIVER).ToList();

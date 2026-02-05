@@ -7,6 +7,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UIElements;
 using TMPro;
 using TMPro.EditorUtilities;
 using UnityEditor.PackageManager;
@@ -149,7 +150,7 @@ namespace UNIHper.Editor
                 }
                 if (!File.Exists(UNIPaths.ProjectPath(_projectStartupPrefabPath)))
                 {
-                    string _UNIHperPrefabPath = UNIPaths.PackagePath("Assets/#UI Prefabs/UNIHper.prefab");
+                    string _UNIHperPrefabPath = UNIPaths.PackagePath("Assets/UI Prefabs/UNIHper.prefab");
                     var _tempUNIHper = GameObject.Instantiate<GameObject>(
                         AssetDatabase.LoadAssetAtPath(_UNIHperPrefabPath, typeof(GameObject)) as GameObject
                     );
@@ -174,7 +175,7 @@ namespace UNIHper.Editor
                 Directory.CreateDirectory(_projectConfigDir);
             }
 
-            var _packageConfigDir = UNIPaths.PackagePath("Assets/#Configs");
+            var _packageConfigDir = UNIPaths.PackagePath("Assets/Configs");
             string _dstResPath = Path.Combine(_projectConfigDir, "resources.json");
             if (!File.Exists(_dstResPath))
             {
@@ -208,9 +209,26 @@ namespace UNIHper.Editor
                 {
                     var _configAsset = ScriptableObject.CreateInstance<UNIHperSettings>();
                     _configAsset.defaultClickSound = AssetDatabase.LoadAssetAtPath<AudioClip>(
-                        UNIPaths.PackagePath("Assets/#Audios/click_effect_00.wav")
+                        UNIPaths.PackagePath("Assets/Audios/click_effect_00.wav")
                     );
+
+                    // 设置 UI Toolkit 默认资源
+                    SetupUIToolkitDefaultAssets(_configAsset);
+
                     AssetDatabase.CreateAsset(_configAsset, _configPath);
+                }
+            }
+            else
+            {
+                // 已存在配置文件，检查并更新 UI Toolkit 默认资源
+                var existingConfig = AssetDatabase.LoadAssetAtPath<UNIHperSettings>(_configPath);
+                if (existingConfig != null)
+                {
+                    bool needSave = SetupUIToolkitDefaultAssets(existingConfig);
+                    if (needSave)
+                    {
+                        EditorUtility.SetDirty(existingConfig);
+                    }
                 }
             }
 
@@ -260,6 +278,82 @@ namespace UNIHper.Editor
             //TMP Menu import way: TMP_PackageUtilities.ImportProjectResourcesMenu();
 
             AssetDatabase.ImportPackage(packageFullPath + "/Package Resources/TMP Essential Resources.unitypackage", false);
+        }
+
+        /// <summary>
+        /// 设置 UI Toolkit 默认资源
+        /// </summary>
+        /// <param name="config">UNIHperSettings 配置</param>
+        /// <returns>是否有更改</returns>
+        private static bool SetupUIToolkitDefaultAssets(UNIHperSettings config)
+        {
+            bool hasChanges = false;
+
+            // 1. 设置默认字体
+            if (config.uiToolkitDefaultFont == null)
+            {
+                var defaultFont = AssetDatabase.LoadAssetAtPath<Font>(UNIPaths.PackagePath("Assets/Fonts/AlibabaPuHuiTi-2-55-Regular.ttf"));
+                if (defaultFont != null)
+                {
+                    config.uiToolkitDefaultFont = defaultFont;
+                    hasChanges = true;
+                    Debug.Log("[UNIHper] 已设置 UI Toolkit 默认字体: AlibabaPuHuiTi-2-55-Regular");
+                }
+            }
+
+            // 2. 设置默认样式表
+            if (config.uiToolkitDefaultStyleSheet == null)
+            {
+                var defaultStyleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(
+                    UNIPaths.PackagePath("Assets/UIToolkit/DefaultUIToolkit.uss")
+                );
+                if (defaultStyleSheet != null)
+                {
+                    config.uiToolkitDefaultStyleSheet = defaultStyleSheet;
+                    hasChanges = true;
+                    Debug.Log("[UNIHper] 已设置 UI Toolkit 默认样式表: DefaultUIToolkit.uss");
+                }
+            }
+
+            // 3. 复制或创建 PanelSettings 到项目目录
+            string projectPanelSettingsPath = "Assets/Resources/UNIHper/UIToolkit/DefaultPanelSettings.asset";
+            EnsureDirectoryExists(Path.GetDirectoryName(UNIPaths.ProjectPath(projectPanelSettingsPath)));
+
+            if (config.uiToolkitPanelSettings == null)
+            {
+                // 检查项目中是否已存在
+                var existingPanelSettings = AssetDatabase.LoadAssetAtPath<PanelSettings>(projectPanelSettingsPath);
+                if (existingPanelSettings != null)
+                {
+                    config.uiToolkitPanelSettings = existingPanelSettings;
+                    hasChanges = true;
+                }
+                else
+                {
+                    // 创建新的 PanelSettings
+                    var newPanelSettings = ScriptableObject.CreateInstance<PanelSettings>();
+                    newPanelSettings.scaleMode = PanelScaleMode.ScaleWithScreenSize;
+                    newPanelSettings.referenceResolution = new Vector2Int(1920, 1080);
+                    newPanelSettings.screenMatchMode = PanelScreenMatchMode.MatchWidthOrHeight;
+                    newPanelSettings.match = 0.5f;
+                    newPanelSettings.sortingOrder = 1000; // 确保在 UGUI 之上
+
+                    AssetDatabase.CreateAsset(newPanelSettings, projectPanelSettingsPath);
+                    config.uiToolkitPanelSettings = newPanelSettings;
+                    hasChanges = true;
+                    Debug.Log("[UNIHper] 已创建 UI Toolkit 默认 PanelSettings");
+                }
+            }
+
+            return hasChanges;
+        }
+
+        private static void EnsureDirectoryExists(string path)
+        {
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
         }
     }
 }
