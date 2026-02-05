@@ -52,7 +52,7 @@ namespace UNIHper.UI
         }
     }
 
-    public abstract partial class UIBase : MonoBehaviour
+    public abstract partial class UIBase : MonoBehaviour, IUIComponent
     {
         internal string __CanvasKey = string.Empty;
         internal string __UIKey = string.Empty;
@@ -130,16 +130,7 @@ namespace UNIHper.UI
             return onHiddenEvent.AsObservable();
         }
 
-        public enum UIState
-        {
-            None,
-            Loading,
-            Loaded,
-            Showing,
-            Shown,
-            Hiding,
-            Hidden
-        }
+        // UIState 已移至 IUIComponent.cs 中统一定义
 
         private UIState _state = UIState.None;
         public bool isShowing => _state == UIState.Showing || _state == UIState.Shown;

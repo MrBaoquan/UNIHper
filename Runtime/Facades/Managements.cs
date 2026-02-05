@@ -14,7 +14,22 @@ namespace UNIHper
     public static class Managements
     {
         public static readonly ConfigManager Config = ConfigManager.Instance;
-        public static readonly UIManager UI = UIManager.Instance;
+
+        /// <summary>
+        /// 统一 UI 管理器 - 自动检测并路由 UGUI 和 UI Toolkit
+        /// </summary>
+        public static readonly UnifiedUIFacade UI = UnifiedUIFacade.Instance;
+
+        /// <summary>
+        /// UGUI 管理器（直接访问）
+        /// </summary>
+        public static UIManager UGUI => UIManager.Instance;
+
+        /// <summary>
+        /// UI Toolkit 管理器（直接访问）
+        /// </summary>
+        public static UIToolkitManager UIToolkit => UIToolkitManager.Instance;
+
         public static readonly ResourceManager Resource = ResourceManager.Instance;
         public static readonly SceneManager Scene = SceneManager.Instance;
         public static readonly UNetManager Network = UNetManager.Instance;
@@ -44,64 +59,64 @@ namespace UNIHper
 
     public static class UIMgr
     {
+        /// <summary>
+        /// UGUI 管理器实例（直接访问）
+        /// </summary>
         public static UIManager Instance => UIManager.Instance;
 
         /// <summary>
-        /// Get the UI of the specified type.
+        /// 统一 UI 门面（自动检测 UGUI / UI Toolkit）
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static T Get<T>()
-            where T : UIBase => Instance.Get<T>();
+        public static UnifiedUIFacade Unified => UnifiedUIFacade.Instance;
 
         /// <summary>
-        /// Show the UI of the specified type. If it is already showing, do nothing.
+        /// 获取 UI 实例 - 自动检测类型
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="InCallback"></param>
-        /// <returns></returns>
-        public static T Show<T>()
-            where T : UIBase => Instance.Show<T>();
+        public static T Get<T>(int instanceID = 0)
+            where T : class, IUIComponent => Unified.Get<T>(instanceID);
 
         /// <summary>
-        /// Hide the UI of the specified type. If it is not showing, do nothing.
+        /// 显示 UI - 自动检测类型
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static T Hide<T>()
-            where T : UIBase => Instance.Hide<T>();
+        public static T Show<T>(bool bForceNotify = false)
+            where T : class, IUIComponent => Unified.Show<T>(bForceNotify);
 
         /// <summary>
-        /// Check if the UI of the specified type is showing.
+        /// 隐藏 UI - 自动检测类型
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static bool IsShowing<T>()
-            where T : UIBase => Instance.IsShowing<T>();
+        public static T Hide<T>(bool bForceNotify = false)
+            where T : class, IUIComponent => Unified.Hide<T>(bForceNotify);
 
         /// <summary>
-        /// Toggle the UI of the specified type. If it is showing, hide it. If it is hidden, show it.
+        /// 检查 UI 是否正在显示 - 自动检测类型
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
+        public static bool IsShowing<T>(int instanceID = 0)
+            where T : class, IUIComponent => Unified.IsShowing<T>(instanceID);
+
+        /// <summary>
+        /// 切换 UI 显示/隐藏 - 自动检测类型
+        /// </summary>
         public static T Toggle<T>()
-            where T : UIBase => Instance.Toggle<T>();
+            where T : class, IUIComponent => Unified.Toggle<T>();
 
         /// <summary>
-        /// Hide all UI.
+        /// 隐藏所有 UI（UGUI 和 UI Toolkit）
         /// </summary>
-        public static void HideAll() => Instance.HideAll();
+        public static void HideAll() => Unified.HideAll();
 
+        /// <summary>
+        /// 设置渲染模式（仅 UGUI）
+        /// </summary>
         public static void SetRenderMode(RenderMode renderMode, string canvasKey = UIManager.CANVAS_DEFAULT) =>
             Instance.SetRenderMode(renderMode, canvasKey);
 
         /// <summary>
-        /// Stash all active UI.
+        /// 暂存当前活动的 UI
         /// </summary>
         public static void StashActiveUI() => Instance.StashActiveUI();
 
         /// <summary>
-        /// Pop all stashed UI.
+        /// 恢复暂存的 UI
         /// </summary>
         public static void UnstashActiveUI() => Instance.PopStashedUI();
     }

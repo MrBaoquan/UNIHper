@@ -82,6 +82,9 @@ namespace UNIHper
             await ResourceManager.Instance.Initialize();
             await UIManager.Instance.Initialize();
 
+            // 初始化 UI Toolkit 管理器
+            UIToolkitManager.Instance.Initialize();
+
             this.Initialize();
             Framework.Instance.Initialize();
 

@@ -108,15 +108,26 @@ namespace UNIHper.Editor
             );
         }
 
-        [MenuItem("Assets/Create/📦 UNIHper Framework/ConfigScript", priority = 53)]
-        [MenuItem("UNIHper/Create/ConfigScript", priority = 62)]
+        [MenuItem("Assets/Create/📦 UNIHper Framework/UIToolkitScript", priority = 53)]
+        [MenuItem("UNIHper/Create/UIToolkitScript", priority = 62)]
+        private static void CreateUIToolkitScript()
+        {
+            CreateCodeFileFromTemplate(
+                "NewUIToolkit.cs",
+                $@"Packages/{bundleName}/Editor/Templates/UIToolkitScriptTemplate.txt",
+                ScriptableObject.CreateInstance<DoCreateUICodeFile>()
+            );
+        }
+
+        [MenuItem("Assets/Create/📦 UNIHper Framework/ConfigScript", priority = 54)]
+        [MenuItem("UNIHper/Create/ConfigScript", priority = 63)]
         private static void CreateConfigScript()
         {
             CreateCodeFileFromTemplate("NewConfig.cs", $@"Packages\{bundleName}\Editor\Templates\ConfigScriptTemplate.txt");
         }
 
-        [MenuItem("Assets/Create/📦 UNIHper Framework/Game Assembly Definition", priority = 54)]
-        [MenuItem("UNIHper/Create/Game Assembly Definition", priority = 63)]
+        [MenuItem("Assets/Create/📦 UNIHper Framework/Game Assembly Definition", priority = 55)]
+        [MenuItem("UNIHper/Create/Game Assembly Definition", priority = 64)]
         private static void CreateGameAssemblyDefinition()
         {
             CreateGameAssemblyDefinitionFromTemplate(

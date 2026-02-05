@@ -86,7 +86,7 @@ namespace UNIHper
             Assemblies.Clear();
             allTypesMap.Clear();
             CachedTypes.Clear();
-            var _internalAssemblies = getAssemblies("__Configs/assemblies");
+            var _internalAssemblies = getAssemblies("#Configs/assemblies");
             var _customAssemblies = getAssemblies(UNIHperSettings.AssemblyConfigPath);
 
             _internalAssemblies

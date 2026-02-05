@@ -58,82 +58,72 @@ namespace UNIHper.UI
         internal const string PERSISTENCE_SCENE = "Persistence";
         private Dictionary<string, UIRootLayout> m_uiRootLayoutDic = new Dictionary<string, UIRootLayout>();
 
-        // ===== 全局UI事件 =====
-        // UI开始显示事件 (Showing)
-        private readonly Subject<UIBase> onUIShowingSubject = new Subject<UIBase>();
-
-        // UI完全显示事件 (Shown)
-        private readonly Subject<UIBase> onUIShownSubject = new Subject<UIBase>();
-
-        // UI开始隐藏事件 (Hiding)
-        private readonly Subject<UIBase> onUIHidingSubject = new Subject<UIBase>();
-
-        // UI完全隐藏事件 (Hidden)
-        private readonly Subject<UIBase> onUIHiddenSubject = new Subject<UIBase>();
+        // ===== 全局UI事件 - 使用 UIEventBus =====
+        private readonly UIEventBus<UIBase> _eventBus = new UIEventBus<UIBase>();
 
         /// <summary>
         /// 全局UI开始显示事件 (Showing)
         /// </summary>
-        public IObservable<UIBase> OnUIShowingAsObservable() => onUIShowingSubject.AsObservable();
+        public IObservable<UIBase> OnUIShowingAsObservable() => _eventBus.OnUIShowingAsObservable();
 
         /// <summary>
         /// 全局UI完全显示事件 (Shown)
         /// </summary>
-        public IObservable<UIBase> OnUIShownAsObservable() => onUIShownSubject.AsObservable();
+        public IObservable<UIBase> OnUIShownAsObservable() => _eventBus.OnUIShownAsObservable();
 
         /// <summary>
         /// 全局UI开始隐藏事件 (Hiding)
         /// </summary>
-        public IObservable<UIBase> OnUIHidingAsObservable() => onUIHidingSubject.AsObservable();
+        public IObservable<UIBase> OnUIHidingAsObservable() => _eventBus.OnUIHidingAsObservable();
 
         /// <summary>
         /// 全局UI完全隐藏事件 (Hidden)
         /// </summary>
-        public IObservable<UIBase> OnUIHiddenAsObservable() => onUIHiddenSubject.AsObservable();
+        public IObservable<UIBase> OnUIHiddenAsObservable() => _eventBus.OnUIHiddenAsObservable();
 
         /// <summary>
         /// 监听指定类型UI的显示事件
         /// </summary>
         public IObservable<T> OnUIShowingAsObservable<T>()
-            where T : UIBase => onUIShowingSubject.Where(ui => ui is T).Select(ui => ui as T);
+            where T : UIBase => _eventBus.OnUIShowingAsObservable<T>();
 
         /// <summary>
         /// 监听指定类型UI的显示完成事件
         /// </summary>
         public IObservable<T> OnUIShownAsObservable<T>()
-            where T : UIBase => onUIShownSubject.Where(ui => ui is T).Select(ui => ui as T);
+            where T : UIBase => _eventBus.OnUIShownAsObservable<T>();
 
         /// <summary>
         /// 监听指定类型UI的隐藏事件
         /// </summary>
         public IObservable<T> OnUIHidingAsObservable<T>()
-            where T : UIBase => onUIHidingSubject.Where(ui => ui is T).Select(ui => ui as T);
+            where T : UIBase => _eventBus.OnUIHidingAsObservable<T>();
 
         /// <summary>
         /// 监听指定类型UI的隐藏完成事件
         /// </summary>
         public IObservable<T> OnUIHiddenAsObservable<T>()
-            where T : UIBase => onUIHiddenSubject.Where(ui => ui is T).Select(ui => ui as T);
+            where T : UIBase => _eventBus.OnUIHiddenAsObservable<T>();
 
         /// <summary>
         /// 内部方法：触发UI Showing事件
         /// </summary>
-        internal void NotifyUIShowing(UIBase ui) => onUIShowingSubject.OnNext(ui);
+        internal void NotifyUIShowing(UIBase ui) => _eventBus.NotifyShowing(ui);
 
         /// <summary>
         /// 内部方法：触发UI Shown事件
         /// </summary>
-        internal void NotifyUIShown(UIBase ui) => onUIShownSubject.OnNext(ui);
+        internal void NotifyUIShown(UIBase ui) => _eventBus.NotifyShown(ui);
 
         /// <summary>
         /// 内部方法：触发UI Hiding事件
         /// </summary>
-        internal void NotifyUIHiding(UIBase ui) => onUIHidingSubject.OnNext(ui);
+        internal void NotifyUIHiding(UIBase ui) => _eventBus.NotifyHiding(ui);
 
         /// <summary>
         /// 内部方法：触发UI Hidden事件
         /// </summary>
-        internal void NotifyUIHidden(UIBase ui) => onUIHiddenSubject.OnNext(ui);
+        internal void NotifyUIHidden(UIBase ui) => _eventBus.NotifyHidden(ui);
 
         // 自定义的UI配置
         private Dictionary<string, Dictionary<string, UIConfig>> customUIConfigData = null;
@@ -745,7 +735,7 @@ namespace UNIHper.UI
             var _codeRegisterUIs = loadCodeRegisterUI();
             mergeUIConfig(customUIConfigData, _codeRegisterUIs);
 
-            var _persistUIAsset = Resources.Load<TextAsset>("__Configs/Persistence/ui");
+            var _persistUIAsset = Resources.Load<TextAsset>("#Configs/Persistence/ui");
             builtInConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, UIConfig>>(_persistUIAsset.text);
             builtInConfigData = fillUIKeys(builtInConfigData);
 
@@ -876,7 +866,7 @@ namespace UNIHper.UI
 #endif
                 if (_canvas == null)
                 {
-                    var _uiLayoutGO = GameObject.Instantiate(Resources.Load<GameObject>("__Prefabs/CanvasDefault"));
+                    var _uiLayoutGO = GameObject.Instantiate(ResourceManager.Instance.Get<GameObject>("#UI Prefabs/CanvasDefault"));
                     _uiLayoutGO.name = canvasKey;
                     _canvas = _uiLayoutGO.GetComponent<Canvas>();
                 }

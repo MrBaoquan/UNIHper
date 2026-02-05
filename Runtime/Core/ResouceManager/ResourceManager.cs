@@ -543,13 +543,27 @@ namespace UNIHper
                 .ToDictionary(_ => _.Key, _ => _.Value);
 
             // 框架层资源加载配置项
-            var _persistAsset = Resources.Load<TextAsset>("__Configs/Persistence/res");
+            var _persistAsset = Resources.Load<TextAsset>("#Configs/Persistence/res");
 
             var _persistConfigData = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ResourceItem>>(_persistAsset.text);
             persistConfigData = _persistConfigData.Where(_ => _.driver == RESOURCES_DRIVER).ToList();
 
-            // 框架层AB包
-            var _persistABList = _persistConfigData.Except(persistConfigData).ToList();
+            // 框架层AB包（只筛选 AssetBundle 驱动的资源）
+            var _persistABList = _persistConfigData.Where(_ => _.driver == ASSET_BUDDLE_DRIVER).ToList();
+
+            // 框架层Addressable资源
+            var _persistAddressableList = _persistConfigData.Where(_ => _.driver == ADDRESSABLE_DRIVER).ToList();
+            if (_persistAddressableList.Count > 0)
+            {
+                if (!addressableConfigData.ContainsKey("Persistence"))
+                {
+                    addressableConfigData.Add("Persistence", _persistAddressableList);
+                }
+                else
+                {
+                    addressableConfigData["Persistence"] = addressableConfigData["Persistence"].Concat(_persistAddressableList).ToList();
+                }
+            }
 
             // 初始化所有AB包
             assetBundlesConfigData.Add("Persistence", _persistABList);
@@ -638,6 +652,22 @@ namespace UNIHper
                 try
                 {
                     var _T = Type.GetType("UnityEngine." + _resItem.type + ",UnityEngine");
+                    if (_T == null)
+                    {
+                        // 尝试从 UnityEngine.UIElements 程序集加载
+                        _T = Type.GetType("UnityEngine.UIElements." + _resItem.type + ",UnityEngine.UIElementsModule");
+                    }
+                    if (_T == null)
+                    {
+                        // 尝试从 TMPro 程序集加载
+                        _T = Type.GetType("TMPro." + _resItem.type + ",Unity.TextMeshPro");
+                    }
+
+                    if (_T == null)
+                    {
+                        UNIHperLogger.LogWarning($"[ResourceManager] 无法解析类型: {_resItem.type}，跳过加载 label [{_resItem.label}]");
+                        continue;
+                    }
 
                     var _assets = await (
                         GetType()
@@ -645,12 +675,34 @@ namespace UNIHper
                             .MakeGenericMethod(new Type[] { _T })
                             .Invoke(this, new object[] { _resItem.label }) as IObservable<IEnumerable<AssetItem>>
                     );
-                    appendResources(_assets, InResID);
-                    UNIHperLogger.Log($"load with label [{_resItem.label}] completed");
+
+                    if (_assets != null && _assets.Any())
+                    {
+                        appendResources(_assets, InResID);
+                        UNIHperLogger.Log($"load with label [{_resItem.label}] completed, count: {_assets.Count()}");
+                    }
+                    else
+                    {
+                        UNIHperLogger.Log($"no assets found with label [{_resItem.label}] for type [{_resItem.type}]");
+                    }
+                }
+                catch (InvalidOperationException)
+                {
+                    // 没有找到匹配的资源，静默处理
+                    UNIHperLogger.Log($"no addressable assets found with label [{_resItem.label}] for type [{_resItem.type}]");
+                    continue;
                 }
                 catch (Exception _ex)
                 {
-                    Debug.LogWarning($"try load addressable assets with label [{_resItem.label}] failed, {_ex.Message}");
+                    // 只在真正的错误时输出警告
+                    if (!_ex.Message.Contains("Value cannot be null") && !_ex.Message.Contains("Sequence contains no elements"))
+                    {
+                        Debug.LogWarning($"load addressable assets with label [{_resItem.label}] failed: {_ex.Message}");
+                    }
+                    else
+                    {
+                        UNIHperLogger.Log($"no addressable assets found with label [{_resItem.label}] for type [{_resItem.type}]");
+                    }
                     continue;
                 }
             }

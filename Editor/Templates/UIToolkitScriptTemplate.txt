@@ -1,0 +1,56 @@
+using UnityEngine;
+using UnityEngine.UIElements;
+using UniRx;
+using UNIHper;
+using UNIHper.UI;
+
+[UIToolkitPage(Asset = "##CLASSNAME##", Type = UIType.Normal)]
+public class ##CLASSNAME## : UIToolkitBase
+{
+    // Called when this ui is loaded (only once)
+    protected override void OnLoaded()
+    {
+
+    }
+
+    // Called when this ui starts showing
+    protected override void OnShowing()
+    {
+        // 查询并绑定 UI 元素
+        // var btn = Q<Button>("MyButton");
+        // btn.clicked += OnButtonClicked;
+        
+        // 或使用便捷方法
+        // BindButton("MyButton", OnButtonClicked);
+        // BindTextField("InputField", OnTextChanged);
+        // BindToggle("Checkbox", OnToggleChanged);
+        // BindSlider("Slider", OnSliderChanged);
+    }
+
+    // Called when this ui is fully shown
+    protected override void OnShown()
+    {
+
+    }
+
+    // Called when this ui starts hiding
+    protected override void OnHiding()
+    {
+        // 清理事件绑定
+    }
+
+    // Called when this ui is fully hidden
+    protected override void OnHidden()
+    {
+
+    }
+
+    #region UI Event Handlers
+
+    // private void OnButtonClicked() { }
+    // private void OnTextChanged(string value) { }
+    // private void OnToggleChanged(bool value) { }
+    // private void OnSliderChanged(float value) { }
+
+    #endregion
+}

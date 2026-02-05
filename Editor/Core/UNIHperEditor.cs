@@ -24,6 +24,12 @@ namespace UNIHper.Editor
         {
             EditorSceneManager.newSceneCreated += NewSceneCreatedCallback;
             EditorSceneManager.sceneSaved += SceneSaved;
+
+            var _assets = "Packages/com.parful.unihper/Assets";
+            if (!AddressableUtil.IsEntryExist(_assets))
+            {
+                AddressableUtil.AddToLabel("com.parful.unihper", _assets);
+            }
         }
 
         [MenuItem("UNIHper/Help/View Documentation", priority = 900)]
@@ -39,11 +45,7 @@ namespace UNIHper.Editor
             Window.Open("com.parful.unihper");
         }
 
-        private static void NewSceneCreatedCallback(
-            Scene scene,
-            NewSceneSetup setup,
-            NewSceneMode mode
-        ) { }
+        private static void NewSceneCreatedCallback(Scene scene, NewSceneSetup setup, NewSceneMode mode) { }
 
         [MenuItem("UNIHper/Settings", priority = 1000)]
         static void FindResource()
@@ -83,10 +85,7 @@ namespace UNIHper.Editor
                 _startupScenePath = $"Assets/Scenes/{sceneEntryName}.unity";
 
                 Debug.Log($"New scene {sceneEntryName} created");
-                var _sceneEntry = EditorSceneManager.NewScene(
-                    NewSceneSetup.DefaultGameObjects,
-                    NewSceneMode.Single
-                );
+                var _sceneEntry = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
                 if (!Directory.Exists(UNIPaths.ProjectAssetPath("Scenes")))
                 {
                     Directory.CreateDirectory(UNIPaths.ProjectAssetPath("Scenes"));
@@ -105,16 +104,11 @@ namespace UNIHper.Editor
             }
 
             var _sceneBuildSettings = EditorBuildSettings.scenes.ToList();
-            _sceneBuildSettings.RemoveAll(
-                _ => AssetDatabase.LoadAssetAtPath<SceneAsset>(_.path) == null
-            );
+            _sceneBuildSettings.RemoveAll(_ => AssetDatabase.LoadAssetAtPath<SceneAsset>(_.path) == null);
 
             if (!_sceneBuildSettings.Exists(_ => _.path == _startupScenePath))
             {
-                _sceneBuildSettings.Insert(
-                    0,
-                    new EditorBuildSettingsScene(_startupScenePath, true)
-                );
+                _sceneBuildSettings.Insert(0, new EditorBuildSettingsScene(_startupScenePath, true));
             }
             EditorBuildSettings.scenes = _sceneBuildSettings.ToArray();
 
@@ -123,18 +117,13 @@ namespace UNIHper.Editor
 #if UNITY_2023_1_OR_NEWER
             Component[] _objs =
                 FindObjectsByType(
-                    Type.GetType(
-                        "UNIHper.UNIHperEntry, UNIHper, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"
-                    ),
+                    Type.GetType("UNIHper.UNIHperEntry, UNIHper, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"),
                     FindObjectsSortMode.None
                 ) as Component[];
 #else
             Component[] _objs =
-                FindObjectsOfType(
-                    Type.GetType(
-                        "UNIHper.UNIHperEntry, UNIHper, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"
-                    )
-                ) as Component[];
+                FindObjectsOfType(Type.GetType("UNIHper.UNIHperEntry, UNIHper, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"))
+                as Component[];
 #endif
             if (_objs.Length > 1)
             {
@@ -160,24 +149,17 @@ namespace UNIHper.Editor
                 }
                 if (!File.Exists(UNIPaths.ProjectPath(_projectStartupPrefabPath)))
                 {
-                    string _UNIHperPrefabPath = UNIPaths.PackagePath(
-                        "Assets/Resources/__Prefabs/UNIHper.prefab"
-                    );
+                    string _UNIHperPrefabPath = UNIPaths.PackagePath("Assets/#UI Prefabs/UNIHper.prefab");
                     var _tempUNIHper = GameObject.Instantiate<GameObject>(
-                        AssetDatabase.LoadAssetAtPath(_UNIHperPrefabPath, typeof(GameObject))
-                            as GameObject
+                        AssetDatabase.LoadAssetAtPath(_UNIHperPrefabPath, typeof(GameObject)) as GameObject
                     );
 
                     PrefabUtility.SaveAsPrefabAsset(_tempUNIHper, _projectStartupPrefabPath);
                     DestroyImmediate(_tempUNIHper);
                 }
 
-                UnityEngine.Object _UNIHperPrefab = AssetDatabase.LoadAssetAtPath(
-                    _projectStartupPrefabPath,
-                    typeof(GameObject)
-                );
-                GameObject _newUNIHper =
-                    PrefabUtility.InstantiatePrefab(_UNIHperPrefab) as GameObject;
+                UnityEngine.Object _UNIHperPrefab = AssetDatabase.LoadAssetAtPath(_projectStartupPrefabPath, typeof(GameObject));
+                GameObject _newUNIHper = PrefabUtility.InstantiatePrefab(_UNIHperPrefab) as GameObject;
                 _newUNIHper.name = "__UNIHper";
                 var _activeScene = EditorSceneManager.GetActiveScene();
                 EditorSceneManager.MarkSceneDirty(_activeScene);
@@ -192,7 +174,7 @@ namespace UNIHper.Editor
                 Directory.CreateDirectory(_projectConfigDir);
             }
 
-            var _packageConfigDir = UNIPaths.PackagePath("Assets/Resources/__Configs");
+            var _packageConfigDir = UNIPaths.PackagePath("Assets/#Configs");
             string _dstResPath = Path.Combine(_projectConfigDir, "resources.json");
             if (!File.Exists(_dstResPath))
             {
@@ -214,25 +196,19 @@ namespace UNIHper.Editor
             string _dstAssembliesConfigPath = Path.Combine(_projectConfigDir, "assemblies.json");
             if (!File.Exists(_dstAssembliesConfigPath))
             {
-                File.Copy(
-                    Path.Combine(UNIPaths.PackagePath("Editor/Templates/AssembliesTemplate.txt")),
-                    _dstAssembliesConfigPath
-                );
+                File.Copy(Path.Combine(UNIPaths.PackagePath("Editor/Templates/AssembliesTemplate.txt")), _dstAssembliesConfigPath);
             }
 
             string _configPath = "Assets/Resources/UNIHperSettings.asset";
             if (!File.Exists(UNIPaths.ProjectPath(_configPath)))
             {
-                var _configInstance = AssetDatabase.LoadAssetAtPath(
-                    _configPath,
-                    typeof(UNIHperSettings)
-                );
+                var _configInstance = AssetDatabase.LoadAssetAtPath(_configPath, typeof(UNIHperSettings));
 
                 if (_configInstance == null)
                 {
                     var _configAsset = ScriptableObject.CreateInstance<UNIHperSettings>();
                     _configAsset.defaultClickSound = AssetDatabase.LoadAssetAtPath<AudioClip>(
-                        UNIPaths.PackagePath("Assets/Resources/__AudioClips/click_effect_00.wav")
+                        UNIPaths.PackagePath("Assets/#Audios/click_effect_00.wav")
                     );
                     AssetDatabase.CreateAsset(_configAsset, _configPath);
                 }
@@ -257,10 +233,7 @@ namespace UNIHper.Editor
             });
 
             // 3.   创建程序集定义文件
-            string _dstAssemblyPath = Path.Combine(
-                Path.GetFullPath("Assets/Develop/Scripts"),
-                "GameMain.asmdef"
-            );
+            string _dstAssemblyPath = Path.Combine(Path.GetFullPath("Assets/Develop/Scripts"), "GameMain.asmdef");
 
             if (UNIHperSettings.Instance.UseAssembly && !File.Exists(_dstAssemblyPath))
             {
@@ -286,10 +259,7 @@ namespace UNIHper.Editor
 
             //TMP Menu import way: TMP_PackageUtilities.ImportProjectResourcesMenu();
 
-            AssetDatabase.ImportPackage(
-                packageFullPath + "/Package Resources/TMP Essential Resources.unitypackage",
-                false
-            );
+            AssetDatabase.ImportPackage(packageFullPath + "/Package Resources/TMP Essential Resources.unitypackage", false);
         }
     }
 }

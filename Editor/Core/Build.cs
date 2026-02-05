@@ -36,18 +36,10 @@ namespace UNIHper.Editor
         {
             string streamingAssetsPath = string.Empty;
 
-            if (
-                target == BuildTarget.StandaloneWindows
-                || target == BuildTarget.StandaloneWindows64
-                || target == BuildTarget.StandaloneOSX
-            )
+            if (target == BuildTarget.StandaloneWindows || target == BuildTarget.StandaloneWindows64 || target == BuildTarget.StandaloneOSX)
             {
                 string dataPath = Path.GetFileNameWithoutExtension(pathToBuiltProject) + "_Data";
-                streamingAssetsPath = Path.Combine(
-                    Path.GetDirectoryName(pathToBuiltProject),
-                    dataPath,
-                    "StreamingAssets"
-                );
+                streamingAssetsPath = Path.Combine(Path.GetDirectoryName(pathToBuiltProject), dataPath, "StreamingAssets");
             }
             else if (target == BuildTarget.Android)
             {
