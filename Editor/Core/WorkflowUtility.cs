@@ -51,9 +51,7 @@ namespace UNIHper.Editor
 
             Func<bool> isInvalidProductName = () =>
             {
-                return UNIHperSettings.InvalidAppNamePrefixes.Any(
-                    _prefix => PlayerSettings.productName.ToLower().StartsWith(_prefix)
-                );
+                return UNIHperSettings.InvalidAppNamePrefixes.Any(_prefix => PlayerSettings.productName.ToLower().StartsWith(_prefix));
             };
 
             if (isInvalidProductName())
@@ -78,19 +76,14 @@ namespace UNIHper.Editor
 
         private static bool checkAllWorkflowComplete()
         {
-            return new List<string> { bSetProductName, bOdinConfigMoved }
-                .Select(_field => SessionState.GetBool(_field, false))
-                .All(b => b);
+            return new List<string> { bSetProductName, bOdinConfigMoved }.Select(_field => SessionState.GetBool(_field, false)).All(b => b);
         }
 
         private static void firstOpenWorkflow()
         {
             if (File.Exists(unihperCacheFilePath) == false)
             {
-                File.WriteAllText(
-                    unihperCacheFilePath,
-                    JsonConvert.SerializeObject(new UNIHperCache(), Formatting.Indented)
-                );
+                File.WriteAllText(unihperCacheFilePath, JsonConvert.SerializeObject(new UNIHperCache(), Formatting.Indented));
 
                 if (Application.HasProLicense())
                 {
@@ -181,7 +174,7 @@ namespace UNIHper.Editor
             return _isOdinConfigExists();
         }
 
-        [MenuItem("UNIHper/Workflow/Restart Editor &r", priority = 41)]
+        [MenuItem("UNIHper/Workflow/Restart Editor &r", priority = 32)]
         private static void RestartEditor()
         {
             if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
@@ -191,7 +184,7 @@ namespace UNIHper.Editor
             }
         }
 
-        [MenuItem("UNIHper/Workflow/Clean Excluded Files", priority = 95)]
+        [MenuItem("UNIHper/Workflow/Clean Excluded Files", priority = 35)]
         public static void CleanExcludedPaths()
         {
             var _excludedPaths = UNIHperSettings.Instance.SVNExcludedPaths;
@@ -210,13 +203,13 @@ namespace UNIHper.Editor
             AssetDatabase.Refresh();
         }
 
-        [MenuItem("UNIHper/Workflow/SVN Update Slim Repo", priority = 71)]
+        [MenuItem("UNIHper/Workflow/SVN Update Slim Repo", priority = 33)]
         public static void CleanAssets()
         {
             UpdateSVNDepth("exclude");
         }
 
-        [MenuItem("UNIHper/Workflow/SVN Update Full Repo", priority = 72)]
+        [MenuItem("UNIHper/Workflow/SVN Update Full Repo", priority = 34)]
         public static void SetFullSVNDepth()
         {
             UpdateSVNDepth("infinity");
@@ -224,11 +217,7 @@ namespace UNIHper.Editor
 
         private static void UpdateSVNDepth(string depth)
         {
-            EditorUtility.DisplayProgressBar(
-                "Switch SVN Repo Mode",
-                "Start setting SVN depth...",
-                0
-            );
+            EditorUtility.DisplayProgressBar("Switch SVN Repo Mode", "Start setting SVN depth...", 0);
 
             var _excludedPaths = UNIHperSettings.Instance.SVNExcludedPaths;
             foreach (var path in _excludedPaths)
@@ -236,11 +225,7 @@ namespace UNIHper.Editor
                 var _progress = (float)(_excludedPaths.IndexOf(path) + 1) / _excludedPaths.Count;
                 try
                 {
-                    var _output = ShellUtils.ExecuteCommand(
-                        "svn",
-                        $"update --set-depth {depth} \"{path}\"",
-                        true
-                    );
+                    var _output = ShellUtils.ExecuteCommand("svn", $"update --set-depth {depth} \"{path}\"", true);
                     if (_output.HasErrors) { }
                 }
                 catch (System.Exception ex)
@@ -249,11 +234,7 @@ namespace UNIHper.Editor
                 }
                 finally
                 {
-                    EditorUtility.DisplayProgressBar(
-                        "Switch SVN Repo Mode",
-                        "Finished setting SVN depth.",
-                        _progress
-                    );
+                    EditorUtility.DisplayProgressBar("Switch SVN Repo Mode", "Finished setting SVN depth.", _progress);
                 }
             }
             EditorUtility.ClearProgressBar();

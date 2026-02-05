@@ -25,6 +25,9 @@
 
 ### 版本更新日志
 
+v1.26.0205
+- 增加AVPro Live Camera管理类
+
 v1.26.0131
 - 增加DisposableManager管理类，方便管理IDisposable对象
 - 增加FadeIn/FadeOut拓展方法，方便UI淡入淡出

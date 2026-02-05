@@ -7,6 +7,10 @@ namespace UNIHper
 {
     using UniRx;
 
+    /// <summary>
+    /// [已弃用] 请使用 LiveCameraService 代替
+    /// </summary>
+    [Obsolete("UWebCamTexture 已弃用，请使用 LiveCameraService 代替。", false)]
     public class UWebCamTexture : MonoBehaviour
     {
         private UnityEvent<WebCamTexture> onCapture = new UnityEvent<WebCamTexture>();

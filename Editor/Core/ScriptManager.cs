@@ -82,17 +82,13 @@ namespace UNIHper.Editor
         ///< <summary>TABSPACE's replacement tag.</summary>
 
         /// <summary>C#'s Script Icon [The one MonoBhevaiour Scripts have].</summary>
-        private static Texture2D scriptIcon = (
-            EditorGUIUtility.IconContent("cs Script Icon").image as Texture2D
-        );
+        private static Texture2D scriptIcon = (EditorGUIUtility.IconContent("cs Script Icon").image as Texture2D);
 
-        private static Texture2D assemblyIcon = (
-            EditorGUIUtility.IconContent("AssemblyDefinitionAsset Icon").image as Texture2D
-        );
+        private static Texture2D assemblyIcon = (EditorGUIUtility.IconContent("AssemblyDefinitionAsset Icon").image as Texture2D);
 
         /// <summary>Creates a new C# Class.</summary>
         [MenuItem("Assets/Create/📦 UNIHper Framework/SceneScript", priority = 51)]
-        [MenuItem("UNIHper/Create/SceneScript", priority = 11)]
+        [MenuItem("UNIHper/Create/SceneScript", priority = 60)]
         private static void CreateSceneScript()
         {
             CreateCodeFileFromTemplate(
@@ -102,7 +98,7 @@ namespace UNIHper.Editor
         }
 
         [MenuItem("Assets/Create/📦 UNIHper Framework/UIScript", priority = 52)]
-        [MenuItem("UNIHper/Create/UIScript", priority = 12)]
+        [MenuItem("UNIHper/Create/UIScript", priority = 61)]
         private static void CreateUIScript()
         {
             CreateCodeFileFromTemplate(
@@ -113,17 +109,14 @@ namespace UNIHper.Editor
         }
 
         [MenuItem("Assets/Create/📦 UNIHper Framework/ConfigScript", priority = 53)]
-        [MenuItem("UNIHper/Create/ConfigScript", priority = 13)]
+        [MenuItem("UNIHper/Create/ConfigScript", priority = 62)]
         private static void CreateConfigScript()
         {
-            CreateCodeFileFromTemplate(
-                "NewConfig.cs",
-                $@"Packages\{bundleName}\Editor\Templates\ConfigScriptTemplate.txt"
-            );
+            CreateCodeFileFromTemplate("NewConfig.cs", $@"Packages\{bundleName}\Editor\Templates\ConfigScriptTemplate.txt");
         }
 
         [MenuItem("Assets/Create/📦 UNIHper Framework/Game Assembly Definition", priority = 54)]
-        [MenuItem("UNIHper/Create/Game Assembly Definition", priority = 14)]
+        [MenuItem("UNIHper/Create/Game Assembly Definition", priority = 63)]
         private static void CreateGameAssemblyDefinition()
         {
             CreateGameAssemblyDefinitionFromTemplate(
@@ -134,10 +127,7 @@ namespace UNIHper.Editor
 
         public static void CreateSceneScriptIfNotExists(string InScriptName)
         {
-            string _relativePath = string.Format(
-                "Assets/Develop/Scripts/{0}Script.cs",
-                InScriptName
-            );
+            string _relativePath = string.Format("Assets/Develop/Scripts/{0}Script.cs", InScriptName);
             string _scriptPath = Path.GetFullPath(_relativePath);
             if (File.Exists(_scriptPath))
                 return;
@@ -147,10 +137,7 @@ namespace UNIHper.Editor
             {
                 Directory.CreateDirectory(_directory);
             }
-            Object o = CreateScript(
-                _relativePath,
-                $@"Packages\{bundleName}\Editor\Templates\SceneScriptTemplate.txt"
-            );
+            Object o = CreateScript(_relativePath, $@"Packages\{bundleName}\Editor\Templates\SceneScriptTemplate.txt");
             ProjectWindowUtil.ShowCreatedAsset(o);
         }
 
@@ -167,10 +154,7 @@ namespace UNIHper.Editor
             {
                 Directory.CreateDirectory(_directory);
             }
-            Object o = CreateScript(
-                _relativePath,
-                $@"Packages\{bundleName}\Editor\Templates\GameAssemblyDefinitionTemplate.txt"
-            );
+            Object o = CreateScript(_relativePath, $@"Packages\{bundleName}\Editor\Templates\GameAssemblyDefinitionTemplate.txt");
             ProjectWindowUtil.ShowCreatedAsset(o);
         }
 
@@ -214,11 +198,7 @@ namespace UNIHper.Editor
         /// <summary>Creates a new code file from a template file.</summary>
         /// <param name="initialName">The initial name to give the file in the UI</param>
         /// <param name="templatePath">The full path of the template file to use</param>
-        public static void CreateCodeFileFromTemplate(
-            string initialName,
-            string templatePath,
-            EndNameEditAction endNameEditAction = null
-        )
+        public static void CreateCodeFileFromTemplate(string initialName, string templatePath, EndNameEditAction endNameEditAction = null)
         {
             ProjectWindowUtil.StartNameEditingIfProjectWindowExists(
                 0,

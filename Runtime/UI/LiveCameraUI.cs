@@ -1,0 +1,27 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+using UniRx;
+using UNIHper;
+using UNIHper.UI;
+using DNHper;
+
+[UIPage(Asset = "LiveCameraUI", Type = UIType.Normal, Order = -1)]
+public class LiveCameraUI : UIBase
+{
+    // Start is called before the first frame update
+    private void Start() { }
+
+    // Update is called once per frame
+    private void Update() { }
+
+    // Called when this ui is loaded
+    protected override void OnLoaded() { }
+
+    // Called when this ui is shown
+    protected override void OnShown() { }
+
+    // Called when this ui is hidden
+    protected override void OnHidden() { }
+}

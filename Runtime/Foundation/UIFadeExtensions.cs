@@ -29,10 +29,13 @@ namespace UNIHper
         /// </summary>
         public static Tween FadeIn(this Transform target, float duration = 0.5f, Ease ease = Ease.OutQuad)
         {
-            target.gameObject.SetActive(true);
+            // 先取消该对象上正在进行的渐变动画
             var canvasGroup = target.GetOrAddComponent<CanvasGroup>();
+            DOTween.Kill(canvasGroup);
+
+            target.gameObject.SetActive(true);
             canvasGroup.alpha = 0;
-            return canvasGroup.DOFade(1f, duration).SetEase(ease);
+            return canvasGroup.DOFade(1f, duration).SetEase(ease).SetTarget(canvasGroup);
         }
 
         /// <summary>
@@ -98,8 +101,15 @@ namespace UNIHper
         /// </summary>
         public static Tween FadeOut(this Transform target, float duration = 0.5f, Ease ease = Ease.InQuad)
         {
+            // 先取消该对象上正在进行的渐变动画
             var canvasGroup = target.GetOrAddComponent<CanvasGroup>();
-            return canvasGroup.DOFade(0f, duration).SetEase(ease).OnComplete(() => target.gameObject.SetActive(false));
+            DOTween.Kill(canvasGroup);
+
+            return canvasGroup
+                .DOFade(0f, duration)
+                .SetEase(ease)
+                .SetTarget(canvasGroup)
+                .OnComplete(() => target.gameObject.SetActive(false));
         }
 
         /// <summary>

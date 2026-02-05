@@ -52,8 +52,7 @@ namespace UNIHper.Editor
         [System.Serializable]
         public class ConfigData : List<string> { }
 
-        private static string ConfigFilePath =>
-            "Assets/Resources/" + UNIHperSettings.AssemblyConfigPath + ".json";
+        private static string ConfigFilePath => "Assets/Resources/" + UNIHperSettings.AssemblyConfigPath + ".json";
 
         public static void AddAssembly(string assemblyName)
         {
@@ -104,9 +103,7 @@ namespace UNIHper.Editor
             {
                 if (obj is ResourceItem other)
                 {
-                    return this.driver == other.driver
-                        && this.type == other.type
-                        && (this.label == other.label || this.path == other.path);
+                    return this.driver == other.driver && this.type == other.type && (this.label == other.label || this.path == other.path);
                 }
                 return false;
             }
@@ -122,8 +119,7 @@ namespace UNIHper.Editor
             }
         }
 
-        private static string ConfigFilePath =>
-            "Assets/Resources/" + UNIHperSettings.ResourceConfigPath + ".json";
+        private static string ConfigFilePath => "Assets/Resources/" + UNIHperSettings.ResourceConfigPath + ".json";
 
         public static void AddPersistenceItem(ResourceItem newItem)
         {

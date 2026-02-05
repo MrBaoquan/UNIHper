@@ -13,21 +13,13 @@ namespace UNIHper.Editor
             if (!AddressableAssetSettingsDefaultObject.SettingsExists)
             {
                 var _settings = AddressableAssetSettingsDefaultObject.GetSettings(true);
-                var _persistenceGroup = _settings.groups.FirstOrDefault(
-                    g => g.name == "Persistence Assets"
-                );
+                var _persistenceGroup = _settings.groups.FirstOrDefault(g => g.name == "Persistence Assets");
                 if (_persistenceGroup != null)
                 {
                     return AddressableAssetSettingsDefaultObject.Settings;
                 }
 
-                var _group = _settings.CreateGroup(
-                    "Persistence Assets",
-                    true,
-                    false,
-                    true,
-                    _settings.DefaultGroup.Schemas
-                );
+                var _group = _settings.CreateGroup("Persistence Assets", true, false, true, _settings.DefaultGroup.Schemas);
 
                 _settings.RemoveGroup(_settings.FindGroup("Default Local Group"));
                 EditorUtility.SetDirty(_group);
@@ -48,9 +40,7 @@ namespace UNIHper.Editor
         static bool checkParentEntryExist(string path)
         {
             var settings = LoadOrCreateAddressableSettings();
-            return path.GetParentPaths()
-                .Select(_path => _path.ToForwardSlash())
-                .Any(_path => checkEntryExist(_path));
+            return path.GetParentPaths().Select(_path => _path.ToForwardSlash()).Any(_path => checkEntryExist(_path));
         }
 
         [MenuItem("Assets/Add To Addressable System", priority = 1500)]
@@ -82,11 +72,7 @@ namespace UNIHper.Editor
             return _entry != null;
         }
 
-        static List<string> builtinDirectories = new List<string>
-        {
-            "Assets/Resources",
-            "Assets/StreamingAssets",
-        };
+        static List<string> builtinDirectories = new List<string> { "Assets/Resources", "Assets/StreamingAssets", };
 
         [MenuItem("Assets/Add To Addressable System", true)]
         static bool Add2AddressableValidate()

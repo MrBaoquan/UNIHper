@@ -69,13 +69,7 @@ namespace UNIHper
             audioSource.clip.GetData(samples, 0);
             float[] _clipSamplers = new float[_lastTime];
             Array.Copy(samples, _clipSamplers, _clipSamplers.Length - 1);
-            audioSource.clip = AudioClip.Create(
-                "_tempAudioClip",
-                _clipSamplers.Length,
-                1,
-                16000,
-                false
-            );
+            audioSource.clip = AudioClip.Create("_tempAudioClip", _clipSamplers.Length, 1, 16000, false);
             audioSource.clip.SetData(_clipSamplers, 0);
 
             return true;

@@ -43,6 +43,16 @@ namespace UNIHper
             PrepareVideos(_videoPaths, settingCallback);
         }
 
+        /// <summary>
+        /// 准备视频文件（重载：仅路径和搜索选项）
+        /// </summary>
+        /// <param name="videoDir">视频目录（相对于 StreamingAssets 或绝对路径）</param>
+        /// <param name="searchOption">搜索选项</param>
+        public void PrepareVideos(string videoDir, SearchOption searchOption)
+        {
+            PrepareVideos(videoDir, "*.mp4", searchOption, null);
+        }
+
         private PlaylistMediaPlayer listPlayer = null;
         public PlaylistMediaPlayer ListPlayer
         {
@@ -121,6 +131,17 @@ namespace UNIHper
         public void Play(string Path, bool Loop = false, double StartTime = 0f, double EndTime = 0f, bool seek2StartAfterFinished = true)
         {
             Play(Path, null, Loop, StartTime, EndTime, seek2StartAfterFinished);
+        }
+
+        /// <summary>
+        /// 播放指定路径的视频（简化版：路径、循环、开始时间）
+        /// </summary>
+        /// <param name="Path">视频名</param>
+        /// <param name="Loop">是否循环</param>
+        /// <param name="seek2StartAfterFinished">播放完成后是否跳到首帧</param>
+        public void Play(string Path, bool Loop, bool seek2StartAfterFinished)
+        {
+            Play(Path, null, Loop, 0f, 0f, seek2StartAfterFinished);
         }
 
         /// <summary>
