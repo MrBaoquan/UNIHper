@@ -1,0 +1,16 @@
+# GitHub Sponsors configuration
+# This project is free and open-source
+
+# Disable GitHub Sponsors for this repository
+# To enable sponsorship, uncomment and configure the options below:
+
+# github: # Add GitHub Sponsors username(s) here
+# patreon: # Add Patreon username
+# open_collective: # Add Open Collective username
+# ko_fi: # Add Ko-fi username
+# tidelift: # Add Tidelift platform-name/package-name
+# community_bridge: # Add Community Bridge project-name
+# liberapay: # Add Liberapay username
+# issuehunt: # Add IssueHunt username
+# otechie: # Add Otechie username
+# custom: # Add custom sponsorship URLs
