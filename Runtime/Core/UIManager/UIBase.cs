@@ -225,6 +225,8 @@ namespace UNIHper.UI
             _state = UIState.Showing;
             this.OnShowing();
             onShowingEvent.Invoke();
+            // 触发全局UI Showing事件
+            UIManager.Instance.NotifyUIShowing(this);
             try
             {
                 showOrHideCancellationTokenSource = new CancellationTokenSource();
@@ -240,6 +242,8 @@ namespace UNIHper.UI
             _state = UIState.Shown;
             this.OnShown();
             onShownEvent.Invoke();
+            // 触发全局UI Shown事件
+            UIManager.Instance.NotifyUIShown(this);
         }
 
         // Called when the ui is being requested to hide
@@ -255,6 +259,8 @@ namespace UNIHper.UI
             _state = UIState.Hiding;
             this.OnHiding();
             onHidingEvent.Invoke();
+            // 触发全局UI Hiding事件
+            UIManager.Instance.NotifyUIHiding(this);
             try
             {
                 showOrHideCancellationTokenSource = new CancellationTokenSource();
@@ -276,6 +282,8 @@ namespace UNIHper.UI
             this.gameObject.SetActive(false);
             this.OnHidden();
             onHiddenEvent.Invoke();
+            // 触发全局UI Hidden事件
+            UIManager.Instance.NotifyUIHidden(this);
             LifeCycleDisposables?.Dispose();
         }
 

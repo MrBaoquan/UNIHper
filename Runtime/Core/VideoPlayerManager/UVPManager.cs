@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,6 +10,7 @@ using UnityEngine.Video;
 
 namespace UNIHper
 {
+    [Obsolete("UVPManager 已弃用，请使用 Multiple AVPro Player", false)]
     public class UVPManager : MonoBehaviour
     {
         private Dictionary<string, string> rawUrls = new Dictionary<string, string>();
@@ -30,10 +32,7 @@ namespace UNIHper
                     Destroy(_videoPlayer.gameObject);
                 });
 
-            rawUrls = InUrls.ToDictionary(
-                _path => Path.GetFileNameWithoutExtension(_path),
-                _path => _path
-            );
+            rawUrls = InUrls.ToDictionary(_path => Path.GetFileNameWithoutExtension(_path), _path => _path);
 
             int _width = -1,
                 _height = -1;
@@ -86,10 +85,7 @@ namespace UNIHper
             if (!currentPlayer.isPrepared)
             {
                 // TODO 多个视频频繁切换会出现重叠 待优化
-                urlPlayers.Values
-                    .Where(_vp => _vp != currentPlayer)
-                    .ToList()
-                    .ForEach(_vp => _vp.Stop());
+                urlPlayers.Values.Where(_vp => _vp != currentPlayer).ToList().ForEach(_vp => _vp.Stop());
                 currentPlayer.Prepare(_ =>
                 {
                     currentPlayer.Play(OnReachEndHandler, loop, StartTime, InEndTime);
@@ -102,11 +98,7 @@ namespace UNIHper
 
             renderTexture.Value = currentPlayer.RenderTexture;
 
-            this.BroadcastMessage(
-                "OnPlayByUrl",
-                currentPlayer,
-                SendMessageOptions.DontRequireReceiver
-            );
+            this.BroadcastMessage("OnPlayByUrl", currentPlayer, SendMessageOptions.DontRequireReceiver);
         }
 
         public void Pause(bool Reset = false)

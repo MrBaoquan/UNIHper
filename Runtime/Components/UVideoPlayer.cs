@@ -10,6 +10,10 @@ namespace UNIHper
 {
     using UniRx;
 
+    /// <summary>
+    /// [已弃用] 此组件将在未来版本中移除
+    /// </summary>
+    [Obsolete("UVideoPlayer 已弃用，请使用 AVProPlayer 或 Unity 原生 VideoPlayer。", false)]
     [RequireComponent(typeof(VideoPlayer))]
     public class UVideoPlayer : MonoBehaviour
     {
@@ -113,12 +117,7 @@ namespace UNIHper
                 if (Height == -1)
                     Height = Screen.height;
             }
-            RenderTexture _videoRT = new RenderTexture(
-                Width,
-                Height,
-                0,
-                RenderTextureFormat.ARGB32
-            );
+            RenderTexture _videoRT = new RenderTexture(Width, Height, 0, RenderTextureFormat.ARGB32);
 
             if (bAutoRender)
             {
@@ -260,12 +259,7 @@ namespace UNIHper
             Play(OnReachEndHandler, loop, StartTime, InEndTime);
         }
 
-        public void Play(
-            VideoPlayer.EventHandler OnReachEndHandler = null,
-            int loop = -1,
-            float StartTime = 0,
-            float InEndTime = 0
-        )
+        public void Play(VideoPlayer.EventHandler OnReachEndHandler = null, int loop = -1, float StartTime = 0, float InEndTime = 0)
         {
             if (videoPlayer.isPlaying)
             {
@@ -300,12 +294,7 @@ namespace UNIHper
         /// <param name="loop"></param>
         /// <param name="StartTime"></param>
         /// <param name="InEndTime"></param>
-        private void realPlay(
-            VideoPlayer.EventHandler OnReachEndHandler = null,
-            int loop = -1,
-            float StartTime = 0,
-            float InEndTime = 0
-        )
+        private void realPlay(VideoPlayer.EventHandler OnReachEndHandler = null, int loop = -1, float StartTime = 0, float InEndTime = 0)
         {
             if (!renderTexture)
             {
@@ -402,11 +391,7 @@ namespace UNIHper
             });
         }
 
-        public void Prepare(
-            string InUrl,
-            VideoPlayer.EventHandler OnPrepared = null,
-            VideoPlayer.EventHandler OnTimeReady = null
-        )
+        public void Prepare(string InUrl, VideoPlayer.EventHandler OnPrepared = null, VideoPlayer.EventHandler OnTimeReady = null)
         {
             videoPlayer.url = InUrl;
             this.Prepare(_ =>

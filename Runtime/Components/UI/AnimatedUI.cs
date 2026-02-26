@@ -26,6 +26,7 @@ namespace UNIHper.UI
         Fly_Down = 102,
         Fly_Left = 103,
         Zoom = 110,
+        Fade = 120,
     }
 
     [RequireComponent(typeof(Animator))]
@@ -387,6 +388,24 @@ namespace UNIHper.UI
                 {
                     //_rectTransform.localScale = Vector3.one;
                     return _rectTransform.DOScale(Vector3.zero, _duration);
+                }
+            }
+            else if (_typeNumber < 130)
+            {
+                // Fade 动画 - 使用 CanvasGroup 实现透明度渐变
+                var _canvasGroup = this.GetOrAdd<CanvasGroup>();
+                if (InDir == 1)
+                {
+                    // 显示：从透明到不透明
+                    _canvasGroup.alpha = 0;
+                    _rectTransform.anchoredPosition = m_originAnchoredPosition;
+                    _rectTransform.localScale = m_originLocalScale;
+                    return _canvasGroup.DOFade(1, _duration);
+                }
+                else
+                {
+                    // 隐藏：从不透明到透明
+                    return _canvasGroup.DOFade(0, _duration);
                 }
             }
             return null;

@@ -28,23 +28,12 @@ namespace UNIHper.Ghost.Editor
 {
     public static class GhostManager
     {
-        private static List<string> builtNameSpaces = new List<string>
-        {
-            "UnityEngine",
-            "UnityEditor",
-            "TMPro",
-        };
+        private static List<string> builtNameSpaces = new List<string> { "UnityEngine", "UnityEditor", "TMPro", };
 
         public static IEnumerable<Component> NonBuiltinComponents(this GameObject self)
         {
             return self.GetComponents<Component>()
-                .Where(
-                    _component =>
-                        _component
-                        && !builtNameSpaces.Exists(
-                            _ => _component.GetType().Assembly.ToString().StartsWith(_)
-                        )
-                )
+                .Where(_component => _component && !builtNameSpaces.Exists(_ => _component.GetType().Assembly.ToString().StartsWith(_)))
                 .Where(_component => !GhostType.IsAssignableFrom(_component.GetType()));
         }
 
@@ -117,9 +106,7 @@ namespace UNIHper.Ghost.Editor
                 if (ghostType == null)
                 {
                     var _assembly = Assembly.Load(
-                        new AssemblyName(
-                            "UNIArt.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"
-                        )
+                        new AssemblyName("UNIArt.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")
                     );
                     if (_assembly is null)
                     {
@@ -155,11 +142,7 @@ namespace UNIHper.Ghost.Editor
         private static void backupEntityFolder()
         {
             var _projectDir = Path.GetDirectoryName(Application.dataPath);
-            var _zipFile = Path.Combine(
-                _projectDir,
-                backupDir,
-                DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".zip"
-            );
+            var _zipFile = Path.Combine(_projectDir, backupDir, DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".zip");
             if (!Directory.Exists(Path.GetDirectoryName(_zipFile)))
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(_zipFile));
@@ -167,11 +150,7 @@ namespace UNIHper.Ghost.Editor
             try
             {
                 if (Directory.Exists(Path.Combine(_projectDir, "Assets/GhostEntities")))
-                    AssetDatabase.ExportPackage(
-                        "Assets/GhostEntities",
-                        _zipFile,
-                        ExportPackageOptions.Recurse
-                    );
+                    AssetDatabase.ExportPackage("Assets/GhostEntities", _zipFile, ExportPackageOptions.Recurse);
             }
             catch (System.Exception) { }
         }
@@ -208,20 +187,13 @@ namespace UNIHper.Ghost.Editor
                 if (Selection.activeGameObject)
                 {
                     var _objFullPath = Selection.activeGameObject.transform.GetFullPath("/");
-                    if (
-                        Regex.Replace(_objFullPath, @".*?/(.*)$", "$1")
-                        == Path.GetFileNameWithoutExtension(_prefabStage.assetPath)
-                    )
+                    if (Regex.Replace(_objFullPath, @".*?/(.*)$", "$1") == Path.GetFileNameWithoutExtension(_prefabStage.assetPath))
                     {
                         selectedGameObjectPath = string.Empty;
                     }
                     else
                     {
-                        selectedGameObjectPath = Regex.Replace(
-                            _objFullPath,
-                            @"(.*?/){2}(.*)$",
-                            "$2"
-                        );
+                        selectedGameObjectPath = Regex.Replace(_objFullPath, @"(.*?/){2}(.*)$", "$2");
                     }
                 }
             }
@@ -238,9 +210,7 @@ namespace UNIHper.Ghost.Editor
             {
                 var _prefabStage = PrefabStageUtility.OpenPrefab(stagePrefabPath);
                 if (!string.IsNullOrEmpty(selectedGameObjectPath))
-                    Selection.activeGameObject = _prefabStage.prefabContentsRoot.transform
-                        .Find(selectedGameObjectPath)
-                        ?.gameObject;
+                    Selection.activeGameObject = _prefabStage.prefabContentsRoot.transform.Find(selectedGameObjectPath)?.gameObject;
             }
             else if (selectObject != null && AssetDatabase.Contains(selectObject))
             {
@@ -256,7 +226,7 @@ namespace UNIHper.Ghost.Editor
             IsBusyNow = false;
         }
 
-        [MenuItem("UNIHper/Ghost Mode/Enable", priority = 21)]
+        [MenuItem("UNIHper/Ghost Mode/Enable", priority = 30)]
         public static void EnableGhost()
         {
             AutoGenerateGhost();
@@ -269,7 +239,7 @@ namespace UNIHper.Ghost.Editor
             return !GhostData.bGhost;
         }
 
-        [MenuItem("UNIHper/Ghost Mode/Disable", priority = 22)]
+        [MenuItem("UNIHper/Ghost Mode/Disable", priority = 31)]
         public static void DisableGhost()
         {
             RestoreGhostEntities();
@@ -282,7 +252,7 @@ namespace UNIHper.Ghost.Editor
             return GhostData.bGhost;
         }
 
-        [MenuItem("UNIHper/Ghost Mode/Advanced/Generate All Ghost Entities", priority = 33)]
+        [MenuItem("UNIHper/Ghost Mode/Advanced/Generate All Ghost Entities", priority = 40)]
         public static void GenerateGhostEntities()
         {
             safeTransaction(
@@ -337,7 +307,7 @@ namespace UNIHper.Ghost.Editor
             //PrefabUtility.UnpackPrefabInstance(_gameObj, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
         }
 
-        [MenuItem("UNIHper/Ghost Mode/Advanced/Restore All Ghost Entities", priority = 34)]
+        [MenuItem("UNIHper/Ghost Mode/Advanced/Restore All Ghost Entities", priority = 41)]
         private static void RestoreGhostEntities()
         {
             safeTransaction(
@@ -374,7 +344,7 @@ namespace UNIHper.Ghost.Editor
             );
         }
 
-        [MenuItem("UNIHper/Ghost Mode/Advanced/Add Ghost To All", priority = 35)]
+        [MenuItem("UNIHper/Ghost Mode/Advanced/Add Ghost To All", priority = 42)]
         public static void AutoGenerateGhost()
         {
             safeTransaction(() =>
@@ -396,22 +366,12 @@ namespace UNIHper.Ghost.Editor
         /// <param name="searchInFolders"></param>
         private static void addGhostToAssets(string[] searchInFolders = null)
         {
-            AllPrefabComponents(
-                typeof(Transform),
-                (_component, _path) => addGhostComponent(_component),
-                null,
-                searchInFolders
-            );
+            AllPrefabComponents(typeof(Transform), (_component, _path) => addGhostComponent(_component), null, searchInFolders);
         }
 
         private static void removeGhostFromAssets(string[] searchInFolders = null)
         {
-            AllPrefabComponents(
-                GhostType,
-                (_component, _path) => removeGhostComponent(_component),
-                null,
-                searchInFolders
-            );
+            AllPrefabComponents(GhostType, (_component, _path) => removeGhostComponent(_component), null, searchInFolders);
         }
 
         private static void addGhostComponent(GameObject gameObj)
@@ -447,7 +407,7 @@ namespace UNIHper.Ghost.Editor
 
         // }
 
-        [MenuItem("UNIHper/Ghost Mode/Advanced/Remove Ghost From All", priority = 36)]
+        [MenuItem("UNIHper/Ghost Mode/Advanced/Remove Ghost From All", priority = 43)]
         public static void ClearAllGhostComponent()
         {
             safeTransaction(() =>
@@ -489,13 +449,9 @@ namespace UNIHper.Ghost.Editor
                         .ForEach(
                             (_ghostComponent) =>
                             {
-                                GameObjectUtility.RemoveMonoBehavioursWithMissingScript(
-                                    _ghostComponent.gameObject
-                                );
+                                GameObjectUtility.RemoveMonoBehavioursWithMissingScript(_ghostComponent.gameObject);
                                 UnityEngine.Object.DestroyImmediate(_ghostComponent, true);
-                                PrefabUtility.RecordPrefabInstancePropertyModifications(
-                                    _originPrefab
-                                );
+                                PrefabUtility.RecordPrefabInstancePropertyModifications(_originPrefab);
                             }
                         );
                     if (!PrefabUtility.IsPartOfModelPrefab(_originPrefab))
@@ -523,9 +479,7 @@ namespace UNIHper.Ghost.Editor
             }
             catch (System.IO.FileNotFoundException err)
             {
-                Debug.LogWarning(
-                    err.Message + " please check if GhostComponent Art scripts exists"
-                );
+                Debug.LogWarning(err.Message + " please check if GhostComponent Art scripts exists");
                 OnError?.Invoke(err);
             }
             catch (Exception err)
@@ -540,12 +494,7 @@ namespace UNIHper.Ghost.Editor
             }
         }
 
-        static readonly List<string> invalidFolders = new List<string>
-        {
-            "AddressableAssetsData",
-            "GhostEntities",
-            "StreamingAssets"
-        };
+        static readonly List<string> invalidFolders = new List<string> { "AddressableAssetsData", "GhostEntities", "StreamingAssets" };
 
         private static IEnumerable<string> filterDirectories()
         {
@@ -575,18 +524,11 @@ namespace UNIHper.Ghost.Editor
         //构造场景对象的保存路径
         private static string buildSceneObjectEntitySavePath(GameObject sceneGO)
         {
-            return Path.Combine(
-                    "Assets/GhostEntities/",
-                    sceneGO.scene.name,
-                    sceneGO.transform.GetFullPath(".") + ".prefab"
-                )
+            return Path.Combine("Assets/GhostEntities/", sceneGO.scene.name, sceneGO.transform.GetFullPath(".") + ".prefab")
                 .ToForwardSlash();
         }
 
-        private static void AllSceneObjects<T>(
-            T goType,
-            Action<UnityEngine.GameObject, UnityEngine.SceneManagement.Scene> handler
-        )
+        private static void AllSceneObjects<T>(T goType, Action<UnityEngine.GameObject, UnityEngine.SceneManagement.Scene> handler)
             where T : System.Type
         {
             AssetDatabase
@@ -623,10 +565,7 @@ namespace UNIHper.Ghost.Editor
                 (_ghostComponent, _prefabPath) =>
                 {
                     var _entityPath = prefabAssetPathToGhostEntityPath(_prefabPath);
-                    _entityPath = Path.Combine(
-                            Path.GetDirectoryName(_entityPath),
-                            _ghostComponent.transform.GetFullPath(".") + ".prefab"
-                        )
+                    _entityPath = Path.Combine(Path.GetDirectoryName(_entityPath), _ghostComponent.transform.GetFullPath(".") + ".prefab")
                         .ToForwardSlash();
                     generateSingleEntity(_ghostComponent, _entityPath);
                 },
@@ -660,12 +599,7 @@ namespace UNIHper.Ghost.Editor
         {
             var _selectedFolders = EditorUtil.GetSelectedDirectories();
             var _validFolders = _selectedFolders
-                .Where(
-                    _ =>
-                        !invalidFolders.Exists(
-                            _invalidFolder => _.StartsWith("Assets/" + _invalidFolder)
-                        )
-                )
+                .Where(_ => !invalidFolders.Exists(_invalidFolder => _.StartsWith("Assets/" + _invalidFolder)))
                 .ToList();
             if (_validFolders.Count > 0)
                 return true;
@@ -720,9 +654,7 @@ namespace UNIHper.Ghost.Editor
 
             EditorApplication.ExecuteMenuItem("Assets/Make Ghosts");
 
-            var _uniArtDir = AssetDatabase.LoadAssetAtPath<DefaultAsset>(
-                @"Packages\com.parful.uniart"
-            );
+            var _uniArtDir = AssetDatabase.LoadAssetAtPath<DefaultAsset>(@"Packages\com.parful.uniart");
             _selectPaths.Add(AssetDatabase.GetAssetPath(_uniArtDir));
 
             var _guid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(_uniArtDir));
@@ -794,10 +726,7 @@ namespace UNIHper.Ghost.Editor
                 _entityPath =
                     Path.GetDirectoryName(_prefabStage.assetPath)
                     + @"\"
-                    + ghostComponent.transform.GetFullPath(
-                        ".",
-                        _prefabStage.prefabContentsRoot.transform.parent
-                    )
+                    + ghostComponent.transform.GetFullPath(".", _prefabStage.prefabContentsRoot.transform.parent)
                     + ".prefab";
                 _entityPath = _entityPath.Replace(@"\", "/");
                 _entityPath = prefabAssetPathToGhostEntityPath(_entityPath);
@@ -874,11 +803,7 @@ namespace UNIHper.Ghost.Editor
         /// </summary>
         /// <param name="ghostEntity"></param>
         /// <param name="entityPath"></param>
-        private static void generateSingleEntity(
-            GameObject ghostObj,
-            string entityPath,
-            bool forceOverwrite = false
-        )
+        private static void generateSingleEntity(GameObject ghostObj, string entityPath, bool forceOverwrite = false)
         {
             var ghostComponent = ghostObj.GetComponent(GhostType);
             var _ghostMeta = GhostData.GetGhostMeta(entityPath);
@@ -948,9 +873,7 @@ namespace UNIHper.Ghost.Editor
             LogWarning("移除非内置组件目标 " + ghostEntity.transform.GetFullPath("/"));
             while (_nonBuiltinComponents.Count > 0)
             {
-                var _component = _nonBuiltinComponents
-                    .Where(_component => _component.gameObject.CanDestroy(_component.GetType()))
-                    .First();
+                var _component = _nonBuiltinComponents.Where(_component => _component.gameObject.CanDestroy(_component.GetType())).First();
                 LogWarning("移除组件: " + _component.GetType().Name);
                 _nonBuiltinComponents.Remove(_component);
                 UnityEngine.Object.DestroyImmediate(_component, true);
@@ -967,12 +890,7 @@ namespace UNIHper.Ghost.Editor
                     UnityEngine.Object.DestroyImmediate(_child);
                 });
 
-            Log(
-                "保存实体结束: "
-                    + entityPath
-                    + " 组件数量"
-                    + _newEntityPrefab.GetComponents<Component>().Length
-            );
+            Log("保存实体结束: " + entityPath + " 组件数量" + _newEntityPrefab.GetComponents<Component>().Length);
             PrefabUtility.SaveAsPrefabAsset(_newEntityPrefab, entityPath, out bool success);
             var _assetGUID = AssetDatabase.AssetPathToGUID(entityPath);
             _ghostMeta.HasEntity = false;
@@ -1009,10 +927,7 @@ namespace UNIHper.Ghost.Editor
                 (_component, _prefabPath) =>
                 {
                     var _entityPath = prefabAssetPathToGhostEntityPath(_prefabPath);
-                    _entityPath = Path.Combine(
-                            Path.GetDirectoryName(_entityPath),
-                            _component.transform.GetFullPath(".") + ".prefab"
-                        )
+                    _entityPath = Path.Combine(Path.GetDirectoryName(_entityPath), _component.transform.GetFullPath(".") + ".prefab")
                         .ToForwardSlash();
 
                     AssetDatabase.Refresh();
@@ -1112,15 +1027,11 @@ namespace UNIHper.Ghost.Editor
             if (_nonBuiltinComponents.Count <= 0)
                 return;
 
-            Debug.LogWarning(
-                "You can't add non built-in component because current component is in ghost mode."
-            );
+            Debug.LogWarning("You can't add non built-in component because current component is in ghost mode.");
 
             while (_nonBuiltinComponents.Count > 0)
             {
-                var _component = _nonBuiltinComponents
-                    .Where(_component => _component.gameObject.CanDestroy(_component.GetType()))
-                    .First();
+                var _component = _nonBuiltinComponents.Where(_component => _component.gameObject.CanDestroy(_component.GetType())).First();
                 _nonBuiltinComponents.Remove(_component);
                 UnityEngine.Object.DestroyImmediate(_component, true);
             }
