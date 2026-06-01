@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 using System.IO;
 using DNHper;
 
@@ -9,7 +10,27 @@ namespace UNIHper
         // 获取StreamingAssets下的资源绝对路径
         public static string GetStreamingAssetsPath(string relativePath)
         {
-            return Path.Combine(Application.streamingAssetsPath, relativePath).ToForwardSlash();
+            if (string.IsNullOrEmpty(relativePath))
+                return Application.streamingAssetsPath.ToForwardSlash();
+
+            var normalizedPath = NormalizePath(relativePath);
+            if (IsAbsolutePathOrUrl(normalizedPath))
+                return normalizedPath;
+
+            return Path.Combine(Application.streamingAssetsPath, normalizedPath).ToForwardSlash();
+        }
+
+        public static string NormalizePath(string path)
+        {
+            return string.IsNullOrEmpty(path) ? string.Empty : path.ToForwardSlash();
+        }
+
+        public static bool IsAbsolutePathOrUrl(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return false;
+
+            return path.Contains("://") || Path.IsPathRooted(path);
         }
 
         public static string GetPersistentDataPath(string relativePath)
@@ -29,9 +50,14 @@ namespace UNIHper
 
         public static string BuildWebRequestJARUri(string filePath)
         {
-            if (filePath.StartsWith("jar:file://"))
-                return filePath;
-            return "jar:file://" + filePath;
+            var normalizedPath = NormalizePath(filePath);
+            if (normalizedPath.Contains("://"))
+                return normalizedPath;
+
+            if (Path.IsPathRooted(normalizedPath))
+                return $"file://{normalizedPath}";
+
+            return GetStreamingAssetsPath(normalizedPath);
         }
 
         /// <summary>
@@ -164,7 +190,22 @@ namespace UNIHper
         /// <returns>路径是否存在</returns>
         public static bool PathExists(string path)
         {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            if (IsStreamingAssetsPath(path))
+                return true;
+#endif
             return File.Exists(path) || Directory.Exists(path);
+        }
+
+        public static bool IsStreamingAssetsPath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return false;
+
+            var normalizedPath = NormalizePath(path);
+            var streamingRoot = NormalizePath(Application.streamingAssetsPath).TrimEnd('/');
+            return normalizedPath.Equals(streamingRoot, StringComparison.OrdinalIgnoreCase)
+                || normalizedPath.StartsWith(streamingRoot + "/", StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>

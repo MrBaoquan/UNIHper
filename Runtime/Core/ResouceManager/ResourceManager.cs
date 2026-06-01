@@ -637,14 +637,7 @@ namespace UNIHper
             {
                 try
                 {
-                    var _T = Type.GetType("UnityEngine." + _resItem.type + ",UnityEngine");
-
-                    var _assets = await (
-                        GetType()
-                            .GetMethod("LoadAddressableAssetsByLabel", BindingFlags.NonPublic | BindingFlags.Instance)
-                            .MakeGenericMethod(new Type[] { _T })
-                            .Invoke(this, new object[] { _resItem.label }) as IObservable<IEnumerable<AssetItem>>
-                    );
+                    var _assets = await LoadAddressableAssetsByItem(_resItem);
                     appendResources(_assets, InResID);
                     UNIHperLogger.Log($"load with label [{_resItem.label}] completed");
                 }
@@ -657,6 +650,22 @@ namespace UNIHper
 
             Debug.Log($"load addressable assets for [{InResID}] completed");
             await Task.CompletedTask;
+        }
+
+        private IObservable<IEnumerable<AssetItem>> LoadAddressableAssetsByItem(ResourceItem resItem)
+        {
+            return resItem.type switch
+            {
+                nameof(UnityEngine.Object) => LoadAddressableAssetsByLabel<UnityEngine.Object>(resItem.label),
+                nameof(Sprite) => LoadAddressableAssetsByLabel<Sprite>(resItem.label),
+                nameof(GameObject) => LoadAddressableAssetsByLabel<GameObject>(resItem.label),
+                nameof(TextAsset) => LoadAddressableAssetsByLabel<TextAsset>(resItem.label),
+                nameof(Material) => LoadAddressableAssetsByLabel<Material>(resItem.label),
+                _
+                    => Observable
+                        .Return(Enumerable.Empty<AssetItem>())
+                        .Do(_ => Debug.LogWarning($"Unsupported addressable asset type [{resItem.type}] for label [{resItem.label}]"))
+            };
         }
 
         // 加载AB包

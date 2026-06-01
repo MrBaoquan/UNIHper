@@ -55,9 +55,9 @@ namespace UNIHper
 
         public static IObservable<Texture2D> LoadTexture2D(this ResourceManager resourceManager, string filePath)
         {
-            if (!Path.IsPathRooted(filePath))
+            if (!PathUtils.IsAbsolutePathOrUrl(filePath))
             {
-                filePath = PathUtils.GetExternalAbsolutePath(filePath);
+                filePath = PathUtils.GetStreamingAssetsPath(filePath);
             }
 
 #if UNITY_ANDROID && !UNITY_EDITOR
@@ -82,10 +82,13 @@ namespace UNIHper
             AudioType InAudioType = AudioType.UNKNOWN
         )
         {
-            if (!Path.IsPathRooted(filePath))
+            if (!PathUtils.IsAbsolutePathOrUrl(filePath))
             {
-                filePath = Path.Combine(Application.streamingAssetsPath, filePath);
+                filePath = PathUtils.GetStreamingAssetsPath(filePath);
             }
+#if UNITY_ANDROID && !UNITY_EDITOR
+            filePath = PathUtils.BuildWebRequestJARUri(filePath);
+#endif
             return Observable
                 .FromCoroutine<AudioClip>(
                     (_observer, _cancellationToken) => LoadAudioClip(filePath, _observer, _cancellationToken, InAudioType)

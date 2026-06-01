@@ -1,4 +1,4 @@
-﻿#if UNITY_2018_1_OR_NEWER || (UNITY_2017_4_OR_NEWER && !UNITY_2017_4_0 && !UNITY_2017_4_1 && !UNITY_2017_4_2 && !UNITY_2017_4_3 && !UNITY_2017_4_4 && !UNITY_2017_4_5 && !UNITY_2017_4_6 && !UNITY_2017_4_7 && !UNITY_2017_4_8 && !UNITY_2017_4_9 && !UNITY_2017_4_10 && !UNITY_2017_4_11 && !UNITY_2017_4_12 && !UNITY_2017_4_13 && !UNITY_2017_4_14 && !UNITY_2017_4_15 && !UNITY_2017_4_15)
+#if UNITY_2018_1_OR_NEWER || (UNITY_2017_4_OR_NEWER && !UNITY_2017_4_0 && !UNITY_2017_4_1 && !UNITY_2017_4_2 && !UNITY_2017_4_3 && !UNITY_2017_4_4 && !UNITY_2017_4_5 && !UNITY_2017_4_6 && !UNITY_2017_4_7 && !UNITY_2017_4_8 && !UNITY_2017_4_9 && !UNITY_2017_4_10 && !UNITY_2017_4_11 && !UNITY_2017_4_12 && !UNITY_2017_4_13 && !UNITY_2017_4_14 && !UNITY_2017_4_15 && !UNITY_2017_4_15)
 	// Unity added Android ARM64 support in 2018.1, and backported to 2017.4.16
 	#define AVPROVIDEO_UNITY_ANDROID_ARM64_SUPPORT
 #endif
@@ -25,6 +25,7 @@ using UnityEditor.Build.Reporting;
 #endif
 using System.Collections.Generic;
 using System.IO;
+using UnityEditor.Compilation;
 
 //-----------------------------------------------------------------------------
 // Copyright 2015-2021 RenderHeads Ltd.  All rights reserved.
@@ -123,36 +124,54 @@ namespace RenderHeads.Media.AVProVideo.Editor
 
 		internal static void AddPlugins_Android()
 		{
-			#if AVPROVIDEO_UNITY_ANDROID_ARM64_SUPPORT
+#if AVPROVIDEO_UNITY_ANDROID_ARM64_SUPPORT
 			const bool IsAndroidArm64Supported = true;
-			#else
+#else
 			const bool IsAndroidArm64Supported = false;
-			#endif
-			#if AVPROVIDEO_UNITY_ANDROID_X86_SUPPORT
+#endif
+#if AVPROVIDEO_UNITY_ANDROID_X86_SUPPORT
 			const bool IsAndroidX86Supported = true;
-			#else
+#else
 			const bool IsAndroidX86Supported = false;
-			#endif
-			#if AVPROVIDEO_UNITY_ANDROID_X8664_SUPPORT
+#endif
+#if AVPROVIDEO_UNITY_ANDROID_X8664_SUPPORT
 			const bool IsAndroidX8664Supported = true;
-			#else
+#else
 			const bool IsAndroidX8664Supported = false;
-			#endif
-			string[] filenames = {
-				"libAudio360.so",
-				"libAudio360-JNI.so",
+#endif
+			string[] filenames =
+			{
 				"libAVProVideo2Native.so",
-				"libopus.so",
-				"libopusJNI.so",
 				"libresample-rh.so",
 				"libsamplerate-android.so",
 				"libssrc-android.so",
 			};
+
 			BuildTarget target = BuildTarget.Android;
 			AddPluginFiles(target, filenames, "Android/libs/armeabi-v7a/", false, new CpuArchitecture("ARMv7", true));
 			AddPluginFiles(target, filenames, "Android/libs/arm64-v8a/", false, new CpuArchitecture("ARM64", IsAndroidArm64Supported));
 			AddPluginFiles(target, filenames, "Android/libs/x86/", false, new CpuArchitecture("X86", IsAndroidX86Supported));
 			AddPluginFiles(target, filenames, "Android/libs/x86_64/", false, new CpuArchitecture("X86_64", IsAndroidX8664Supported));
+
+			ProjectSettings projectSettings = ProjectSettings.GetOrCreateProjectSettings();
+
+			// Facebook360 Support
+
+			string[] facebook360AudioFilenames =
+			{
+				"libAudio360.so",
+				"libAudio360-JNI.so",
+				"libopus.so",
+				"libopusJNI.so",
+			};
+
+			bool isFacebook360SupportEnabled = projectSettings.IsFacebook360SupportEnabled;
+			AddPluginFiles(target, facebook360AudioFilenames, "Android/libs/armeabi-v7a/", false, new CpuArchitecture("ARMv7", isFacebook360SupportEnabled));
+			AddPluginFiles(target, facebook360AudioFilenames, "Android/libs/arm64-v8a/", false, new CpuArchitecture("ARM64", isFacebook360SupportEnabled && IsAndroidArm64Supported));
+			AddPluginFiles(target, facebook360AudioFilenames, "Android/libs/x86/", false, new CpuArchitecture("X86", isFacebook360SupportEnabled && IsAndroidX86Supported));
+
+			bool isFacebook360EnabledFor_x86_64 = isFacebook360SupportEnabled && IsAndroidX8664Supported && projectSettings.IsFacebook360SupportOnx86_64Enabled;
+			AddPluginFiles(target, facebook360AudioFilenames, "Android/libs/x86_64/", false, new CpuArchitecture("X86_64", isFacebook360EnabledFor_x86_64));
 		}
 
 		internal static void AddPlugins_UWP()
@@ -200,11 +219,38 @@ namespace RenderHeads.Media.AVProVideo.Editor
         {
             List<SFileToDelete> aFilesToDelete = new List<SFileToDelete>();
 
-#if (UNITY_EDITOR && UNITY_ANDROID)
+#if UNITY_EDITOR
+	#if UNITY_ANDROID
             aFilesToDelete.Add( new SFileToDelete( "Android/guava-27.1-android.jar" ) );
+			aFilesToDelete.Add( new SFileToDelete( "Android/libs/arm64-v8a/libc++_shared.so" ) );
+			aFilesToDelete.Add( new SFileToDelete( "Android/libs/armeabi-v7a/libc++_shared.so" ) );
+			aFilesToDelete.Add( new SFileToDelete( "Android/libs/x86/libc++_shared.so" ) );
+			aFilesToDelete.Add( new SFileToDelete( "Android/libs/x86_64/libc++_shared.so" ) );
+
+			aFilesToDelete.Add( new SFileToDelete( "Android/guava-31.1-android.jar" ) );
+			aFilesToDelete.Add( new SFileToDelete( "Android/media3-common.aar" ) );
+			aFilesToDelete.Add( new SFileToDelete( "Android/media3-container.aar" ) );
+			aFilesToDelete.Add( new SFileToDelete( "Android/media3-database.aar" ) );
+			aFilesToDelete.Add( new SFileToDelete( "Android/media3-datasource.aar" ) );
+			aFilesToDelete.Add( new SFileToDelete( "Android/media3-datasource-cronet.aar" ) );
+			aFilesToDelete.Add( new SFileToDelete( "Android/media3-datasource-okhttp.aar" ) );
+			aFilesToDelete.Add( new SFileToDelete( "Android/media3-datasource-rtmp.aar" ) );
+			aFilesToDelete.Add( new SFileToDelete( "Android/media3-decoder.aar" ) );
+			aFilesToDelete.Add( new SFileToDelete( "Android/media3-extractor.aar" ) );
+			aFilesToDelete.Add( new SFileToDelete( "Android/media3-exoplayer.aar" ) );
+			aFilesToDelete.Add( new SFileToDelete( "Android/media3-exoplayer-dash.aar" ) );
+			aFilesToDelete.Add( new SFileToDelete( "Android/media3-exoplayer-hls.aar" ) );
+			aFilesToDelete.Add( new SFileToDelete( "Android/media3-exoplayer-rtsp.aar" ) );
+			aFilesToDelete.Add( new SFileToDelete( "Android/media3-exoplayer-smoothstreaming.aar" ) );
+			aFilesToDelete.Add( new SFileToDelete( "Android/media3-exoplayer-workmanager.aar" ) );
+			// aFilesToDelete.Add( new SFileToDelete( "Android/rtmp-client-3.2.0.aar" ) );
+	#elif UNITY_OPENHARMONY
+            aFilesToDelete.Add( new SFileToDelete( "OpenHarmony/AVProVideoLib.har" ) );
+            aFilesToDelete.Add( new SFileToDelete( "OpenHarmony/Manager.tslib" ) );
+	#endif
 #endif
 
-            if ( aFilesToDelete.Count > 0 )
+			if( aFilesToDelete.Count > 0 )
             {
                 int iNumFoundFilesToDelete = 0;
                 string aFilesToDeleteString = "";
@@ -233,9 +279,9 @@ namespace RenderHeads.Media.AVProVideo.Editor
 
                 if( iNumFoundFilesToDelete > 0 )
                 {
-                    string message = ( iNumFoundFilesToDelete == 1 ) ? "A legacy AVPro Video plugin file has been found that requires deleting in order to build." : "Legacy AVPro Video plugin files have been found that require deleting in order to build.";
+                    string message = ( iNumFoundFilesToDelete == 1 ) ? "A legacy AVPro Video plugin file(s) have been found that requires deleting in order to build." : "Legacy AVPro Video plugin files have been found that require deleting in order to build.";
                     Debug.Log("[AVProVideo] " + message + " Files: " + aFilesToDeleteString );
-                    if ( EditorUtility.DisplayDialog( "AVPro Video Legacy File", message + "\n\nDelete the following files?\n\n" + aFilesToDeleteString, "Delete", "Ignore" ) )
+                    if( EditorUtility.DisplayDialog( "AVPro Video Legacy File", message + "\n\nDelete the following files?\n\n" + aFilesToDeleteString, "Delete", "Ignore" ) )
                     {
                         foreach( SFileToDelete fileToDelete in aFilesToDelete )
                         {
@@ -245,7 +291,10 @@ namespace RenderHeads.Media.AVProVideo.Editor
                                 Debug.Log( "[AVProVideo] Deleting " + fileToDelete.fullPath );
                             }
                         }
-                    }
+
+						AssetDatabase.Refresh();
+						CompilationPipeline.RequestScriptCompilation();
+					}
                 }
             }
         }

@@ -1,7 +1,7 @@
 using UnityEngine;
 
 //-----------------------------------------------------------------------------
-// Copyright 2019-2022 RenderHeads Ltd.  All rights reserved.
+// Copyright 2019-2023 RenderHeads Ltd.  All rights reserved.
 //-----------------------------------------------------------------------------
 
 namespace RenderHeads.Media.AVProVideo
@@ -24,6 +24,10 @@ namespace RenderHeads.Media.AVProVideo
 		private RenderTexture _internalTexture;
 		private int _textureFrameCount = -1;
 
+		// Material used for blitting the texture as we need a shader to provide clamp to border colour style texture sampling
+		private Material _materialBlit;
+		private int _srcTexId;
+
 		public MediaPlayer MediaPlayer
 		{
 			get
@@ -33,6 +37,19 @@ namespace RenderHeads.Media.AVProVideo
 			set
 			{
 				ChangeMediaPlayer(value);
+			}
+		}
+
+		public VideoResolveOptions VideoResolveOptions
+		{
+			get
+			{
+				return _options;
+			}
+			set
+			{
+				_options = value;
+				_isMaterialDirty = true;
 			}
 		}
 
@@ -52,7 +69,8 @@ namespace RenderHeads.Media.AVProVideo
 		{
 			get
 			{
-				if (_externalTexture == null) return _internalTexture;
+				if (_externalTexture == null)
+					return _internalTexture;
 				return _externalTexture;
 			}
 		}
@@ -76,28 +94,33 @@ namespace RenderHeads.Media.AVProVideo
 
 		void Start()
 		{
-			_isMaterialOES = ( _mediaPlayer != null ) ? _mediaPlayer.IsUsingAndroidOESPath() : false;
-			_materialResolve = VideoRender.CreateResolveMaterial( _isMaterialOES );
+			_isMaterialOES = _mediaPlayer != null ? _mediaPlayer.IsUsingAndroidOESPath() : false;
+			_materialResolve = VideoRender.CreateResolveMaterial(_isMaterialOES);
 			VideoRender.SetupMaterialForMedia(_materialResolve, _mediaPlayer, -1);
+
+			_materialBlit = new Material(Shader.Find("AVProVideo/Internal/Blit"));
+			_srcTexId = Shader.PropertyToID("_SrcTex");
 		}
 
 		void LateUpdate()
 		{
-			Debug.Assert(_mediaPlayer != null);
 			Resolve();
 		}
 
 		public void Resolve()
 		{
 			ITextureProducer textureProducer = _mediaPlayer != null ? _mediaPlayer.TextureProducer : null;
-			if (textureProducer != null && textureProducer.GetTexture())
+			if (textureProducer == null)
+				return;
+
+			if (textureProducer.GetTexture())
 			{
 				// Check for a swap between OES and none-OES
 				bool playerIsOES = _mediaPlayer.IsUsingAndroidOESPath();
-				if ( _isMaterialOES != playerIsOES )
+				if (_isMaterialOES != playerIsOES)
 				{
 					_isMaterialOES = playerIsOES;
-					_materialResolve = VideoRender.CreateResolveMaterial( playerIsOES );
+					_materialResolve = VideoRender.CreateResolveMaterial(playerIsOES);
 				}
 
 				if (!_isMaterialSetup)
@@ -106,6 +129,7 @@ namespace RenderHeads.Media.AVProVideo
 					_isMaterialSetup = true;
 					_isMaterialDirty = true;
 				}
+
 				if (_isMaterialDirty)
 				{
 					VideoRender.SetupResolveMaterial(_materialResolve, _options);
@@ -120,9 +144,62 @@ namespace RenderHeads.Media.AVProVideo
 
 					if (_internalTexture && _externalTexture)
 					{
+						float srcAspectRatio = (float)_internalTexture.width / (float)_internalTexture.height;
+						float dstAspectRatio = (float)_externalTexture.width / (float)_externalTexture.height;
+
+						Vector2 offset = Vector2.zero;
+						Vector2 scale = new Vector2(1.0f, 1.0f);
+
+						// No point in handling the aspect ratio if the textures dimension's are the same
+						if (srcAspectRatio != dstAspectRatio)
+						{
+							switch (_options.aspectRatio)
+							{
+							case VideoResolveOptions.AspectRatio.NoScaling:
+								scale.x = (float)_externalTexture.width / (float)_internalTexture.width;
+								scale.y = (float)_externalTexture.height / (float)_internalTexture.height;
+								offset.x = (1.0f - scale.x) * 0.5f;
+								offset.y = (1.0f - scale.y) * 0.5f;
+								break;
+
+							case VideoResolveOptions.AspectRatio.FitVertically:
+								scale.x = (float)_internalTexture.height / (float)_internalTexture.width * dstAspectRatio;
+								offset.x = (1.0f - scale.x) * 0.5f;
+								break;
+
+							case VideoResolveOptions.AspectRatio.FitHorizontally:
+								scale.y = (float)_externalTexture.height / (float)_externalTexture.width * srcAspectRatio;
+								offset.y = (1.0f - scale.y) * 0.5f;
+								break;
+
+							case VideoResolveOptions.AspectRatio.FitInside:
+							{
+								if (srcAspectRatio > dstAspectRatio)
+									goto case VideoResolveOptions.AspectRatio.FitHorizontally;
+								else if (srcAspectRatio < dstAspectRatio)
+									goto case VideoResolveOptions.AspectRatio.FitVertically;
+							}	break;
+
+							case VideoResolveOptions.AspectRatio.FitOutside:
+							{
+								if (srcAspectRatio > dstAspectRatio)
+									goto case VideoResolveOptions.AspectRatio.FitVertically;
+								else if (srcAspectRatio < dstAspectRatio)
+									goto case VideoResolveOptions.AspectRatio.FitHorizontally;
+							}	break;
+
+							case VideoResolveOptions.AspectRatio.Stretch:
+								break;
+							}
+						}
+
 						// NOTE: This blit can be removed once we can ResolveVideoToRenderTexture is made not to recreate textures
 						// NOTE: This blit probably doesn't do correct linear/srgb conversion if the colorspace settings differ, may have to use GL.sRGBWrite
-						Graphics.Blit(_internalTexture, _externalTexture);
+						// NOTE: Cannot use _MainTex as Graphics.Blit replaces the texture offset and scale when using a material
+						_materialBlit.SetTexture(_srcTexId, _internalTexture);
+						_materialBlit.SetTextureOffset(_srcTexId, offset);
+						_materialBlit.SetTextureScale(_srcTexId, scale);
+						Graphics.Blit(null, _externalTexture, _materialBlit, 0);
 					}
 				}
 			}
@@ -132,7 +209,8 @@ namespace RenderHeads.Media.AVProVideo
 		{
 			if (_internalTexture)
 			{
-				RenderTexture.ReleaseTemporary(_internalTexture); _internalTexture = null;
+				RenderTexture.ReleaseTemporary(_internalTexture);
+				_internalTexture = null;
 			}
 		}
 
@@ -140,7 +218,8 @@ namespace RenderHeads.Media.AVProVideo
 		{
 			if (_materialResolve)
 			{
-				Destroy(_materialResolve); _materialResolve = null;
+				Destroy(_materialResolve);
+				_materialResolve = null;
 			}
 		}
 #if false

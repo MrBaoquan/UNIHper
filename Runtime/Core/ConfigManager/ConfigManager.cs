@@ -52,6 +52,18 @@ namespace UNIHper
         //private ConfigDriver driverMode = ConfigDriver.XML;
         private const string configDir = "Configs";
 
+#if UNITY_ANDROID && !UNITY_EDITOR
+        private static string GetAndroidInternalFilesDir()
+        {
+            using (var unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
+            using (var currentActivity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity"))
+            using (var filesDir = currentActivity.Call<AndroidJavaObject>("getFilesDir"))
+            {
+                return filesDir.Call<string>("getAbsolutePath");
+            }
+        }
+#endif
+
         private string suffix(ConfigDriver driverMode)
         {
             if (driverMode == ConfigDriver.YAML)
@@ -76,15 +88,15 @@ namespace UNIHper
             _configClasses.Sort(
                 (a, b) =>
                 {
-                    var _aAttr = Attribute.GetCustomAttributes(a).Where(_attr => _attr is SerializedAt).FirstOrDefault();
-                    var _bAttr = Attribute.GetCustomAttributes(b).Where(_attr => _attr is SerializedAt).FirstOrDefault();
-                    var _aPriority = (_aAttr as SerializedAt)?.Priority;
-                    var _bPriority = (_bAttr as SerializedAt)?.Priority;
-                    if (_aPriority == null || _bPriority == null)
-                    {
-                        return _aPriority == null ? -1 : 1;
-                    }
-                    return _aPriority.Value.CompareTo(_bPriority.Value);
+                    SerializedAt _aAttr = CachedSerializedAtDict.TryGetValue(a.Name, out var _aCached)
+                        ? _aCached
+                        : Attribute.GetCustomAttributes(a).OfType<SerializedAt>().FirstOrDefault();
+                    SerializedAt _bAttr = CachedSerializedAtDict.TryGetValue(b.Name, out var _bCached)
+                        ? _bCached
+                        : Attribute.GetCustomAttributes(b).OfType<SerializedAt>().FirstOrDefault();
+                    if (_aAttr == null || _bAttr == null)
+                        return _aAttr == null ? -1 : 1;
+                    return _aAttr.Priority.CompareTo(_bAttr.Priority);
                 }
             );
 
@@ -121,22 +133,43 @@ namespace UNIHper
                     }
 
                     _fileName = _serializedAttr.FileName;
-                    if (_serializedAttr.RootDir == AppPath.StreamingDir)
+
+                    switch (_serializedAttr.RootDir)
                     {
-                        _configDir = Path.Combine(Application.streamingAssetsPath, _serializedAttr.SubDir);
-                    }
-                    else if (_serializedAttr.RootDir == AppPath.PersistentDir)
-                    {
-                        _configDir = Path.Combine(Application.persistentDataPath, _serializedAttr.SubDir);
-                    }
-                    else if (_serializedAttr.RootDir == AppPath.DataDir)
-                    {
-                        _configDir = Path.Combine(Application.dataPath, _serializedAttr.SubDir);
-                    }
-                    else if (_serializedAttr.RootDir == AppPath.ProjectDir)
-                    {
-                        var _projectDir = Directory.GetParent(Application.dataPath).FullName;
-                        _configDir = Path.Combine(_projectDir, _serializedAttr.SubDir);
+                        case AppPath.StreamingDir:
+                            _configDir = Path.Combine(Application.streamingAssetsPath, _serializedAttr.SubDir);
+                            break;
+                        case AppPath.Auto:
+#if UNITY_ANDROID && !UNITY_EDITOR
+                            _configDir = Path.Combine(Application.persistentDataPath, _serializedAttr.SubDir);
+#else
+                            _configDir = Path.Combine(Application.streamingAssetsPath, _serializedAttr.SubDir);
+#endif
+                            break;
+                        case AppPath.PersistentDir:
+                            _configDir = Path.Combine(Application.persistentDataPath, _serializedAttr.SubDir);
+                            break;
+#pragma warning disable CS0618
+                        case AppPath.AndroidInternalFilesDir:
+#pragma warning restore CS0618
+                            _configDir = Path.Combine(Application.persistentDataPath, _serializedAttr.SubDir);
+                            break;
+                        case AppPath.DataDir:
+#if UNITY_ANDROID && !UNITY_EDITOR
+                            _configDir = Path.Combine(GetAndroidInternalFilesDir(), _serializedAttr.SubDir);
+#else
+                            _configDir = Path.Combine(Application.dataPath, _serializedAttr.SubDir);
+#endif
+                            break;
+                        case AppPath.ProjectDir:
+                            var _projectDir = Directory.GetParent(Application.dataPath).FullName;
+                            _configDir = Path.Combine(_projectDir, _serializedAttr.SubDir);
+                            break;
+                        default:
+                            UNIHperLogger.LogWarning(
+                                $"Config {_configClass.FullName}: unhandled AppPath {_serializedAttr.RootDir}, falling back to persistentDataPath."
+                            );
+                            break;
                     }
                 }
 

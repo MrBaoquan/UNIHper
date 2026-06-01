@@ -21,20 +21,36 @@ namespace UNIHper
         ProjectDir,
 
         /// <summary>
-        /// Save the config file in the project [Application.dataPath] directory
+        /// Save the config file in [Application.dataPath] on Win/Editor;
+        /// maps to Android Context.getFilesDir() on Android.
         /// </summary>
         DataDir,
 
         /// <summary>
-        /// Save the config file in the project [streaming assets] directory
+        /// Save the config file literally in [Application.streamingAssetsPath].
+        /// Read-only on Android (inside APK). Use Auto if the file must be writable at runtime.
         /// </summary>
         StreamingDir,
 
         /// <summary>
-        /// Save the config file in the project [%userprofile%\AppData\LocalLow\companyname\productname] directory
+        /// Platform-appropriate writable directory for app-bundled configs.
+        /// Win/Editor: Application.streamingAssetsPath.
+        /// Android: Application.persistentDataPath (StreamingAssets is read-only inside APK).
+        /// </summary>
+        Auto,
+
+        /// <summary>
+        /// Save the config file in [Application.persistentDataPath] on all platforms.
         /// </summary>
         PersistentDir,
-        None
+
+        None,
+
+        /// <summary>
+        /// Deprecated. Use DataDir — it resolves to AndroidInternalFilesDir on Android automatically.
+        /// </summary>
+        [Obsolete("Use DataDir instead.")]
+        AndroidInternalFilesDir
     }
 
     [AttributeUsage(AttributeTargets.Class, Inherited = true, AllowMultiple = false)]
@@ -83,11 +99,7 @@ namespace UNIHper
         }
     }
 
-#if UNITY_EDITOR || UNITY_STANDALONE_WIN
-    [SerializedAt(AppPath.StreamingDir, Priority = -1), SerializeWith(ConfigDriver.XML)]
-#else
-    [SerializedAt(AppPath.PersistentDir, Priority = -1)]
-#endif
+    [SerializedAt(AppPath.Auto, Priority = -1), SerializeWith(ConfigDriver.XML)]
     public class UConfig
     {
         [XmlIgnore, JsonIgnore]

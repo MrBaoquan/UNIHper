@@ -26,6 +26,8 @@ namespace RenderHeads.Media.AVProVideo.Editor
 		private SerializedProperty _propOptionsGamma;
 		private SerializedProperty _propOptionsTint;
 
+		private SerializedProperty _propOptionsAspectRatio;
+
 		void OnEnable()
 		{
 			_propMediaPlayer = this.CheckFindProperty("_mediaPlayer");
@@ -38,6 +40,7 @@ namespace RenderHeads.Media.AVProVideo.Editor
 			_propOptionsContrast = this.CheckFindProperty("_options.contrast");
 			_propOptionsGamma = this.CheckFindProperty("_options.gamma");
 			_propOptionsTint = this.CheckFindProperty("_options.tint");
+			_propOptionsAspectRatio = this.CheckFindProperty("_options.aspectRatio");
 		}
 
 		private void ButtonFloatReset(SerializedProperty prop, float value)
@@ -97,6 +100,8 @@ namespace RenderHeads.Media.AVProVideo.Editor
 					}
 				}
 			}
+
+			EditorGUILayout.PropertyField(_propOptionsAspectRatio);
 
 			serializedObject.ApplyModifiedProperties();
 

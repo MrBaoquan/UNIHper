@@ -24,6 +24,7 @@ namespace RenderHeads.Media.AVProVideo
 		[SerializeField] MediaReference _macOS = null;
 		[SerializeField] MediaReference _windows = null;
 		[SerializeField] MediaReference _android = null;
+		[SerializeField] MediaReference _openharmony = null;
 		[SerializeField] MediaReference _iOS = null;
 		[SerializeField] MediaReference _tvOS = null;
 		[SerializeField] MediaReference _windowsUWP = null;
@@ -65,13 +66,15 @@ namespace RenderHeads.Media.AVProVideo
 		#elif (UNITY_EDITOR_OSX && UNITY_TVOS) || (!UNITY_EDITOR && UNITY_TVOS)
 			result = GetPlatformMediaReference(Platform.tvOS);
 		#elif (UNITY_EDITOR_OSX || (!UNITY_EDITOR && UNITY_STANDALONE_OSX))
-			result = GetPlatformMediaReference(Platform.MacOSX);
+			result = GetPlatformMediaReference(Platform.macOS);
 		#elif (UNITY_EDITOR_WIN) || (!UNITY_EDITOR && UNITY_STANDALONE_WIN)
 			result = GetPlatformMediaReference(Platform.Windows);
 		#elif (!UNITY_EDITOR && UNITY_WSA_10_0)
 			result = GetPlatformMediaReference(Platform.WindowsUWP);
 		#elif (!UNITY_EDITOR && UNITY_ANDROID)
 			result = GetPlatformMediaReference(Platform.Android);
+		#elif (!UNITY_EDITOR && UNITY_OPENHARMONY)
+			result = GetPlatformMediaReference(Platform.OpenHarmony);
 		#elif (!UNITY_EDITOR && UNITY_WEBGL)
 			result = GetPlatformMediaReference(Platform.WebGL);
 		#endif
@@ -96,7 +99,7 @@ namespace RenderHeads.Media.AVProVideo
 				case Platform.tvOS:
 					result = _tvOS;
 					break;
-				case Platform.MacOSX:
+				case Platform.macOS:
 					result = _macOS;
 					break;
 				case Platform.Windows:
@@ -107,6 +110,9 @@ namespace RenderHeads.Media.AVProVideo
 					break;
 				case Platform.Android:
 					result = _android;
+					break;
+				case Platform.OpenHarmony:
+					result = _openharmony;
 					break;
 				case Platform.WebGL:
 					result = _webGL;

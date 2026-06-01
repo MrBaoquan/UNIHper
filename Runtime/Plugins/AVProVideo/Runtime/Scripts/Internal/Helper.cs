@@ -3,20 +3,21 @@ using System.Collections;
 using System.Collections.Generic;
 
 //-----------------------------------------------------------------------------
-// Copyright 2015-2022 RenderHeads Ltd.  All rights reserved.
+// Copyright 2015-2025 RenderHeads Ltd.  All rights reserved.
 //-----------------------------------------------------------------------------
 
 namespace RenderHeads.Media.AVProVideo
 {
 	public static class Helper
 	{
-		public const string AVProVideoVersion = "2.7.3";
+		public const string AVProVideoVersion = "3.3.5";
 		public sealed class ExpectedPluginVersion
 		{
-			public const string Windows      = "2.7.0";
-			public const string WinRT        = "2.7.0";
-			public const string Android      = "2.7.1";
-			public const string Apple        = "2.7.3";
+			public const string Windows      = "3.2.6";
+			public const string WinRT        = "3.2.6";
+			public const string Android      = "3.3.5";
+			public const string Apple        = "3.3.5";
+			public const string OpenHarmony  = "3.3.5";
 		}
 
 		public const string UnityBaseTextureName = "_MainTex";
@@ -48,6 +49,11 @@ namespace RenderHeads.Media.AVProVideo
 					break;
 				case MediaPathType.RelativeToStreamingAssetsFolder:
 					result = Application.streamingAssetsPath;
+#if UNITY_OPENHARMONY && !UNITY_EDITOR
+					// It has been seen that some versions of Tuanjie do not include the 'jar:' prefix on the streamingAssetsPath so add it in here if it is missing
+					string jarUrlPrefix = "jar:";
+					result = result.StartsWith( jarUrlPrefix ) ? result : ( jarUrlPrefix + result );
+#endif
 					break;
 			}
 			return result;
@@ -150,9 +156,6 @@ namespace RenderHeads.Media.AVProVideo
 				case Platform.WindowsUWP:
 					result = "Windows UWP";
 					break;
-				case Platform.MacOSX:
-					result = "macOS";
-					break;
 				default:
 					result = platform.ToString();
 				break;
@@ -164,12 +167,14 @@ namespace RenderHeads.Media.AVProVideo
 		{
 			return new string[] {
 				GetPlatformName(Platform.Windows),
-				GetPlatformName(Platform.MacOSX),
+				GetPlatformName(Platform.macOS),
 				GetPlatformName(Platform.iOS),
 				GetPlatformName(Platform.tvOS),
+				GetPlatformName(Platform.visionOS),
 				GetPlatformName(Platform.Android),
 				GetPlatformName(Platform.WindowsUWP),
 				GetPlatformName(Platform.WebGL),
+				GetPlatformName(Platform.OpenHarmony)
 			};
 		}
 
@@ -311,9 +316,9 @@ namespace RenderHeads.Media.AVProVideo
 			return result;
 		}
 
-		private static Matrix4x4 PortraitMatrix         = Matrix4x4.TRS(new Vector3(0f, 1f, 0f), Quaternion.Euler(0f, 0f, -90f), Vector3.one);
-		private static Matrix4x4 PortraitFlippedMatrix  = Matrix4x4.TRS(new Vector3(1f, 0f, 0f), Quaternion.Euler(0f, 0f, 90f), Vector3.one);
-		private static Matrix4x4 LandscapeFlippedMatrix = Matrix4x4.TRS(new Vector3(0f, 1f, 0f), Quaternion.Euler(0f, 0f, -90f), Vector3.one);
+		private static Matrix4x4 PortraitMatrix         = Matrix4x4.TRS(new Vector3(0f, 1f, 0f), Quaternion.Euler(0f, 0f,  -90f), Vector3.one);
+		private static Matrix4x4 PortraitFlippedMatrix  = Matrix4x4.TRS(new Vector3(1f, 0f, 0f), Quaternion.Euler(0f, 0f,   90f), Vector3.one);
+		private static Matrix4x4 LandscapeFlippedMatrix = Matrix4x4.TRS(new Vector3(1f, 1f, 0f), Quaternion.Euler(0f, 0f, -180f), Vector3.one);
 
 		public static Matrix4x4 GetMatrixForOrientation(Orientation ori)
 		{
@@ -345,6 +350,15 @@ namespace RenderHeads.Media.AVProVideo
 			return result;
 		}
 
+		public static Matrix4x4 Matrix4x4FromAffineTransform(float[] affineXfrm)
+		{
+			Vector4 v0 = new Vector4(affineXfrm[0], affineXfrm[1], 0, 0);
+			Vector4 v1 = new Vector4(affineXfrm[2], affineXfrm[3], 0, 0);
+			Vector4 v2 = new Vector4(            0,             0, 1, 0);
+			Vector4 v3 = new Vector4(affineXfrm[4], affineXfrm[5], 0, 1);
+			return new Matrix4x4(v0, v1, v2, v3);
+		}
+
 		public static int ConvertTimeSecondsToFrame(double seconds, float frameRate)
 		{
 			// NOTE: Generally you should use RountToInt when converting from time to frame number
@@ -359,7 +373,11 @@ namespace RenderHeads.Media.AVProVideo
 			frame = Mathf.Max(0, frame);
 			frameRate = Mathf.Max(0f, frameRate);
 			double frameDurationSeconds = 1.0 / frameRate;
-			return ((double)frame * frameDurationSeconds) + (frameDurationSeconds * 0.5);		// Add half a frame we that the time lands in the middle of the frame range and not at the edges
+#if !UNITY_EDITOR && UNITY_ANDROID
+			return ((double)frame * frameDurationSeconds) + (frameDurationSeconds * 0.01);		// #1999 : Need to bump on the value a little, but not a whole half frame time, to avoid float inaccuracy error
+#else
+			return ((double)frame * frameDurationSeconds) + (frameDurationSeconds * 0.5);       // Add half a frame we that the time lands in the middle of the frame range and not at the edges
+#endif
 		}
 
 		public static double FindNextKeyFrameTimeSeconds(double seconds, float frameRate, int keyFrameInterval)
@@ -467,9 +485,9 @@ namespace RenderHeads.Media.AVProVideo
 
 				// The above Blit can't flip unless using a material, so we use Graphics.DrawTexture instead
 				GL.InvalidateState();
-				GL.PushMatrix();
-				GL.Clear(false, true, Color.red);
 				RenderTexture.active = tempRT;
+				GL.Clear(false, true, Color.black);
+				GL.PushMatrix();
 				GL.LoadPixelMatrix(0f, tempRT.width, 0f, tempRT.height);
 				Rect sourceRect = new Rect(0f, 0f, 1f, 1f);
 				// NOTE: not sure why we need to set y to -1, without this there is a 1px gap at the bottom

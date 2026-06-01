@@ -1,8 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 //-----------------------------------------------------------------------------
-// Copyright 2015-2021 RenderHeads Ltd.  All rights reserved.
+// Copyright 2015-2024 RenderHeads Ltd.  All rights reserved.
 //-----------------------------------------------------------------------------
 
 namespace RenderHeads.Media.AVProVideo
@@ -29,7 +31,7 @@ namespace RenderHeads.Media.AVProVideo
 		}
 
 		// The UID is unique to the media
-		internal int Uid { get; private set; }
+		public int Uid { get; private set; }
 
 		public TrackType TrackType { get; private set; }
 
@@ -69,12 +71,15 @@ namespace RenderHeads.Media.AVProVideo
 		public abstract int Count { get; }
 		public abstract IEnumerator GetEnumerator();
 
+		public abstract int GetTrackArrayIndexFromUid( int Uid );
+
 		internal abstract void Clear();
 		internal abstract void Add(TrackBase track);
 		internal abstract bool HasActiveTrack();
 		internal abstract bool IsActiveTrack(TrackBase track);
 		internal abstract void SetActiveTrack(TrackBase track);
 		internal abstract void SetFirstTrackActive();
+		public abstract int GetActiveTrackIndex();
 	}
 
 	public class TrackCollection<T> : TrackCollection where T : TrackBase
@@ -103,6 +108,21 @@ namespace RenderHeads.Media.AVProVideo
 			return (ActiveTrack == track);
 		}
 
+		public override int GetTrackArrayIndexFromUid( int Uid )
+		{
+			int iTrackArrayIndex = 0;
+			foreach( TrackBase track in _tracks )
+			{
+				if( track.Uid == Uid )
+				{
+					return iTrackArrayIndex;
+				}
+				++iTrackArrayIndex;
+			}
+
+			return -1;
+		}
+
 		internal override void Clear()
 		{
 			_tracks.Clear();
@@ -125,6 +145,16 @@ namespace RenderHeads.Media.AVProVideo
 			{
 				ActiveTrack = _tracks[0];
 			}
+		}
+
+		public override int GetActiveTrackIndex()
+		{
+//			Debug.Log("[AVProVideo]: GetActiveTrackIndex() | ActiveTrack = " + ActiveTrack + " | ActiveTrack.Uid = " + (( ActiveTrack != null ) ? ActiveTrack.Uid : -1));
+			if( ActiveTrack != null )
+			{
+				return ActiveTrack.Uid;
+			}
+			return -1;
 		}
 
 		public override int Count { get{ return _tracks.Count; } }
@@ -153,7 +183,7 @@ namespace RenderHeads.Media.AVProVideo
 
 		internal VideoTrack(int uid, string name, string language, bool isDefault)
 			: base(TrackType.Video, uid, name, language, isDefault) { }
-	
+
 		// Optional
 		public int Bitrate { get; set; }
 	}
@@ -200,6 +230,8 @@ namespace RenderHeads.Media.AVProVideo
 		TextTrack			GetActiveTextTrack();
 		void 				SetActiveTextTrack(TextTrack track);
 		TextCue				GetCurrentTextCue();
+
+		int					GetTextTrackArrayIndexFromUid( int Uid );
 	}
 
 	public partial class BaseMediaPlayer : IVideoTracks, IAudioTracks, ITextTracks
@@ -209,19 +241,21 @@ namespace RenderHeads.Media.AVProVideo
 		protected TextTracks _textTracks = new TextTracks();
 		protected TrackCollection[] _trackCollections;
 
-		public VideoTracks			GetVideoTracks() { return _videoTracks; }
-		public AudioTracks			GetAudioTracks() { return _audioTracks; }
-		public TextTracks			GetTextTracks() { return _textTracks; }
-		public VideoTrack			GetActiveVideoTrack() { return _videoTracks.ActiveTrack; }
-		public AudioTrack			GetActiveAudioTrack() { return _audioTracks.ActiveTrack; }
-		public TextTrack			GetActiveTextTrack() { return _textTracks.ActiveTrack; }
-		public void 				SetActiveVideoTrack(VideoTrack track) { if (track != null) SetActiveTrack(_videoTracks, track); }
-		public void 				SetActiveAudioTrack(AudioTrack track) { if (track != null) SetActiveTrack(_audioTracks, track); }
-		public void 				SetActiveTextTrack(TextTrack track) { SetActiveTrack(_textTracks, track); }
+		public VideoTracks GetVideoTracks() { return _videoTracks; }
+		public AudioTracks GetAudioTracks() { return _audioTracks; }
+		public TextTracks GetTextTracks() { return _textTracks; }
+		public VideoTrack GetActiveVideoTrack() { return _videoTracks.ActiveTrack; }
+		public AudioTrack GetActiveAudioTrack() { return _audioTracks.ActiveTrack; }
+		public TextTrack GetActiveTextTrack() { return _textTracks.ActiveTrack; }
+		public void SetActiveVideoTrack(VideoTrack track) { if (track != null) SetActiveTrack(_videoTracks, track); }
+		public void SetActiveAudioTrack(AudioTrack track) { if (track != null) SetActiveTrack(_audioTracks, track); }
+		public void SetActiveTextTrack(TextTrack track) { SetActiveTrack(_textTracks, track); }
 
-		internal abstract bool 		InternalIsChangedTracks(TrackType trackType);
-		internal abstract int 		InternalGetTrackCount(TrackType trackType);
-		internal abstract bool 		InternalSetActiveTrack(TrackType trackType, int trackUid);
+		public int GetTextTrackArrayIndexFromUid(int Uid) { return _trackCollections[2].GetTrackArrayIndexFromUid(Uid); }
+
+		internal abstract bool InternalIsChangedTracks(TrackType trackType);
+		internal abstract int InternalGetTrackCount(TrackType trackType);
+		internal abstract bool InternalSetActiveTrack(TrackType trackType, int trackUid);
 		internal abstract TrackBase InternalGetTrackInfo(TrackType trackType, int trackIndex, ref bool isActiveTrack);
 
 		private void InitTracks()
@@ -283,7 +317,7 @@ namespace RenderHeads.Media.AVProVideo
 				switch (collection.TrackType)
 				{
 					case TrackType.Text:
-						UpdateTextCue(force:true);
+						UpdateTextCue(force: true);
 						break;
 				}
 			}

@@ -24,7 +24,14 @@ namespace UNIHper.Editor
                 {
                     if (!File.Exists(_readme))
                         return;
-                    File.Copy(_readme, Path.Combine(_buildDir, Path.GetFileName(_readme)), true);
+
+                    var _destination = Path.Combine(_buildDir, Path.GetFileName(_readme));
+                    if (string.Equals(Path.GetFullPath(_readme), Path.GetFullPath(_destination), System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        return;
+                    }
+
+                    File.Copy(_readme, _destination, true);
                 });
 
             // 删除发布后目录StreamingAssets下符合*~的文件及文件夹
@@ -36,18 +43,10 @@ namespace UNIHper.Editor
         {
             string streamingAssetsPath = string.Empty;
 
-            if (
-                target == BuildTarget.StandaloneWindows
-                || target == BuildTarget.StandaloneWindows64
-                || target == BuildTarget.StandaloneOSX
-            )
+            if (target == BuildTarget.StandaloneWindows || target == BuildTarget.StandaloneWindows64 || target == BuildTarget.StandaloneOSX)
             {
                 string dataPath = Path.GetFileNameWithoutExtension(pathToBuiltProject) + "_Data";
-                streamingAssetsPath = Path.Combine(
-                    Path.GetDirectoryName(pathToBuiltProject),
-                    dataPath,
-                    "StreamingAssets"
-                );
+                streamingAssetsPath = Path.Combine(Path.GetDirectoryName(pathToBuiltProject), dataPath, "StreamingAssets");
             }
             else if (target == BuildTarget.Android)
             {

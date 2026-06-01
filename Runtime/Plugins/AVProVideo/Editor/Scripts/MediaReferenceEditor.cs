@@ -17,6 +17,7 @@ namespace RenderHeads.Media.AVProVideo.Editor
 		private SerializedProperty _propPlatformMacOS;
 		private SerializedProperty _propPlatformWindows;
 		private SerializedProperty _propPlatformAndroid;
+		private SerializedProperty _propPlatformOpenHarmony;
 		private SerializedProperty _propPlatformIOS;
 		private SerializedProperty _propPlatformTvOS;
 		private SerializedProperty _propPlatformWindowsUWP;
@@ -31,6 +32,7 @@ namespace RenderHeads.Media.AVProVideo.Editor
 			_propPlatformMacOS = this.CheckFindProperty("_macOS");
 			_propPlatformWindows = this.CheckFindProperty("_windows");
 			_propPlatformAndroid = this.CheckFindProperty("_android");
+			_propPlatformOpenHarmony = this.CheckFindProperty("_openharmony");
 			_propPlatformIOS = this.CheckFindProperty("_iOS");
 			_propPlatformTvOS = this.CheckFindProperty("_tvOS");
 			_propPlatformWindowsUWP = this.CheckFindProperty("_windowsUWP");
@@ -82,6 +84,7 @@ namespace RenderHeads.Media.AVProVideo.Editor
 			EditorGUILayout.PropertyField(_propPlatformMacOS, new GUIContent("macOS"));
 			EditorGUILayout.PropertyField(_propPlatformWindows, new GUIContent("Windows"));
 			EditorGUILayout.PropertyField(_propPlatformAndroid, new GUIContent("Android"));
+			EditorGUILayout.PropertyField(_propPlatformOpenHarmony, new GUIContent("OpenHarmony"));
 			EditorGUILayout.PropertyField(_propPlatformIOS, new GUIContent("iOS"));
 			EditorGUILayout.PropertyField(_propPlatformTvOS, new GUIContent("tvOS"));
 			EditorGUILayout.PropertyField(_propPlatformWindowsUWP, new GUIContent("UWP"));
@@ -186,7 +189,7 @@ namespace RenderHeads.Media.AVProVideo.Editor
 			#elif UNITY_EDITOR_OSX
 			{
 				MediaPlayer.OptionsApple options = new MediaPlayer.OptionsApple(MediaPlayer.OptionsApple.TextureFormat.BGRA, MediaPlayer.OptionsApple.Flags.None);
-				_thumbnailPlayer = new AppleMediaPlayer(options);
+				_thumbnailPlayer = new PlatformMediaPlayer(options);
 			}
 			#endif
 

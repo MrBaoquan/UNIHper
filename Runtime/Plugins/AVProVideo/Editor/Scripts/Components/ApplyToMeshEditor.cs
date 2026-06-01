@@ -99,7 +99,11 @@ namespace RenderHeads.Media.AVProVideo.Editor
 						MaterialProperty[] matProps = MaterialEditor.GetMaterialProperties(new Object[] { mat });
 						foreach (MaterialProperty matProp in matProps)
 						{
+						#if UNITY_6000_2_OR_NEWER
+							if (matProp.propertyType == UnityEngine.Rendering.ShaderPropertyType.Texture)
+						#else
 							if (matProp.type == MaterialProperty.PropType.Texture)
+						#endif
 							{
 								if (!textureNames.Contains(matProp.name))
 								{

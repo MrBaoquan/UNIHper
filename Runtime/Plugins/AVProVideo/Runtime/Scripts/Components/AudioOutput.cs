@@ -1,8 +1,8 @@
-﻿using UnityEngine;
+﻿//-----------------------------------------------------------------------------
+// Copyright 2015-2026 RenderHeads Ltd.  All rights reserved.
+//-----------------------------------------------------------------------------
 
-//-----------------------------------------------------------------------------
-// Copyright 2015-2022 RenderHeads Ltd.  All rights reserved.
-//-----------------------------------------------------------------------------
+using UnityEngine;
 
 namespace RenderHeads.Media.AVProVideo
 {
@@ -27,6 +27,8 @@ namespace RenderHeads.Media.AVProVideo
 		[HideInInspector, SerializeField] int _channelMask = 0xffff;
 		[SerializeField] bool _supportPositionalAudio = false;
 
+		private int _mediaPlayerInstanceID = 0;
+
 		public MediaPlayer Player
 		{
 			get { return _mediaPlayer; }
@@ -45,6 +47,12 @@ namespace RenderHeads.Media.AVProVideo
 			set { _channelMask = value; }
 		}
 
+		public bool SupportPositionalAudio
+		{
+			get { return _supportPositionalAudio; }
+			set { _supportPositionalAudio = value; }
+		}
+
 		private AudioSource _audioSource;
 
 		void Awake()
@@ -61,7 +69,7 @@ namespace RenderHeads.Media.AVProVideo
 
 		void OnAudioConfigurationChanged(bool deviceChanged)
 		{
-			if (_mediaPlayer.Control == null)
+			if (_mediaPlayer == null || _mediaPlayer.Control == null)
 				return;
 			_mediaPlayer.Control.AudioConfigurationChanged(deviceChanged);
 		}
@@ -83,32 +91,23 @@ namespace RenderHeads.Media.AVProVideo
 		{
 			return _audioSource;
 		}
+		public void SetAudioSource(AudioSource source)
+		{
+			_audioSource = source;
+			if (_mediaPlayer)
+				_mediaPlayer.AudioSource = source;
+		}
 
 		public void ChangeMediaPlayer(MediaPlayer newPlayer)
 		{
-			#if UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || (!UNITY_EDITOR && (UNITY_IOS || UNITY_TVOS))
-				if (newPlayer != null)
-				{
-					MediaPlayer.OptionsApple options = (MediaPlayer.OptionsApple)newPlayer.GetCurrentPlatformOptions();
-					if (options.audioMode == MediaPlayer.OptionsApple.AudioMode.Unity)
-					{
-						this.enabled = true;
-					}
-					else
-					{
-						Debug.LogWarning("[AVProVideo] Unity audio output is not supported when 'Audio Output Mode' is not set to 'Unity' in the MediaPlayer platform options");
-						this.enabled = false;
-						return;
-					}
-				}
-			#endif
-
 			// When changing the media player, handle event subscriptions
 			if (_mediaPlayer != null)
 			{
 				_mediaPlayer.AudioSource = null;
 				_mediaPlayer.Events.RemoveListener(OnMediaPlayerEvent);
+				AudioOutputManager.Instance.RemovePlayerInstance(_mediaPlayerInstanceID);
 				_mediaPlayer = null;
+				_mediaPlayerInstanceID = 0;
 			}
 
 			_mediaPlayer = newPlayer;
@@ -116,6 +115,8 @@ namespace RenderHeads.Media.AVProVideo
 			{
 				_mediaPlayer.Events.AddListener(OnMediaPlayerEvent);
 				_mediaPlayer.AudioSource = _audioSource;
+				_mediaPlayerInstanceID = _mediaPlayer.GetInstanceID();
+				AudioOutputManager.Instance.AddPlayerInstance(_mediaPlayerInstanceID);
 			}
 
 			if (_supportPositionalAudio)
@@ -169,10 +170,10 @@ namespace RenderHeads.Media.AVProVideo
 			}
 		}
 
-#if (UNITY_EDITOR_WIN || UNITY_EDITOR_OSX) || (!UNITY_EDITOR && (UNITY_STANDALONE_WIN || UNITY_WSA_10_0 || UNITY_STANDALONE_OSX || UNITY_IOS || UNITY_TVOS || UNITY_ANDROID))
+#if (UNITY_EDITOR_WIN || UNITY_EDITOR_OSX) || (!UNITY_EDITOR && (UNITY_STANDALONE_WIN || UNITY_WSA_10_0 || UNITY_STANDALONE_OSX || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS || UNITY_ANDROID))
 		void OnAudioFilterRead(float[] audioData, int channelCount)
 		{
-			AudioOutputManager.Instance.RequestAudio(this, _mediaPlayer, audioData, channelCount, _channelMask, _audioOutputMode, _supportPositionalAudio);
+			AudioOutputManager.Instance.RequestAudio(this, _mediaPlayer, _mediaPlayerInstanceID, audioData, channelCount, _channelMask, _audioOutputMode, _supportPositionalAudio);
 		}
 #endif
 	}

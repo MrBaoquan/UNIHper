@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 
@@ -66,7 +66,11 @@ namespace RenderHeads.Media.AVProVideo.Editor
 				List<GUIContent> items = new List<GUIContent>(16);
 				foreach (MaterialProperty matProp in matProps)
 				{
+				#if UNITY_6000_2_OR_NEWER
+					if (matProp.propertyType == UnityEngine.Rendering.ShaderPropertyType.Texture)
+				#else
 					if (matProp.type == MaterialProperty.PropType.Texture)
+				#endif
 					{
 						if (matProp.name == _propTexturePropertyName.stringValue)
 						{

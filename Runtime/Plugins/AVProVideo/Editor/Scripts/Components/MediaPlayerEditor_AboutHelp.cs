@@ -14,13 +14,13 @@ namespace RenderHeads.Media.AVProVideo.Editor
 	{
 		public const string LinkPluginWebsite = "https://renderheads.com/products/avpro-video/";
 		public const string LinkForumPage = "https://forum.unity.com/threads/released-avpro-video-complete-video-playback-solution.385611/";
-		public const string LinkForumLastPage = "https://forum.unity.com/threads/released-avpro-video-complete-video-playback-solution.385611/page-100";
+		public const string LinkForumLastPage = "https://discussions.unity.com/t/released-avpro-video-complete-video-playback-solution/616470/5259";
 		public const string LinkGithubIssues = "https://github.com/RenderHeads/UnityPlugin-AVProVideo/issues";
 		public const string LinkGithubIssuesNew = "https://github.com/RenderHeads/UnityPlugin-AVProVideo/issues/new/choose";
-		public const string LinkAssetStorePage = "https://assetstore.unity.com/packages/slug/181844?aid=1101lcNgx";
-		public const string LinkUserManual = "https://www.renderheads.com/content/docs/AVProVideo/";
-		public const string LinkScriptingClassReference = "https://www.renderheads.com/content/docs/AVProVideo/api/RenderHeads.Media.AVProVideo.html";
-		public const string LinkPurchase = "https://www.renderheads.com/content/docs/AVProVideo/articles/download.html";
+		public const string LinkAssetStorePage = "https://assetstore.unity.com/packages/tools/video/avpro-video-v3-core-edition-278893";
+		public const string LinkUserManual = "https://www.renderheads.com/content/docs/AVProVideo-v3/articles/intro.html";
+		public const string LinkScriptingClassReference = "https://www.renderheads.com/content/docs/AVProVideo-v3/api/RenderHeads.Media.AVProVideo.html";
+		public const string LinkPurchase = "https://www.renderheads.com/content/docs/AVProVideo-v3/articles/download.html";
 
 		private struct Native
 		{
@@ -148,11 +148,15 @@ namespace RenderHeads.Media.AVProVideo.Editor
 			EditorHelper.IMGUI.CentreLabel("Sunrise Wang");
 			EditorHelper.IMGUI.CentreLabel("Muano Mainganye");
 			EditorHelper.IMGUI.CentreLabel("Shane Marks");
+			EditorHelper.IMGUI.CentreLabel("Reuben Miller");
 			GUILayout.Space(8f);
 			EditorHelper.IMGUI.CentreLabel("Graphics", EditorStyles.boldLabel);
 			GUILayout.Space(8f);
 			EditorHelper.IMGUI.CentreLabel("Jeff Rusch");
 			EditorHelper.IMGUI.CentreLabel("Luke Godward");
+			EditorHelper.IMGUI.CentreLabel( "QA/Support", EditorStyles.boldLabel );
+			GUILayout.Space( 8f );
+			EditorHelper.IMGUI.CentreLabel( "Chris Clarkson" );
 
 			GUILayout.Space(32f);
 		}

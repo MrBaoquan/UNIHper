@@ -9,6 +9,7 @@ Shader "AVProVideo/Skybox/Sphere"
 		[NoScaleOffset] _ChromaTex ("Chroma", 2D) = "grey" { }
 		[KeywordEnum(None, Top_Bottom, Left_Right, Custom_UV)] Stereo ("Stereo Mode", Float) = 0
 		[Toggle(STEREO_DEBUG)] _StereoDebug ("Stereo Debug Tinting", Float) = 0
+		[KeywordEnum(None, EquiRect180)] Layout("Layout", Float) = 0
 		[Toggle(APPLY_GAMMA)] _ApplyGamma("Apply Gamma", Float) = 0
 		[Toggle(USE_YPCBCR)] _UseYpCbCr("Use YpCbCr", Float) = 0
 	}
@@ -25,6 +26,8 @@ Shader "AVProVideo/Skybox/Sphere"
 		#pragma multi_compile __ STEREO_DEBUG
 		#pragma multi_compile __ APPLY_GAMMA
 		#pragma multi_compile __ USE_YPCBCR
+		#pragma multi_compile __ LAYOUT_EQUIRECT180
+
 		#include "UnityCG.cginc"
 		#include "AVProVideo.cginc"
 
@@ -36,10 +39,10 @@ Shader "AVProVideo/Skybox/Sphere"
 		float4 _MainTex_TexelSize;
 		half4 _MainTex_HDR;
 		float4 _MainTex_ST;
-#if USE_YPCBCR
+	#if USE_YPCBCR
 		sampler2D _ChromaTex;
 		float4x4 _YpCbCrTransform;
-#endif
+	#endif
 
 		float3 RotateAroundYInDegrees (float3 vertex, float degrees)
 		{
@@ -67,75 +70,82 @@ Shader "AVProVideo/Skybox/Sphere"
 		struct appdata_t {
 			float4 vertex : POSITION;
 			float2 texcoord : TEXCOORD0;
-#ifdef UNITY_STEREO_INSTANCING_ENABLED
+		#ifdef UNITY_STEREO_INSTANCING_ENABLED
 			UNITY_VERTEX_INPUT_INSTANCE_ID
-#endif
+		#endif
 		};
 		
 		struct v2f {
 			float4 vertex : SV_POSITION;
 			float3 texcoord : TEXCOORD0;
-#if STEREO_TOP_BOTTOM | STEREO_LEFT_RIGHT
+		#if STEREO_TOP_BOTTOM || STEREO_LEFT_RIGHT
 			float4 scaleOffset : TEXCOORD1;
-	#if STEREO_DEBUG
+		#endif
+		#if (STEREO_TOP_BOTTOM || STEREO_LEFT_RIGHT) && STEREO_DEBUG
 			float4 tint : COLOR;
-	#endif
-#endif
-#ifdef UNITY_STEREO_INSTANCING_ENABLED
+		#endif
+		#ifdef UNITY_STEREO_INSTANCING_ENABLED
 			UNITY_VERTEX_OUTPUT_STEREO
-#endif
+		#endif
 		};
 
 		v2f sb_vert(appdata_t v)
 		{
 			v2f o;
-#ifdef UNITY_STEREO_INSTANCING_ENABLED
+		#ifdef UNITY_STEREO_INSTANCING_ENABLED
 			UNITY_SETUP_INSTANCE_ID(v);						// calculates and sets the built-n unity_StereoEyeIndex and unity_InstanceID Unity shader variables to the correct values based on which eye the GPU is currently rendering
 			UNITY_INITIALIZE_OUTPUT(v2f, o);				// initializes all v2f values to 0
 			UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);		// tells the GPU which eye in the texture array it should render to
-#endif
+		#endif
 			float3 rotated = RotateAroundYInDegrees(v.vertex, _Rotation);
 			o.vertex = XFormObjectToClip(float4(rotated, 0.0));
 			o.texcoord = v.vertex.xyz;
 
-#if STEREO_TOP_BOTTOM | STEREO_LEFT_RIGHT
+		#if STEREO_TOP_BOTTOM || STEREO_LEFT_RIGHT
 			o.scaleOffset = GetStereoScaleOffset(IsStereoEyeLeft(), _MainTex_ST.y < 0.0);
+		#endif
 
-			#if STEREO_DEBUG
+		#if (STEREO_TOP_BOTTOM || STEREO_LEFT_RIGHT) && STEREO_DEBUG
 			o.tint = GetStereoDebugTint(IsStereoEyeLeft());
-			#endif
-#endif
+		#endif
 			return o;
 		}
 
 		half4 frag(v2f i) : SV_Target
 		{
 			float2 tc = ToRadialCoords(i.texcoord);
+		#if LAYOUT_EQUIRECT180
+			float x = ((tc.x - 0.5) * 2.0) + 0.5;
+			if (x < 0.0 || x > 1.0)
+			{
+				discard;
+			}
+			tc.x = saturate(x);
+		#endif
 
-			#if STEREO_TOP_BOTTOM | STEREO_LEFT_RIGHT
+		tc = TRANSFORM_TEX(tc, _MainTex);
+
+		#if STEREO_TOP_BOTTOM || STEREO_LEFT_RIGHT
 			tc.xy *= i.scaleOffset.xy;
 			tc.xy += i.scaleOffset.zw;
-			#endif
+		#endif
 
-			tc = TRANSFORM_TEX(tc, _MainTex);
+		#if USE_YPCBCR
+			half4 col = SampleYpCbCr(_MainTex, _ChromaTex, tc, _YpCbCrTransform);
+		#else
+			half4 col = SampleRGBA(_MainTex, tc);
+		#endif
 
-			half4 tex;
-#if USE_YPCBCR
-			tex = SampleYpCbCr(_MainTex, _ChromaTex, tc, _YpCbCrTransform);
-#else
-			tex = SampleRGBA(_MainTex, tc);
-#endif
-			half3 c = tex;
 			//c = DecodeHDR(tex, _MainTex_HDR);
 			//c = c * _Tint.rgb;
 			///c = c * unity_ColorSpaceDouble.rgb;
-			c *= _Exposure;
-#if STEREO_TOP_BOTTOM | STEREO_LEFT_RIGHT
-	#if STEREO_DEBUG
-			c *= i.tint;
-	#endif
-#endif
-			return half4(c, 1.0);
+			col.rgb *= _Exposure;
+		
+		#if (STEREO_TOP_BOTTOM || STEREO_LEFT_RIGHT) && STEREO_DEBUG
+			col *= i.tint;
+		#endif
+
+			return col;
 		}
 		ENDCG
 

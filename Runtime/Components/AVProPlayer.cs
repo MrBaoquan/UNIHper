@@ -57,6 +57,7 @@ namespace UNIHper
         {
             return Observable.Create<AVProPlayer>(observer =>
             {
+                path = PathUtils.NormalizePath(path);
                 var _disposable = new CompositeDisposable();
 
                 OnFirstFrameReadyAsObservable()
@@ -70,14 +71,21 @@ namespace UNIHper
                     })
                     .AddTo(_disposable);
 
-                MediaPlayer.OpenMedia(MediaPathType.RelativeToStreamingAssetsFolder, path, false);
+                var _mediaPathType = PathUtils.IsAbsolutePathOrUrl(path)
+                    ? MediaPathType.AbsolutePathOrURL
+                    : MediaPathType.RelativeToStreamingAssetsFolder;
+                MediaPlayer.OpenMedia(_mediaPathType, path, false);
                 return _disposable;
             });
         }
 
         public bool Switch(string path)
         {
-            return MediaPlayer.OpenMedia(MediaPathType.RelativeToStreamingAssetsFolder, path, false);
+            path = PathUtils.NormalizePath(path);
+            var _mediaPathType = PathUtils.IsAbsolutePathOrUrl(path)
+                ? MediaPathType.AbsolutePathOrURL
+                : MediaPathType.RelativeToStreamingAssetsFolder;
+            return MediaPlayer.OpenMedia(_mediaPathType, path, false);
         }
 
         public void Switch() { }
@@ -177,6 +185,7 @@ namespace UNIHper
             bool seek2StartAfterFinished = false
         )
         {
+            videoPath = PathUtils.NormalizePath(videoPath);
             ClearPlayHandlers();
             if (_readyHandler != null)
             {
@@ -213,6 +222,11 @@ namespace UNIHper
                 tempPlayDisposables = new CompositeDisposable();
                 _builtSeekOperation = false;
                 Play(false);
+                // 强制启动播放：HLS 流在 _notSameSource=false 时 Play(false) 可能不会自动开始
+                if (MediaPlayer.Control != null && !MediaPlayer.Control.IsPlaying())
+                {
+                    MediaPlayer.Control.Play();
+                }
                 bool _bFinished = false;
                 var _duration = MediaPlayer.Info.GetDuration();
                 endTime = endTime == 0 ? Mathf.FloorToInt((float)_duration * 100) / 100f - 0.033 : endTime;
@@ -291,15 +305,9 @@ namespace UNIHper
                         _startSeek();
                     });
 
-                var _mediaPathType = MediaPathType.RelativeToStreamingAssetsFolder;
-
-#if UNITY_ANDROID && !UNITY_EDITOR
-                _mediaPathType = MediaPathType.RelativeToPersistentDataFolder;
-#endif
-                if (Path.IsPathRooted(videoPath))
-                {
-                    _mediaPathType = MediaPathType.AbsolutePathOrURL;
-                }
+                var _mediaPathType = PathUtils.IsAbsolutePathOrUrl(videoPath)
+                    ? MediaPathType.AbsolutePathOrURL
+                    : MediaPathType.RelativeToStreamingAssetsFolder;
                 Log($"open media: {_mediaPathType} : {videoPath}");
                 MediaPlayer.OpenMedia(_mediaPathType, videoPath, false);
             }

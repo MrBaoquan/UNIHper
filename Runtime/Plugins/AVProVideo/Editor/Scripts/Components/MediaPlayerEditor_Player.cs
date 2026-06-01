@@ -38,6 +38,8 @@ namespace RenderHeads.Media.AVProVideo.Editor
 			ITextTracks textTracks = media.TextTracks;
 			IAudioTracks audioTracks = media.AudioTracks;
 			IVideoTracks videoTracks = media.VideoTracks;
+			ITimedMetadata timedMetadata = media.TimedMetadata;
+
 			if (info != null)
 			{
 				if (!info.HasVideo() && !info.HasAudio())// && !info.HasText())
@@ -73,7 +75,7 @@ namespace RenderHeads.Media.AVProVideo.Editor
 							foreach (VideoTrack track in tracks)
 							{
 								bool isActiveTrack = (track == videoTracks.GetActiveVideoTrack());
-								GUI.color = isActiveTrack?Color.green:Color.white;
+								GUI.color = isActiveTrack ? Color.green : Color.white;
 								{
 									if (GUILayout.Button(track.DisplayName))
 									{
@@ -101,7 +103,7 @@ namespace RenderHeads.Media.AVProVideo.Editor
 							foreach (AudioTrack track in tracks)
 							{
 								bool isActiveTrack = (track == audioTracks.GetActiveAudioTrack());
-								GUI.color = isActiveTrack?Color.green:Color.white;
+								GUI.color = isActiveTrack ? Color.green : Color.white;
 								{
 									if (GUILayout.Button(track.DisplayName))
 									{
@@ -136,7 +138,7 @@ namespace RenderHeads.Media.AVProVideo.Editor
 							foreach (TextTrack track in tracks)
 							{
 								bool isActiveTrack = (track == textTracks.GetActiveTextTrack());
-								GUI.color = isActiveTrack?Color.green:Color.white;
+								GUI.color = isActiveTrack ? Color.green : Color.white;
 								{
 									if (GUILayout.Button(track.DisplayName))
 									{
@@ -167,7 +169,7 @@ namespace RenderHeads.Media.AVProVideo.Editor
 								}
 								GUILayout.Label(text, EditorHelper.IMGUI.GetWordWrappedTextAreaStyle(), GUILayout.Height(48f));
 							}
-							
+
 							EditorGUILayout.Space();
 						}
 					}
@@ -466,6 +468,12 @@ namespace RenderHeads.Media.AVProVideo.Editor
 					if (float.IsNaN(durationTime))
 					{
 						durationTime = 0f;
+					}
+
+					// RJT NOTE: Sometimes current time can exceed duration temporarily before a finished event occurs so clamp for display purposes
+					if (currentTime > durationTime)
+					{
+						currentTime = durationTime;
 					}
 				}
 				

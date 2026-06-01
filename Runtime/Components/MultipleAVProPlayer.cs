@@ -77,7 +77,7 @@ namespace UNIHper
             this.registerAllEvents();
 
             videoIndex.SetMax(VideoPaths.Count() - 1);
-            this.videoPaths = VideoPaths.ToList();
+            this.videoPaths = VideoPaths.Select(_path => _path.ToForwardSlash()).ToList();
 
             // listPlayer = this.Get<PlaylistMediaPlayer>();
             ListPlayer.LoopMode = PlaylistMediaPlayer.PlaylistLoopMode.None;
@@ -91,7 +91,11 @@ namespace UNIHper
             videoPaths.ForEach(_videoPath =>
             {
                 MediaPlaylist.MediaItem _mediaItem = new MediaPlaylist.MediaItem();
-                _mediaItem.mediaPath = new MediaPath(_videoPath, MediaPathType.RelativeToStreamingAssetsFolder);
+                var _pathType =
+                    (_videoPath.StartsWith("http://") || _videoPath.StartsWith("https://"))
+                        ? MediaPathType.AbsolutePathOrURL
+                        : MediaPathType.RelativeToStreamingAssetsFolder;
+                _mediaItem.mediaPath = new MediaPath(_videoPath, _pathType);
                 _mediaItem.startMode = PlaylistMediaPlayer.StartMode.Manual;
                 _mediaItem.progressMode = PlaylistMediaPlayer.ProgressMode.Manual;
                 // item.isOverrideTransition = false;
@@ -292,7 +296,7 @@ namespace UNIHper
                     })
                     .SelectMany(
                         _player =>
-                            (startTime == -1 || _player.CurrentTime == startTime)
+                            (startTime == -1 || Math.Abs(_player.CurrentTime - startTime) < 0.05)
                                 ? Observable.Return(_player)
                                 : _player.SeekAsObservable(startTime)
                     )

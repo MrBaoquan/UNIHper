@@ -1,22 +1,15 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
+
+//-----------------------------------------------------------------------------
+// Copyright 2015-2025 RenderHeads Ltd.  All rights reserved.
+//-----------------------------------------------------------------------------
 
 namespace RenderHeads.Media.AVProVideo.Editor
 {
 	[CustomPropertyDrawer(typeof(MediaHints))]
 	public class MediaHintsDrawer : PropertyDrawer
 	{
-		private readonly static GUIContent[] StereoPackingOptions =
-		{
-			// NOTE: must be in the same order as enum StereoPacking
-			new GUIContent("None"),
-			new GUIContent("Top Bottom"),
-			new GUIContent("Left Right"),
-			new GUIContent("Custom UV"),
-		};
-
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label) { return 0f; }
 
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
@@ -33,10 +26,7 @@ namespace RenderHeads.Media.AVProVideo.Editor
 				EditorGUILayout.PropertyField(propHintsAlphaPacking);
 			}
 
-			{
-				// NOTE: We don't allow selection of 'Two Textures' as this mode is only produced by the Players as it is platform specific
-				propHintsStereoPacking.enumValueIndex = EditorGUILayout.Popup(new GUIContent("Stereo Packing"), propHintsStereoPacking.enumValueIndex, StereoPackingOptions);
-			}
+			EditorGUILayout.PropertyField(propHintsStereoPacking);
 
 			EditorGUI.EndProperty();
 		}

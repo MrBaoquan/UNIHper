@@ -210,6 +210,8 @@ namespace RenderHeads.Media.AVProVideo
 		{
 			bool result = true;
 #if UNITY_EDITOR && UNITY_2019_1_OR_NEWER
+			if (Application.isBatchMode)
+				return false;
 			System.Reflection.Assembly assembly = typeof(UnityEditor.EditorWindow).Assembly;
 			System.Type type = assembly.GetType("UnityEditor.GameView");
 			UnityEditor.EditorWindow window = UnityEditor.EditorWindow.GetWindow(type);
@@ -219,7 +221,7 @@ namespace RenderHeads.Media.AVProVideo
 				result = (bool)prop.GetValue(window);
 			}
 #endif
-			return result;
+            return result;
 		}
 	}
 }
