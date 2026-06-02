@@ -340,7 +340,53 @@ namespace UNIHper
                 return _methodJSON.Invoke(null, new object[] { path }) as UConfig;
             }
             MethodInfo _method = typeof(DNHper.USerialization).GetMethod("DeserializeXML").MakeGenericMethod(new Type[] { configClass });
-            return _method.Invoke(null, new object[] { path, null }) as UConfig;
+
+            // IL2CPP XmlSerializer 无法处理 XmlComment 节点，反序列化前剥离注释
+            var _cleanPath = StripXmlComments(path);
+            var _result = _method.Invoke(null, new object[] { _cleanPath, null }) as UConfig;
+            // 清理临时文件
+            if (_cleanPath != path && File.Exists(_cleanPath))
+            {
+                try { File.Delete(_cleanPath); } catch { }
+            }
+            return _result;
+        }
+
+        /// <summary>
+        /// 剥离 XML 文件中的注释节点，返回清理后的临时文件路径。
+        /// 如果无注释则返回原始路径（不创建临时文件）。
+        /// </summary>
+        private static string StripXmlComments(string path)
+        {
+            try
+            {
+                var content = File.ReadAllText(path);
+                if (!content.Contains("<!--"))
+                    return path;
+
+                // 用 XmlDocument 加载后保存，自动剥离注释
+                var doc = new System.Xml.XmlDocument();
+                doc.LoadXml(content);
+                // 移除所有注释节点
+                var comments = doc.SelectNodes("//comment()");
+                if (comments != null && comments.Count > 0)
+                {
+                    foreach (System.Xml.XmlNode comment in comments)
+                        comment.ParentNode.RemoveChild(comment);
+                }
+                else
+                {
+                    return path; // 无注释
+                }
+
+                var tempPath = path + ".tmp";
+                doc.Save(tempPath);
+                return tempPath;
+            }
+            catch
+            {
+                return path; // 失败时回退到原始文件
+            }
         }
 
         public T Get<T>()
