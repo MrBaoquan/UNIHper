@@ -2,7 +2,7 @@
     "name": "AVProLiveCamera.Editor",
     "rootNamespace": "RenderHeads.Media.AVProLiveCamera.Editor",
     "references": [
-        "AVProLiveCamera"
+        "AVProLiveCamera.Runtime"
     ],
     "includePlatforms": [
         "Editor"

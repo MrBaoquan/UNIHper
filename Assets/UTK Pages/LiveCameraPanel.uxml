@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:engine="UnityEngine.UIElements"
+    xsi:noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd"
+>
+    <engine:Style src="UNIDebuggerPanel.uss" />
+
+    <engine:VisualElement name="Root">
+        <!-- 顶部标题栏 -->
+        <engine:VisualElement name="TitleBar">
+            <engine:Label name="Title" text="📷 Live Camera Debug" />
+            <engine:VisualElement name="TitleBarCenter">
+                <engine:Label name="CameraStatus" text="状态: 未初始化" />
+                <engine:Label name="CameraDevice" text="设备: --" />
+                <engine:Label name="CameraResolution" text="分辨率: --" />
+                <engine:Label name="CameraFrameRate" text="帧率: --" />
+            </engine:VisualElement>
+            <engine:Button name="CloseBtn" text="✕" />
+        </engine:VisualElement>
+
+        <!-- 主体区域：左侧预览 + 右侧控制面板 -->
+        <engine:VisualElement name="MainBody">
+            <!-- 左侧：全尺寸实时预览 -->
+            <engine:VisualElement name="PreviewArea">
+                <engine:Label name="PreviewPlaceholder" text="摄像头未启动&#10;&#10;点击右侧 [初始化] 开始" />
+                <engine:VisualElement name="PreviewImage" />
+            </engine:VisualElement>
+
+            <!-- 右侧：控制面板 -->
+            <engine:ScrollView name="ControlPanel">
+
+                <!-- 摄像头控制 -->
+                <engine:Foldout name="CameraControl" text="摄像头控制" value="true" class="section-foldout">
+                    <engine:VisualElement class="button-row">
+                        <engine:Button name="InitCamera" text="初始化" class="action-btn" />
+                        <engine:Button name="StartCamera" text="启动" class="action-btn" />
+                    </engine:VisualElement>
+                    <engine:VisualElement class="button-row">
+                        <engine:Button name="StopCamera" text="停止" class="action-btn" />
+                        <engine:Button name="RestartCamera" text="重启" class="action-btn" />
+                    </engine:VisualElement>
+                </engine:Foldout>
+
+                <!-- 设备选择 -->
+                <engine:Foldout name="DeviceSelection" text="设备选择" value="true" class="section-foldout">
+                    <engine:VisualElement class="settings-group">
+                        <engine:Label text="可用设备" class="group-label" />
+                        <engine:DropdownField name="DeviceDropdown" label="" class="setting-field" />
+                        <engine:Label name="DeviceCount" text="设备数: 0" class="info-label" />
+                    </engine:VisualElement>
+                    <engine:VisualElement class="button-row center">
+                        <engine:Button name="RefreshDevices" text="刷新设备列表" class="secondary-btn" />
+                        <engine:Button name="SwitchDevice" text="切换设备" class="primary-btn" />
+                    </engine:VisualElement>
+                </engine:Foldout>
+
+                <!-- 画面设置 -->
+                <engine:Foldout name="ImageSettings" text="画面设置" value="true" class="section-foldout">
+                    <engine:VisualElement class="settings-group">
+                        <engine:Toggle name="FlipX" label="水平翻转" class="setting-toggle" />
+                        <engine:Toggle name="FlipY" label="垂直翻转" class="setting-toggle" />
+                    </engine:VisualElement>
+                </engine:Foldout>
+
+                <!-- 截图功能 -->
+                <engine:Foldout name="Capture" text="截图" value="true" class="section-foldout">
+                    <engine:VisualElement class="settings-group">
+                        <engine:Label name="CaptureStatus" text="截图状态: 就绪" class="info-label" />
+                    </engine:VisualElement>
+                    <engine:VisualElement class="button-row">
+                        <engine:Button name="CaptureFrame" text="截取当前帧" class="action-btn" />
+                        <engine:Button name="SaveCapture" text="保存截图 (PNG)" class="action-btn" />
+                    </engine:VisualElement>
+                </engine:Foldout>
+
+                <!-- 配置信息 -->
+                <engine:Foldout name="ConfigInfo" text="当前配置" value="false" class="section-foldout">
+                    <engine:VisualElement class="info-grid">
+                        <engine:Label name="ConfigDeviceMode" text="设备选择: --" class="info-label" />
+                        <engine:Label name="ConfigResolutionMode" text="分辨率选择: --" class="info-label" />
+                        <engine:Label name="ConfigPreferredDevices" text="首选设备: --" class="info-label" />
+                        <engine:Label name="ConfigPreferredResolutions" text="首选分辨率: --" class="info-label" />
+                        <engine:Label name="ConfigFrameRate" text="目标帧率: --" class="info-label" />
+                        <engine:Label name="ConfigFlipX" text="水平翻转: --" class="info-label" />
+                        <engine:Label name="ConfigFlipY" text="垂直翻转: --" class="info-label" />
+                        <engine:Label name="ConfigPlayOnStart" text="自动启动: --" class="info-label" />
+                    </engine:VisualElement>
+                </engine:Foldout>
+
+            </engine:ScrollView>
+        </engine:VisualElement>
+
+        <!-- 底部状态栏 -->
+        <engine:VisualElement name="StatusBar">
+            <engine:Label name="Version" text="AVProLiveCamera" />
+            <engine:Label name="AppName" text="Live Camera Debug" />
+        </engine:VisualElement>
+    </engine:VisualElement>
+</engine:UXML>

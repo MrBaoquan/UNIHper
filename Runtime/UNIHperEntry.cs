@@ -56,40 +56,53 @@ namespace UNIHper
             }
             UNILogger.Initialize();
             SRDebug.Init();
-            Debug.Log("UNIHper.Awake");
             DontDestroyOnLoad(this.gameObject);
 
-            // 创建音频管理脚本
-            GameObject _audioManager = new GameObject("AudioManager");
-            _audioManager.transform.parent = this.transform;
-            await _audioManager.AddComponent<AudioManager>().Initialize();
-
-            AssemblyConfig.Refresh();
-#if UNITY_2023_1_OR_NEWER
-            var _eventSystem = UnityEngine.Object.FindFirstObjectByType<EventSystem>();
-#else
-            var _eventSystem = UnityEngine.Object.FindObjectOfType<EventSystem>();
-#endif
-            if (_eventSystem is null || !_eventSystem.gameObject.activeSelf || !_eventSystem.enabled)
+            try
             {
-                CreateDefaultEventSystem();
+                // WebGL: 让出一帧确保 PlayerLoop 已启动，避免 Addressables 等异步操作在首帧前卡死
+                await Observable.NextFrame();
+
+                // 创建音频管理脚本
+                GameObject _audioManager = new GameObject("AudioManager");
+                _audioManager.transform.parent = this.transform;
+                await _audioManager.AddComponent<AudioManager>().Initialize();
+
+                AssemblyConfig.Refresh();
+#if UNITY_2023_1_OR_NEWER
+                var _eventSystem = UnityEngine.Object.FindFirstObjectByType<EventSystem>();
+#else
+                var _eventSystem = UnityEngine.Object.FindObjectOfType<EventSystem>();
+#endif
+                if (_eventSystem is null || !_eventSystem.gameObject.activeSelf || !_eventSystem.enabled)
+                {
+                    CreateDefaultEventSystem();
+                }
+
+                SceneManager.Instance.Awake();
+
+                // 基础组件初始化
+                await ConfigManager.Instance.Initialize();
+                await ResourceManager.Instance.Initialize();
+                await UIManager.Instance.Initialize();
+
+                // 初始化 UI Toolkit 管理器
+                UIToolkitManager.Instance.Initialize();
+
+                this.Initialize();
+                Framework.Instance.Initialize();
+
+                await TimerManager.Instance.Initialize();
+                await UNetManager.Instance.Initialize();
+                await SceneManager.Instance.Initialize();
+
+                isInitialized.Value = true;
             }
-
-            SceneManager.Instance.Awake();
-
-            // 基础组件初始化
-            await ConfigManager.Instance.Initialize();
-            await ResourceManager.Instance.Initialize();
-            await UIManager.Instance.Initialize();
-
-            this.Initialize();
-            Framework.Instance.Initialize();
-
-            await TimerManager.Instance.Initialize();
-            await UNetManager.Instance.Initialize();
-            await SceneManager.Instance.Initialize();
-
-            isInitialized.Value = true;
+            catch (Exception ex)
+            {
+                Debug.LogError($"[UNIHper] Bootstrap failed: {ex}");
+                throw;
+            }
         }
 
         private void CreateDefaultEventSystem()
@@ -140,6 +153,7 @@ namespace UNIHper
         {
             ConfigManager.Instance.CleanUp();
             UIManager.Instance.CleanUp();
+            UIToolkitManager.Instance.CleanUp();
             ResourceManager.Instance.CleanUp();
             Debug.Log("Application Quit");
             UNILogger.CleanUp();

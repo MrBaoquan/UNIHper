@@ -1,0 +1,30 @@
+using UnityEngine;
+using UnityEngine.UIElements;
+using UNIHper;
+using UNIHper.UI;
+
+[UIToolkitPage(Asset = "##CLASSNAME##", Type = UIType.Normal)]
+public class ##CLASSNAME## : UIToolkitBase
+{
+    protected override void OnLoaded()
+    {
+    }
+
+    protected override void OnShowing()
+    {
+        // Bind UI events before the page becomes interactive.
+        // BindButton("MyButton", OnButtonClicked);
+    }
+
+    protected override void OnShown()
+    {
+    }
+
+    protected override void OnHiding()
+    {
+    }
+
+    protected override void OnHidden()
+    {
+    }
+}

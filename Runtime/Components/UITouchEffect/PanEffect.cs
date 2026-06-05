@@ -26,7 +26,7 @@ namespace UNIHper
         private void Awake()
         {
             transform.SetParent(Framework.Instance.TopmostCanvas.transform);
-            var _panEffectAsset = Resources.Load<GameObject>("__Prefabs/Common/PanEffect");
+            var _panEffectAsset = ResourceManager.Instance.Get<GameObject>("UI Prefabs/Common/PanEffect");
             if (_panEffectAsset is null)
             {
                 Debug.LogWarning("Cannot find PanEffect prefab");

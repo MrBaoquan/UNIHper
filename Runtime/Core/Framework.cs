@@ -127,7 +127,8 @@ namespace UNIHper
             }
             if (Keyboard.current.f12Key.wasPressedThisFrame)
             {
-                Managements.UI.Get<UNIDebuggerPanel>().Toggle();
+                // Managements.UI.Get<UNIDebuggerPanel>().Toggle();
+                Managements.UI.Toggle<UNIDebuggerToolkitUI>();
             }
 
             if (Keyboard.current.altKey.isPressed && Keyboard.current.f10Key.wasPressedThisFrame)
@@ -151,7 +152,7 @@ namespace UNIHper
             }
             if (Input.GetKeyDown(KeyCode.F12))
             {
-                Managements.UI.Get<UNIDebuggerPanel>().Toggle();
+                Managements.UI.Toggle<UNIDebuggerToolkitUI>();
             }
 
             if ((Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)) && Input.GetKeyDown(KeyCode.F10))

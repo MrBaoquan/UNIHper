@@ -1,42 +1,27 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UniRx;
 using UNIHper;
 using UNIHper.UI;
-using DNHper;
+using TMPro;
 
 [UIPage(Asset = "##CLASSNAME##", Type = UIType.Normal, Order = -1)]
 public class ##CLASSNAME## : UIBase
 {
-    // Start is called before the first frame update
-    private void Start()
-    {
-        
-    }
+    private readonly CompositeDisposable _disposables = new CompositeDisposable();
 
-    // Update is called once per frame
-    private void Update()
-    {
-        
-    }
-
-    // Called when this ui is loaded
     protected override void OnLoaded()
     {
-
+        // Cache child references with Get<T>("path") when needed.
     }
 
-    // Called when this ui is shown
     protected override void OnShown()
     {
-
+        // Bind reactive events here and add them to _disposables.
     }
 
-    // Called when this ui is hidden
     protected override void OnHidden()
     {
-
+        _disposables.Clear();
     }
 }

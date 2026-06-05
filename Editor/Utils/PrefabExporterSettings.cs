@@ -11,6 +11,8 @@ namespace UNIHper.Editor
     public class PrefabExporterSettings : ScriptableObject
     {
         private const string SettingsPath = "Assets/Editor/PrefabExporterSettings.asset";
+        private const string DefaultSourceFolderPath = "Assets/ArtAssets/UI Prefabs";
+        private const string DefaultOutputFolderPath = ".ai-context/prefabs";
 
         #region 配置字段
 
@@ -26,11 +28,11 @@ namespace UNIHper.Editor
         [Header("路径设置")]
         [Tooltip("UI预制体源目录（相对于Assets）")]
         [SerializeField]
-        private string _sourceFolderPath = "Assets/ArtAssets/UI Prefabs";
+        private string _sourceFolderPath = DefaultSourceFolderPath;
 
         [Tooltip("导出目标目录（相对于项目根目录）")]
         [SerializeField]
-        private string _outputFolderPath = ".ai-context/prefabs";
+        private string _outputFolderPath = DefaultOutputFolderPath;
 
         [Header("导出选项")]
         [Tooltip("是否导出 RectTransform 详细信息")]
@@ -67,6 +69,8 @@ namespace UNIHper.Editor
         /// </summary>
         public string FullSourcePath => Path.Combine(Application.dataPath, _sourceFolderPath.Replace("Assets/", ""));
 
+        public bool SourcePathExists => AssetDatabase.IsValidFolder(_sourceFolderPath);
+
         #endregion
 
         #region 单例
@@ -95,6 +99,8 @@ namespace UNIHper.Editor
                 AssetDatabase.SaveAssets();
                 Debug.Log($"[PrefabExporter] 创建配置文件: {SettingsPath}");
             }
+
+            _instance.NormalizePaths();
             return _instance;
         }
 
@@ -111,6 +117,7 @@ namespace UNIHper.Editor
                 guiHandler = (searchContext) =>
                 {
                     var settings = new SerializedObject(Instance);
+                    settings.Update();
 
                     EditorGUILayout.Space(10);
                     EditorGUILayout.LabelField("预制体结构导出器", EditorStyles.boldLabel);
@@ -137,6 +144,11 @@ namespace UNIHper.Editor
                         new GUIContent("输出目录", "Markdown 文件输出目录（相对于项目根目录）")
                     );
 
+                    if (!Instance.SourcePathExists)
+                    {
+                        EditorGUILayout.HelpBox($"源目录不存在: {Instance.SourceFolderPath}", MessageType.Warning);
+                    }
+
                     EditorGUILayout.Space(10);
 
                     // 导出选项
@@ -157,12 +169,17 @@ namespace UNIHper.Editor
 
                     // 操作按钮
                     EditorGUILayout.BeginHorizontal();
-                    if (GUILayout.Button("导出所有 UI 预制体", GUILayout.Height(30)))
+                    using (new EditorGUI.DisabledScope(!Instance.SourcePathExists))
                     {
-                        PrefabStructureExporter.ExportAllPrefabs();
+                        if (GUILayout.Button("导出所有 UI 预制体", GUILayout.Height(30)))
+                        {
+                            ApplyIfModified(settings);
+                            PrefabStructureExporter.ExportAllPrefabs();
+                        }
                     }
                     if (GUILayout.Button("打开输出目录", GUILayout.Height(30)))
                     {
+                        ApplyIfModified(settings);
                         var path = Instance.FullOutputPath;
                         if (Directory.Exists(path))
                         {
@@ -187,35 +204,59 @@ namespace UNIHper.Editor
                     EditorGUILayout.Space(10);
 
                     // 主操作按钮
+                    var previousColor = GUI.backgroundColor;
                     GUI.backgroundColor = new Color(0.4f, 0.8f, 0.4f);
                     if (GUILayout.Button("🚀 Generate Context (Alt+Q)", GUILayout.Height(40)))
                     {
+                        ApplyIfModified(settings);
                         AIContextGenerator.GenerateAIContext();
                     }
-                    GUI.backgroundColor = Color.white;
+                    GUI.backgroundColor = previousColor;
 
                     EditorGUILayout.Space(5);
 
                     EditorGUILayout.BeginHorizontal();
-                    if (GUILayout.Button("Open Context Folder", GUILayout.Height(25)))
+                    if (GUILayout.Button("Open Skills Folder", GUILayout.Height(25)))
                     {
-                        AIContextGenerator.OpenAIContextDirectory();
-                    }
-                    if (GUILayout.Button("Open Copilot Instructions", GUILayout.Height(25)))
-                    {
-                        AIContextGenerator.OpenCopilotInstructions();
+                        AIContextGenerator.OpenSkillsDirectory();
                     }
                     EditorGUILayout.EndHorizontal();
 
-                    if (settings.hasModifiedProperties)
-                    {
-                        settings.ApplyModifiedProperties();
-                        EditorUtility.SetDirty(Instance);
-                    }
+                    ApplyIfModified(settings);
                 },
                 keywords = new[] { "AI", "Prefab", "Export", "Copilot", "Context" }
             };
             return provider;
+        }
+
+        private static void ApplyIfModified(SerializedObject settings)
+        {
+            if (!settings.hasModifiedProperties)
+                return;
+
+            settings.ApplyModifiedProperties();
+            Instance.NormalizePaths();
+            EditorUtility.SetDirty(Instance);
+        }
+
+        private void NormalizePaths()
+        {
+            if (string.IsNullOrWhiteSpace(_sourceFolderPath))
+                _sourceFolderPath = DefaultSourceFolderPath;
+
+            _sourceFolderPath = _sourceFolderPath.Replace('\\', '/').Trim();
+            if (!_sourceFolderPath.StartsWith("Assets/"))
+            {
+                _sourceFolderPath = _sourceFolderPath.StartsWith("Assets")
+                    ? _sourceFolderPath
+                    : $"Assets/{_sourceFolderPath.TrimStart('/')}";
+            }
+
+            if (string.IsNullOrWhiteSpace(_outputFolderPath))
+                _outputFolderPath = DefaultOutputFolderPath;
+
+            _outputFolderPath = _outputFolderPath.Replace('\\', '/').Trim();
+            _outputFolderPath = _outputFolderPath.TrimStart('/');
         }
 
         #endregion

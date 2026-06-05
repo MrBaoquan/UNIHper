@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:engine="UnityEngine.UIElements"
+    xsi:noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd"
+>
+    <engine:Style src="UNIDebuggerPanel.uss" />
+
+    <engine:VisualElement name="Root" class="debugger-root">
+        <!-- 左侧面板 -->
+        <engine:VisualElement name="Panel" class="panel">
+            <!-- 标题栏 -->
+            <engine:VisualElement name="TitleBar" class="title-bar">
+                <engine:Label name="Title" text="🛠 UNIHper 调试中心" class="title" />
+                <engine:Button name="CloseBtn" text="✕" class="close-btn" />
+            </engine:VisualElement>
+
+            <!-- 运行时状态条 (始终可见) -->
+            <engine:VisualElement name="RuntimeBar" class="runtime-bar">
+                <engine:Label name="FPS" text="FPS: --" class="runtime-item highlight" />
+                <engine:Label name="FrameTime" text="帧时间: --" class="runtime-item" />
+                <engine:Label name="UsedMemory" text="内存: --" class="runtime-item" />
+                <engine:Label name="RunTime" text="运行: --" class="runtime-item" />
+            </engine:VisualElement>
+
+            <!-- 内容区域 -->
+            <engine:ScrollView name="Content" class="content">
+
+                <!-- 显示设置 (核心功能) -->
+                <engine:Foldout name="DisplaySettings" text="📐 显示设置" value="true" class="section-foldout">
+                    <engine:VisualElement class="settings-group">
+                        <engine:Label text="分辨率" class="group-label" />
+                        <engine:VisualElement class="input-row">
+                            <engine:IntegerField name="Width" label="W" class="size-field" />
+                            <engine:IntegerField name="Height" label="H" class="size-field" />
+                        </engine:VisualElement>
+                    </engine:VisualElement>
+                    <engine:VisualElement class="settings-group">
+                        <engine:Label text="窗口位置" class="group-label" />
+                        <engine:VisualElement class="input-row">
+                            <engine:IntegerField name="PosX" label="X" class="position-field" />
+                            <engine:IntegerField name="PosY" label="Y" class="position-field" />
+                        </engine:VisualElement>
+                    </engine:VisualElement>
+                    <engine:VisualElement class="settings-group">
+                        <engine:Label text="窗口模式" class="group-label" />
+                        <engine:Toggle name="Fullscreen" label="全屏模式" class="setting-toggle" />
+                        <engine:Toggle name="UseTitleBar" label="显示标题栏" class="setting-toggle windowed-only" />
+                        <engine:Toggle name="KeepTop" label="窗口置顶" class="setting-toggle windowed-only" />
+                    </engine:VisualElement>
+                    <engine:VisualElement class="settings-group">
+                        <engine:Label text="屏幕信息" class="group-label" />
+                        <engine:Label name="ScreenResolution" text="当前分辨率: --" class="info-label" />
+                        <engine:Label name="ScreenRefreshRate" text="刷新率: --" class="info-label" />
+                    </engine:VisualElement>
+                    <engine:VisualElement class="button-row center">
+                        <engine:Button name="ApplyWindowSettings" text="应用设置" class="primary-btn" />
+                        <engine:Button name="ResetWindowSettings" text="重置" class="secondary-btn" />
+                    </engine:VisualElement>
+                </engine:Foldout>
+
+                <!-- 应用设置 -->
+                <engine:Foldout name="AppSettings" text="⚙️ 应用设置" value="false" class="section-foldout">
+                    <engine:VisualElement class="settings-group">
+                        <engine:Label text="无操作超时 (秒)" class="group-label" />
+                        <engine:FloatField name="LongTimeNoOperationTimeout" label="超时时间" value="300" class="setting-field" />
+                        <engine:Label text="设为 0 则不启用无操作检测" class="info-label hint" />
+                    </engine:VisualElement>
+                    <engine:VisualElement class="settings-group">
+                        <engine:Label text="桌面分辨率检测间隔 (秒)" class="group-label" />
+                        <engine:FloatField name="CheckDesktopResolutionInterval" label="检测间隔" value="5" class="setting-field" />
+                        <engine:Label text="设为 0 则不检测桌面分辨率变化" class="info-label hint" />
+                    </engine:VisualElement>
+                    <engine:VisualElement class="settings-group">
+                        <engine:Label text="重新应用屏幕设置间隔 (秒)" class="group-label" />
+                        <engine:FloatField name="ResetPrimaryScreenInterval" label="重置间隔" value="0" class="setting-field" />
+                        <engine:Label text="设为 0 则不自动重新应用屏幕设置" class="info-label hint" />
+                    </engine:VisualElement>
+                    <engine:VisualElement class="button-row center">
+                        <engine:Button name="ApplyAppSettings" text="应用设置" class="primary-btn" />
+                        <engine:Button name="ResetAppSettings" text="重置" class="secondary-btn" />
+                    </engine:VisualElement>
+                </engine:Foldout>
+
+                <!-- 工具箱 (可扩展) -->
+                <engine:Foldout name="Toolbox" text="🧰 工具箱" value="true" class="section-foldout">
+                    <engine:VisualElement name="ToolGrid" class="tool-grid">
+                        <!-- 工具卡片由 C# 动态生成 (内置 + 外部注册) -->
+                    </engine:VisualElement>
+                </engine:Foldout>
+
+                <!-- 快捷操作 -->
+                <engine:Foldout name="QuickActions" text="⚡ 快捷操作" value="true" class="section-foldout">
+                    <engine:VisualElement class="button-row">
+                        <engine:Button name="OpenPersistentData" text="持久化目录" class="action-btn" />
+                        <engine:Button name="OpenStreamingAssets" text="流媒体目录" class="action-btn" />
+                    </engine:VisualElement>
+                    <engine:VisualElement class="button-row">
+                        <engine:Button name="OpenDataPath" text="数据目录" class="action-btn" />
+                        <engine:Button name="ClearPlayerPrefs" text="清除 PlayerPrefs" class="action-btn danger" />
+                    </engine:VisualElement>
+                </engine:Foldout>
+
+                <!-- 系统信息 -->
+                <engine:Foldout name="SystemInfo" text="💻 系统信息" value="false" class="section-foldout">
+                    <engine:VisualElement class="info-grid">
+                        <engine:Label name="DeviceModel" text="设备型号: --" class="info-label" />
+                        <engine:Label name="DeviceType" text="设备类型: --" class="info-label" />
+                        <engine:Label name="OS" text="操作系统: --" class="info-label" />
+                        <engine:Label name="CPU" text="CPU: --" class="info-label" />
+                        <engine:Label name="GPU" text="GPU: --" class="info-label" />
+                        <engine:Label name="Memory" text="系统内存: --" class="info-label" />
+                        <engine:Label name="GraphicsMemory" text="显存: --" class="info-label" />
+                    </engine:VisualElement>
+                </engine:Foldout>
+
+            </engine:ScrollView>
+
+            <!-- 底部状态栏 -->
+            <engine:VisualElement name="StatusBar" class="status-bar">
+                <engine:Label name="Version" text="UNIHper v1.0.0" class="version-label" />
+                <engine:Label name="AppName" text="App" class="app-name" />
+            </engine:VisualElement>
+        </engine:VisualElement>
+
+        <!-- 右侧点击遮罩 -->
+        <engine:VisualElement name="Backdrop" class="backdrop" />
+    </engine:VisualElement>
+</engine:UXML>
