@@ -68,8 +68,8 @@ namespace UNIHper
 
             // 应用层持久性资源
             await this.LoadAssetByKey("Persistence");
-
             UNIHperLogger.Log("load application persistence assets finished");
+
             // 加载场景资源
             await this.LoadSceneResources();
             UNIHperLogger.Log("load scene assets finished");
@@ -289,6 +289,29 @@ namespace UNIHper
                 })
                 .SubscribeOnMainThread();
         }
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+        /// <summary>
+        /// WebGL专用：直接使用Task API加载Addressable资源，绕过Observable调度问题
+        /// </summary>
+        private async Task<IEnumerable<AssetItem>> LoadAddressableAssetsByLabelDirectAsync(string labelName, Type assetType)
+        {
+            var locations = await Addressables.LoadResourceLocationsAsync(labelName, assetType).Task;
+            var results = new List<AssetItem>();
+            foreach (var location in locations)
+            {
+                var asset = await Addressables.LoadAssetAsync<UnityEngine.Object>(location).Task;
+                results.Add(new AssetItem
+                {
+                    asset = asset,
+                    path = location.PrimaryKey,
+                    asssetDriver = AsssetDriver.Addressable,
+                    label = labelName
+                });
+            }
+            return results;
+        }
+#endif
 
         public bool Exists<T>(string assetName)
             where T : UnityEngine.Object
@@ -700,7 +723,6 @@ namespace UNIHper
                 return;
             }
 
-            Debug.Log($"loading addressable assets for [{InResID}]");
             foreach (var _resItem in InItems)
             {
                 try
@@ -723,6 +745,9 @@ namespace UNIHper
                         continue;
                     }
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+                    var _assets = await LoadAddressableAssetsByLabelDirectAsync(_resItem.label, _T);
+#else
                     var _assets = await (
                         GetType()
                             .GetMethod("LoadAddressableAssetsByLabel", BindingFlags.NonPublic | BindingFlags.Instance)
@@ -761,7 +786,6 @@ namespace UNIHper
                 }
             }
 
-            Debug.Log($"load addressable assets for [{InResID}] completed");
             await Task.CompletedTask;
         }
 
