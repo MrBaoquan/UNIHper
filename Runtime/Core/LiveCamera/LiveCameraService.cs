@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Xml.Serialization;
 using UnityEngine;
 using UniRx;
 using RenderHeads.Media.AVProLiveCamera;
@@ -7,10 +8,11 @@ using RenderHeads.Media.AVProLiveCamera;
 namespace UNIHper
 {
     /// <summary>
-    /// 摄像头服务配置
+    /// 摄像头服务持久化配置（继承 UConfig，由 ConfigManager 自动管理序列化）
+    /// <para>配置文件默认保存在 StreamingAssets/Configs/LiveCameraConfig.xml</para>
     /// </summary>
-    [Serializable]
-    public class LiveCameraConfig
+    [SerializedAt(AppPath.StreamingDir)]
+    public class LiveCameraConfig : UConfig
     {
         /// <summary>
         /// 设备选择方式（默认按索引选择第一个摄像头）
@@ -20,15 +22,9 @@ namespace UNIHper
         /// <summary>
         /// 首选设备名称列表（按优先级排序）
         /// </summary>
-        public List<string> PreferredDeviceNames = new List<string>
-        {
-            "Logitech BRIO",
-            "Logitech HD Pro Webcam C922",
-            "Logitech HD Pro Webcam C920",
-            "HD Pro Webcam C922",
-            "HD Pro Webcam C920",
-            "Integrated Webcam"
-        };
+        [XmlArray("PreferredDeviceNames")]
+        [XmlArrayItem("Name")]
+        public List<string> PreferredDeviceNames = new List<string>();
 
         /// <summary>
         /// 首选设备索引
@@ -43,12 +39,9 @@ namespace UNIHper
         /// <summary>
         /// 首选分辨率列表（按优先级排序）
         /// </summary>
-        public List<Vector2> PreferredResolutions = new List<Vector2>
-        {
-            new Vector2(1920, 1080),
-            new Vector2(1280, 720),
-            new Vector2(640, 480)
-        };
+        [XmlArray("PreferredResolutions")]
+        [XmlArrayItem("Resolution")]
+        public List<SerializableVector2> PreferredResolutions = new List<SerializableVector2>();
 
         /// <summary>
         /// 期望帧率（0 表示自动）
@@ -69,6 +62,40 @@ namespace UNIHper
         /// 是否自动开始
         /// </summary>
         public bool PlayOnStart = true;
+
+        /// <summary>
+        /// 首次加载 / XML 文件不存在时填充默认值
+        /// </summary>
+        protected override void OnLoaded()
+        {
+            if (PreferredDeviceNames == null || PreferredDeviceNames.Count == 0)
+            {
+                PreferredDeviceNames = new List<string>
+                {
+                    "Logitech BRIO",
+                    "Logitech HD Pro Webcam C922",
+                    "Logitech HD Pro Webcam C920",
+                    "HD Pro Webcam C922",
+                    "HD Pro Webcam C920",
+                    "Integrated Webcam"
+                };
+            }
+
+            if (PreferredResolutions == null || PreferredResolutions.Count == 0)
+            {
+                PreferredResolutions = new List<SerializableVector2>
+                {
+                    new SerializableVector2(1920, 1080),
+                    new SerializableVector2(1280, 720),
+                    new SerializableVector2(640, 480)
+                };
+            }
+        }
+
+        protected override string Comment()
+        {
+            return "LiveCameraConfig - 摄像头服务配置（自动生成，可手动编辑）";
+        }
     }
 
     /// <summary>
@@ -81,6 +108,7 @@ namespace UNIHper
 
         private static LiveCameraService _instance;
         private static readonly object _lock = new object();
+        private static readonly Dictionary<string, LiveCameraService> _namedInstances = new Dictionary<string, LiveCameraService>();
 
         /// <summary>
         /// 获取 LiveCameraService 单例实例
@@ -126,10 +154,20 @@ namespace UNIHper
         private GameObject _cameraObject;
         private LiveCameraConfig _config;
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
+        private string _instanceKey;
+
+        // 纹理更新暂停标志
+        private bool _isPaused = false;
+
+        // 用于取消上一次 RestartCamera 的延迟启动，防止多次切换设备导致重叠重启
+        private readonly SerialDisposable _restartDisposable = new SerialDisposable();
+        private bool _isSwitching = false;
 
         // Reactive Subjects
         private readonly BehaviorSubject<bool> _isRunningSubject = new BehaviorSubject<bool>(false);
-        private readonly Subject<Texture> _textureReadySubject = new Subject<Texture>();
+
+        // BehaviorSubject 保证晚订阅的调用方也能立即收到已就绪的纹理
+        private readonly BehaviorSubject<Texture> _textureReadySubject = new BehaviorSubject<Texture>(null);
         private readonly Subject<Unit> _frameUpdatedSubject = new Subject<Unit>();
 
         #endregion
@@ -176,6 +214,11 @@ namespace UNIHper
         /// </summary>
         public LiveCameraConfig Config => _config;
 
+        /// <summary>
+        /// 纹理更新是否已暂停（摄像头底层继续采集，仅冻结向订阅者推送的纹理帧）
+        /// </summary>
+        public bool IsPaused => _isPaused;
+
         #endregion
 
         #region Events (Observables)
@@ -186,31 +229,78 @@ namespace UNIHper
         public IObservable<bool> OnRunningStateChanged => _isRunningSubject.DistinctUntilChanged();
 
         /// <summary>
-        /// 纹理就绪事件（摄像头启动后触发）
+        /// 纹理就绪事件（摄像头启动后触发；晚订阅时若已就绪则立即推送）
         /// </summary>
-        public IObservable<Texture> OnTextureReady => _textureReadySubject.AsObservable();
+        public IObservable<Texture> OnTextureReady => _textureReadySubject.Where(t => t != null).AsObservable();
 
         /// <summary>
         /// 帧更新事件
         /// </summary>
         public IObservable<Unit> OnFrameUpdated => _frameUpdatedSubject.AsObservable();
 
+        /// <summary>
+        /// 实时纹理流：每帧推送当前 OutputTexture（摄像头运行期间持续有效）
+        /// </summary>
+        public IObservable<Texture> TextureStream => _frameUpdatedSubject.Where(_ => OutputTexture != null).Select(_ => OutputTexture);
+
         #endregion
 
         #region Constructor
 
-        private LiveCameraService()
+        private LiveCameraService(string key = null)
         {
-            _config = new LiveCameraConfig();
-            Debug.Log("[LiveCameraService] 服务已创建");
+            _instanceKey = key;
+            // _config 由 Initialize() 从 ConfigManager 加载或外部传入，此处不再 new
+            Debug.Log($"[LiveCameraService{(key != null ? $"({key})" : "")}] 服务已创建");
         }
 
         /// <summary>
-        /// 创建新实例（非单例）
+        /// 创建独立实例（非单例、非命名管理）
         /// </summary>
-        public static LiveCameraService Create()
+        public static LiveCameraService Create() => new LiveCameraService();
+
+        /// <summary>
+        /// 按 key 获取已存在的命名实例，不存在则返回 null
+        /// </summary>
+        public static LiveCameraService Get(string key)
         {
-            return new LiveCameraService();
+            lock (_lock)
+            {
+                _namedInstances.TryGetValue(key, out var inst);
+                return inst;
+            }
+        }
+
+        /// <summary>
+        /// 按 key 获取或创建命名实例，支持多摄像头并行场景
+        /// <para>示例：LiveCameraService.GetOrCreate("cam0") / GetOrCreate("cam1")</para>
+        /// </summary>
+        public static LiveCameraService GetOrCreate(string key)
+        {
+            lock (_lock)
+            {
+                if (!_namedInstances.TryGetValue(key, out var inst) || inst._isDisposed)
+                {
+                    inst = new LiveCameraService(key);
+                    _namedInstances[key] = inst;
+                }
+                return inst;
+            }
+        }
+
+        /// <summary>
+        /// 销毁指定 key 的命名实例
+        /// </summary>
+        public static void DestroyInstance(string key)
+        {
+            lock (_lock)
+            {
+                if (_namedInstances.TryGetValue(key, out var inst))
+                {
+                    inst.Dispose();
+                    // Dispose 内部会调用 _namedInstances.Remove，此处无需重复
+                }
+            }
         }
 
         #endregion
@@ -220,19 +310,20 @@ namespace UNIHper
         /// <summary>
         /// 初始化摄像头服务
         /// </summary>
-        /// <param name="config">可选配置</param>
+        /// <param name="config">可选配置，为 null 时自动读取 ConfigManager 中持久化的 LiveCameraConfig</param>
         /// <returns>初始化是否成功</returns>
         public IObservable<bool> Initialize(LiveCameraConfig config = null)
         {
-            if (config != null)
-            {
-                _config = config;
-            }
+            // 未传入配置 → 读取 ConfigManager 管理的持久化实例
+            _config = config ?? Managements.Config.Get<LiveCameraConfig>();
 
             return Observable.Create<bool>(observer =>
             {
                 try
                 {
+                    // 清理旧的订阅（防止重复 Initialize 导致 EveryUpdate 泄漏）
+                    _disposables.Clear();
+
                     // 确保 Manager 存在
                     EnsureManager();
 
@@ -285,6 +376,16 @@ namespace UNIHper
                 _manager._shaderYV12 = Shader.Find("Hidden/AVProLiveCamera/CompositeYUV_YV12");
                 _manager._shaderDeinterlace = Shader.Find("Hidden/AVProLiveCamera/Deinterlace");
 
+                // 打包后 Hidden/ 前缀的 Shader 可能被 Unity 剥离，检测并给出明确提示
+                if (_manager._shaderBGRA32 == null || _manager._shaderYUY2 == null || _manager._shaderMONO8 == null)
+                {
+                    Debug.LogError(
+                        "[LiveCameraService] AVProLiveCamera 转换 Shader 未找到！"
+                            + "\n请在 Unity 编辑器中执行菜单: UNIHper > LiveCamera > Include Shaders in Build"
+                            + "\n或确认 Project Settings > Graphics > Always Included Shaders 中包含 AVProLiveCamera 的 Hidden Shader。"
+                    );
+                }
+
                 Debug.Log("[LiveCameraService] 创建 AVProLiveCameraManager");
             }
         }
@@ -296,7 +397,7 @@ namespace UNIHper
                 GameObject.Destroy(_cameraObject);
             }
 
-            _cameraObject = new GameObject("[LiveCamera]");
+            _cameraObject = new GameObject(_instanceKey != null ? $"[LiveCamera:{_instanceKey}]" : "[LiveCamera]");
             GameObject.DontDestroyOnLoad(_cameraObject);
             _camera = _cameraObject.AddComponent<AVProLiveCamera>();
             _camera._playOnStart = false; // 我们手动控制
@@ -316,7 +417,7 @@ namespace UNIHper
 
             // 分辨率选择
             _camera._modeSelection = _config.ModeSelection;
-            _camera._desiredResolutions = new List<Vector2>(_config.PreferredResolutions);
+            _camera._desiredResolutions = _config.PreferredResolutions.ConvertAll(r => (Vector2)r);
             _camera._desiredFrameRate = _config.DesiredFrameRate;
             _camera._desiredAnyResolution = _config.ModeSelection == AVProLiveCamera.SelectModeBy.Default;
 
@@ -331,17 +432,35 @@ namespace UNIHper
         {
             Observable
                 .EveryUpdate()
-                .Where(_ => _camera?.Device != null && _camera.Device.IsRunning)
+                .Where(_ => _camera?.Device != null)
                 .Subscribe(_ =>
                 {
-                    _frameUpdatedSubject.OnNext(Unit.Default);
+                    var deviceRunning = _camera.Device.IsRunning;
+                    var subjectValue = _isRunningSubject.Value;
 
-                    // 检查纹理是否就绪
-                    if (OutputTexture != null && !_isRunningSubject.Value)
+                    if (deviceRunning)
                     {
-                        _isRunningSubject.OnNext(true);
-                        _textureReadySubject.OnNext(OutputTexture);
-                        Debug.Log($"[LiveCameraService] 摄像头已启动: {DeviceName} ({Width}x{Height}@{FrameRate:F1}fps)");
+                        if (!_isPaused)
+                        {
+                            _frameUpdatedSubject.OnNext(Unit.Default);
+                        }
+
+                        // 设备正在运行且 Subject 尚未同步 → 纹理就绪（暂停状态下也要完成初始就绪通知）
+                        if (OutputTexture != null && !subjectValue)
+                        {
+                            _isRunningSubject.OnNext(true);
+                            if (!_isPaused)
+                            {
+                                _textureReadySubject.OnNext(OutputTexture);
+                            }
+                            Debug.Log($"[LiveCameraService] 摄像头已启动: {DeviceName} ({Width}x{Height}@{FrameRate:F1}fps)");
+                        }
+                    }
+                    else if (subjectValue)
+                    {
+                        // 设备已停止但 Subject 仍为 true → 同步状态
+                        _isRunningSubject.OnNext(false);
+                        Debug.Log("[LiveCameraService] 检测到摄像头已外部停止");
                     }
                 })
                 .AddTo(_disposables);
@@ -374,19 +493,29 @@ namespace UNIHper
             if (_camera?.Device != null)
             {
                 _camera.Device.Close();
+                _isPaused = false; // 停止时重置暂停标志，避免重启后仍处于冻结状态
                 _isRunningSubject.OnNext(false);
+                _textureReadySubject.OnNext(null); // 清除已就绪标记，避免晚订阅者收到过期纹理
                 Debug.Log("[LiveCameraService] 摄像头已停止");
             }
         }
 
         /// <summary>
-        /// 重启摄像头
+        /// 重启摄像头（取消之前未完成的重启序列）
         /// </summary>
         public void RestartCamera()
         {
             StopCamera();
 
-            Observable.Timer(TimeSpan.FromMilliseconds(500)).Subscribe(_ => StartCamera()).AddTo(_disposables);
+            // 用 SerialDisposable 确保上一次延迟启动被取消，防止重叠重启
+            _restartDisposable.Disposable = Observable
+                .EveryUpdate()
+                .Select(_ => _camera?.Device == null || !_camera.Device.IsRunning)
+                .Where(closed => closed)
+                .Take(1)
+                .Timeout(TimeSpan.FromSeconds(2))
+                .CatchIgnore()
+                .Subscribe(_ => StartCamera());
         }
 
         /// <summary>
@@ -412,6 +541,52 @@ namespace UNIHper
                 _camera._flipY = flip;
             }
         }
+
+        /// <summary>
+        /// 暂停摄像头帧抓取（从源头禁止 AVProLiveCamera 组件 Update，输出纹理内容就地冻结）
+        /// </summary>
+        public void PauseTextureUpdate()
+        {
+            if (_isPaused)
+                return;
+            _isPaused = true;
+            if (_camera != null)
+                _camera.enabled = false; // 禁止组件 Update，母线驱动停止写入 OutputTexture
+            Debug.Log("[LiveCameraService] 摄像头帧抓取已暂停");
+        }
+
+        /// <summary>
+        /// 恢复摄像头帧抓取
+        /// </summary>
+        public void ResumeTextureUpdate()
+        {
+            if (!_isPaused)
+                return;
+            _isPaused = false;
+            if (_camera != null)
+                _camera.enabled = true; // 重新开启 Update，正常采集恢复
+            // 恢复后推送一次当前纹理，让 BehaviorSubject 同步最新状态
+            if (OutputTexture != null)
+            {
+                _textureReadySubject.OnNext(OutputTexture);
+            }
+            Debug.Log("[LiveCameraService] 摄像头帧抓取已恢复");
+        }
+
+        #endregion
+
+        #region Texture Access
+
+        /// <summary>
+        /// 同步获取当前摄像头原始纹理，未运行时返回 null
+        /// </summary>
+        public Texture GetTexture() => OutputTexture;
+
+        /// <summary>
+        /// 异步等待纹理就绪后返回（已就绪时立即推送，否则等待下次就绪事件）
+        /// </summary>
+        public IObservable<Texture> WaitForTexture() =>
+            IsRunning && OutputTexture != null ? Observable.Return(OutputTexture) : OnTextureReady.Take(1);
 
         #endregion
 
@@ -504,51 +679,123 @@ namespace UNIHper
         }
 
         /// <summary>
-        /// 切换到指定设备
+        /// 切换到指定设备（自带防抖，连续调用时仅最后一次生效）
         /// </summary>
         /// <param name="deviceName">设备名称</param>
         public void SwitchDevice(string deviceName)
         {
+            if (_isSwitching)
+            {
+                Debug.LogWarning($"[LiveCameraService] 设备切换进行中，忽略重复请求: {deviceName}");
+                return;
+            }
+            _isSwitching = true;
+
             _config.DeviceSelection = AVProLiveCamera.SelectDeviceBy.Name;
             _config.PreferredDeviceNames = new List<string> { deviceName };
 
-            RestartCamera();
+            ApplyConfig();
+            StopCamera();
+
+            // 取消之前的重启序列，等设备关闭后再启动
+            _restartDisposable.Disposable = Observable
+                .EveryUpdate()
+                .Select(_ => _camera?.Device == null || !_camera.Device.IsRunning)
+                .Where(closed => closed)
+                .Take(1)
+                .Timeout(TimeSpan.FromSeconds(2))
+                .CatchIgnore()
+                .Subscribe(
+                    _ =>
+                    {
+                        StartCamera();
+                        _isSwitching = false;
+                    },
+                    _ => _isSwitching = false
+                );
         }
 
         /// <summary>
-        /// 切换到指定设备（按索引）
+        /// 切换到指定设备（按索引，自带防抖）
         /// </summary>
         /// <param name="deviceIndex">设备索引</param>
         public void SwitchDevice(int deviceIndex)
         {
+            if (_isSwitching)
+            {
+                Debug.LogWarning($"[LiveCameraService] 设备切换进行中，忽略重复请求: index={deviceIndex}");
+                return;
+            }
+            _isSwitching = true;
+
             _config.DeviceSelection = AVProLiveCamera.SelectDeviceBy.Index;
             _config.PreferredDeviceIndex = deviceIndex;
 
             ApplyConfig();
-            RestartCamera();
+            StopCamera();
+
+            _restartDisposable.Disposable = Observable
+                .EveryUpdate()
+                .Select(_ => _camera?.Device == null || !_camera.Device.IsRunning)
+                .Where(closed => closed)
+                .Take(1)
+                .Timeout(TimeSpan.FromSeconds(2))
+                .CatchIgnore()
+                .Subscribe(
+                    _ =>
+                    {
+                        StartCamera();
+                        _isSwitching = false;
+                    },
+                    _ => _isSwitching = false
+                );
         }
 
         #endregion
 
         #region Cleanup
 
+        private bool _isDisposed = false;
+
         public void Dispose()
         {
-            StopCamera();
-            _disposables.Dispose();
+            if (_isDisposed)
+                return;
+            _isDisposed = true;
 
-            if (_cameraObject != null)
+            // 从命名实例字典中移除（命名实例才有 key）
+            if (_instanceKey != null)
             {
-                GameObject.Destroy(_cameraObject);
-                _cameraObject = null;
+                lock (_lock)
+                {
+                    _namedInstances.Remove(_instanceKey);
+                }
             }
 
+            // 1. 停止摄像头
+            StopCamera();
+
+            // 1.5 取消未完成的重启/切换
+            _restartDisposable.Dispose();
+            _isSwitching = false;
+
+            // 2. 先清理订阅（EveryUpdate 观察者引用了 _camera，必须先停）
+            _disposables.Dispose();
+
+            // 3. 完成并释放 Subjects（通知所有订阅者流已结束）
             _isRunningSubject.OnCompleted();
             _isRunningSubject.Dispose();
             _textureReadySubject.OnCompleted();
             _textureReadySubject.Dispose();
             _frameUpdatedSubject.OnCompleted();
             _frameUpdatedSubject.Dispose();
+
+            // 4. 最后销毁 GameObject（此时已无观察者引用它）
+            if (_cameraObject != null)
+            {
+                GameObject.Destroy(_cameraObject);
+                _cameraObject = null;
+            }
 
             Debug.Log("[LiveCameraService] 服务已销毁");
         }

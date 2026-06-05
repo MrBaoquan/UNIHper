@@ -56,12 +56,6 @@ namespace UNIHper.UI
             set => _runtimeAutoApplyFont = value;
         }
 
-        /// <summary>
-        /// [已废弃] 使用 DefaultFont 属性代替
-        /// </summary>
-        [Obsolete("使用 DefaultFont 属性代替")]
-        public static string DefaultFontName { get; set; } = string.Empty;
-
         // 自动加载的备用字体缓存
         private static Font _fallbackFont;
 
@@ -477,6 +471,34 @@ namespace UNIHper.UI
         protected virtual void Awake()
         {
             Document = GetComponent<UIDocument>();
+        }
+
+        /// <summary>
+        /// 内部加载方法（由 UIToolkitManager 调用，仅一次）
+        /// 对应 UIBase.OnLoad()
+        /// </summary>
+        internal void OnLoad()
+        {
+            _state = UIState.Loaded;
+            OnLoaded();
+        }
+
+        /// <summary>
+        /// 强制触发 OnShown 事件（用于 bForceNotify）
+        /// </summary>
+        internal void ForceInvokeOnShownEvent()
+        {
+            if (_state == UIState.Shown)
+                onShownEvent.Invoke();
+        }
+
+        /// <summary>
+        /// 强制触发 OnHidden 事件（用于 bForceNotify）
+        /// </summary>
+        internal void ForceInvokeOnHiddenEvent()
+        {
+            if (_state == UIState.Hidden)
+                onHiddenEvent.Invoke();
         }
 
         #endregion

@@ -25,12 +25,14 @@ namespace UNIHper.UI
         private static readonly Dictionary<Type, MethodInfo> _hideMethodCache = new();
         private static readonly Dictionary<Type, MethodInfo> _getMethodCache = new();
         private static readonly Dictionary<Type, MethodInfo> _toggleMethodCache = new();
+        private static readonly Dictionary<Type, MethodInfo> _destroyMethodCache = new();
 
         // 基础方法信息（只获取一次）
         private static MethodInfo _showBaseMethod;
         private static MethodInfo _hideBaseMethod;
         private static MethodInfo _getBaseMethod;
         private static MethodInfo _toggleBaseMethod;
+        private static MethodInfo _destroyBaseMethod;
 
         private static MethodInfo GetShowMethod(Type uiType)
         {
@@ -76,6 +78,17 @@ namespace UNIHper.UI
             return method;
         }
 
+        private static MethodInfo GetDestroyMethod(Type uiType)
+        {
+            if (!_destroyMethodCache.TryGetValue(uiType, out var method))
+            {
+                _destroyBaseMethod ??= typeof(UIManager).GetMethod("Destroy", new[] { typeof(int), typeof(bool) });
+                method = _destroyBaseMethod.MakeGenericMethod(uiType);
+                _destroyMethodCache[uiType] = method;
+            }
+            return method;
+        }
+
         #endregion
 
         #region Show Methods
@@ -94,7 +107,7 @@ namespace UNIHper.UI
             }
             else if (typeof(UIToolkitBase).IsAssignableFrom(type))
             {
-                return _toolkitManager.Show(type.FullName) as T;
+                return _toolkitManager.Show(type.FullName, bForceNotify) as T;
             }
 
             Debug.LogWarning($"[UnifiedUIFacade] 未知的 UI 类型: {type.Name}");
@@ -136,7 +149,7 @@ namespace UNIHper.UI
             }
             else if (typeof(UIToolkitBase).IsAssignableFrom(type))
             {
-                return _toolkitManager.Hide(type.FullName) as T;
+                return _toolkitManager.Hide(type.FullName, bForceNotify) as T;
             }
 
             Debug.LogWarning($"[UnifiedUIFacade] 未知的 UI 类型: {type.Name}");
@@ -247,7 +260,7 @@ namespace UNIHper.UI
             }
             else if (typeof(UIToolkitBase).IsAssignableFrom(type))
             {
-                return _toolkitManager?.Toggle<UIToolkitBase>() as T;
+                return _toolkitManager?.Toggle(type.FullName) as T;
             }
 
             return null;
@@ -277,28 +290,38 @@ namespace UNIHper.UI
         }
 
         /// <summary>
-        /// 销毁 UI（仅 UGUI）
+        /// 销毁 UI - 自动检测类型（UGUI 或 UI Toolkit）
         /// </summary>
         public void Destroy<T>(int instanceID = 0, bool immediate = false)
-            where T : UIBase
+            where T : class, IUIComponent
         {
-            _uguiManager.Destroy<T>(instanceID, immediate);
+            var type = typeof(T);
+            if (typeof(UIBase).IsAssignableFrom(type))
+            {
+                GetDestroyMethod(type).Invoke(_uguiManager, new object[] { instanceID, immediate });
+            }
+            else if (typeof(UIToolkitBase).IsAssignableFrom(type))
+            {
+                _toolkitManager?.Destroy(type.FullName, immediate);
+            }
         }
 
         /// <summary>
-        /// 暂存当前活动的 UI（仅 UGUI）
+        /// 暂存当前活动的 UI（UGUI + UIToolkit）
         /// </summary>
         public void StashActiveUI()
         {
             _uguiManager.StashActiveUI();
+            _toolkitManager?.StashActiveUI();
         }
 
         /// <summary>
-        /// 恢复暂存的 UI（仅 UGUI）
+        /// 恢复暂存的 UI（UGUI + UIToolkit）
         /// </summary>
         public void PopStashedUI()
         {
             _uguiManager.PopStashedUI();
+            _toolkitManager?.PopStashedUI();
         }
 
         /// <summary>
@@ -380,6 +403,30 @@ namespace UNIHper.UI
         /// 全局 UI Toolkit 完全隐藏事件
         /// </summary>
         public IObservable<UIToolkitBase> OnToolkitUIHiddenAsObservable() => _toolkitManager?.OnUIHiddenAsObservable();
+
+        /// <summary>
+        /// 监听指定类型 UI Toolkit 的显示事件
+        /// </summary>
+        public IObservable<T> OnToolkitUIShowingAsObservable<T>()
+            where T : UIToolkitBase => _toolkitManager?.OnUIShowingAsObservable<T>();
+
+        /// <summary>
+        /// 监听指定类型 UI Toolkit 的显示完成事件
+        /// </summary>
+        public IObservable<T> OnToolkitUIShownAsObservable<T>()
+            where T : UIToolkitBase => _toolkitManager?.OnUIShownAsObservable<T>();
+
+        /// <summary>
+        /// 监听指定类型 UI Toolkit 的隐藏事件
+        /// </summary>
+        public IObservable<T> OnToolkitUIHidingAsObservable<T>()
+            where T : UIToolkitBase => _toolkitManager?.OnUIHidingAsObservable<T>();
+
+        /// <summary>
+        /// 监听指定类型 UI Toolkit 的隐藏完成事件
+        /// </summary>
+        public IObservable<T> OnToolkitUIHiddenAsObservable<T>()
+            where T : UIToolkitBase => _toolkitManager?.OnUIHiddenAsObservable<T>();
 
         #endregion
 

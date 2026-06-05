@@ -345,7 +345,40 @@ namespace UNIHper.Editor
                 }
             }
 
+            // 4. 复制框架内置 UI 资源到 Resources 目录
+            CopyBuiltInUIToolkitAssets();
+
             return hasChanges;
+        }
+
+        /// <summary>
+        /// 复制框架内置的 UI Toolkit 资源到项目 Resources 目录
+        /// </summary>
+        private static void CopyBuiltInUIToolkitAssets()
+        {
+            string targetDir = "Assets/Resources/UNIHper/UIToolkit";
+            EnsureDirectoryExists(UNIPaths.ProjectPath(targetDir));
+
+            // 需要复制的内置 UI 资源
+            var builtInAssets = new[] { ("UNIDebuggerPanel.uxml", "UNIDebuggerPanel"), ("UNIDebuggerPanel.uss", "UNIDebuggerPanel"), };
+
+            foreach (var (fileName, _) in builtInAssets)
+            {
+                string sourcePath = UNIPaths.PackagePath($"Assets/UIToolkit/{fileName}");
+                string targetPath = $"{targetDir}/{fileName}";
+
+                // 如果目标不存在或源文件更新，则复制
+                if (!File.Exists(UNIPaths.ProjectPath(targetPath)))
+                {
+                    if (File.Exists(UNIPaths.ProjectPath(sourcePath)))
+                    {
+                        AssetDatabase.CopyAsset(sourcePath, targetPath);
+                        Debug.Log($"[UNIHper] 已复制 UI 资源: {fileName}");
+                    }
+                }
+            }
+
+            AssetDatabase.Refresh();
         }
 
         private static void EnsureDirectoryExists(string path)

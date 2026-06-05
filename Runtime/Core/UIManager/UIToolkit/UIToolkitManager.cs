@@ -19,17 +19,30 @@ namespace UNIHper.UI
 
         internal const string PERSISTENCE_SCENE = "Persistence";
 
+        // UIDocument sortingOrder 基准值（按类型分层，与 UIManager 的 Transform 层级对应）
+        private const int SORTING_ORDER_STANDALONE = 100;
+        private const int SORTING_ORDER_NORMAL = 1000;
+        private const int SORTING_ORDER_POPUP = 10000;
+
         #endregion
 
         #region Private Fields
 
         // 所有已注册的 UI 配置
-        private Dictionary<string, UIToolkitPageConfig> _registeredConfigs = new Dictionary<string, UIToolkitPageConfig>();
+        private readonly Dictionary<string, UIToolkitPageConfig> _registeredConfigs = new Dictionary<string, UIToolkitPageConfig>();
 
         // 所有已实例化的 UI
-        private Dictionary<string, UIToolkitBase> _spawnedUIs = new Dictionary<string, UIToolkitBase>();
+        private readonly Dictionary<string, UIToolkitBase> _spawnedUIs = new Dictionary<string, UIToolkitBase>();
 
-        // UI 容器
+        // 页面类型追踪器（与 UIManager 共享逻辑）
+        private readonly UIPageTracker<UIToolkitBase> _pageTracker = new UIPageTracker<UIToolkitBase>();
+
+        // 按类型分组的容器节点（对应 UIManager 的 StandaloneUIRoot / NormalUIRoot / PopupUIRoot）
+        private Transform _standaloneRoot;
+        private Transform _normalRoot;
+        private Transform _popupRoot;
+
+        // 根容器
         private Transform _uiContainer;
 
         #endregion
@@ -99,7 +112,7 @@ namespace UNIHper.UI
         /// </summary>
         public void Initialize()
         {
-            // 创建 UI 容器
+            // 创建 UI 容器（含类型分组子节点）
             EnsureUIContainer();
 
             // 扫描并注册所有 UI Toolkit 页面
@@ -117,11 +130,26 @@ namespace UNIHper.UI
                 GameObject.DontDestroyOnLoad(containerGO);
             }
             _uiContainer = containerGO.transform;
+
+            // 创建类型分组子节点（与 UIManager 的 StandaloneUIRoot/NormalUIRoot/PopupUIRoot 对应）
+            _standaloneRoot = EnsureChildContainer("StandaloneUIRoot");
+            _normalRoot = EnsureChildContainer("NormalUIRoot");
+            _popupRoot = EnsureChildContainer("PopupUIRoot");
+        }
+
+        private Transform EnsureChildContainer(string name)
+        {
+            var child = _uiContainer.Find(name);
+            if (child == null)
+            {
+                child = new GameObject(name).transform;
+                child.SetParent(_uiContainer);
+            }
+            return child;
         }
 
         private void ScanAndRegisterUIPages()
         {
-            // 获取所有程序集中继承自 UIToolkitBase 的类型
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
             foreach (var assembly in assemblies)
@@ -160,50 +188,168 @@ namespace UNIHper.UI
 
         #endregion
 
+        #region Scene Lifecycle
+
+        /// <summary>
+        /// 场景切换时调用（对应 UIManager.OnEnterScene）
+        /// 清理非持久化 UI，创建新场景的 UI
+        /// </summary>
+        internal void OnEnterScene(string sceneName)
+        {
+            // 清理非持久化的已实例化 UI
+            var allKeys = _spawnedUIs.Keys.ToList();
+            foreach (var uiKey in allKeys)
+            {
+                if (IsPersistUI(uiKey))
+                    continue;
+
+                if (_spawnedUIs.TryGetValue(uiKey, out var ui))
+                {
+                    if (ui.isShowing)
+                    {
+                        ui.HandleHide();
+                    }
+                    _pageTracker.Untrack(uiKey, ui);
+                    _spawnedUIs.Remove(uiKey);
+
+                    if (ui != null && ui.gameObject != null)
+                    {
+                        GameObject.Destroy(ui.gameObject);
+                    }
+                }
+            }
+
+            // 预创建新场景配置的 UI（Scene 匹配的 UI）
+            foreach (var kvp in _registeredConfigs)
+            {
+                if (kvp.Value.Scene == sceneName && !_spawnedUIs.ContainsKey(kvp.Key))
+                {
+                    CreateUI(kvp.Key);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 清理所有资源（应用退出时调用，对应 UIManager.CleanUp）
+        /// </summary>
+        internal void CleanUp()
+        {
+            HideAll();
+
+            foreach (var ui in _spawnedUIs.Values.ToList())
+            {
+                if (ui != null && ui.gameObject != null)
+                {
+                    GameObject.Destroy(ui.gameObject);
+                }
+            }
+
+            _spawnedUIs.Clear();
+            _pageTracker.Clear();
+            _eventBus.Dispose();
+        }
+
+        /// <summary>
+        /// 判断是否为持久化 UI
+        /// </summary>
+        private bool IsPersistUI(string uiKey)
+        {
+            if (_registeredConfigs.TryGetValue(uiKey, out var config))
+            {
+                return string.IsNullOrEmpty(config.Scene) || config.Scene == PERSISTENCE_SCENE;
+            }
+            return true; // 未注册的 UI 默认为持久化（安全策略）
+        }
+
+        #endregion
+
         #region Show/Hide Methods
 
         /// <summary>
         /// 显示 UI（泛型版本）
         /// </summary>
-        public T Show<T>()
+        public T Show<T>(bool bForceNotify = false)
             where T : UIToolkitBase
         {
-            return Show(typeof(T).FullName) as T;
+            return Show(typeof(T).FullName, bForceNotify) as T;
         }
 
         /// <summary>
-        /// 显示 UI（按 Key）
+        /// 显示 UI（按 Key）— 根据 UIType 执行不同的页面管理逻辑
         /// </summary>
-        public UIToolkitBase Show(string uiKey)
+        public UIToolkitBase Show(string uiKey, bool bForceNotify = false)
         {
             var ui = GetOrCreate(uiKey);
-            if (ui != null)
+            if (ui == null)
+                return null;
+
+            // 防重入：已显示则不重复执行（与 UIManager 行为一致）
+            if (ui.isShowing)
             {
-                ui.HandleShow();
+                Debug.LogWarning($"[UIToolkitManager] UI {uiKey} is already showing.");
+                if (bForceNotify)
+                    ui.ForceInvokeOnShownEvent();
+                return ui;
             }
+
+            _pageTracker.TrackShow(
+                uiKey,
+                ui,
+                handleShow: u => u.HandleShow(),
+                handleHide: u => u.HandleHide(),
+                onPopupSortOrder: (u, depth) =>
+                {
+                    var uiDoc = u.GetComponent<UIDocument>();
+                    if (uiDoc != null)
+                    {
+                        uiDoc.sortingOrder = SORTING_ORDER_POPUP + depth;
+                    }
+                }
+            );
+
             return ui;
         }
 
         /// <summary>
         /// 隐藏 UI（泛型版本）
         /// </summary>
-        public T Hide<T>()
+        public T Hide<T>(bool bForceNotify = false)
             where T : UIToolkitBase
         {
-            return Hide(typeof(T).FullName) as T;
+            return Hide(typeof(T).FullName, bForceNotify) as T;
         }
 
         /// <summary>
-        /// 隐藏 UI（按 Key）
+        /// 隐藏 UI（按 Key）— 根据 UIType 执行不同的页面管理逻辑
         /// </summary>
-        public UIToolkitBase Hide(string uiKey)
+        public UIToolkitBase Hide(string uiKey, bool bForceNotify = false)
         {
-            if (_spawnedUIs.TryGetValue(uiKey, out var ui))
+            if (!_spawnedUIs.TryGetValue(uiKey, out var ui))
             {
-                ui.HandleHide();
+                Debug.LogWarning($"[UIToolkitManager] Hide ui {uiKey} failed. UI not exists.");
+                return null;
+            }
+
+            // 防重入：已隐藏则不重复执行（与 UIManager 行为一致）
+            if (!ui.isShowing)
+            {
+                Debug.LogWarning($"[UIToolkitManager] UI {uiKey} is already hidden.");
+                if (bForceNotify)
+                    ui.ForceInvokeOnHiddenEvent();
                 return ui;
             }
-            return null;
+
+            _pageTracker.TrackHide(uiKey, ui, handleHide: u => u.HandleHide(), handleShow: u => u.HandleShow());
+
+            return ui;
+        }
+
+        /// <summary>
+        /// 隐藏最顶层的 Popup
+        /// </summary>
+        public UIToolkitBase HideTopPopup()
+        {
+            return _pageTracker.HideTopPopup(u => u.HandleHide());
         }
 
         /// <summary>
@@ -213,12 +359,52 @@ namespace UNIHper.UI
         {
             foreach (var ui in _spawnedUIs.Values.ToList())
             {
-                if (ui.isShowing)
+                if (ui != null && ui.isShowing)
                 {
                     ui.HandleHide();
                 }
             }
+            _pageTracker.Clear();
         }
+
+        /// <summary>
+        /// 隐藏所有指定类型的 UI
+        /// </summary>
+        public void HideAll<T>()
+            where T : UIToolkitBase
+        {
+            GetAll<T>().ForEach(ui => Hide(ui.Key));
+        }
+
+        /// <summary>
+        /// 显示所有指定类型的 UI
+        /// </summary>
+        public void ShowAll<T>()
+            where T : UIToolkitBase
+        {
+            GetAll<T>().ForEach(ui => Show(ui.Key));
+        }
+
+        /// <summary>
+        /// 暂存当前所有活跃 UI
+        /// </summary>
+        public void StashActiveUI()
+        {
+            _pageTracker.StashActiveUI(uiKey => Hide(uiKey));
+        }
+
+        /// <summary>
+        /// 恢复暂存的 UI
+        /// </summary>
+        public void PopStashedUI()
+        {
+            _pageTracker.PopStashedUI(uiKey => Show(uiKey));
+        }
+
+        /// <summary>
+        /// 当前所有活跃（显示中）的 UI 列表
+        /// </summary>
+        public List<UIToolkitBase> ActiveUIs => _spawnedUIs.Values.Where(ui => ui != null && ui.isShowing).ToList();
 
         #endregion
 
@@ -240,6 +426,24 @@ namespace UNIHper.UI
         {
             _spawnedUIs.TryGetValue(uiKey, out var ui);
             return ui;
+        }
+
+        /// <summary>
+        /// 获取所有指定类型的 UI 实例（对应 UIManager.GetAll）
+        /// </summary>
+        public List<T> GetAll<T>()
+            where T : UIToolkitBase
+        {
+            return _spawnedUIs.Values.Where(ui => ui is T).Cast<T>().ToList();
+        }
+
+        /// <summary>
+        /// 检查 UI 是否存在（对应 UIManager.Exists）
+        /// </summary>
+        public bool Exists<T>()
+            where T : UIToolkitBase
+        {
+            return Get<T>() != null;
         }
 
         /// <summary>
@@ -268,38 +472,34 @@ namespace UNIHper.UI
         /// <summary>
         /// 检查 UI 是否正在显示（按 Type）
         /// </summary>
-        public bool IsShowing<T>(Type uiType)
-            where T : UIToolkitBase
+        public bool IsShowing(Type uiType)
         {
-            var ui = Get<T>(uiType);
+            var ui = Get(uiType.FullName);
             return ui != null && ui.isShowing;
         }
 
         /// <summary>
         /// 显示 UI（按 Type）
         /// </summary>
-        public T Show<T>(Type uiType)
-            where T : UIToolkitBase
+        public UIToolkitBase Show(Type uiType, bool bForceNotify = false)
         {
-            return Show(uiType.FullName) as T;
+            return Show(uiType.FullName, bForceNotify);
         }
 
         /// <summary>
         /// 隐藏 UI（按 Type）
         /// </summary>
-        public T Hide<T>(Type uiType)
-            where T : UIToolkitBase
+        public UIToolkitBase Hide(Type uiType, bool bForceNotify = false)
         {
-            return Hide(uiType.FullName) as T;
+            return Hide(uiType.FullName, bForceNotify);
         }
 
         /// <summary>
         /// 获取 UI 实例（按 Type）
         /// </summary>
-        public T Get<T>(Type uiType)
-            where T : UIToolkitBase
+        public UIToolkitBase Get(Type uiType)
         {
-            return Get(uiType.FullName) as T;
+            return Get(uiType.FullName);
         }
 
         /// <summary>
@@ -308,24 +508,26 @@ namespace UNIHper.UI
         public T Toggle<T>()
             where T : UIToolkitBase
         {
-            var ui = Get<T>();
-            if (ui != null)
-            {
-                ui.Toggle();
-            }
-            return ui;
+            return Toggle(typeof(T).FullName) as T;
         }
 
         /// <summary>
-        /// 切换 UI 显示/隐藏（按 Type）
+        /// 切换 UI 显示/隐藏（按 Key）
         /// </summary>
-        public T Toggle<T>(Type uiType)
-            where T : UIToolkitBase
+        public UIToolkitBase Toggle(string uiKey)
         {
-            var ui = Get<T>(uiType);
-            if (ui != null)
+            var ui = GetOrCreate(uiKey);
+            if (ui == null)
+                return null;
+
+            // 直接判断并调用管理器级 Show/Hide，避免 ui.Toggle() 回调造成循环
+            if (ui.isShowing)
             {
-                ui.Toggle();
+                Hide(uiKey);
+            }
+            else
+            {
+                Show(uiKey);
             }
             return ui;
         }
@@ -344,20 +546,34 @@ namespace UNIHper.UI
 
             // 加载 UXML 资源
             var uxmlAsset = ResourceManager.Instance.Get<VisualTreeAsset>(config.Asset);
+
+            if (uxmlAsset == null)
+            {
+                uxmlAsset = Resources.Load<VisualTreeAsset>(config.Asset);
+            }
+
+            if (uxmlAsset == null)
+            {
+                uxmlAsset = Resources.Load<VisualTreeAsset>($"UIToolkit/{config.Asset}");
+            }
+
             if (uxmlAsset == null)
             {
                 Debug.LogError($"[UIToolkitManager] 无法加载 UXML 资源: {config.Asset}");
                 return null;
             }
 
-            // 创建 GameObject
+            // 根据 UIType 选择父容器
+            var parentRoot = GetParentForType(config.ShowType);
+
+            // 创建 GameObject 并挂到对应类型容器下
             var go = new GameObject(config.ClassType.Name);
-            go.transform.SetParent(_uiContainer);
+            go.transform.SetParent(parentRoot);
 
             // 添加 UIDocument 组件
             var uiDocument = go.AddComponent<UIDocument>();
 
-            // 设置 Panel Settings（如果指定）
+            // 设置 Panel Settings
             if (!string.IsNullOrEmpty(config.PanelSettings))
             {
                 var panelSettings = ResourceManager.Instance.Get<PanelSettings>(config.PanelSettings);
@@ -368,9 +584,11 @@ namespace UNIHper.UI
             }
             else
             {
-                // 使用默认 Panel Settings
                 uiDocument.panelSettings = GetOrCreateDefaultPanelSettings();
             }
+
+            // 根据 UIType 设置基准 sortingOrder（类型分层）
+            uiDocument.sortingOrder = GetBaseSortingOrder(config.ShowType) + config.Order;
 
             // 设置 UXML
             uiDocument.visualTreeAsset = uxmlAsset;
@@ -398,9 +616,48 @@ namespace UNIHper.UI
             // 缓存
             _spawnedUIs[uiKey] = uiComponent;
 
-            Debug.Log($"[UIToolkitManager] 创建 UI: {config.ClassType.Name}");
+            // 调用 OnLoad 生命周期（对应 UIManager.SpawnUI 中的 OnLoad 调用）
+            uiComponent.OnLoad();
+
+            Debug.Log($"[UIToolkitManager] 创建 UI: {config.ClassType.Name} (Type={config.ShowType}, Parent={parentRoot.name})");
 
             return uiComponent;
+        }
+
+        /// <summary>
+        /// 根据 UIType 获取父容器
+        /// </summary>
+        private Transform GetParentForType(UIType uiType)
+        {
+            switch (uiType)
+            {
+                case UIType.Standalone:
+                    return _standaloneRoot;
+                case UIType.Normal:
+                    return _normalRoot;
+                case UIType.Popup:
+                    return _popupRoot;
+                default:
+                    return _normalRoot;
+            }
+        }
+
+        /// <summary>
+        /// 根据 UIType 获取基准 sortingOrder
+        /// </summary>
+        private int GetBaseSortingOrder(UIType uiType)
+        {
+            switch (uiType)
+            {
+                case UIType.Standalone:
+                    return SORTING_ORDER_STANDALONE;
+                case UIType.Normal:
+                    return SORTING_ORDER_NORMAL;
+                case UIType.Popup:
+                    return SORTING_ORDER_POPUP;
+                default:
+                    return SORTING_ORDER_NORMAL;
+            }
         }
 
         private PanelSettings _defaultPanelSettings;
@@ -446,26 +703,46 @@ namespace UNIHper.UI
         /// <summary>
         /// 销毁 UI 实例
         /// </summary>
-        public void Destroy<T>()
+        public void Destroy<T>(bool immediate = false)
             where T : UIToolkitBase
         {
-            Destroy(typeof(T).FullName);
+            Destroy(typeof(T).FullName, immediate);
         }
 
         /// <summary>
-        /// 销毁 UI 实例（按 Key）
+        /// 销毁 UI 实例（按 Key），支持等待过渡完成（对应 UIManager.Destroy）
         /// </summary>
-        public void Destroy(string uiKey)
+        public async void Destroy(string uiKey, bool immediate = false)
         {
             if (_spawnedUIs.TryGetValue(uiKey, out var ui))
             {
+                if (ui.isShowing)
+                {
+                    Hide(uiKey);
+                }
+
+                _pageTracker.Untrack(uiKey, ui);
                 _spawnedUIs.Remove(uiKey);
+
+                if (!immediate && ui != null)
+                {
+                    await ui.WaitForTransitionComplete(0);
+                }
 
                 if (ui != null && ui.gameObject != null)
                 {
                     GameObject.Destroy(ui.gameObject);
                 }
             }
+        }
+
+        /// <summary>
+        /// 销毁所有指定类型的 UI（对应 UIManager.DestroyAll）
+        /// </summary>
+        public void DestroyAll<T>(bool immediate = false)
+            where T : UIToolkitBase
+        {
+            GetAll<T>().ForEach(ui => Destroy(ui.Key, immediate));
         }
 
         /// <summary>
@@ -481,6 +758,7 @@ namespace UNIHper.UI
                 }
             }
             _spawnedUIs.Clear();
+            _pageTracker.Clear();
         }
 
         #endregion

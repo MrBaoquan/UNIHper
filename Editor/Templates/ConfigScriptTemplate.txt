@@ -1,22 +1,21 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
+using System.Xml.Serialization;
+using Newtonsoft.Json;
 using UNIHper;
 
-[SerializedAt(AppPath.StreamingDir)]
+[SerializedAt(AppPath.StreamingDir, "Configs", Priority = 0)]
+[SerializeWith(ConfigDriver.XML)]
 public class ##CLASSNAME## : UConfig
 {
-    // Write your comments here
-    protected override string Comment () {
-        return @"
-        Write your comments here...
-        ";
+    [XmlIgnore, JsonIgnore]
+    public bool IsInitialized { get; set; }
+
+    protected override void OnLoaded()
+    {
+        IsInitialized = true;
     }
 
-    // Called once after the config data is loaded
-    protected override void OnLoaded () {
-        
+    protected override string Comment()
+    {
+        return "##CLASSNAME##";
     }
-
 }

@@ -139,18 +139,16 @@ namespace UNIHper.UI
         private Dictionary<string, UIBase> allSpawnedUICaches = new Dictionary<string, UIBase>();
         private Dictionary<string, UIBase> allSpawnedPersistentUICaches = new Dictionary<string, UIBase>();
 
-        // 当前管理中的normalUIs
-        private Dictionary<string, UIBase> activatedNormalUIs = new Dictionary<string, UIBase>();
-
-        // 当前管理中的standaloneUIs
-        private Dictionary<string, UIBase> activatedStandaloneUIs = new Dictionary<string, UIBase>();
-
-        // 当前管理中的popupUIs
-        private List<UIBase> activatedPopupUIs = new List<UIBase>();
+        // 页面类型追踪器（与 UIToolkitManager 共享逻辑）
+        private readonly UIPageTracker<UIBase> _pageTracker = new UIPageTracker<UIBase>();
 
         internal async Task Initialize()
         {
             UNIHperLogger.Log("UIManager Initializing ...");
+
+            // 配置 Standalone 分组键：按 CanvasKey 分组
+            _pageTracker.GetStandaloneGroupKey = ui => (ui as UIBase)?.__CanvasKey ?? CANVAS_DEFAULT;
+
             ReadConfigData();
             spawnPersistUIs();
             await Task.CompletedTask;
@@ -167,9 +165,8 @@ namespace UNIHper.UI
                 });
             this.allSpawnedPersistentUICaches.Clear();
             this.allSpawnedUICaches.Clear();
-            this.activatedNormalUIs.Clear();
-            this.activatedStandaloneUIs.Clear();
-            this.activatedPopupUIs.Clear();
+            _pageTracker.Clear();
+            _eventBus.Dispose();
         }
 
         internal void OnEnterScene(string sceneName)
@@ -183,15 +180,11 @@ namespace UNIHper.UI
                 if (allSpawnedUICaches.ContainsKey(_uiKey))
                 {
                     var _ui = allSpawnedUICaches[_uiKey];
-                    //UReflection.CallPrivateMethod(_ui, "HandleHide");
                     _ui.HandleHide();
+                    _pageTracker.Untrack(_uiKey, _ui);
                     GameObject.Destroy(_ui.gameObject);
                     allSpawnedUICaches.Remove(_uiKey);
-                    if (activatedPopupUIs.Contains(_ui))
-                        activatedPopupUIs.Remove(_ui);
                 }
-                if (activatedNormalUIs.ContainsKey(_uiKey))
-                    activatedNormalUIs.Remove(_uiKey);
             });
 
             Dictionary<string, UIConfig> _uis = null;
@@ -239,7 +232,17 @@ namespace UNIHper.UI
                 return _uiComponent as T;
             }
 
-            Show(uiKey, _uiComponent);
+            _pageTracker.TrackShow(
+                uiKey,
+                _uiComponent,
+                handleShow: u => u.HandleShow(),
+                handleHide: u => u.HandleHide(),
+                onPopupSortOrder: (u, depth) =>
+                {
+                    u.transform.SetAsLastSibling();
+                }
+            );
+
             return _uiComponent as T;
         }
 
@@ -416,19 +419,7 @@ namespace UNIHper.UI
                 return _uiComponent as T;
             }
 
-            UIType _uiType = _uiComponent.Type;
-            switch (_uiType)
-            {
-                case UIType.Normal:
-                    hideNormalUI(uiKey);
-                    break;
-                case UIType.Standalone:
-                    hideStandaloneUI(uiKey);
-                    break;
-                case UIType.Popup:
-                    hidePopupUI(uiKey);
-                    break;
-            }
+            _pageTracker.TrackHide(uiKey, _uiComponent, handleHide: u => u.HandleHide(), handleShow: u => u.HandleShow());
 
             return _uiComponent as T;
         }
@@ -442,6 +433,7 @@ namespace UNIHper.UI
         public void HideAll()
         {
             allSpawnedUICaches.Where(_ui => _ui.Value.isShowing).ToList().ForEach(_ui => Hide(_ui.Key));
+            _pageTracker.Clear();
         }
 
         public void ShowAll<T>()
@@ -455,38 +447,25 @@ namespace UNIHper.UI
             allSpawnedUICaches.Where(_ui => !_ui.Value.isShowing).ToList().ForEach(_ui => Show(_ui.Key));
         }
 
-        private bool isStashing = false;
-        List<UIBase> stashedUIs = new List<UIBase>();
-
         public void StashActiveUI()
         {
-            if (isStashing)
-                return;
-            isStashing = true;
-            var _normalUIs = activatedNormalUIs.Values.Where(_ui => _ui.isShowing).ToList();
-            var _standaloneUIs = activatedStandaloneUIs.Values.Where(_ui => _ui.isShowing).ToList();
-            var _popupUIs = activatedPopupUIs.Where(_ui => _ui.isShowing).ToList();
-            stashedUIs = _normalUIs.Concat(_standaloneUIs).Concat(_popupUIs).ToList();
-            stashedUIs.ForEach(_ui => Hide(_ui.__UIKey));
+            _pageTracker.StashActiveUI(uiKey => Hide(uiKey));
         }
 
         public List<UIBase> ActiveUIs
         {
             get
             {
-                var _normalUIs = activatedNormalUIs.Values.Where(_ui => _ui.isShowing).ToList();
-                var _standaloneUIs = activatedStandaloneUIs.Values.Where(_ui => _ui.isShowing).ToList();
-                var _popupUIs = activatedPopupUIs.Where(_ui => _ui.isShowing).ToList();
+                var _normalUIs = _pageTracker.ActivatedNormalUIs.Values.Where(_ui => _ui.isShowing).ToList();
+                var _standaloneUIs = _pageTracker.ActivatedStandaloneUIs.Values.Where(_ui => _ui.isShowing).ToList();
+                var _popupUIs = _pageTracker.ActivatedPopupUIs.Where(_ui => _ui.isShowing).ToList();
                 return _normalUIs.Concat(_standaloneUIs).Concat(_popupUIs).ToList();
             }
         }
 
         public void PopStashedUI()
         {
-            if (!isStashing)
-                return;
-            stashedUIs.ForEach(_ui => Show(_ui.__UIKey));
-            isStashing = false;
+            _pageTracker.PopStashedUI(uiKey => Show(uiKey));
         }
 
         public UIBase Hide(string InKey)
@@ -500,7 +479,15 @@ namespace UNIHper.UI
             var _ui = Get<T>();
             if (_ui is null)
                 return null;
-            _ui.Toggle();
+            // 直接判断并调用管理器级 Show/Hide，避免通过 UIBase.Toggle() 产生迂回调用
+            if (_ui.isShowing)
+            {
+                Hide<T>();
+            }
+            else
+            {
+                Show<T>();
+            }
             return _ui;
         }
 
@@ -873,137 +860,6 @@ namespace UNIHper.UI
                 m_uiRootLayoutDic.Add(canvasKey, new UIRootLayout(_canvas));
             }
             return m_uiRootLayoutDic[canvasKey];
-        }
-
-        private void Show(string InKey, UIBase InUIComponent)
-        {
-            UIType _uiType = InUIComponent.Type;
-            switch (_uiType)
-            {
-                case UIType.Normal:
-                    showNormalUI(InKey);
-                    break;
-                case UIType.Standalone:
-                    showStandaloneUI(InKey);
-                    break;
-                case UIType.Popup:
-                    showPopupUI(InKey);
-                    break;
-            }
-        }
-
-        private void showNormalUI(string InKey)
-        {
-            UIBase _uiComponent = allSpawnedUICaches[InKey];
-            if (activatedNormalUIs.ContainsKey(InKey))
-                return;
-            activatedNormalUIs.Add(InKey, _uiComponent);
-            _uiComponent.HandleShow();
-        }
-
-        private void hideNormalUI(string InKey)
-        {
-            UIBase _uiComponent;
-            if (!activatedNormalUIs.TryGetValue(InKey, out _uiComponent))
-            {
-                return;
-            }
-
-            activatedNormalUIs.Remove(InKey);
-            _uiComponent.HandleHide();
-        }
-
-        private void showStandaloneUI(string InKey)
-        {
-            UIBase _uiComponent = allSpawnedUICaches[InKey];
-            foreach (
-                var _uiItem in activatedStandaloneUIs.Values
-                    .Where(_ui => _ui.__CanvasKey == _uiComponent.__CanvasKey && _ui != _uiComponent)
-                    .ToList()
-            )
-            {
-                _uiItem.HandleHide();
-            }
-
-            _uiComponent.HandleShow();
-
-            if (!activatedStandaloneUIs.Keys.Contains(InKey))
-            {
-                activatedStandaloneUIs.Add(InKey, _uiComponent);
-            }
-        }
-
-        private void hideStandaloneUI(string InKey)
-        {
-            UIBase _uiComponent;
-            if (!activatedStandaloneUIs.TryGetValue(InKey, out _uiComponent))
-            {
-                return;
-            }
-
-            //UReflection.CallPrivateMethod(_uiComponent, "HandleHide");
-            _uiComponent.HandleHide();
-
-            activatedStandaloneUIs.Remove(InKey);
-            var _last = activatedStandaloneUIs.Values
-                .Where(_ui => _ui.__CanvasKey == _uiComponent.__CanvasKey && _ui != _uiComponent)
-                .LastOrDefault();
-            if (_last != default(UIBase))
-            {
-                //UReflection.CallPrivateMethod(_last, "HandleShow");
-                _last.HandleShow();
-            }
-        }
-
-        private void showPopupUI(string InKey)
-        {
-            UIBase _uiComponent = allSpawnedUICaches[InKey];
-            if (_uiComponent == null)
-            {
-                return;
-            }
-
-            if (!activatedPopupUIs.Contains(_uiComponent))
-            {
-                activatedPopupUIs.Add(_uiComponent);
-            }
-            else
-            {
-                if (activatedPopupUIs.Remove(_uiComponent))
-                {
-                    activatedPopupUIs.Add(_uiComponent);
-                }
-            }
-
-            //UReflection.CallPrivateMethod(_uiComponent, "HandleShow");
-            _uiComponent.transform.SetAsLastSibling();
-            _uiComponent.HandleShow();
-        }
-
-        private void hidePopupUI(string uiKey = "")
-        {
-            if (activatedPopupUIs.Count <= 0)
-            {
-                return;
-            }
-            UIBase _uiComponent = null;
-            if (string.IsNullOrEmpty(uiKey))
-            {
-                _uiComponent = activatedPopupUIs.LastOrDefault();
-            }
-            else
-            {
-                _uiComponent = allSpawnedUICaches[uiKey];
-            }
-
-            if (!activatedPopupUIs.Contains(_uiComponent))
-            {
-                return;
-            }
-
-            //UReflection.CallPrivateMethod(_uiComponent, "HandleHide");
-            _uiComponent.HandleHide();
-            activatedPopupUIs.Remove(_uiComponent);
         }
 
         private bool isPersistUI(string uiKey)

@@ -77,9 +77,43 @@ namespace UNIHper
 
         internal void CleanUp()
         {
+            // 释放所有 Addressable 资源
+            foreach (var resGroup in resources)
+            {
+                foreach (var asset in resGroup.Value.Values)
+                {
+                    if (asset.asssetDriver == AsssetDriver.Addressable && asset.asset != null)
+                    {
+                        try
+                        {
+                            Addressables.Release(asset.asset);
+                        }
+                        catch (Exception ex)
+                        {
+                            UNIHperLogger.LogError($"Failed to release addressable asset: {ex.Message}");
+                        }
+                    }
+                }
+            }
+
+            // 卸载所有 AssetBundle
+            foreach (var bundleGroup in bundles)
+            {
+                foreach (var bundle in bundleGroup.Value.Values)
+                {
+                    if (bundle != null)
+                    {
+                        bundle.Unload(true);
+                    }
+                }
+            }
+            bundles.Clear();
+
             this.assetBundlesConfigData.Clear();
             this.addressableConfigData.Clear();
             this.resources.Clear();
+            InvalidateAssetsCache();
+            Resources.UnloadUnusedAssets();
         }
 
         private void registerEvents()
@@ -115,12 +149,34 @@ namespace UNIHper
             this.UnLoadAssetByKey(InSceneName);
         }
 
-        internal Dictionary<string, AssetItem> allAssets =>
-            resources.Keys
-                .Where(_key => new List<string> { "Persistence", getCurrentSceneName(), CUSTOM_RES_KEY }.Contains(_key))
-                .Select(_key => resources[_key])
-                .SelectMany(_kv => _kv)
-                .ToDictionary(_kv => _kv.Key, _kv => _kv.Value);
+        // allAssets 缓存（避免每次访问都重建字典）
+        private Dictionary<string, AssetItem> _allAssetsCache;
+        private bool _allAssetsDirty = true;
+        private string _cachedSceneName;
+
+        internal Dictionary<string, AssetItem> allAssets
+        {
+            get
+            {
+                var _currentScene = getCurrentSceneName();
+                if (_allAssetsDirty || _allAssetsCache == null || _cachedSceneName != _currentScene)
+                {
+                    _cachedSceneName = _currentScene;
+                    _allAssetsCache = resources.Keys
+                        .Where(_key => _key == "Persistence" || _key == _currentScene || _key == CUSTOM_RES_KEY)
+                        .Where(_key => resources.ContainsKey(_key))
+                        .SelectMany(_key => resources[_key])
+                        .ToDictionary(_kv => _kv.Key, _kv => _kv.Value);
+                    _allAssetsDirty = false;
+                }
+                return _allAssetsCache;
+            }
+        }
+
+        private void InvalidateAssetsCache()
+        {
+            _allAssetsDirty = true;
+        }
 
         // internal Dictionary<string, AssetItem> AllAssets => allAssets;
 
@@ -435,17 +491,15 @@ namespace UNIHper
 
         private void RefreshResources()
         {
-            // resources = resources
-            //     .Select(_ =>
-            //     {
-            //         return new KeyValuePair<string, Dictionary<string, UnityEngine.Object>>(
-            //             _.Key,
-            //             _.Value
-            //                 .Where(_1 => _1.Value != null)
-            //                 .ToDictionary(_1 => _1.Key, _2 => _2.Value)
-            //         );
-            //     })
-            //     .ToDictionary(_ => _.Key, _ => _.Value);
+            foreach (var resGroup in resources)
+            {
+                var nullKeys = resGroup.Value.Where(kv => kv.Value.asset == null).Select(kv => kv.Key).ToList();
+                foreach (var key in nullKeys)
+                {
+                    resGroup.Value.Remove(key);
+                }
+            }
+            InvalidateAssetsCache();
         }
 
         private T getResource<T>(Dictionary<string, AssetItem> assets, string assetPath)
@@ -789,6 +843,7 @@ namespace UNIHper
                 // TODO: 子资源的加载处理
                 _appendResource(_resource);
             }
+            InvalidateAssetsCache();
         }
 
         private void UnLoadAssetByKey(string sceneKey)
@@ -841,6 +896,7 @@ namespace UNIHper
             // 5. 触发垃圾回收（可选，根据需要启用）
             System.GC.Collect();
 
+            InvalidateAssetsCache();
             UNIHperLogger.Log($"Unloaded all assets for scene: {sceneKey}");
         }
 

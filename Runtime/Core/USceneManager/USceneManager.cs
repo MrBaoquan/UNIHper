@@ -14,6 +14,7 @@ namespace UNIHper
     public class SceneManager : Singleton<SceneManager>
     {
         private UnityEvent<Scene> m_onSceneLoaded = new UnityEvent<Scene>();
+        private bool _isLoading = false;
 
         internal void Awake()
         {
@@ -22,8 +23,10 @@ namespace UNIHper
 
         internal async Task Initialize()
         {
-            UIManager.Instance.OnEnterScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
-            SceneScriptManager.Instance.TriggerOnStart(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+            var _activeSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            UIManager.Instance.OnEnterScene(_activeSceneName);
+            UIToolkitManager.Instance.OnEnterScene(_activeSceneName);
+            SceneScriptManager.Instance.TriggerOnStart(_activeSceneName);
             Application.quitting += () =>
             {
                 SceneScriptManager.Instance.TriggerOnDestroy(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
@@ -36,20 +39,18 @@ namespace UNIHper
             return m_onSceneLoaded.AsObservable();
         }
 
-        public void LoadSceneAsync(
-            string sceneName,
-            System.Action<float> progress = null,
-            System.Action completed = null
-        )
+        public void LoadSceneAsync(string sceneName, System.Action<float> progress = null, System.Action completed = null)
         {
+            if (_isLoading)
+            {
+                Debug.LogWarning($"[SceneManager] 正在加载场景中，忽略重复请求: {sceneName}");
+                return;
+            }
+            _isLoading = true;
             UNIHperEntry.Instance.StartCoroutine(IE_LoadScene(sceneName, progress, completed));
         }
 
-        internal IEnumerator IE_LoadScene(
-            string InSceneName,
-            System.Action<float> InProgress,
-            System.Action InCompleted
-        )
+        internal IEnumerator IE_LoadScene(string InSceneName, System.Action<float> InProgress, System.Action InCompleted)
         {
             string _currentSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             // 1. 触发场景脚本->销毁事件
@@ -79,17 +80,19 @@ namespace UNIHper
                 yield return new WaitForEndOfFrame();
             }
 
-            // 4. 通知加载场景完成事件
-            InCompleted?.Invoke();
-
-            // 5. 通知UIManager 进入新场景事件
+            // 4. 通知UIManager/UIToolkitManager 进入新场景事件
             UIManager.Instance.OnEnterScene(InSceneName);
+            UIToolkitManager.Instance.OnEnterScene(InSceneName);
+
+            // 5. 通知加载场景完成事件（此时场景 UI 已准备好）
+            InCompleted?.Invoke();
 
             // 6. 通知场景脚本 OnStart 事件
             SceneScriptManager.Instance.TriggerOnAwake(InSceneName);
             SceneScriptManager.Instance.TriggerOnStart(InSceneName);
 
             m_onSceneLoaded.Invoke(UnityEngine.SceneManagement.SceneManager.GetSceneByName(InSceneName));
+            _isLoading = false;
             yield return null;
         }
 

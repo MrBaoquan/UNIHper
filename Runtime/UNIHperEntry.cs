@@ -143,6 +143,7 @@ namespace UNIHper
         {
             ConfigManager.Instance.CleanUp();
             UIManager.Instance.CleanUp();
+            UIToolkitManager.Instance.CleanUp();
             ResourceManager.Instance.CleanUp();
             Debug.Log("Application Quit");
             UNILogger.CleanUp();

@@ -80,7 +80,7 @@ namespace UNIHper
             var config = new LiveCameraConfig
             {
                 ModeSelection = RenderHeads.Media.AVProLiveCamera.AVProLiveCamera.SelectModeBy.Resolution,
-                PreferredResolutions = new System.Collections.Generic.List<Vector2>
+                PreferredResolutions = new System.Collections.Generic.List<SerializableVector2>
                 {
                     new Vector2(_preferredWidth, _preferredHeight),
                     new Vector2(1280, 720),
