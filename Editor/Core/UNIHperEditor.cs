@@ -264,8 +264,40 @@ namespace UNIHper.Editor
 
             AddressableUtil.LoadOrCreateAddressableSettings();
             importTMPEssentialResourcesIfNotExists();
+            ExportFrameworkSkills();
 
             ScriptCompileReloadTools.ManualReload();
+        }
+
+        // 导出框架技能到项目 .github/skills/（project-memory 仅首次播种，导出后归项目所有）
+        private static void ExportFrameworkSkills()
+        {
+            var projectRoot = Directory.GetParent(Application.dataPath).FullName;
+            var sourceDir = Path.Combine(projectRoot, "Packages/com.parful.unihper/Editor/Skills");
+            var targetDir = Path.Combine(projectRoot, ".github/skills");
+            if (!Directory.Exists(sourceDir))
+                return;
+
+            Directory.CreateDirectory(targetDir);
+            var exported = 0;
+            foreach (var skillDir in Directory.GetDirectories(sourceDir))
+            {
+                var skillFile = Path.Combine(skillDir, "SKILL.md");
+                if (!File.Exists(skillFile))
+                    continue;
+
+                var skillName = Path.GetFileName(skillDir);
+                var destFile = Path.Combine(targetDir, skillName, "SKILL.md");
+                if (skillName == "project-memory" && File.Exists(destFile))
+                    continue;
+
+                Directory.CreateDirectory(Path.GetDirectoryName(destFile));
+                File.Copy(skillFile, destFile, overwrite: true);
+                exported++;
+            }
+
+            if (exported > 0)
+                Debug.Log($"[UNIHper] Exported {exported} framework skills to .github/skills/");
         }
 
         private static void importTMPEssentialResourcesIfNotExists()
