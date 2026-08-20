@@ -49,4 +49,4 @@ public class {ClassName} : UIBase
 
 - File name should follow `{Feature}UI.cs`.
 - Keep the asset name and class name aligned unless the task explicitly requires otherwise.
-- Prefer `Get<T>("path")` and consult `ugui-prefabs` when the path is unclear.
+- Prefer `Get<T>("path")` for child references. When the path is unclear, inspect the prefab hierarchy (select it in Unity Editor, or query scene objects) instead of guessing.
