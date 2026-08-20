@@ -751,6 +751,16 @@ namespace UNIHper
 
         private IObservable<IEnumerable<AssetItem>> LoadAddressableAssetsByItem(ResourceItem resItem)
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            // WebGL: 所有类型统一走 Task 直加载，绕过 Observable 调度问题（对齐 remote a56eb72 行为）
+            var _webglType = ResolveResourceItemType(resItem.type);
+            if (_webglType == null)
+            {
+                UNIHperLogger.LogWarning($"[ResourceManager] 无法解析类型: {resItem.type}，跳过加载 label [{resItem.label}]");
+                return Observable.Return(Enumerable.Empty<AssetItem>());
+            }
+            return LoadAddressableAssetsByLabelDirectAsync(resItem.label, _webglType).ToObservable();
+#else
             return resItem.type switch
             {
                 nameof(UnityEngine.Object) => LoadAddressableAssetsByLabel<UnityEngine.Object>(resItem.label),
@@ -760,15 +770,20 @@ namespace UNIHper
                 nameof(Material) => LoadAddressableAssetsByLabel<Material>(resItem.label),
                 _ => LoadAddressableAssetsByItemViaReflection(resItem)
             };
+#endif
+        }
+
+        private static Type ResolveResourceItemType(string typeName)
+        {
+            return Type.GetType("UnityEngine." + typeName + ",UnityEngine")
+                ?? Type.GetType("UnityEngine.UIElements." + typeName + ",UnityEngine.UIElementsModule")
+                ?? Type.GetType("TMPro." + typeName + ",Unity.TextMeshPro");
         }
 
         // 反射兜底: 解析任意类型 (UIElements / TMPro 等), 与 remote 分支能力对齐
         private IObservable<IEnumerable<AssetItem>> LoadAddressableAssetsByItemViaReflection(ResourceItem resItem)
         {
-            var _T =
-                Type.GetType("UnityEngine." + resItem.type + ",UnityEngine")
-                ?? Type.GetType("UnityEngine.UIElements." + resItem.type + ",UnityEngine.UIElementsModule")
-                ?? Type.GetType("TMPro." + resItem.type + ",Unity.TextMeshPro");
+            var _T = ResolveResourceItemType(resItem.type);
 
             if (_T == null)
             {
