@@ -1,6 +1,6 @@
 ---
 name: project-memory
-description: 'Project-specific delta memory for TalkWithOldMan. Use when the task needs exceptions, corrections, or project-only conventions that should override default UNIHper guidance.'
+description: 'Project-specific delta memory. Use when the task needs exceptions, corrections, or project-only conventions that should override default UNIHper guidance.'
 ---
 
 # Project Memory
