@@ -17,7 +17,7 @@ namespace UNIHper
         /// 标识当前播放器是否准备就绪
         /// </summary>
         /// <value></value>
-        public bool Ready2Play
+        public virtual bool Ready2Play
         {
             get { return MediaPlayer.Control != null && MediaPlayer.Control.HasMetaData(); }
         }
@@ -26,38 +26,38 @@ namespace UNIHper
         /// 标识当前视频是否处于暂停状态
         /// </summary>
         /// <value></value>
-        public bool IsPaused
+        public virtual bool IsPaused
         {
-            get { return MediaPlayer.Control.IsPaused(); }
+            get { return MediaPlayer.Control != null && MediaPlayer.Control.IsPaused(); }
         }
 
-        public bool IsFinished
+        public virtual bool IsFinished
         {
-            get { return MediaPlayer.Control.IsFinished(); }
+            get { return MediaPlayer.Control != null && MediaPlayer.Control.IsFinished(); }
         }
 
         /// <summary>
         /// 当前播放的视频的总时长 seconds
         /// </summary>
         /// <value></value>
-        public double Duration
+        public virtual double Duration
         {
-            get { return MediaPlayer.Info.GetDuration(); }
+            get { return MediaPlayer.Info != null ? MediaPlayer.Info.GetDuration() : 0; }
         }
 
-        public int DurationFrames
+        public virtual int DurationFrames
         {
-            get { return MediaPlayer.Info.GetDurationFrames(); }
+            get { return MediaPlayer.Info != null ? MediaPlayer.Info.GetDurationFrames() : 0; }
         }
 
-        public int MaxFrameNumber
+        public virtual int MaxFrameNumber
         {
-            get { return MediaPlayer.Info.GetMaxFrameNumber(); }
+            get { return MediaPlayer.Info != null ? MediaPlayer.Info.GetMaxFrameNumber() : 0; }
         }
 
-        public float PlaybackRate
+        public virtual float PlaybackRate
         {
-            get { return MediaPlayer.Control.GetPlaybackRate(); }
+            get { return MediaPlayer.Control != null ? MediaPlayer.Control.GetPlaybackRate() : 0f; }
         }
 
         #endregion
@@ -92,7 +92,7 @@ namespace UNIHper
         protected readonly UnityEvent<MediaPlayer, float> OnRequestSeek = new();
 
         #endregion
-        protected CompositeDisposable _playDisposables = new CompositeDisposable();
+        protected readonly CompositeDisposable _playDisposables = new CompositeDisposable();
 
         public virtual void ClearPlayHandlers()
         {
@@ -101,6 +101,8 @@ namespace UNIHper
         }
 
         private MediaPlayer _mediaPlayer;
+        private bool _eventsRegistered = false;
+
         public MediaPlayer MediaPlayer
         {
             get
@@ -110,15 +112,18 @@ namespace UNIHper
                     _mediaPlayer = this.GetComponent<MediaPlayer>();
                     if (_mediaPlayer == null)
                         _mediaPlayer = this.gameObject.AddComponent<MediaPlayer>();
-                    if (Application.isPlaying)
+                    if (Application.isPlaying && !_eventsRegistered)
+                    {
+                        _eventsRegistered = true;
                         registerAllEvents();
+                    }
                 }
                 return _mediaPlayer;
             }
         }
 
         #region  播放器事件
-        public IObservable<MediaPlayer> OnMetaDataReadyAsObservable()
+        public virtual IObservable<MediaPlayer> OnMetaDataReadyAsObservable()
         {
             return OnMetaDataReady.AsObservable();
         }
@@ -138,97 +143,97 @@ namespace UNIHper
             return OnRequestSeek.AsObservable().Select(x => (x.Item1, x.Item2));
         }
 
-        public IObservable<MediaPlayer> OnReadyToPlayAsObservable()
+        public virtual IObservable<MediaPlayer> OnReadyToPlayAsObservable()
         {
             return OnReadyToPlay.AsObservable();
         }
 
-        public IObservable<MediaPlayer> OnStartedAsObservable()
+        public virtual IObservable<MediaPlayer> OnStartedAsObservable()
         {
             return OnStarted.AsObservable();
         }
 
-        public IObservable<MediaPlayer> OnFirstFrameReadyAsObservable()
+        public virtual IObservable<MediaPlayer> OnFirstFrameReadyAsObservable()
         {
             return OnFirstFrameReady.AsObservable();
         }
 
-        public IObservable<MediaPlayer> OnFinishedPlayingAsObservable()
+        public virtual IObservable<MediaPlayer> OnFinishedPlayingAsObservable()
         {
             return OnFinishedPlaying.AsObservable();
         }
 
-        public IObservable<MediaPlayer> OnReachedEndAsObservable()
+        public virtual IObservable<MediaPlayer> OnReachedEndAsObservable()
         {
             return OnReachedEnd.AsObservable();
         }
 
-        public IObservable<MediaPlayer> OnClosingAsObservable()
+        public virtual IObservable<MediaPlayer> OnClosingAsObservable()
         {
             return OnClosing.AsObservable();
         }
 
-        public IObservable<MediaPlayer> OnErrorAsObservable()
+        public virtual IObservable<MediaPlayer> OnErrorAsObservable()
         {
             return OnError.AsObservable();
         }
 
-        public IObservable<MediaPlayer> OnSubtitleChangeAsObservable()
+        public virtual IObservable<MediaPlayer> OnSubtitleChangeAsObservable()
         {
             return OnSubtitleChange.AsObservable();
         }
 
-        public IObservable<MediaPlayer> OnStalledAsObservable()
+        public virtual IObservable<MediaPlayer> OnStalledAsObservable()
         {
             return OnStalled.AsObservable();
         }
 
-        public IObservable<MediaPlayer> OnUnstalledAsObservable()
+        public virtual IObservable<MediaPlayer> OnUnstalledAsObservable()
         {
             return OnUnstalled.AsObservable();
         }
 
-        public IObservable<MediaPlayer> OnResolutionChangedAsObservable()
+        public virtual IObservable<MediaPlayer> OnResolutionChangedAsObservable()
         {
             return OnResolutionChanged.AsObservable();
         }
 
-        public IObservable<MediaPlayer> OnStartedSeekingAsObservable()
+        public virtual IObservable<MediaPlayer> OnStartedSeekingAsObservable()
         {
             return OnStartedSeeking.AsObservable();
         }
 
-        public IObservable<MediaPlayer> OnFinishedSeekingAsObservable()
+        public virtual IObservable<MediaPlayer> OnFinishedSeekingAsObservable()
         {
             return OnFinishedSeeking.AsObservable();
         }
 
-        public IObservable<MediaPlayer> OnStartedBufferingAsObservable()
+        public virtual IObservable<MediaPlayer> OnStartedBufferingAsObservable()
         {
             return OnStartedBuffering.AsObservable();
         }
 
-        public IObservable<MediaPlayer> OnFinishedBufferingAsObservable()
+        public virtual IObservable<MediaPlayer> OnFinishedBufferingAsObservable()
         {
             return OnFinishedBuffering.AsObservable();
         }
 
-        public IObservable<MediaPlayer> OnPropertiesChangedAsObservable()
+        public virtual IObservable<MediaPlayer> OnPropertiesChangedAsObservable()
         {
             return OnPropertiesChanged.AsObservable();
         }
 
-        public IObservable<MediaPlayer> OnPlaylistItemChangedAsObservable()
+        public virtual IObservable<MediaPlayer> OnPlaylistItemChangedAsObservable()
         {
             return OnPlaylistItemChanged.AsObservable();
         }
 
-        public IObservable<MediaPlayer> OnPlaylistFinishedAsObservable()
+        public virtual IObservable<MediaPlayer> OnPlaylistFinishedAsObservable()
         {
             return OnPlaylistFinished.AsObservable();
         }
 
-        public IObservable<MediaPlayer> OnTextTracksChangedAsObservable()
+        public virtual IObservable<MediaPlayer> OnTextTracksChangedAsObservable()
         {
             return OnTextTracksChanged.AsObservable();
         }
@@ -238,19 +243,19 @@ namespace UNIHper
         #region 公共接口
         public static bool EnableLog { get; set; } = false;
 
-        public bool IsPlaying
+        public virtual bool IsPlaying
         {
-            get { return MediaPlayer.Control.IsPlaying(); }
+            get { return MediaPlayer.Control != null && MediaPlayer.Control.IsPlaying(); }
         }
 
-        public double CurrentTime
+        public virtual double CurrentTime
         {
-            get { return MediaPlayer.Control.GetCurrentTime(); }
+            get { return MediaPlayer.Control != null ? MediaPlayer.Control.GetCurrentTime() : 0; }
         }
 
-        public int CurrentFrame
+        public virtual int CurrentFrame
         {
-            get { return MediaPlayer.Control.GetCurrentTimeFrames(); }
+            get { return MediaPlayer.Control != null ? MediaPlayer.Control.GetCurrentTimeFrames() : 0; }
         }
 
         protected void Log(string msg)

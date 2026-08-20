@@ -7,15 +7,13 @@ using UNIHper;
 using UNIHper.UI;
 using DNHper;
 
+/// <summary>
+/// [已弃用] 旧版 UGUI 摄像头 UI，请使用 LiveCameraToolkitUI 替代
+/// 保留此类仅用于兼容旧项目中的 RawImage 摄像头画面展示
+/// </summary>
 [UIPage(Asset = "LiveCameraUI", Type = UIType.Normal, Order = -1)]
 public class LiveCameraUI : UIBase
 {
-    // Start is called before the first frame update
-    private void Start() { }
-
-    // Update is called once per frame
-    private void Update() { }
-
     // Called when this ui is loaded
     protected override void OnLoaded() { }
 

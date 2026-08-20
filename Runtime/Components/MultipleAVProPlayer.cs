@@ -74,8 +74,6 @@ namespace UNIHper
                 Debug.LogWarning("No video found.");
             }
 
-            this.registerAllEvents();
-
             videoIndex.SetMax(VideoPaths.Count() - 1);
             this.videoPaths = VideoPaths.Select(_path => _path.ToForwardSlash()).ToList();
 
@@ -120,9 +118,6 @@ namespace UNIHper
                 Debug.LogWarning((object)("Video ID out of range: " + videoIndex));
                 return;
             }
-
-            _playDisposables.Clear();
-            _playDisposables = new CompositeDisposable();
 
             SwitchAsObservable(videoIndex, StartTime)
                 .Subscribe(_player =>
@@ -257,8 +252,7 @@ namespace UNIHper
             }
             else
             {
-                _playDisposables.Clear();
-                _playDisposables = new CompositeDisposable();
+                ClearPlayHandlers();
 
                 OnItemChangedAsObservable()
                     .First()
@@ -286,8 +280,7 @@ namespace UNIHper
             startTime = Math.Round(startTime, 3);
             return Observable.Create<AVProPlayer>(_observer =>
             {
-                _playDisposables?.Dispose();
-                _playDisposables = new CompositeDisposable();
+                ClearPlayHandlers();
                 OnItemChangedAsObservable()
                     .First()
                     .Do(_player =>
@@ -309,7 +302,7 @@ namespace UNIHper
 
                 listPlayer.JumpToItem(mediaIndex);
                 videoIndex.Set(mediaIndex);
-                return Disposable.Empty;
+                return Disposable.Create(() => _playDisposables.Clear());
             });
         }
 
@@ -323,9 +316,66 @@ namespace UNIHper
             Switch(videoIndex.PrevValue(), bRewind, bAutoPlay);
         }
 
+        #region 属性代理 - 委托给 CurrentPlayer
+
+        public override bool Ready2Play => CurrentPlayer?.Ready2Play ?? false;
+
+        public override bool IsPaused => CurrentPlayer?.IsPaused ?? false;
+
+        public override bool IsFinished => CurrentPlayer?.IsFinished ?? false;
+
+        public override double Duration => CurrentPlayer?.Duration ?? 0;
+
+        public override int DurationFrames => CurrentPlayer?.DurationFrames ?? 0;
+
+        public override int MaxFrameNumber => CurrentPlayer?.MaxFrameNumber ?? 0;
+
+        public override float PlaybackRate => CurrentPlayer?.PlaybackRate ?? 0f;
+
+        public override bool IsPlaying => CurrentPlayer?.IsPlaying ?? false;
+
+        public override double CurrentTime => CurrentPlayer?.CurrentTime ?? 0;
+
+        public override int CurrentFrame => CurrentPlayer?.CurrentFrame ?? 0;
+
+        #endregion
+
+        #region 控制方法代理
+
+        public override void Play(bool withEvent = true)
+        {
+            CurrentPlayer?.Play(withEvent);
+        }
+
+        public override void Pause(bool withEvent = true)
+        {
+            CurrentPlayer?.Pause(withEvent);
+        }
+
+        public override void Stop()
+        {
+            ClearPlayHandlers();
+            CurrentPlayer?.Stop();
+        }
+
+        public override void TogglePlay()
+        {
+            CurrentPlayer?.TogglePlay();
+        }
+
+        public override void Rewind(bool pause)
+        {
+            CurrentPlayer?.Rewind(pause);
+        }
+
+        public override void Seek(double time)
+        {
+            CurrentPlayer?.Seek(time);
+        }
+
         public void SetPlaybackRate(float rate)
         {
-            CurrentPlayer.SetPlaybackRate(rate);
+            CurrentPlayer?.SetPlaybackRate(rate);
         }
 
         public void SetVolume(float volume)
@@ -338,10 +388,14 @@ namespace UNIHper
             listPlayer.AudioMuted = bMute;
         }
 
-        public override void Seek(double time)
+        public void SetLoop(bool loop)
         {
-            CurrentPlayer?.Seek(time);
+            CurrentPlayer?.SetLoop(loop);
         }
+
+        #endregion
+
+        #region 生命周期管理
 
         public override void ClearPlayHandlers()
         {
@@ -349,6 +403,10 @@ namespace UNIHper
             CurrentPlayer?.ClearPlayHandlers();
             NextPlayer?.ClearPlayHandlers();
         }
+
+        #endregion
+
+        #region 查找
 
         public int FindVideoIndex(string videoName)
         {
@@ -360,23 +418,49 @@ namespace UNIHper
             return _idx;
         }
 
+        #endregion
+
+        #region 事件代理 - 合并 A/B 子播放器事件并过滤 CurrentPlayer
+
+        /// <summary>
+        /// 辅助方法：合并两个子播放器的事件并按 CurrentPlayer 过滤
+        /// </summary>
+        private IObservable<MediaPlayer> MergeChildPlayerEvents(Func<AVProPlayer, IObservable<MediaPlayer>> eventSelector)
+        {
+            return Observable.Merge(eventSelector(CurrentPlayer), eventSelector(NextPlayer)).Where(mp => IsCurrentPlayer(mp));
+        }
+
+        public bool IsCurrentPlayer(MediaPlayer mp)
+        {
+            return mp == CurrentPlayer?.MediaPlayer;
+        }
+
+        // Playlist 专属事件
         public IObservable<AVProPlayer> OnItemChangedAsObservable()
         {
-            return this.OnPlaylistItemChangedAsObservable().SelectMany(_ => Observable.NextFrame().Select(_1 => CurrentPlayer));
+            return base.OnPlaylistItemChangedAsObservable().SelectMany(_ => Observable.NextFrame().Select(_1 => CurrentPlayer));
         }
 
-        public new IObservable<MediaPlayer> OnReachedEndAsObservable()
+        // 播放完成事件：直接合并两路子播放器事件，不做 IsCurrentPlayer 过滤
+        // 播放结束瞬间 ListPlayer.CurrentPlayer 可能已切换，过滤会导致事件丢失
+        public override IObservable<MediaPlayer> OnFinishedPlayingAsObservable()
         {
-            return Observable
-                .Merge(CurrentPlayer.OnReachedEndAsObservable(), NextPlayer.OnReachedEndAsObservable())
-                .Where(_ => IsCurrentPlayer(_));
+            return Observable.Merge(CurrentPlayer.OnFinishedPlayingAsObservable(), NextPlayer.OnFinishedPlayingAsObservable());
         }
 
-        public new IObservable<MediaPlayer> OnFinishedPlayingAsObservable()
+        public override IObservable<MediaPlayer> OnReachedEndAsObservable()
         {
-            return Observable
-                .Merge(CurrentPlayer.OnFinishedPlayingAsObservable(), NextPlayer.OnFinishedPlayingAsObservable())
-                .Where(_ => IsCurrentPlayer(_));
+            return MergeChildPlayerEvents(p => p.OnReachedEndAsObservable());
+        }
+
+        public override IObservable<MediaPlayer> OnPausedAsObservable()
+        {
+            return MergeChildPlayerEvents(p => p.OnPausedAsObservable());
+        }
+
+        public override IObservable<MediaPlayer> OnUnpausedAsObservable()
+        {
+            return MergeChildPlayerEvents(p => p.OnUnpausedAsObservable());
         }
 
         public override IObservable<(MediaPlayer mediaPlayer, float targetTime)> OnRequestSeekAsObservable()
@@ -386,29 +470,104 @@ namespace UNIHper
                 .Where(_ => IsCurrentPlayer(_.mediaPlayer));
         }
 
-        public override IObservable<MediaPlayer> OnPausedAsObservable()
+        public override IObservable<MediaPlayer> OnMetaDataReadyAsObservable()
         {
-            return Observable.Merge(CurrentPlayer.OnPausedAsObservable(), NextPlayer.OnPausedAsObservable()).Where(_ => IsCurrentPlayer(_));
+            return MergeChildPlayerEvents(p => p.OnMetaDataReadyAsObservable());
         }
 
-        public override IObservable<MediaPlayer> OnUnpausedAsObservable()
+        public override IObservable<MediaPlayer> OnReadyToPlayAsObservable()
         {
-            return Observable
-                .Merge(CurrentPlayer.OnUnpausedAsObservable(), NextPlayer.OnUnpausedAsObservable())
-                .Where(_ => IsCurrentPlayer(_));
+            return MergeChildPlayerEvents(p => p.OnReadyToPlayAsObservable());
         }
 
-        public bool IsCurrentPlayer(MediaPlayer mp)
+        public override IObservable<MediaPlayer> OnStartedAsObservable()
         {
-            return mp == CurrentPlayer?.MediaPlayer;
+            return MergeChildPlayerEvents(p => p.OnStartedAsObservable());
         }
 
-        public void SetLoop(bool loop)
+        public override IObservable<MediaPlayer> OnFirstFrameReadyAsObservable()
         {
-            CurrentPlayer?.SetLoop(loop);
+            return MergeChildPlayerEvents(p => p.OnFirstFrameReadyAsObservable());
         }
+
+        public override IObservable<MediaPlayer> OnClosingAsObservable()
+        {
+            return MergeChildPlayerEvents(p => p.OnClosingAsObservable());
+        }
+
+        public override IObservable<MediaPlayer> OnErrorAsObservable()
+        {
+            return MergeChildPlayerEvents(p => p.OnErrorAsObservable());
+        }
+
+        public override IObservable<MediaPlayer> OnSubtitleChangeAsObservable()
+        {
+            return MergeChildPlayerEvents(p => p.OnSubtitleChangeAsObservable());
+        }
+
+        public override IObservable<MediaPlayer> OnStalledAsObservable()
+        {
+            return MergeChildPlayerEvents(p => p.OnStalledAsObservable());
+        }
+
+        public override IObservable<MediaPlayer> OnUnstalledAsObservable()
+        {
+            return MergeChildPlayerEvents(p => p.OnUnstalledAsObservable());
+        }
+
+        public override IObservable<MediaPlayer> OnResolutionChangedAsObservable()
+        {
+            return MergeChildPlayerEvents(p => p.OnResolutionChangedAsObservable());
+        }
+
+        public override IObservable<MediaPlayer> OnStartedSeekingAsObservable()
+        {
+            return MergeChildPlayerEvents(p => p.OnStartedSeekingAsObservable());
+        }
+
+        public override IObservable<MediaPlayer> OnFinishedSeekingAsObservable()
+        {
+            return MergeChildPlayerEvents(p => p.OnFinishedSeekingAsObservable());
+        }
+
+        public override IObservable<MediaPlayer> OnStartedBufferingAsObservable()
+        {
+            return MergeChildPlayerEvents(p => p.OnStartedBufferingAsObservable());
+        }
+
+        public override IObservable<MediaPlayer> OnFinishedBufferingAsObservable()
+        {
+            return MergeChildPlayerEvents(p => p.OnFinishedBufferingAsObservable());
+        }
+
+        public override IObservable<MediaPlayer> OnPropertiesChangedAsObservable()
+        {
+            return MergeChildPlayerEvents(p => p.OnPropertiesChangedAsObservable());
+        }
+
+        public override IObservable<MediaPlayer> OnTextTracksChangedAsObservable()
+        {
+            return MergeChildPlayerEvents(p => p.OnTextTracksChangedAsObservable());
+        }
+
+        // Playlist 事件代理到自身（PlaylistMediaPlayer 上的原生事件）
+        public override IObservable<MediaPlayer> OnPlaylistItemChangedAsObservable()
+        {
+            return base.OnPlaylistItemChangedAsObservable();
+        }
+
+        public override IObservable<MediaPlayer> OnPlaylistFinishedAsObservable()
+        {
+            return base.OnPlaylistFinishedAsObservable();
+        }
+
+        #endregion
+
+        #region 子播放器引用
 
         public AVProPlayer CurrentPlayer => ListPlayer.CurrentPlayer.Get<AVProPlayer>();
         public AVProPlayer NextPlayer => ListPlayer.NextPlayer.Get<AVProPlayer>();
+
+        #endregion
     }
 }

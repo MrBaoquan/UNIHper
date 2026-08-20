@@ -905,6 +905,8 @@ namespace AVProUI
                 .Subscribe(_ =>
                 {
                     _autoHideControlsDisposable = null;
+                    if (_mediaPlayer == null || _mediaPlayer.Control == null)
+                        return;
                     if (_mediaPlayer.Control.IsPaused())
                         return;
 

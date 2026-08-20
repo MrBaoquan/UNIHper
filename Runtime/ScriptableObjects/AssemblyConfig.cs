@@ -86,7 +86,7 @@ namespace UNIHper
             Assemblies.Clear();
             allTypesMap.Clear();
             CachedTypes.Clear();
-            var _internalAssemblies = getAssemblies("__Configs/assemblies");
+            var _internalAssemblies = getAssemblies("Configs/assemblies");
             var _customAssemblies = getAssemblies(UNIHperSettings.AssemblyConfigPath);
 
             _internalAssemblies
@@ -141,7 +141,19 @@ namespace UNIHper
             Assembly _assembly = null;
             try
             {
-                _assembly = Assembly.Load(assemblyName);
+                _assembly = AppDomain.CurrentDomain
+                    .GetAssemblies()
+                    .FirstOrDefault(_loaded => _loaded.FullName == assemblyName || _loaded.GetName().Name == assemblyName);
+
+                if (_assembly == null)
+                {
+#if UNITY_WEBGL && !UNITY_EDITOR
+                    UNIHperLogger.LogWarning($"Assembly not preloaded on WebGL: {assemblyName}");
+                    return;
+#else
+                    _assembly = Assembly.Load(assemblyName);
+#endif
+                }
             }
             catch (Exception)
             {

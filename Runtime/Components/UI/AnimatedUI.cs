@@ -137,9 +137,7 @@ namespace UNIHper.UI
             var _machineStates = _stateMachine.states.Select(_ => _.state);
 
             var _clips = AssetDatabase
-                .LoadAllAssetRepresentationsAtPath(
-                    "Packages/com.parful.unihper/Assets/Resources/__Animations/Controllers/UI_Controller.controller"
-                )
+                .LoadAllAssetRepresentationsAtPath("Packages/com.parful.unihper/Assets/Animations/Controllers/UI_Controller.controller")
                 .Where(_ => _ is AnimationClip)
                 .OfType<AnimationClip>()
                 .ToList();
@@ -198,12 +196,10 @@ namespace UNIHper.UI
         {
 #if UNITY_EDITOR
             overrideController = AssetDatabase.LoadAssetAtPath<AnimatorController>(
-                "Packages/com.parful.unihper/Assets/Resources/__Animations/Controllers/UI_Controller.controller"
+                "Packages/com.parful.unihper/Assets/Animations/Controllers/UI_Controller.controller"
             );
             var _clips = AssetDatabase
-                .LoadAllAssetRepresentationsAtPath(
-                    "Packages/com.parful.unihper/Assets/Resources/__Animations/Controllers/UI_Controller.controller"
-                )
+                .LoadAllAssetRepresentationsAtPath("Packages/com.parful.unihper/Assets/Animations/Controllers/UI_Controller.controller")
                 .Where(_ => _ is AnimationClip)
                 .OfType<AnimationClip>()
                 .ToList();

@@ -240,6 +240,7 @@ namespace UNIHper
 
         public async void SetScreen(ScreenConfig screenConfig)
         {
+#if !UNITY_EDITOR && UNITY_STANDALONE_WIN
             try
             {
                 Screen.SetResolution(screenConfig.Width, screenConfig.Height, screenConfig.IsFullScreen);
@@ -273,6 +274,7 @@ namespace UNIHper
             {
                 Debug.LogError($"设置屏幕失败: {ex.Message}\n{ex.StackTrace}");
             }
+#endif
         }
 
         private void executeWindowSettings() => ResetPrimaryScreen();

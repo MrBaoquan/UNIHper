@@ -25,9 +25,7 @@ namespace UNIHper
     {
         [
             SerializeField,
-            Tooltip(
-                "where the tap effect will be instantiated, if null, it will be instantiated in the first Canvas in the scene"
-            )
+            Tooltip("where the tap effect will be instantiated, if null, it will be instantiated in the first Canvas in the scene")
         ]
         private Canvas _canvas;
         public Canvas RootCanvas
@@ -72,30 +70,22 @@ namespace UNIHper
                     _image.raycastTarget = false;
 
                     var _controller = _effectPrefab.AddComponent<UAnimatorOverrideController>();
-                    _controller.runtimeAnimatorController =
-                        Resources.Load<RuntimeAnimatorController>(
-                            "__Animations/Controllers/OneClip_Idle"
-                        );
+                    _controller.runtimeAnimatorController = Managements.Resource.Get<RuntimeAnimatorController>(
+                        "Animations/Controllers/OneClip_Idle"
+                    );
 
-                    effectClip =
-                        effectClip == null
-                            ? Resources.Load<AnimationClip>("__Animations/TapEffect")
-                            : effectClip;
+                    effectClip = effectClip == null ? Managements.Resource.Get<AnimationClip>("Animations/TapEffect") : effectClip;
 
-                    _controller.animationClipPairs =
-                        _controller.runtimeAnimatorController.animationClips
-                            .Select(
-                                _animtionClip =>
-                                    new AnimationClipPair
-                                    {
-                                        originalClip = _animtionClip,
-                                        overrideClip =
-                                            _animtionClip.name == "Idle"
-                                                ? effectClip
-                                                : _animtionClip
-                                    }
-                            )
-                            .ToList();
+                    _controller.animationClipPairs = _controller.runtimeAnimatorController.animationClips
+                        .Select(
+                            _animtionClip =>
+                                new AnimationClipPair
+                                {
+                                    originalClip = _animtionClip,
+                                    overrideClip = _animtionClip.name == "Idle" ? effectClip : _animtionClip
+                                }
+                        )
+                        .ToList();
                     _effectPrefab.SetActive(false);
                 }
                 return _effectPrefab;
@@ -164,9 +154,7 @@ namespace UNIHper
 #if ENABLE_INPUT_SYSTEM
                 Observable
                     .EveryUpdate()
-                    .Where(
-                        _ => Pointer.current != null && Pointer.current.press.wasPressedThisFrame
-                    )
+                    .Where(_ => Pointer.current != null && Pointer.current.press.wasPressedThisFrame)
                     .Subscribe(_ =>
                     {
                         ShowEffect(Pointer.current.position.ReadValue());

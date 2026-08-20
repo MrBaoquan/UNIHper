@@ -1,0 +1,32 @@
+[
+    {
+        "driver":"Addressable",
+        "type": "GameObject",
+          "label":"com.parful.unihper"
+    },
+    {
+        "driver":"Addressable",
+        "type": "RuntimeAnimatorController",
+          "label":"com.parful.unihper"
+    },
+    {
+        "driver":"Addressable",
+        "type": "AudioClip",
+        "label":"com.parful.unihper"
+    },
+    {
+        "driver":"Addressable",
+        "type":"VisualTreeAsset",
+        "label":"com.parful.unihper"
+    },
+    {
+        "driver":"Addressable",
+        "type":"FontAsset",
+        "label":"com.parful.unihper"
+    },
+    {
+        "driver":"Addressable",
+        "type":"Font",
+        "label":"com.parful.unihper"
+    }
+]

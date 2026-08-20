@@ -80,7 +80,6 @@ namespace UNIHper
         internal async Task Initialize()
         {
             UNIHperLogger.Log("ConfigManager Initializing ...");
-            this.loadConfig();
 
             var _configClasses = AssemblyConfig.GetSubClasses(typeof(UConfig)).ToList();
             UNIHperLogger.Log($"Config Classes Count: {_configClasses.Count}");
@@ -264,8 +263,6 @@ namespace UNIHper
             return _configInstance as T;
         }
 
-        private void loadConfig() { }
-
         public void SaveAll()
         {
             this.configs.Values
@@ -366,21 +363,20 @@ namespace UNIHper
                 return false;
 
             ConfigDriver _driver = _config.Driver;
-            // UReflection.CallPrivateMethod(_config, "OnSerializing");
             _config.Serializing();
             if (_driver == ConfigDriver.YAML)
             {
                 USerialization.SerializeYAML(_config, _config.FilePath);
-                return true;
             }
             else if (_driver == ConfigDriver.JSON)
             {
                 USerialization.SerializeJSON(_config, _config.FilePath);
-                return true;
             }
-
-            DNHper.USerialization.SerializeXML(_config, _config.FilePath);
-            // UReflection.CallPrivateMethod(_config, "OnSerialized");
+            else
+            {
+                DNHper.USerialization.SerializeXML(_config, _config.FilePath);
+            }
+            Backup(_config);
             _config.Serialized();
             return true;
         }
@@ -389,7 +385,7 @@ namespace UNIHper
         {
             var _srcFilePath = config.FilePath;
 
-            if (checkIfXMLValid(_srcFilePath) == false)
+            if (checkIfConfigValid(_srcFilePath) == false)
             {
                 Debug.LogWarning($"Config file {_srcFilePath} is invalid, skip backup.");
                 return;
@@ -426,7 +422,7 @@ namespace UNIHper
                 return;
             }
 
-            if (checkIfXMLValid(_backupFilePath) == false)
+            if (checkIfConfigValid(_backupFilePath) == false)
             {
                 Debug.LogWarning($"Backup file {_backupFilePath} is invalid.");
                 return;
@@ -450,30 +446,42 @@ namespace UNIHper
 
         private void restoreIfConfigError(string filePath)
         {
-            // 仅针对 XML 文件进行检查
-            if (Path.GetExtension(filePath) != ".xml")
+            if (checkIfConfigValid(filePath))
             {
                 return;
             }
-            if (checkIfXMLValid(filePath))
-            {
-                return;
-            }
-
             this.restoreConfig(filePath);
         }
 
-        private bool checkIfXMLValid(string filePath)
+        private bool checkIfConfigValid(string filePath)
         {
+            if (!File.Exists(filePath))
+                return false;
+
+            var ext = Path.GetExtension(filePath).ToLower();
             try
             {
-                var _xmlDoc = new System.Xml.XmlDocument();
-                _xmlDoc.Load(filePath);
-                return true;
+                switch (ext)
+                {
+                    case ".xml":
+                        var _xmlDoc = new System.Xml.XmlDocument();
+                        _xmlDoc.Load(filePath);
+                        return true;
+                    case ".json":
+                        var _jsonContent = File.ReadAllText(filePath);
+                        Newtonsoft.Json.Linq.JToken.Parse(_jsonContent);
+                        return true;
+                    case ".yaml":
+                    case ".yml":
+                        var _yamlContent = File.ReadAllText(filePath);
+                        return !string.IsNullOrWhiteSpace(_yamlContent);
+                    default:
+                        return true;
+                }
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"Config file {filePath} is invalid, {e.Message}");
+                Debug.LogWarning($"Config file {filePath} is invalid: {e.Message}");
                 return false;
             }
         }
