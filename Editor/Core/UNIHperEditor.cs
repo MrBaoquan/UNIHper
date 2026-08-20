@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -269,7 +270,7 @@ namespace UNIHper.Editor
             ScriptCompileReloadTools.ManualReload();
         }
 
-        // 导出框架技能到项目 .github/skills/（project-memory 仅首次播种，导出后归项目所有）
+        // 导出框架技能到 .github/skills/，并播种跨工具入口 AGENTS.md / CLAUDE.md（均仅首次生成，之后归项目所有）
         private static void ExportFrameworkSkills()
         {
             var projectRoot = Directory.GetParent(Application.dataPath).FullName;
@@ -280,6 +281,7 @@ namespace UNIHper.Editor
 
             Directory.CreateDirectory(targetDir);
             var exported = 0;
+            var skillIndex = new List<KeyValuePair<string, string>>();
             foreach (var skillDir in Directory.GetDirectories(sourceDir))
             {
                 var skillFile = Path.Combine(skillDir, "SKILL.md");
@@ -287,6 +289,8 @@ namespace UNIHper.Editor
                     continue;
 
                 var skillName = Path.GetFileName(skillDir);
+                skillIndex.Add(new KeyValuePair<string, string>(skillName, ExtractSkillDescription(skillFile)));
+
                 var destFile = Path.Combine(targetDir, skillName, "SKILL.md");
                 if (skillName == "project-memory" && File.Exists(destFile))
                     continue;
@@ -296,8 +300,86 @@ namespace UNIHper.Editor
                 exported++;
             }
 
+            SeedCrossToolEntries(projectRoot, skillIndex);
+
             if (exported > 0)
                 Debug.Log($"[UNIHper] Exported {exported} framework skills to .github/skills/");
+        }
+
+        // AGENTS.md 服务 Codex/Cursor/Jules 等工具；CLAUDE.md 通过 @import 引入，服务 Claude Code；已存在则不覆盖
+        private static void SeedCrossToolEntries(string projectRoot, List<KeyValuePair<string, string>> skillIndex)
+        {
+            var agentsFile = Path.Combine(projectRoot, "AGENTS.md");
+            if (File.Exists(agentsFile))
+                return;
+
+            var sb = new StringBuilder();
+            sb.AppendLine("# AGENTS.md");
+            sb.AppendLine();
+            sb.AppendLine("跨 AI 工具仓库级入口（Codex / Cursor / Jules 等读取本文件），由 UNIHper Initialize 播种，可自由追加项目规则。");
+            sb.AppendLine("技能权威内容位于 `.github/skills/`；Claude Code 经根目录 `CLAUDE.md` 引入本文件。");
+            sb.AppendLine();
+            sb.AppendLine("## 实现立场");
+            sb.AppendLine();
+            sb.AppendLine("- 默认优先用 UNIHper 能力解决问题，而非原生 Unity 模式。");
+            sb.AppendLine("- 以 UNIHper Editor 模板与框架基类作为新代码的默认骨架来源。");
+            sb.AppendLine();
+            sb.AppendLine("## 全局默认");
+            sb.AppendLine();
+            sb.AppendLine("- 框架能力存在时优先使用 `Managements.*` 门面。");
+            sb.AppendLine("- 异步流、事件与 UI 绑定优先使用 UniRx / `IObservable<T>`。");
+            sb.AppendLine("- 延迟、间隔、倒计时、节流、防抖优先使用 `Managements.Timer`。");
+            sb.AppendLine("- 跨组件通信优先使用 `Managements.Event`。");
+            sb.AppendLine("- 所有 `Subscribe` 必须做生命周期管理（`AddTo` / `DisposeWith`）。");
+            sb.AppendLine();
+            sb.AppendLine("## 默认避免");
+            sb.AppendLine();
+            sb.AppendLine("- 除非 Unity API 要求，不引入 `IEnumerator` / `StartCoroutine`。");
+            sb.AppendLine("- 除非确属帧驱动，不引入轮询式 `Update()` 逻辑。");
+            sb.AppendLine("- 不用 `UnityEvent` / `SendMessage` 承载项目逻辑。");
+            sb.AppendLine();
+            sb.AppendLine("## 命名约定");
+            sb.AppendLine();
+            sb.AppendLine("- UGUI 页面 `{Feature}UI.cs`；UI Toolkit 页面 `{Feature}ToolkitUI.cs`。");
+            sb.AppendLine("- 场景脚本 `Scene{Name}Script.cs`；配置 `{Feature}Config.cs`；事件 `{Action}Event.cs`。");
+            sb.AppendLine();
+            sb.AppendLine("## 技能索引");
+            sb.AppendLine();
+            sb.AppendLine("| 技能 | 用途 |");
+            sb.AppendLine("|---|---|");
+            foreach (var skill in skillIndex)
+                sb.AppendLine($"| {skill.Key} | {skill.Value} |");
+            sb.AppendLine();
+            sb.AppendLine("> 规则冲突时以 Editor 模板与框架 API 为最终事实源。");
+            sb.AppendLine();
+
+            File.WriteAllText(agentsFile, sb.ToString(), new UTF8Encoding(false));
+
+            var claudeFile = Path.Combine(projectRoot, "CLAUDE.md");
+            if (!File.Exists(claudeFile))
+                File.WriteAllText(claudeFile, "@AGENTS.md\n", new UTF8Encoding(false));
+
+            Debug.Log("[UNIHper] Seeded AGENTS.md / CLAUDE.md for cross-tool AI entry");
+        }
+
+        private static string ExtractSkillDescription(string skillFile)
+        {
+            try
+            {
+                var inFrontmatter = false;
+                foreach (var line in File.ReadAllLines(skillFile))
+                {
+                    if (line.Trim() == "---")
+                    {
+                        if (!inFrontmatter) { inFrontmatter = true; continue; }
+                        break;
+                    }
+                    if (inFrontmatter && line.TrimStart().StartsWith("description:"))
+                        return line.Substring(line.IndexOf(':') + 1).Trim().Trim('\'').Replace("|", "/");
+                }
+            }
+            catch { }
+            return "";
         }
 
         private static void importTMPEssentialResourcesIfNotExists()
